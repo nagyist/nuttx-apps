@@ -557,7 +557,11 @@ static ssize_t fstest_rdblock(int fd, FAR struct fstest_filedesc_s *file,
         {
           int errcode = errno;
 
-          if (errcode != EINTR)
+          if (errcode == EINTR)
+            {
+              continue;
+            }
+          else
             {
               printf("ERROR: Failed to read file: %d\n", errno);
               printf("  File name:    %s\n", file->name);
