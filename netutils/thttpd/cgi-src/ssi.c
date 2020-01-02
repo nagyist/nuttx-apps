@@ -100,7 +100,7 @@ static void internal_error(char *reason)
 {
   char *title = "500 Internal Error";
 
-  printf("\
+  (void)printf("\
 <HTML><HEAD><TITLE>%s</TITLE></HEAD>\n\
 <BODY><H2>%s</H2>\n\
 Something unusual went wrong during a server-side-includes request:\n\
@@ -114,7 +114,7 @@ static void not_found(char *filename)
 {
   char *title = "404 Not Found";
 
-  printf("\
+  (void)printf("\
 <HTML><HEAD><TITLE>%s</TITLE></HEAD>\n\
 <BODY><H2>%s</H2>\n\
 The requested server-side-includes filename, %s,\n\
@@ -126,7 +126,7 @@ static void not_found2(char *directive, char *tag, char *filename)
 {
   char *title = "Not Found";
 
-  printf("\
+  (void)printf("\
 <HR><H2>%s</H2>\n\
 The filename requested in a %s %s directive, %s,\n\
 does not seem to exist.\n\
@@ -137,7 +137,7 @@ static void not_permitted(char *directive, char *tag, char *val)
 {
   char *title = "Not Permitted";
 
-  printf("\
+  (void)printf("\
 <HR><H2>%s</H2>\n\
 The filename requested in the %s %s=%s directive\n\
 may not be fetched.\n\
@@ -148,7 +148,7 @@ static void unknown_directive(char *filename, char *directive)
 {
   char *title = "Unknown Directive";
 
-  printf("\
+  (void)printf("\
 <HR><H2>%s</H2>\n\
 The requested server-side-includes filename, %s,\n\
 tried to use an unknown directive, %s.\n\
@@ -159,7 +159,7 @@ static void unknown_tag(char *filename, char *directive, char *tag)
 {
   char *title = "Unknown Tag";
 
-  printf("\
+  (void)printf("\
 <HR><H2>%s</H2>\n\
 The requested server-side-includes filename, %s,\n\
 tried to use the directive %s with an unknown tag, %s.\n\
@@ -170,7 +170,7 @@ static void unknown_value(char *filename, char *directive, char *tag, char *val)
 {
   char *title = "Unknown Value";
 
-  printf("\
+  (void)printf("\
 <HR><H2>%s</H2>\n\
 The requested server-side-includes filename, %s,\n\
 tried to use the directive %s %s with an unknown value, %s.\n\
@@ -214,8 +214,8 @@ static int get_filename(char *vfilename, char *filename,
           return -1;
         }
 
-      strncpy(fn, filename, fl - vl);
-      strcpy(&fn[fl - vl], val);
+      (void)strncpy(fn, filename, fl - vl);
+      (void)strcpy(&fn[fl - vl], val);
     }
   else if (strcmp(tag, "file") == 0)
     {
@@ -229,14 +229,14 @@ static int get_filename(char *vfilename, char *filename,
           return -1;
         }
 
-      strcpy(fn, filename);
+      (void)strcpy(fn, filename);
       cp = strrchr(fn, '/');
       if (cp == (char *)0)
         {
           cp = &fn[strlen(fn)];
           *cp = '/';
         }
-      strcpy(++cp, val);
+      (void)strcpy(++cp, val);
     }
   else
     {
@@ -309,7 +309,7 @@ static int check_filename(char *filename)
   cp = strrchr(dirname, '/');
   if (cp == (char *)0)
     {
-      strcpy(dirname, ".");
+      (void)strcpy(dirname, ".");
     }
   else
     {
@@ -325,7 +325,7 @@ static int check_filename(char *filename)
       return 0;
     }
 
-  sprintf(authname, "%s/%s", dirname, CONFIG_AUTH_FILE);
+  (void)sprintf(authname, "%s/%s", dirname, CONFIG_AUTH_FILE);
   r = stat(authname, &sb);
 
   free(dirname);
@@ -361,7 +361,7 @@ static void show_time(time_t t, int gmt)
 
   if (strftime(g_iobuffer2, BUFFER_SIZE, g_timeformat, tmP) > 0)
     {
-      puts(g_iobuffer2);
+      (void)puts(g_iobuffer2);
     }
 }
 
@@ -370,25 +370,25 @@ static void show_size(off_t size)
   switch (g_sizefmt)
     {
     case SF_BYTES:
-      printf("%ld", (long)size);  /* spec says should have commas */
+      (void)printf("%ld", (long)size);  /* spec says should have commas */
       break;
 
     case SF_ABBREV:
       if (size < 1024)
         {
-          printf("%ld", (long)size);
+          (void)printf("%ld", (long)size);
         }
       else if (size < 1024 * 1024)
         {
-          printf("%ldK", (long)size / 1024L);
+          (void)printf("%ldK", (long)size / 1024L);
         }
       else if (size < 1024 * 1024 * 1024)
         {
-          printf("%ldM", (long)size / (1024L * 1024L));
+          (void)printf("%ldM", (long)size / (1024L * 1024L));
         }
       else
         {
-          printf("%ldG", (long)size / (1024L * 1024L * 1024L));
+          (void)printf("%ldG", (long)size / (1024L * 1024L * 1024L));
         }
       break;
     }
@@ -409,7 +409,7 @@ static void do_config(FILE *instream, char *vfilename, char *filename,
 
   if (strcmp(tag, "g_timeformat") == 0)
     {
-      strncpy(g_timeformat, val, TIMEFMT_SIZE - 1);
+      (void)strncpy(g_timeformat, val, TIMEFMT_SIZE - 1);
       g_timeformat[TIMEFMT_SIZE - 1] = '\0';
     }
   else if (strcmp(tag, "g_sizefmt") == 0)
@@ -464,11 +464,11 @@ static void do_include(FILE *instream, char *vfilename, char *filename,
     {
       if (strlen(val) <BUFFER_SIZE)
         {
-          strcpy(g_iobuffer2, val);
+          (void)strcpy(g_iobuffer2, val);
         }
       else
         {
-          strcpy(g_iobuffer2, g_iobuffer1);    /* same size, has to fit */
+          (void)strcpy(g_iobuffer2, g_iobuffer1);    /* same size, has to fit */
         }
     }
   else
@@ -476,23 +476,23 @@ static void do_include(FILE *instream, char *vfilename, char *filename,
       if (strlen(vfilename) + 1 + strlen(val) < BUFFER_SIZE)
         {
           char *cp;
-          strcpy(g_iobuffer2, vfilename);
+          (void)strcpy(g_iobuffer2, vfilename);
           cp = strrchr(g_iobuffer2, '/');
           if (cp == (char *)0)
             {
               cp = &g_iobuffer2[strlen(g_iobuffer2)];
               *cp = '/';
             }
-          strcpy(++cp, val);
+          (void)strcpy(++cp, val);
         }
       else
         {
-          strcpy(g_iobuffer2, g_iobuffer1);    /* same size, has to fit */
+          (void)strcpy(g_iobuffer2, g_iobuffer1);    /* same size, has to fit */
         }
     }
 
   read_file(instream2, g_iobuffer2, g_iobuffer1);
-  fclose(instream2);
+  (void)fclose(instream2);
 }
 
 static void do_echo(FILE *instream, char *vfilename, char *filename,
@@ -515,13 +515,13 @@ static void do_echo(FILE *instream, char *vfilename, char *filename,
         {
           /* The current filename. */
 
-          puts(filename);
+          (void)puts(filename);
         }
       else if (strcmp(val, "DOCUMENT_URI") == 0)
         {
           /* The virtual path to this file (such as /~robm/foo.shtml). */
 
-          puts(vfilename);
+          (void)puts(vfilename);
         }
       else if (strcmp(val, "QUERY_STRING_UNESCAPED") == 0)
         {
@@ -530,7 +530,7 @@ static void do_echo(FILE *instream, char *vfilename, char *filename,
           cp = getenv("QUERY_STRING");
           if (cp != (char *)0)
             {
-              puts(cp);
+              (void)puts(cp);
             }
         }
       else if (strcmp(val, "DATE_LOCAL") == 0)
@@ -573,7 +573,7 @@ static void do_echo(FILE *instream, char *vfilename, char *filename,
             }
           else
             {
-              puts(cp);
+              (void)puts(cp);
             }
         }
     }
@@ -838,7 +838,7 @@ static void read_file(FILE *instream, char *vfilename, char *filename)
           else
             {
               state = ST_GROUND;
-              puts("<!");
+              (void)puts("<!");
             }
           break;
 
@@ -851,7 +851,7 @@ static void read_file(FILE *instream, char *vfilename, char *filename)
           else
             {
               state = ST_GROUND;
-              puts("<!-");
+              (void)puts("<!-");
             }
           break;
 
@@ -865,7 +865,7 @@ static void read_file(FILE *instream, char *vfilename, char *filename)
           else
             {
               state = ST_GROUND;
-              puts("<!--");
+              (void)puts("<!--");
             }
           break;
         }
@@ -892,12 +892,12 @@ int main(int argc, char *argv[])
 
   /* Default formats. */
 
-  strcpy(g_timeformat, "%a %b %e %T %Z %Y");
+  (void)strcpy(g_timeformat, "%a %b %e %T %Z %Y");
   g_sizefmt = SF_BYTES;
 
   /* The MIME type has to be text/html. */
 
-  puts("Content-type: text/html\n\n");
+  (void)puts("Content-type: text/html\n\n");
 
   /* Get the name that we were run as. */
 
@@ -922,7 +922,7 @@ int main(int argc, char *argv[])
       internal_error("Out of memory.");
       return 2;
     }
-  sprintf(g_url, "%s%s", script_name, path_info);
+  (void)sprintf(g_url, "%s%s", script_name, path_info);
 
   /* Get the name of the file to parse. */
 
@@ -955,7 +955,7 @@ int main(int argc, char *argv[])
 
   read_file(instream, path_info, path_translated);
 
-  fclose(instream);
+  (void)fclose(instream);
 
 errout_with_g_url:
   free(g_url);

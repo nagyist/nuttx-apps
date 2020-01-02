@@ -293,14 +293,14 @@ int main(int argc, FAR char *argv[])
    * is in place for each transmission.
     */
 
-  pthread_attr_getschedparam(&attr, &param);
+  (void)pthread_attr_getschedparam(&attr, &param);
   param.sched_priority++;
-  pthread_attr_setschedparam(&attr, &param);
+  (void)pthread_attr_setschedparam(&attr, &param);
 #endif
 
   /* Set the receiver stack size */
 
-  pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_I2SCHAR_RXSTACKSIZE);
+  (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_I2SCHAR_RXSTACKSIZE);
 
   /* Start the receiver */
 
@@ -323,7 +323,7 @@ int main(int argc, FAR char *argv[])
 
   /* Set the transmitter stack size */
 
-  pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_I2SCHAR_TXSTACKSIZE);
+  (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_I2SCHAR_TXSTACKSIZE);
 
   /* Start the transmitter */
 
@@ -334,7 +334,7 @@ int main(int argc, FAR char *argv[])
       printf("i2schar_main: ERROR: failed to Start transmitter thread: %d\n", ret);
 #ifdef CONFIG_EXAMPLES_I2SCHAR_RX
       printf("i2schar_main: Waiting for the receiver thread\n");
-      pthread_join(receiver, &result);
+      (void)pthread_join(receiver, &result);
 #endif
       return EXIT_FAILURE;
     }

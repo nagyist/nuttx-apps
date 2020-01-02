@@ -248,6 +248,7 @@ static void cfgdatacmd_parse_byte_array(struct config_data_s *cfg,
 
 static void cfgdatacmd_set(int argc, char *argv[])
 {
+  int                   x;
   int                   ret;
   int                   fd;
   struct config_data_s  cfg;
@@ -258,10 +259,9 @@ static void cfgdatacmd_set(int argc, char *argv[])
   /* Copy the name to the cfg struct */
 
   strncpy(cfg.name, argv[2], CONFIG_MTD_CONFIG_NAME_LEN);
+  (void) x;
 
 #else
-  int                   x;
-
   /* Parse the id and instance */
 
   cfg.id = atoi(argv[2]);
@@ -380,6 +380,7 @@ static void cfgdatacmd_set(int argc, char *argv[])
 
 static void cfgdatacmd_unset(int argc, char *argv[])
 {
+  int                   x;
   int                   ret;
   int                   fd;
   struct config_data_s  cfg;
@@ -388,10 +389,9 @@ static void cfgdatacmd_unset(int argc, char *argv[])
   /* Copy the name to the cfg struct */
 
   strncpy(cfg.name, argv[2], CONFIG_MTD_CONFIG_NAME_LEN);
+  (void) x;
 
 #else
-  int                   x;
-
   /* Parse the id and instance */
 
   cfg.id = atoi(argv[2]);
@@ -444,7 +444,7 @@ static void cfgdatacmd_unset(int argc, char *argv[])
 static void cfgdatacmd_print(int argc, char *argv[])
 {
   struct config_data_s  cfg;
-  int                   ret;
+  int                   x, ret;
   int                   fd;
   bool                  isstring;
 
@@ -453,10 +453,9 @@ static void cfgdatacmd_print(int argc, char *argv[])
   /* Copy the name to the cfg struct */
 
   strncpy(cfg.name, argv[2], CONFIG_MTD_CONFIG_NAME_LEN);
+  (void)x;
 
 #else
-  int                   x;
-
   /* Parse the id and instance */
 
   cfg.id = atoi(argv[2]);

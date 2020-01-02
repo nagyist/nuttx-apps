@@ -488,7 +488,7 @@ int main(int argc, FAR char *argv[])
         {
           /* Parse and process the command */
 
-          ftpc_parse(handle, g_line);
+          (void)ftpc_parse(handle, g_line);
           FFLUSH();
         }
     }

@@ -284,7 +284,7 @@ void CButtonTest::click(void)
 
   // Then inject the mouse click
 
-  nx_mousein(handle, m_center.x, m_center.y, NX_MOUSE_LEFTBUTTON);
+  (void)nx_mousein(handle, m_center.x, m_center.y, NX_MOUSE_LEFTBUTTON);
 }
 
 // The counterpart to click.  This simulates a button release through
@@ -304,7 +304,7 @@ void CButtonTest::release(void)
 
   // Then inject the mouse click
 
-  nx_mousein(handle, m_center.x, m_center.y, NX_MOUSE_NOBUTTONS);
+  (void)nx_mousein(handle, m_center.x, m_center.y, NX_MOUSE_NOBUTTONS);
 }
 
 // Widget events are normally handled in a modal loop.

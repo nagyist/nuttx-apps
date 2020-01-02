@@ -182,7 +182,7 @@ static void mm_update(FAR unsigned int *previous, FAR const char *msg)
 #ifdef CONFIG_CAN_PASS_STRUCTS
   mmcurrent = mallinfo();
 #else
-  mallinfo(&mmcurrent);
+  (void)mallinfo(&mmcurrent);
 #endif
 
   /* Show the change from the previous time */
@@ -207,7 +207,7 @@ static void mm_initmonitor(void)
 #ifdef CONFIG_CAN_PASS_STRUCTS
   mmcurrent = mallinfo();
 #else
-  mallinfo(&mmcurrent);
+  (void)mallinfo(&mmcurrent);
 #endif
 
   g_mminitial = mmcurrent.uordblks;
@@ -362,7 +362,7 @@ int main(int argc, FAR char *argv[])
    * the ROMFS mountpoint.
    */
 
-  setenv("PATH", MOUNTPT, 1);
+  (void)setenv("PATH", MOUNTPT, 1);
 #endif
 
   /* Now exercise every program in the ROMFS file system */

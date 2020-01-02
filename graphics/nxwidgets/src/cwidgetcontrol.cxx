@@ -187,7 +187,7 @@ CWidgetControl::~CWidgetControl(void)
 void CWidgetControl::waitForWindowEvent(void)
 {
   m_waiting = true;
-  sem_wait(&m_waitSem);
+ (void)sem_wait(&m_waitSem);
   m_waiting = false;
 }
 #endif
@@ -201,7 +201,7 @@ void CWidgetControl::postWindowEvent(void)
 {
   if (m_waiting)
     {
-      sem_post(&m_waitSem);
+      (void)sem_post(&m_waitSem);
     }
 }
 #endif
@@ -473,7 +473,7 @@ void CWidgetControl::newMouseEvent(FAR const struct nxgl_point_s *pos, uint8_t b
 
           m_xyinput.leftPressed = 1;
 
-          clock_gettime(CLOCK_REALTIME, &m_xyinput.leftPressTime);
+          (void)clock_gettime(CLOCK_REALTIME, &m_xyinput.leftPressTime);
 
           // Check for double click event
 
@@ -494,7 +494,7 @@ void CWidgetControl::newMouseEvent(FAR const struct nxgl_point_s *pos, uint8_t b
           // New left button release
 
           m_xyinput.leftReleased  = 1;
-          clock_gettime(CLOCK_REALTIME, &m_xyinput.leftReleaseTime);
+          (void)clock_gettime(CLOCK_REALTIME, &m_xyinput.leftReleaseTime);
         }
 
       m_xyinput.leftHeld = 0;
@@ -692,7 +692,7 @@ uint32_t CWidgetControl::elapsedTime(FAR const struct timespec *startTime)
 {
   struct timespec endTime;
 
-  clock_gettime(CLOCK_REALTIME, &endTime);
+  (void)clock_gettime(CLOCK_REALTIME, &endTime);
   if (startTime->tv_sec <= endTime.tv_sec)
     {
       // Get the elapsed seconds

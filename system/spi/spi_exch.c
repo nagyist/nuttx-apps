@@ -161,7 +161,7 @@ int spicmd_exch(FAR struct spitool_s *spitool, int argc, FAR char **argv)
 
   ret = spidev_transfer(fd, &seq);
 
-  close(fd);
+  (void)close(fd);
 
   if (ret)
     {

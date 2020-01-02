@@ -148,7 +148,7 @@ static void hog_time(FAR const char *caller, int threadno)
 
       /* Let other threads run */
 
-      pthread_yield();
+      (void)pthread_yield();
       show_cpu_conditional(caller, threadno);
     }
 }
@@ -265,7 +265,7 @@ int main(int argc, FAR char *argv[])
 
   /* Create the barrier */
 
-  pthread_barrierattr_init(&barrierattr);
+  (void)pthread_barrierattr_init(&barrierattr);
 
   /* Start CONFIG_TESTING_SMP_NBARRIER_THREADS thread instances */
 

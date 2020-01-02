@@ -221,7 +221,7 @@ static void slcd_putc(FAR struct lib_outstream_s *stream, int ch)
 
   if (stream->nput >= CONFIG_EXAMPLES_SLCD_BUFSIZE)
     {
-      slcd_flush(stream);
+      (void)slcd_flush(stream);
     }
 }
 

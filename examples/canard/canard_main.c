@@ -233,8 +233,8 @@ static void onTransferReceived(CanardInstance *ins,
                                (uint16_t) total_size);
       if (resp_res <= 0)
         {
-          fprintf(stderr, "Could not respond to GetNodeInfo; error %d\n",
-                  resp_res);
+          (void)fprintf(stderr, "Could not respond to GetNodeInfo; error %d\n",
+                        resp_res);
         }
     }
 }
@@ -257,6 +257,8 @@ static bool shouldAcceptTransfer(const CanardInstance * ins,
                                  CanardTransferType transfer_type,
                                  uint8_t source_node_id)
 {
+  (void)source_node_id;
+
   if (canardGetLocalNodeID(ins) == CANARD_BROADCAST_NODE_ID)
     {
       /* If we're in the process of allocation of dynamic node ID, accept
@@ -333,8 +335,8 @@ void process1HzTasks(uint64_t timestamp_usec)
                       buffer, UAVCAN_NODE_STATUS_MESSAGE_SIZE);
     if (bc_res <= 0)
       {
-        fprintf(stderr, "Could not broadcast node status; error %d\n",
-                bc_res);
+        (void)fprintf(stderr, "Could not broadcast node status; error %d\n",
+                      bc_res);
       }
   }
 
@@ -350,8 +352,8 @@ void process1HzTasks(uint64_t timestamp_usec)
                              payload, 0);
     if (resp_res <= 0)
       {
-        fprintf(stderr, "Could not request GetNodeInfo; error %d\n",
-                resp_res);
+        (void)fprintf(stderr, "Could not request GetNodeInfo; error %d\n",
+                      resp_res);
       }
   }
 
@@ -378,9 +380,9 @@ void processTxRxOnce(CanardNuttXInstance * nuttxcan, int timeout_msec)
       if (tx_res < 0)           /* Failure - drop the frame and report */
         {
           canardPopTxQueue(&canard);
-          fprintf(stderr,
-                  "Transmit error %d, frame dropped, errno '%s'\n",
-                  tx_res, strerror(errno));
+          (void)fprintf(stderr,
+                        "Transmit error %d, frame dropped, errno '%s'\n",
+                        tx_res, strerror(errno));
         }
       else if (tx_res > 0)      /* Success - just drop the frame */
         {
@@ -400,8 +402,8 @@ void processTxRxOnce(CanardNuttXInstance * nuttxcan, int timeout_msec)
 
   if (rx_res < 0)               /* Failure - report */
     {
-      fprintf(stderr, "Receive error %d, errno '%s'\n", rx_res,
-              strerror(errno));
+      (void)fprintf(stderr, "Receive error %d, errno '%s'\n", rx_res,
+                    strerror(errno));
     }
   else if (rx_res > 0)          /* Success - process the frame */
     {

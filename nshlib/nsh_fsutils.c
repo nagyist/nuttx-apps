@@ -91,7 +91,7 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
   buffer = (FAR char *)malloc(IOBUFFERSIZE);
   if(buffer == NULL)
     {
-      close(fd);
+      (void)close(fd);
       nsh_error(vtbl, g_fmtcmdfailed, cmd, "malloc", NSH_ERRNO);
       return ERROR;
     }
@@ -175,7 +175,7 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
 
    /* Close the input file and return the result */
 
-   close(fd);
+   (void)close(fd);
    free(buffer);
    return ret;
 }

@@ -149,7 +149,7 @@ CWindowEvent::~CWindowEvent(void)
 
   if (m_eventq != (mqd_t)-1)
     {
-      mq_close(m_eventq);
+      (void)mq_close(m_eventq);
       m_eventq = (mqd_t)-1;
     }
 

@@ -100,7 +100,7 @@ static void internal_error(char *reason)
 {
   char *title = "500 Internal Error";
 
-  printf("\
+  (void)printf("\
 Status: %s\n\
 Content-type: text/html\n\
 \n\
@@ -117,7 +117,7 @@ static void not_found(char *script_name)
 {
   char *title = "404 Not Found";
 
-  printf("\
+  (void)printf("\
 Status: %s\n\
 Content-type: text/html\n\
 \n\
@@ -132,7 +132,7 @@ static void moved(char *script_name, char *url)
 {
   char *title = "Moved";
 
-  printf("\
+  (void)printf("\
 Location: %s\n\
 Content-type: text/html\n\
 \n\
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
           return 2;
         }
 
-      sprintf(cp, "%s%s", script_name, path_info);
+      (void)sprintf(cp, "%s%s", script_name, path_info);
       script_name = cp;
     }
 

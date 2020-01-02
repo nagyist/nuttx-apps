@@ -249,7 +249,7 @@ void CCheckBoxTest::clickCheckBox(void)
 
   // Then inject the mouse click
 
-  nx_mousein(handle, checkboxX, checkboxY, NX_MOUSE_LEFTBUTTON);
+  (void)nx_mousein(handle, checkboxX, checkboxY, NX_MOUSE_LEFTBUTTON);
 
   // Poll for mouse events
   //
@@ -262,7 +262,7 @@ void CCheckBoxTest::clickCheckBox(void)
 
   // Then inject the mouse release
 
-  nx_mousein(handle, checkboxX, checkboxY, 0);
+  (void)nx_mousein(handle, checkboxX, checkboxY, 0);
 
   // And poll for more mouse events
 

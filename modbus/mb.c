@@ -387,7 +387,7 @@ eMBErrorCode eMBPoll(void)
 
               if ((ucRcvAddress == ucMBAddress) || (ucRcvAddress == MB_ADDRESS_BROADCAST))
                 {
-                  xMBPortEventPost(EV_EXECUTE);
+                  (void)xMBPortEventPost(EV_EXECUTE);
                 }
             }
             break;
@@ -431,7 +431,7 @@ eMBErrorCode eMBPoll(void)
                   vMBPortTimersDelay(CONFIG_MB_ASCII_TIMEOUT_WAIT_BEFORE_SEND_MS);
                 }
 #endif
-              peMBFrameSendCur(ucMBAddress, ucMBFrame, usLength);
+              (void)peMBFrameSendCur(ucMBAddress, ucMBFrame, usLength);
             }
             break;
 

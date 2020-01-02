@@ -81,7 +81,7 @@ bool xMBPortEventGet(eMBEventType * eEvent)
        * init functions.
        */
 
-      xMBPortSerialPoll();
+      (void)xMBPortSerialPoll();
 
       /* Check if any of the timers have expired. */
 

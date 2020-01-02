@@ -264,7 +264,7 @@ void CRadioButtonTest::pushButton(CRadioButton *button)
 
   // Then inject the mouse click
 
-  nx_mousein(handle, buttonX, buttonY, NX_MOUSE_LEFTBUTTON);
+  (void)nx_mousein(handle, buttonX, buttonY, NX_MOUSE_LEFTBUTTON);
 
   // Poll for mouse events
   //
@@ -277,7 +277,7 @@ void CRadioButtonTest::pushButton(CRadioButton *button)
 
   // Then inject the mouse release
 
-  nx_mousein(handle, buttonX, buttonY, 0);
+  (void)nx_mousein(handle, buttonX, buttonY, 0);
 
   // And poll for more mouse events
 

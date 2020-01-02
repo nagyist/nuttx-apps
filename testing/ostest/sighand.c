@@ -136,7 +136,7 @@ static void wakeup_action(int signo, siginfo_t *info, void *ucontext)
 
   /* Check sigprocmask */
 
-  sigfillset(&allsigs);
+  (void)sigfillset(&allsigs);
   status = sigprocmask(SIG_SETMASK, NULL, &oldset);
   if (status != OK)
     {
@@ -161,8 +161,8 @@ static int waiter_main(int argc, char *argv[])
   printf("waiter_main: Waiter started\n" );
 
   printf("waiter_main: Unmasking signal %d\n" , WAKEUP_SIGNAL);
-  sigemptyset(&set);
-  sigaddset(&set, WAKEUP_SIGNAL);
+  (void)sigemptyset(&set);
+  (void)sigaddset(&set, WAKEUP_SIGNAL);
   status = sigprocmask(SIG_UNBLOCK, &set, NULL);
   if (status != OK)
     {
@@ -174,8 +174,8 @@ static int waiter_main(int argc, char *argv[])
   act.sa_sigaction = wakeup_action;
   act.sa_flags  = SA_SIGINFO;
 
-  sigfillset(&act.sa_mask);
-  sigdelset(&act.sa_mask, WAKEUP_SIGNAL);
+  (void)sigfillset(&act.sa_mask);
+  (void)sigdelset(&act.sa_mask, WAKEUP_SIGNAL);
 
   status = sigaction(WAKEUP_SIGNAL, &act, &oact);
   if (status != OK)
@@ -214,7 +214,7 @@ static int waiter_main(int argc, char *argv[])
   /* Detach the signal handler */
 
   act.sa_handler = SIG_DFL;
-  sigaction(WAKEUP_SIGNAL, &act, &oact);
+  (void)sigaction(WAKEUP_SIGNAL, &act, &oact);
 
   printf("waiter_main: done\n" );
   FFLUSH();
@@ -245,8 +245,8 @@ void sighand_test(void)
 #ifdef CONFIG_SCHED_HAVE_PARENT
   printf("sighand_test: Unmasking SIGCHLD\n");
 
-  sigemptyset(&set);
-  sigaddset(&set, SIGCHLD);
+  (void)sigemptyset(&set);
+  (void)sigaddset(&set, SIGCHLD);
   status = sigprocmask(SIG_UNBLOCK, &set, NULL);
   if (status != OK)
     {
@@ -258,8 +258,8 @@ void sighand_test(void)
   act.sa_sigaction = death_of_child;
   act.sa_flags  = SA_SIGINFO;
 
-  sigfillset(&act.sa_mask);
-  sigdelset(&act.sa_mask, SIGCHLD);
+  (void)sigfillset(&act.sa_mask);
+  (void)sigdelset(&act.sa_mask, SIGCHLD);
 
   status = sigaction(SIGCHLD, &act, &oact);
   if (status != OK)
@@ -332,7 +332,7 @@ void sighand_test(void)
 
 #ifdef CONFIG_SCHED_HAVE_PARENT
   act.sa_handler = SIG_DFL;
-  sigaction(SIGCHLD, &act, &oact);
+  (void)sigaction(SIGCHLD, &act, &oact);
 #endif
 
   printf("sighand_test: done\n" );

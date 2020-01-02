@@ -1164,7 +1164,7 @@ bool CTaskbar::redrawTaskbarWindow(void)
 
           // Set the position of the icon bitmap
 
-          image->moveTo(iconPos.x, iconPos.y);
+          (void)image->moveTo(iconPos.x, iconPos.y);
 
           // Then re-draw the icon at the new position
 
@@ -1427,7 +1427,7 @@ void CTaskbar::handleActionEvent(const NXWidgets::CWidgetEventArgs &e)
               // Maximize the application by moving its window to the top of
               // the hierarchy and re-drawing it.
 
-              maximizeApplication(app);
+              (void)maximizeApplication(app);
             }
 
           // No, it is not minimized.  Is it already the top application?
@@ -1436,7 +1436,7 @@ void CTaskbar::handleActionEvent(const NXWidgets::CWidgetEventArgs &e)
             {
               /* Move window to the top of the hierarchy and re-draw it. */
 
-              topApplication(app);
+              (void)topApplication(app);
             }
 
           // Then break out of the loop

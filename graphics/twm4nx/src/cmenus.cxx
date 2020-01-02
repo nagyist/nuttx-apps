@@ -296,7 +296,7 @@ bool CMenus::event(FAR struct SEventMsg *eventmsg)
           // button array.  handleActionEvent() will be called in that
           // case.  false is not a failure.
 
-          control->pollEvents();
+          (void)control->pollEvents();
         }
         break;
 
@@ -736,7 +736,7 @@ void CMenus::cleanup(void)
 
   if (m_eventq != (mqd_t)-1)
     {
-      mq_close(m_eventq);
+      (void)mq_close(m_eventq);
       m_eventq = (mqd_t)-1;
     }
 

@@ -242,7 +242,7 @@ int main(int argc, FAR char *argv[])
 #ifdef CONFIG_EXAMPLES_HIDKBD_ENCODED
               hidkbd_decode(buffer, nbytes);
 #else
-              write(1, buffer, nbytes);
+              (void)write(1, buffer, nbytes);
 #endif
             }
         }

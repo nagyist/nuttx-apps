@@ -141,7 +141,7 @@ bool xMBMasterPortEventGet(eMBMasterEventType * eEvent)
        * configured from the timer init functions.
        */
 
-      xMBMasterPortSerialPoll();
+      (void)xMBMasterPortSerialPoll();
 
       /* Check if any of the timers have expired. */
 

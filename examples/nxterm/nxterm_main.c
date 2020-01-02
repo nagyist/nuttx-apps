@@ -160,10 +160,10 @@ static int nxterm_initialize(void)
         * smoothly.
         */
 
-       pthread_attr_init(&attr);
+       (void)pthread_attr_init(&attr);
        param.sched_priority = CONFIG_EXAMPLES_NXTERM_LISTENERPRIO;
-       pthread_attr_setschedparam(&attr, &param);
-       pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_NXTERM_STACKSIZE);
+       (void)pthread_attr_setschedparam(&attr, &param);
+       (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_NXTERM_STACKSIZE);
 
        ret = pthread_create(&thread, &attr, nxterm_listener, NULL);
        if (ret != 0)
@@ -180,7 +180,7 @@ static int nxterm_initialize(void)
             * are connected.
             */
 
-           sem_wait(&g_nxterm_vars.eventsem);
+           (void)sem_wait(&g_nxterm_vars.eventsem);
          }
     }
   else
@@ -200,14 +200,14 @@ static int nxterm_task(int argc, char **argv)
   /* If the console front end is selected, then run it on this thread */
 
 #ifdef CONFIG_NSH_CONSOLE
-  nsh_consolemain(0, NULL);
+  (void)nsh_consolemain(0, NULL);
 #endif
 
   printf("nxterm_task: Unlinking the NX console device\n");
-  unlink(CONFIG_EXAMPLES_NXTERM_DEVNAME);
+  (void)unlink(CONFIG_EXAMPLES_NXTERM_DEVNAME);
 
   printf("nxterm_task: Close the window\n");
-  nxtk_closewindow(g_nxterm_vars.hwnd);
+  (void)nxtk_closewindow(g_nxterm_vars.hwnd);
 
   /* Disconnect from the server */
 
@@ -308,7 +308,7 @@ int main(int argc, FAR char *argv[])
 
   while (!g_nxterm_vars.haveres)
     {
-      sem_wait(&g_nxterm_vars.eventsem);
+      (void)sem_wait(&g_nxterm_vars.eventsem);
     }
 
   printf("nxterm_main: Screen resolution (%d,%d)\n",
@@ -409,14 +409,14 @@ int main(int argc, FAR char *argv[])
    printf("nxterm_main: Starting the console task\n");
    fflush(stdout);
 
-  fflush(stdout);
-  fflush(stderr);
+  (void)fflush(stdout);
+  (void)fflush(stderr);
 
-  fclose(stdout);
-  fclose(stderr);
+  (void)fclose(stdout);
+  (void)fclose(stderr);
 
-  dup2(fd, 1);
-  dup2(fd, 2);
+  (void)dup2(fd, 1);
+  (void)dup2(fd, 2);
 
    /* And we can close our original driver file descriptor */
 
@@ -435,10 +435,10 @@ int main(int argc, FAR char *argv[])
   /* Error Exits ************************************************************/
 
 errout_with_driver:
-  unlink(CONFIG_EXAMPLES_NXTERM_DEVNAME);
+  (void)unlink(CONFIG_EXAMPLES_NXTERM_DEVNAME);
 
 errout_with_hwnd:
-  nxtk_closewindow(g_nxterm_vars.hwnd);
+  (void)nxtk_closewindow(g_nxterm_vars.hwnd);
 
 errout_with_nx:
   /* Disconnect from the server */

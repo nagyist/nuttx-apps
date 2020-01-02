@@ -201,8 +201,8 @@ int main(int argc, FAR char *argv[])
 
       /* Wait for a signal */
 
-      sigemptyset(&set);
-      sigaddset(&set, CONFIG_EXAMPLES_DJOYSTICK_SIGNO);
+      (void)sigemptyset(&set);
+      (void)sigaddset(&set, CONFIG_EXAMPLES_DJOYSTICK_SIGNO);
       ret = sigwaitinfo(&set, &value);
       if (ret < 0)
         {

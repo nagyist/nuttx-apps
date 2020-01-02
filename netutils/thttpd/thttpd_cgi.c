@@ -199,7 +199,7 @@ static void create_environment(httpd_conn *hc)
   setenv("GATEWAY_INTERFACE", "CGI/1.1", TRUE);
   setenv("SERVER_PROTOCOL", hc->protocol, TRUE);
 
-  snprintf(buf, sizeof(buf), "%d", (int)CONFIG_THTTPD_PORT);
+  (void)snprintf(buf, sizeof(buf), "%d", (int)CONFIG_THTTPD_PORT);
   setenv("SERVER_PORT", buf, TRUE);
 
   setenv("REQUEST_METHOD", httpd_method_str(hc->method), TRUE);
@@ -209,19 +209,19 @@ static void create_environment(httpd_conn *hc)
       char *cp2;
       size_t l;
 
-      snprintf(buf, sizeof(buf), "/%s", hc->pathinfo);
+      (void)snprintf(buf, sizeof(buf), "/%s", hc->pathinfo);
       setenv("PATH_INFO", buf, TRUE);
 
       l = strlen(httpd_root) + strlen(hc->pathinfo) + 1;
       cp2 = NEW(char, l);
       if (cp2)
         {
-          snprintf(cp2, l, "%s%s", httpd_root, hc->pathinfo);
+          (void)snprintf(cp2, l, "%s%s", httpd_root, hc->pathinfo);
           setenv("PATH_TRANSLATED", cp2, TRUE);
         }
     }
 
-  snprintf(buf, sizeof(buf), "/%s",strcmp(hc->origfilename, ".") == 0 ? "" : hc->origfilename);
+  (void)snprintf(buf, sizeof(buf), "/%s",strcmp(hc->origfilename, ".") == 0 ? "" : hc->origfilename);
   setenv("SCRIPT_NAME", buf, TRUE);
 
   if (hc->query[0] != '\0')
@@ -272,7 +272,7 @@ static void create_environment(httpd_conn *hc)
 
   if (hc->contentlength != -1)
     {
-      snprintf(buf, sizeof(buf), "%lu", (unsigned long)hc->contentlength);
+      (void)snprintf(buf, sizeof(buf), "%lu", (unsigned long)hc->contentlength);
       setenv("CONTENT_LENGTH", buf, TRUE);
     }
 
@@ -417,7 +417,7 @@ static inline int cgi_interpose_input(struct cgi_conn_s *cc)
 
       /* And read up to 2 bytes. */
 
-      read(cc->connfd, cc->inbuf.buffer, CONFIG_THTTPD_CGIINBUFFERSIZE);
+      (void)read(cc->connfd, cc->inbuf.buffer, CONFIG_THTTPD_CGIINBUFFERSIZE);
       return 1;
     }
   return 0;
@@ -494,7 +494,7 @@ static inline int cgi_interpose_output(struct cgi_conn_s *cc)
               /* Accumulate more header data */
 
               httpd_realloc_str(&cc->outbuf.buffer, &cc->outbuf.size, cc->outbuf.len + nbytes_read);
-              memcpy(&(cc->outbuf.buffer[cc->outbuf.len]), cc->inbuf.buffer, nbytes_read);
+              (void)memcpy(&(cc->outbuf.buffer[cc->outbuf.len]), cc->inbuf.buffer, nbytes_read);
               cc->outbuf.len                   += nbytes_read;
               cc->outbuf.buffer[cc->outbuf.len] = '\0';
               ninfo("Header bytes accumulated: %d\n", cc->outbuf.len);
@@ -616,12 +616,12 @@ static inline int cgi_interpose_output(struct cgi_conn_s *cc)
               break;
             }
 
-          snprintf(cc->inbuf.buffer, CONFIG_THTTPD_CGIINBUFFERSIZE, "HTTP/1.0 %d %s\r\n", status, title);
-          httpd_write(cc->connfd, cc->inbuf.buffer, strlen(cc->inbuf.buffer));
+          (void)snprintf(cc->inbuf.buffer, CONFIG_THTTPD_CGIINBUFFERSIZE, "HTTP/1.0 %d %s\r\n", status, title);
+          (void)httpd_write(cc->connfd, cc->inbuf.buffer, strlen(cc->inbuf.buffer));
 
           /* Write the saved cc->outbuf.buffer to the client. */
 
-          httpd_write(cc->connfd, cc->outbuf.buffer, cc->outbuf.len);
+          (void)httpd_write(cc->connfd, cc->outbuf.buffer, cc->outbuf.len);
         }
 
         /* Then set up to read the data following the header from the CGI program and
@@ -675,7 +675,7 @@ static inline int cgi_interpose_output(struct cgi_conn_s *cc)
             {
                /* Forward the data from the CGI program to the client */
 
-             httpd_write(cc->connfd, cc->inbuf.buffer, nbytes_read);
+             (void)httpd_write(cc->connfd, cc->inbuf.buffer, nbytes_read);
             }
         }
         break;
@@ -831,7 +831,7 @@ static int cgi_child(int argc, char **argv)
       directory = dirname(dupname);
       if (directory)
         {
-          chdir(directory); /* ignore errors */
+          (void)chdir(directory); /* ignore errors */
         }
 
       httpd_free(dupname);
@@ -913,7 +913,7 @@ static int cgi_child(int argc, char **argv)
   cgi_semgive();  /* Not safe to reference hc after this point */
   do
     {
-      fdwatch(fw, 1000);
+      (void)fdwatch(fw, 1000);
 
       /* Check for incoming data from the remote client to the CGI task */
 

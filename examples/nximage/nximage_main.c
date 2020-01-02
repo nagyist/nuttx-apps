@@ -145,10 +145,10 @@ static inline int nximage_initialize(void)
         * smoothly.
         */
 
-       pthread_attr_init(&attr);
+       (void)pthread_attr_init(&attr);
        param.sched_priority = CONFIG_EXAMPLES_NXIMAGE_LISTENERPRIO;
-       pthread_attr_setschedparam(&attr, &param);
-       pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_NXIMAGE_LISTENER_STACKSIZE);
+       (void)pthread_attr_setschedparam(&attr, &param);
+       (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_NXIMAGE_LISTENER_STACKSIZE);
 
        ret = pthread_create(&thread, &attr, nximage_listener, NULL);
        if (ret != 0)
@@ -165,7 +165,7 @@ static inline int nximage_initialize(void)
             * are connected.
             */
 
-           sem_wait(&g_nximage.eventsem);
+           (void)sem_wait(&g_nximage.eventsem);
          }
     }
   else
@@ -232,7 +232,7 @@ int main(int argc, FAR char *argv[])
 
   while (!g_nximage.havepos)
     {
-      sem_wait(&g_nximage.eventsem);
+      (void)sem_wait(&g_nximage.eventsem);
     }
 
   printf("nximage_main: Screen resolution (%d,%d)\n", g_nximage.xres, g_nximage.yres);
@@ -244,7 +244,7 @@ int main(int argc, FAR char *argv[])
 
   /* Release background */
 
-  nx_releasebkgd(g_nximage.hbkgd);
+  (void)nx_releasebkgd(g_nximage.hbkgd);
 
   /* Close NX */
 

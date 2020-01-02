@@ -187,7 +187,7 @@ typedef int (*nsh_netdev_callback_t)(FAR struct nsh_vtbl_s *vtbl,
    !defined(CONFIG_NSH_DISABLE_IFCONFIG)
 static inline void net_statistics(FAR struct nsh_vtbl_s *vtbl)
 {
-  nsh_catfile(vtbl, "ifconfig", CONFIG_NSH_PROC_MOUNTPOINT "/net/stat");
+  (void)nsh_catfile(vtbl, "ifconfig", CONFIG_NSH_PROC_MOUNTPOINT "/net/stat");
 }
 #else
 # define net_statistics(vtbl)
@@ -207,7 +207,7 @@ static int ifconfig_callback(FAR struct nsh_vtbl_s *vtbl, FAR char *devname)
   /* Construct the full path to the /proc/net entry for this device */
 
   snprintf(buffer, IFNAMSIZ + 12, CONFIG_NSH_PROC_MOUNTPOINT "/net/%s", devname);
-  nsh_catfile(vtbl, "ifconfig", buffer);
+  (void)nsh_catfile(vtbl, "ifconfig", buffer);
 
   return OK;
 }
@@ -359,7 +359,7 @@ errout:
 static void wget_callback(FAR char **buffer, int offset, int datend,
                           FAR int *buflen, FAR void *arg)
 {
-  write((int)((intptr_t)arg), &((*buffer)[offset]), datend - offset);
+  (void)write((int)((intptr_t)arg), &((*buffer)[offset]), datend - offset);
 }
 #endif
 #endif
@@ -411,7 +411,7 @@ static int nsh_foreach_netdev(nsh_netdev_callback_t callback,
 
   /* Close the directory */
 
-  closedir(dir);
+  (void)closedir(dir);
   return ret;
 }
 #endif
@@ -925,7 +925,7 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
         {
           struct dhcpc_state ds;
 
-          dhcpc_request(handle, &ds);
+          (void)dhcpc_request(handle, &ds);
           netlib_set_ipv4addr("eth0", &ds.ipaddr);
 
           if (ds.netmask.s_addr != 0)

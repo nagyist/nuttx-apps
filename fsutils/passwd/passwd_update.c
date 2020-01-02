@@ -98,6 +98,6 @@ int passwd_update(FAR const char *username, FAR const char *password)
   ret = passwd_append(username, password);
 
 errout_with_lock:
-  passwd_unlock(sem);
+  (void)passwd_unlock(sem);
   return ret;
 }

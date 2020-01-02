@@ -311,7 +311,7 @@ void i8sak_assoc_cmd(FAR struct i8sak_s *i8sak, int argc, FAR char *argv[])
 
   /* Clean up and return */
 
-  i8sak_eventlistener_removereceiver(i8sak, assoc_eventcb);
+  (void)i8sak_eventlistener_removereceiver(i8sak, assoc_eventcb);
   i8sak_releasedaemon(i8sak);
   close(fd);
 }

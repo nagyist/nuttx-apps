@@ -90,7 +90,7 @@ int flash_eraseall(FAR const char *driver)
 
       /* Close the block driver */
 
-     close(fd);
+     (void)close(fd);
     }
 
   return ret;

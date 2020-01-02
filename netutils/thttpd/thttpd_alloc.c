@@ -90,7 +90,7 @@ void httpd_memstats(void)
 #ifdef CONFIG_CAN_PASS_STRUCTS
   mm = mallinfo();
 #else
-  mallinfo(&mm);
+  (void)mallinfo(&mm);
 #endif
   ninfo("arena: %08x ordblks: %08x mxordblk: %08x uordblks: %08x fordblks: %08x\n",
        mm.arena, mm.ordblks, mm.mxordblk, mm.uordblks, mm.fordblks);

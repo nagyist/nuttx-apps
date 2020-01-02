@@ -1338,7 +1338,7 @@ static bool vi_insertfile(FAR struct vi_s *vi, off_t pos,
     }
 
   vi->fullredraw = true;
-  fclose(stream);
+  (void)fclose(stream);
   return ret;
 }
 
@@ -1379,11 +1379,11 @@ static bool vi_savetext(FAR struct vi_s *vi, FAR const char *filename,
       /* Report the error (or partial write).  EINTR is not handled. */
 
       vi_error(vi, g_fmtcmdfail, "fwrite", errno);
-      fclose(stream);
+      (void)fclose(stream);
       return false;
     }
 
-  fclose(stream);
+  (void)fclose(stream);
 
   len = sprintf(vi->scratch, "%dC written", nwritten);
   vi_write(vi, vi->scratch, len);
@@ -3703,7 +3703,7 @@ static void vi_cmd_mode(FAR struct vi_s *vi)
 
         case KEY_CMDMODE_BOTTOM:  /* Move to bottom of screen */
           {
-            vi_gotoscreenbottom(vi, 0);
+            (void)vi_gotoscreenbottom(vi, 0);
           }
           break;
 
@@ -4927,11 +4927,11 @@ static void vi_parsefind(FAR struct vi_s *vi, bool revfind)
   vi->revfind = revfind;
   if (revfind)
     {
-      vi_revfindstring(vi);
+      (void)vi_revfindstring(vi);
     }
   else
     {
-      vi_findstring(vi);
+      (void)vi_findstring(vi);
     }
 
   /* Exit the sub-mode and revert to command mode */
@@ -5879,7 +5879,7 @@ int main(int argc, FAR char *argv[])
 
       /* Load the file into memory */
 
-      vi_insertfile(vi, 0, vi->filename);
+      (void)vi_insertfile(vi, 0, vi->filename);
       vi->modified = false;
 
       /* Skip over the filename argument.  There should nothing after this */

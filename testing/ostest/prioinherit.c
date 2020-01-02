@@ -552,20 +552,20 @@ void priority_inheritance(void)
     {
       printf("priority_inheritance: Waiting for highpri_thread-%d to complete\n", i+1);
       FFLUSH();
-      pthread_join(highpri[i], &result);
+      (void)pthread_join(highpri[i], &result);
       dump_nfreeholders("priority_inheritance:");
     }
 
   printf("priority_inheritance: Waiting for medpri_thread to complete\n");
   FFLUSH();
-  pthread_join(medpri, &result);
+  (void)pthread_join(medpri, &result);
   dump_nfreeholders("priority_inheritance:");
 
   for (i = 0; i < NLOWPRI_THREADS; i++)
     {
       printf("priority_inheritance: Waiting for lowpri_thread-%d to complete\n", i+1);
       FFLUSH();
-      pthread_join(lowpri[i], &result);
+      (void)pthread_join(lowpri[i], &result);
       dump_nfreeholders("priority_inheritance:");
     }
 

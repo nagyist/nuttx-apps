@@ -1622,7 +1622,7 @@ ZMSHANDLE zms_initialize(int remfd)
   return (ZMSHANDLE)pzms;
 
 errout_with_timer:
-  zm_timerrelease(&pzms->cmn);
+  (void)zm_timerrelease(&pzms->cmn);
 errout:
   free(pzms);
   return (ZMSHANDLE)NULL;
@@ -1714,7 +1714,7 @@ int zms_release(ZMSHANDLE handle)
 
   /* Release the timer resources */
 
-  zm_timerrelease(&pzms->cmn);
+  (void)zm_timerrelease(&pzms->cmn);
 
   /* Make sure that the file is closed */
 

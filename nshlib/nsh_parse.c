@@ -357,7 +357,7 @@ static void nsh_releaseargs(struct cmdarg_s *arg)
 
   if (vtbl->np.np_redirect)
     {
-      close(arg->fd);
+      (void)close(arg->fd);
     }
 #endif
 
@@ -639,7 +639,7 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
 
       if (vtbl->np.np_redirect)
         {
-          nsh_redirect(bkgvtbl, fd, NULL);
+          (void)nsh_redirect(bkgvtbl, fd, NULL);
         }
 #endif
 
@@ -681,9 +681,9 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
 
       /* Set up the thread attributes */
 
-      pthread_attr_init(&attr);
-      pthread_attr_setschedpolicy(&attr, SCHED_NSH);
-      pthread_attr_setschedparam(&attr, &param);
+      (void)pthread_attr_init(&attr);
+      (void)pthread_attr_setschedpolicy(&attr, SCHED_NSH);
+      (void)pthread_attr_setschedparam(&attr, &param);
 
       /* Execute the command as a separate thread at the appropriate priority */
 
@@ -700,7 +700,7 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
        * Otherwise, we would have a memory leak.
        */
 
-      pthread_detach(thread);
+      (void)pthread_detach(thread);
 
       nsh_output(vtbl, "%s [%d:%d]\n", argv[0], thread, param.sched_priority);
     }

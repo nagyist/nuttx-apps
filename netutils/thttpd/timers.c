@@ -217,7 +217,7 @@ Timer *tmr_create(struct timeval *now, TimerProc *timer_proc,
     }
   else
     {
-      gettimeofday(&tmr->time, NULL);
+      (void)gettimeofday(&tmr->time, NULL);
     }
 
   tmr->time.tv_sec  += msecs / 1000L;

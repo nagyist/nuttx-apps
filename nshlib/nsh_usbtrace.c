@@ -129,7 +129,7 @@ static int nsh_tracecallback(struct usbtrace_s *trace, void *arg)
 
 void nsh_usbtrace(void)
 {
-  usbtrace_enumerate(nsh_tracecallback, NULL);
+  (void)usbtrace_enumerate(nsh_tracecallback, NULL);
 }
 
 #endif /* CONFIG_NSH_USBDEV_TRACE */

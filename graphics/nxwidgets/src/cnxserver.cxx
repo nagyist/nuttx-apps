@@ -177,10 +177,10 @@ bool CNxServer::connect(void)
       // the least efficient way to do this, but it makes this logic flow more
       // smoothly.
 
-      pthread_attr_init(&attr);
+      (void)pthread_attr_init(&attr);
       param.sched_priority = CONFIG_NXWIDGETS_LISTENERPRIO;
-      pthread_attr_setschedparam(&attr, &param);
-      pthread_attr_setstacksize(&attr, CONFIG_NXWIDGETS_LISTENERSTACK);
+      (void)pthread_attr_setschedparam(&attr, &param);
+      (void)pthread_attr_setstacksize(&attr, CONFIG_NXWIDGETS_LISTENERSTACK);
 
       m_stop    = false;
       m_running = true;
@@ -196,7 +196,7 @@ bool CNxServer::connect(void)
 
       // Detach from the thread
 
-      pthread_detach(thread);
+      (void)pthread_detach(thread);
 
       // Don't return until we are connected to the server
 
@@ -205,7 +205,7 @@ bool CNxServer::connect(void)
           // Wait for the listener thread to wake us up when we really
           // are connected.
 
-          sem_wait(&m_connsem);
+          (void)sem_wait(&m_connsem);
         }
 
       // In the successful case, the listener is still running (m_running)
@@ -244,7 +244,7 @@ void CNxServer::disconnect(void)
         {
           // Wait for the listener thread to stop
 
-          sem_wait(&m_connsem);
+          (void)sem_wait(&m_connsem);
         }
     }
 

@@ -193,7 +193,7 @@ static int ftpc_recvbinary(FAR struct ftpc_session_s *session,
             {
               /* errno should already be set by fread */
 
-              ftpc_xfrabort(session, rinstream);
+              (void)ftpc_xfrabort(session, rinstream);
               return ERROR;
             }
 
@@ -207,7 +207,7 @@ static int ftpc_recvbinary(FAR struct ftpc_session_s *session,
       nwritten = fwrite(session->buffer, sizeof(char), nread, loutstream);
       if (nwritten != nread)
         {
-          ftpc_xfrabort(session, loutstream);
+          (void)ftpc_xfrabort(session, loutstream);
 
           /* If nwritten < 0 errno should already be set by fwrite.
            * What would a short write mean?
@@ -397,7 +397,7 @@ int ftpc_recvtext(FAR struct ftpc_session_s *session,
             {
               /* Ooops... */
 
-              ftpc_xfrabort(session, rinstream);
+              (void)ftpc_xfrabort(session, rinstream);
               return ERROR;
             }
 
@@ -414,7 +414,7 @@ int ftpc_recvtext(FAR struct ftpc_session_s *session,
 
     if (fputc(ch, loutstream) == EOF)
       {
-        ftpc_xfrabort(session, loutstream);
+        (void)ftpc_xfrabort(session, loutstream);
         return ERROR;
       }
 

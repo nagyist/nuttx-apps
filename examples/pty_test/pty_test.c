@@ -349,9 +349,9 @@ int main(int argc, FAR char *argv[])
 
   /* Use this pts file as stdin, stdout, and stderr */
 
-  dup2(fd_pts, 0);
-  dup2(fd_pts, 1);
-  dup2(fd_pts, 2);
+  (void)dup2(fd_pts, 0);
+  (void)dup2(fd_pts, 1);
+  (void)dup2(fd_pts, 2);
 
   /* Create a new console using this /dev/pts/N */
 

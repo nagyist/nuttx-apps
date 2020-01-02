@@ -280,14 +280,14 @@ FILE *popen(FAR const char *command, FAR const char *mode)
    * the interface.
    */
 
-  close(newfd);
+  (void)close(newfd);
 
   /* Free attributes and file actions.  Ignoring return values in the case
    * of an error.
    */
 
-  posix_spawn_file_actions_destroy(&file_actions);
-  posix_spawnattr_destroy(&attr);
+  (void)posix_spawn_file_actions_destroy(&file_actions);
+  (void)posix_spawnattr_destroy(&attr);
 
   /* Finale and return input input/output stream */
 
@@ -295,17 +295,17 @@ FILE *popen(FAR const char *command, FAR const char *mode)
   return &container->copy;
 
 errout_with_actions:
-  posix_spawn_file_actions_destroy(&file_actions);
+  (void)posix_spawn_file_actions_destroy(&file_actions);
 
 errout_with_attrs:
-  posix_spawnattr_destroy(&attr);
+  (void)posix_spawnattr_destroy(&attr);
 
 errout_with_stream:
-  fclose(container->original);
+  (void)fclose(container->original);
 
 errout_with_pipe:
-  close(fd[0]);
-  close(fd[1]);
+  (void)close(fd[0]);
+  (void)close(fd[1]);
 
 errout_with_container:
   free(container);
@@ -380,7 +380,7 @@ int pclose(FILE *stream)
    * process)
    */
 
-  fclose(original);
+  (void)fclose(original);
 
   shell = container->shell;
   free(container);

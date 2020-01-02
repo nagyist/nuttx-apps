@@ -144,7 +144,7 @@ CGraphicsPort::~CGraphicsPort(void)
 const nxgl_coord_t CGraphicsPort::getX(void) const
 {
   struct nxgl_point_s pos;
-  m_pNxWnd->getPosition(&pos);
+  (void)m_pNxWnd->getPosition(&pos);
   return pos.x;
 };
 
@@ -158,7 +158,7 @@ const nxgl_coord_t CGraphicsPort::getX(void) const
 const nxgl_coord_t CGraphicsPort::getY(void) const
 {
   struct nxgl_point_s pos;
-  m_pNxWnd->getPosition(&pos);
+  (void)m_pNxWnd->getPosition(&pos);
   return pos.y;
 };
 
@@ -369,7 +369,7 @@ void CGraphicsPort::drawBitmap(nxgl_coord_t x, nxgl_coord_t y,
 
   // Blit the bitmap
 
-  m_pNxWnd->bitmap(&dest, (FAR const void *)bitmap->data, &origin, bitmap->stride);
+  (void)m_pNxWnd->bitmap(&dest, (FAR const void *)bitmap->data, &origin, bitmap->stride);
 }
 
 /**
@@ -507,7 +507,7 @@ void CGraphicsPort::drawBitmap(nxgl_coord_t x, nxgl_coord_t y,
 
       // Blit the bitmap
 
-      m_pNxWnd->bitmap(&dest, (FAR const void *)runPtr, &origin, bitmap->stride);
+      (void)m_pNxWnd->bitmap(&dest, (FAR const void *)runPtr, &origin, bitmap->stride);
     }
 }
 
@@ -582,7 +582,7 @@ void CGraphicsPort::drawBitmapGreyScale(nxgl_coord_t x, nxgl_coord_t y,
 
       // Now blit the single row
 
-      m_pNxWnd->bitmap(&dest, run, &origin, bitmap->stride);
+      (void)m_pNxWnd->bitmap(&dest, run, &origin, bitmap->stride);
 
        // Setup for the next source row
 
@@ -869,7 +869,7 @@ void CGraphicsPort::copy(nxgl_coord_t sourceX, nxgl_coord_t sourceY,
   offset.x = destX - sourceX;
   offset.y = destY - sourceY;
 
-  m_pNxWnd->move(&rect, &offset);
+  (void)m_pNxWnd->move(&rect, &offset);
 }
 
 /**
@@ -897,7 +897,7 @@ void CGraphicsPort::move(nxgl_coord_t x, nxgl_coord_t y,
   offset.x = deltaX;
   offset.y = deltaY;
 
-  m_pNxWnd->move(&rect, &offset);
+  (void)m_pNxWnd->move(&rect, &offset);
 }
 
 /**

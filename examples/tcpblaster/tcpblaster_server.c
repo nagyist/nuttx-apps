@@ -184,7 +184,7 @@ void tcpblaster_server(void)
   recvcount = 0;
   recvtotal = 0;
 
-  clock_gettime(CLOCK_REALTIME, &start);
+  (void)clock_gettime(CLOCK_REALTIME, &start);
 
   for (; ; )
     {
@@ -233,7 +233,7 @@ void tcpblaster_server(void)
           float fkbsent;
           float felapsed;
 
-          clock_gettime(CLOCK_REALTIME, &curr);
+          (void)clock_gettime(CLOCK_REALTIME, &curr);
 
           elapsed.tv_sec  = curr.tv_sec - start.tv_sec;
           if (curr.tv_nsec >= start.tv_nsec)
@@ -255,7 +255,7 @@ void tcpblaster_server(void)
           recvcount       = 0;
           recvtotal       = 0;
 
-          clock_gettime(CLOCK_REALTIME, &start);
+          (void)clock_gettime(CLOCK_REALTIME, &start);
        }
     }
 

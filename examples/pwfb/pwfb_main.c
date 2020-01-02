@@ -173,10 +173,10 @@ static bool pwfb_listener_initialize(FAR struct pwfb_state_s *st)
    * smoothly.
    */
 
-  pthread_attr_init(&attr);
+  (void)pthread_attr_init(&attr);
   param.sched_priority = CONFIG_EXAMPLES_PWFB_LISTENER_PRIO;
-  pthread_attr_setschedparam(&attr, &param);
-  pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_PWFB_LISTENER_STACKSIZE);
+  (void)pthread_attr_setschedparam(&attr, &param);
+  (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_PWFB_LISTENER_STACKSIZE);
 
   ret = pthread_create(&thread, &attr, pwfb_listener, st);
   if (ret != 0)
@@ -195,7 +195,7 @@ static bool pwfb_listener_initialize(FAR struct pwfb_state_s *st)
        * are connected.
        */
 
-      sem_wait(&st->semevent);
+      (void)sem_wait(&st->semevent);
     }
 
   return true;
@@ -650,7 +650,7 @@ int main(int argc, FAR char *argv[])
 
   while (!wstate.haveres)
     {
-      sem_wait(&wstate.semevent);
+      (void)sem_wait(&wstate.semevent);
     }
 
   printf("pwfb_main: Screen resolution (%d,%d)\n",
@@ -765,7 +765,7 @@ errout_with_cursor:
 #ifdef CONFIG_NX_SWCURSOR
   /* Disable the cursor */
 
-  nxcursor_enable(wstate.hnx, false);
+  (void)nxcursor_enable(wstate.hnx, false);
 
 errout_with_hwnds:
 #endif

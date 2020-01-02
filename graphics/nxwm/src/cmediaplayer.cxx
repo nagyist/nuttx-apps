@@ -526,7 +526,7 @@ void CMediaPlayer::setGeometry(void)
 
   // Get the size of the window
 
-  window->getSize(&m_windowSize);
+  (void)window->getSize(&m_windowSize);
 }
 
 /**
@@ -618,7 +618,7 @@ inline bool CMediaPlayer::showMediaFiles(const char *mediaPath)
 
   // Close the directory
 
-  closedir(dirp);
+  (void)closedir(dirp);
 
   // Sort the file names in alphabetical order
 
@@ -814,7 +814,7 @@ bool CMediaPlayer::createPlayer(void)
 
   // Show the media files that are available for playing
 
-  showMediaFiles(CONFIG_NXWM_MEDIAPLAYER_MEDIAPATH);
+  (void)showMediaFiles(CONFIG_NXWM_MEDIAPLAYER_MEDIAPATH);
 
   // Control image widths.
   // Image widths will depend on if the images will be bordered or not
@@ -1536,7 +1536,7 @@ void CMediaPlayer::updateMotionIndicator(void)
       // Set the new speed string
 
       char buffer[8];
-      std::snprintf(buffer, 8, "%dX", g_motionSteps[m_subSample]);
+      (void)std::snprintf(buffer, 8, "%dX", g_motionSteps[m_subSample]);
 
       NXWidgets::CNxString speed(buffer);
       m_speed->setText(speed);

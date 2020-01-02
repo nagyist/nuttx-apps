@@ -255,7 +255,7 @@ void CLatchButtonArrayTest::click(CLatchButtonArray *buttonArray, int column, in
 
   // Then inject the mouse click
 
-  nx_mousein(handle, buttonX, buttonY, NX_MOUSE_LEFTBUTTON);
+  (void)nx_mousein(handle, buttonX, buttonY, NX_MOUSE_LEFTBUTTON);
 }
 
 // The counterpart to click.  This simulates a button release through
@@ -284,7 +284,7 @@ void CLatchButtonArrayTest::release(CLatchButtonArray *buttonArray, int column, 
 
   // Then inject the mouse release
 
-  nx_mousein(handle, buttonX, buttonY, NX_MOUSE_NOBUTTONS);
+  (void)nx_mousein(handle, buttonX, buttonY, NX_MOUSE_NOBUTTONS);
 }
 
 // Widget events are normally handled in a modal loop.

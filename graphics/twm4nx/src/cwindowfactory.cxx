@@ -224,7 +224,7 @@ FAR CWindow *
           iconMgr = m_twm4nx->getIconMgr();
         }
 
-      iconMgr->addWindow(win->cwin);
+      (void)iconMgr->addWindow(win->cwin);
     }
 
   // Return the contained window
@@ -275,7 +275,7 @@ void CWindowFactory::destroyWindow(FAR CWindow *cwin)
   CIconMgr *iconmgr = cwin->getIconMgr();
   DEBUGASSERT(iconmgr != (CIconMgr *)0);
 
-  iconmgr->removeWindow(cwin);
+  (void)iconmgr->removeWindow(cwin);
 
   // Delete the contained CWindow instance
 
@@ -315,7 +315,7 @@ bool CWindowFactory::placeIcon(FAR CWindow *cwin,
       // Get the size of the Icon
 
       struct nxgl_size_s iconSize;
-      cwin->getIconWidgetSize(iconSize);
+      (void)cwin->getIconWidgetSize(iconSize);
 
       // Get the background instance
 
@@ -449,10 +449,10 @@ void CWindowFactory::redrawIcons(FAR const nxgl_rect_s *nxRect)
           // Yes.. Create a bounding box for the icon
 
           struct nxgl_size_s iconSize;
-          cwin->getIconWidgetSize(iconSize);
+          (void)cwin->getIconWidgetSize(iconSize);
 
           struct nxgl_point_s iconPos;
-          cwin->getIconWidgetPosition(iconPos);
+          (void)cwin->getIconWidgetPosition(iconPos);
 
           struct nxgl_rect_s iconBounds;
           iconBounds.pt1.x = iconPos.x;
@@ -506,10 +506,10 @@ bool CWindowFactory::checkCollision(FAR CWindow *cwin,
           // Create a bounding box for the icon
 
           struct nxgl_size_s iconSize;
-          win->cwin->getIconWidgetSize(iconSize);
+          (void)win->cwin->getIconWidgetSize(iconSize);
 
           struct nxgl_point_s iconPos;
-          win->cwin->getIconWidgetPosition(iconPos);
+          (void)win->cwin->getIconWidgetPosition(iconPos);
 
           collision.pt1.x = iconPos.x;
           collision.pt1.y = iconPos.y;

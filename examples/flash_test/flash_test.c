@@ -107,8 +107,8 @@ int main(int argc, FAR char *argv[])
     {
       /* Perform a low-level format */
 
-      inode->u.i_bops->ioctl(inode, BIOC_LLFORMAT, 0);
-      inode->u.i_bops->ioctl(inode, BIOC_GETFORMAT, (unsigned long) &fmt);
+      (void)inode->u.i_bops->ioctl(inode, BIOC_LLFORMAT, 0);
+      (void)inode->u.i_bops->ioctl(inode, BIOC_GETFORMAT, (unsigned long) &fmt);
     }
 
   if (!(fmt.flags & SMART_FMT_ISFORMATTED))
@@ -137,7 +137,7 @@ int main(int argc, FAR char *argv[])
   seqs = (uint16_t *) malloc(fmt.nsectors << 1);
   if (seqs == NULL)
     {
-      free(buffer);
+      (void) free(buffer);
       fprintf(stderr, "Error allocating seqs buffer\n");
       goto errout_with_driver;
     }
@@ -145,8 +145,8 @@ int main(int argc, FAR char *argv[])
   sectors = (uint16_t *) malloc(fmt.nsectors << 1);
   if (sectors == NULL)
     {
-      free(seqs);
-      free(buffer);
+      (void) free(seqs);
+      (void) free(buffer);
       fprintf(stderr, "Error allocating sectors buffer\n");
       goto errout_with_driver;
     }
@@ -182,8 +182,8 @@ int main(int argc, FAR char *argv[])
       readwrite.offset = 0;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
-                             &readwrite);
+      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+                                   &readwrite);
 
       /* Print the logical sector number */
 
@@ -241,8 +241,8 @@ int main(int argc, FAR char *argv[])
       readwrite.offset = 0;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
-                             &readwrite);
+      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+                                   &readwrite);
 
       /* Print the logical sector number */
 
@@ -266,8 +266,8 @@ int main(int argc, FAR char *argv[])
       readwrite.offset = 64;
       readwrite.count = strlen(buffer) + 1;
       readwrite.buffer = (uint8_t *) buffer;
-      inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
-                             &readwrite);
+      (void)inode->u.i_bops->ioctl(inode, BIOC_WRITESECT, (unsigned long)
+                                   &readwrite);
 
       /* Print the logical sector number */
 
@@ -284,22 +284,22 @@ int main(int argc, FAR char *argv[])
 
       if (sectors[x] != 0xFFFF)
         {
-          inode->u.i_bops->ioctl(inode, BIOC_FREESECT, (unsigned long)
-                                 sectors[x]);
+          (void)inode->u.i_bops->ioctl(inode, BIOC_FREESECT, (unsigned long)
+                                       sectors[x]);
         }
     }
 
 errout_with_buffers:
   /* Free the allocated buffers */
 
-  free(seqs);
-  free(sectors);
-  free(buffer);
+  (void) free(seqs);
+  (void) free(sectors);
+  (void) free(buffer);
 
 errout_with_driver:
   /* Now close the block device and exit */
 
-  close_blockdriver(inode);
+  (void)close_blockdriver(inode);
 
 errout:
 

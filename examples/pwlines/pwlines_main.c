@@ -151,10 +151,10 @@ static bool pwlines_listener_initialize(FAR struct pwlines_state_s *st)
    * smoothly.
    */
 
-  pthread_attr_init(&attr);
+  (void)pthread_attr_init(&attr);
   param.sched_priority = CONFIG_EXAMPLES_PWLINES_LISTENER_PRIO;
-  pthread_attr_setschedparam(&attr, &param);
-  pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_PWLINES_LISTENER_STACKSIZE);
+  (void)pthread_attr_setschedparam(&attr, &param);
+  (void)pthread_attr_setstacksize(&attr, CONFIG_EXAMPLES_PWLINES_LISTENER_STACKSIZE);
 
   ret = pthread_create(&thread, &attr, pwlines_listener, st);
   if (ret != 0)
@@ -173,7 +173,7 @@ static bool pwlines_listener_initialize(FAR struct pwlines_state_s *st)
        * are connected.
        */
 
-      sem_wait(&st->semevent);
+      (void)sem_wait(&st->semevent);
     }
 
   return true;
@@ -384,7 +384,7 @@ int main(int argc, FAR char *argv[])
 
   while (!wstate.haveres)
     {
-      sem_wait(&wstate.semevent);
+      (void)sem_wait(&wstate.semevent);
     }
 
   printf("pwlines_main: Screen resolution (%d,%d)\n",

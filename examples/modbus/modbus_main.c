@@ -232,13 +232,13 @@ static inline int modbus_initialize(void)
 errout_with_modbus:
   /* Release hardware resources. */
 
-  eMBClose();
+  (void)eMBClose();
 
 errout_with_mutex:
 
   /* Free/uninitialize data structures */
 
-  pthread_mutex_destroy(&g_modbus.lock);
+  (void)pthread_mutex_destroy(&g_modbus.lock);
 
   g_modbus.threadstate = STOPPED;
   return status;
@@ -289,15 +289,15 @@ static void *modbus_pollthread(void *pvarg)
 
   /* Disable */
 
-  eMBDisable();
+  (void)eMBDisable();
 
   /* Release hardware resources. */
 
-  eMBClose();
+  (void)eMBClose();
 
   /* Free/uninitialize data structures */
 
-  pthread_mutex_destroy(&g_modbus.lock);
+  (void)pthread_mutex_destroy(&g_modbus.lock);
   g_modbus.threadstate = STOPPED;
   return NULL;
 }
@@ -373,9 +373,9 @@ int main(int argc, FAR char *argv[])
       switch (option)
         {
           case 'd': /* Disable protocol stack */
-            pthread_mutex_lock(&g_modbus.lock);
+            (void)pthread_mutex_lock(&g_modbus.lock);
             g_modbus.threadstate = SHUTDOWN;
-            pthread_mutex_unlock(&g_modbus.lock);
+            (void)pthread_mutex_unlock(&g_modbus.lock);
             break;
 
           case 'e': /* Enable the protocol stack */

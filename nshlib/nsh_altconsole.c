@@ -78,11 +78,11 @@ static int nsh_clone_console(FAR struct console_stdio_s *pstate)
 
   /* Close stderr: note we only close stderr if we opened the alternative one */
 
-  fclose(stderr);
+  (void)fclose(stderr);
 
   /* Associate the new opened file descriptor to stderr */
 
-  dup2(fd, 2);
+  (void)dup2(fd, 2);
 
   /* Close the console device that we just opened */
 
@@ -101,11 +101,11 @@ static int nsh_clone_console(FAR struct console_stdio_s *pstate)
 
   /* Close stdout: note we only close stdout if we opened the alternative one */
 
-  fclose(stdout);
+  (void)fclose(stdout);
 
   /* Associate the new opened file descriptor to stdout */
 
-  dup2(fd, 1);
+  (void)dup2(fd, 1);
 
   /* Close the console device that we just opened */
 
@@ -202,7 +202,7 @@ static int nsh_wait_inputdev(FAR struct console_stdio_s *pstate,
 
   /* Close stdin: note we only closed stdin if we opened the alternative one */
 
-  fclose(stdin);
+  (void)fclose(stdin);
 
   /* Okay.. we have successfully opened the input device.  Did
    * we just re-open fd 0?
@@ -212,7 +212,7 @@ static int nsh_wait_inputdev(FAR struct console_stdio_s *pstate,
     {
        /* No..  Dup the fd to create standard fd 0.  stdin should not know. */
 
-      dup2(fd, 0);
+      (void)dup2(fd, 0);
 
       /* Setup the input console */
 
@@ -281,13 +281,13 @@ int nsh_consolemain(int argc, char *argv[])
   /* Execute the one-time start-up script.  Any output will go to /dev/console. */
 
 #ifdef CONFIG_NSH_ROMFSETC
-  nsh_initscript(&pstate->cn_vtbl);
+  (void)nsh_initscript(&pstate->cn_vtbl);
 #endif
 
 #if defined(CONFIG_NSH_ARCHINIT) && defined(CONFIG_BOARDCTL_FINALINIT)
   /* Perform architecture-specific final-initialization (if configured) */
 
-  boardctl(BOARDIOC_FINALINIT, 0);
+  (void)boardctl(BOARDIOC_FINALINIT, 0);
 #endif
 
   /* First map stderr and stdout to alternative devices */
@@ -315,7 +315,7 @@ int nsh_consolemain(int argc, char *argv[])
 
       /* Execute the session */
 
-      nsh_session(pstate);
+      (void)nsh_session(pstate);
 
       /* We lost the connection.  Wait for the keyboard to
        * be re-connected.

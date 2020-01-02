@@ -177,7 +177,7 @@ static int trace_callback(struct usbtrace_s *trace, void *arg)
 
 static void dumptrace(void)
 {
-  usbtrace_enumerate(trace_callback, NULL);
+  (void)usbtrace_enumerate(trace_callback, NULL);
 }
 #else
 #  define dumptrace()

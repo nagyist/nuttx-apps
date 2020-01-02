@@ -134,7 +134,7 @@ static int waiter_main(int argc, char *argv[])
   printf("waiter_main: Waiter started\n" );
   printf("waiter_main: Setting signal mask\n" );
 
-  sigemptyset(&set);
+  (void)sigemptyset(&set);
   ret = sigprocmask(SIG_SETMASK, &set, NULL);
   if (ret < 0)
     {
@@ -147,12 +147,12 @@ static int waiter_main(int argc, char *argv[])
   act.sa_handler = waiter_action;
   act.sa_flags   = 0;
 
-  sigemptyset(&act.sa_mask);
+  (void)sigemptyset(&act.sa_mask);
   for (i = 1; i < MAX_SIGNO; i += 2)
     {
       if (signest_catchable(i))
         {
-          sigaddset(&act.sa_mask, i);
+          (void)sigaddset(&act.sa_mask, i);
         }
     }
 
@@ -196,7 +196,7 @@ static int interfere_main(int argc, char *argv[])
   g_interferer_running = true;
   while (!g_done)
     {
-      sem_wait(&g_interferer_sem);
+      (void)sem_wait(&g_interferer_sem);
     }
 
   /* Just exit, the system should clean up the signal handlers */

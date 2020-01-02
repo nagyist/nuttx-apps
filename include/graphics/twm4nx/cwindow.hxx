@@ -908,7 +908,7 @@ namespace Twm4Nx
        // pollEvents() returns true if any interesting event occurred.
        // false is not a failure.
 
-        control->pollEvents();
+        (void)control->pollEvents();
         return true;
       }
 

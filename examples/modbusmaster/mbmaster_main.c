@@ -169,11 +169,11 @@ static inline void mbmaster_deinitialize(void)
 {
   /* Disable modbus stack */
 
-  eMBMasterDisable();
+  (void)eMBMasterDisable();
 
   /* Release hardware resources */
 
-  eMBMasterClose();
+  (void)eMBMasterClose();
 }
 
 /****************************************************************************

@@ -181,6 +181,7 @@ eMBErrorCode eMBASCIIInit(uint8_t ucSlaveAddress, uint8_t ucPort,
                           speed_t ulBaudRate, eMBParity eParity)
 {
   eMBErrorCode eStatus = MB_ENOERR;
+  (void)ucSlaveAddress;
 
   ENTER_CRITICAL_SECTION();
   ucMBLFCharacter = MB_ASCII_DEFAULT_LF;
@@ -207,7 +208,7 @@ void eMBASCIIStart(void)
 
   /* No special startup required for ASCII. */
 
-  xMBPortEventPost(EV_READY);
+  (void)xMBPortEventPost(EV_READY);
 }
 
 void eMBASCIIStop(void)
@@ -308,7 +309,7 @@ bool xMBASCIIReceiveFSM(void)
 
   DEBUGASSERT(eSndState == STATE_TX_IDLE);
 
-  xMBPortSerialGetByte((int8_t *) & ucByte);
+  (void)xMBPortSerialGetByte((int8_t *) & ucByte);
   switch (eRcvState)
     {
     /* A new character is received. If the character is a ':' the input

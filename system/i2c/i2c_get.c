@@ -161,7 +161,7 @@ int i2ccmd_get(FAR struct i2ctool_s *i2ctool, int argc, FAR char **argv)
         }
     }
 
-  close(fd);
+  (void)close(fd);
   return ret;
 }
 

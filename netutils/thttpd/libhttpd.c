@@ -252,7 +252,7 @@ static int initialize_listen_socket(httpd_sockaddr *saP)
   if (bind(listen_fd, (struct sockaddr*)saP, sockaddr_len(saP)) < 0)
     {
       nerr("ERROR: bind to %s failed: %d\n", httpd_ntoa(saP), errno);
-      close(listen_fd);
+      (void)close(listen_fd);
       return -1;
     }
 
@@ -262,14 +262,14 @@ static int initialize_listen_socket(httpd_sockaddr *saP)
   if (flags == -1)
     {
       nerr("ERROR: fcntl(F_GETFL) failed: %d\n", errno);
-      close(listen_fd);
+      (void)close(listen_fd);
       return -1;
     }
 
   if (fcntl(listen_fd, F_SETFL, flags | O_NDELAY) < 0)
     {
       nerr("ERROR: fcntl(O_NDELAY) failed: %d\n", errno);
-      close(listen_fd);
+      (void)close(listen_fd);
       return -1;
     }
 
@@ -278,7 +278,7 @@ static int initialize_listen_socket(httpd_sockaddr *saP)
   if (listen(listen_fd, CONFIG_THTTPD_LISTEN_BACKLOG) < 0)
     {
       nerr("ERROR: listen failed: %d\n", errno);
-      close(listen_fd);
+      (void)close(listen_fd);
       return -1;
     }
 
@@ -347,18 +347,18 @@ static void send_mime(httpd_conn *hc, int status, const char *title, const char 
           mod = now.tv_sec;
         }
 
-      snprintf(fixed_type, sizeof(fixed_type), type, CONFIG_THTTPD_CHARSET);
-      snprintf(buf, sizeof(buf), "%.20s %d %s\r\n", hc->protocol, status, title);
+      (void)snprintf(fixed_type, sizeof(fixed_type), type, CONFIG_THTTPD_CHARSET);
+      (void)snprintf(buf, sizeof(buf), "%.20s %d %s\r\n", hc->protocol, status, title);
       add_response(hc, buf);
-      snprintf(buf, sizeof(buf), "Server: %s\r\n", "thttpd");
+      (void)snprintf(buf, sizeof(buf), "Server: %s\r\n", "thttpd");
       add_response(hc, buf);
-      snprintf(buf, sizeof(buf), "Content-Type: %s\r\n", fixed_type);
+      (void)snprintf(buf, sizeof(buf), "Content-Type: %s\r\n", fixed_type);
       add_response(hc, buf);
-      strftime(tmbuf, sizeof(tmbuf), rfc1123fmt, gmtime(&now.tv_sec));
-      snprintf(buf, sizeof(buf), "Date: %s\r\n", tmbuf);
+      (void)strftime(tmbuf, sizeof(tmbuf), rfc1123fmt, gmtime(&now.tv_sec));
+      (void)snprintf(buf, sizeof(buf), "Date: %s\r\n", tmbuf);
       add_response(hc, buf);
-      strftime(tmbuf, sizeof(tmbuf), rfc1123fmt, gmtime(&mod));
-      snprintf(buf, sizeof(buf), "Last-Modified: %s\r\n", tmbuf);
+      (void)strftime(tmbuf, sizeof(tmbuf), rfc1123fmt, gmtime(&mod));
+      (void)snprintf(buf, sizeof(buf), "Last-Modified: %s\r\n", tmbuf);
       add_response(hc, buf);
       add_response(hc, "Accept-Ranges: bytes\r\n");
       add_response(hc, "Connection: close\r\n");
@@ -366,42 +366,42 @@ static void send_mime(httpd_conn *hc, int status, const char *title, const char 
       s100 = status / 100;
       if (s100 != 2 && s100 != 3)
         {
-          snprintf(buf, sizeof(buf), "Cache-Control: no-cache,no-store\r\n");
+          (void)snprintf(buf, sizeof(buf), "Cache-Control: no-cache,no-store\r\n");
           add_response(hc, buf);
         }
 
       if (encodings[0] != '\0')
         {
-          snprintf(buf, sizeof(buf), "Content-Encoding: %s\r\n", encodings);
+          (void)snprintf(buf, sizeof(buf), "Content-Encoding: %s\r\n", encodings);
           add_response(hc, buf);
         }
 
       if (partial_content)
         {
-          snprintf(buf, sizeof(buf),"Content-Range: bytes %ld-%ld/%ld\r\n",
-                   (long)hc->range_start, (long)hc->range_end, (long)length);
+          (void)snprintf(buf, sizeof(buf),"Content-Range: bytes %ld-%ld/%ld\r\n",
+                         (long)hc->range_start, (long)hc->range_end, (long)length);
           add_response(hc, buf);
-          snprintf(buf, sizeof(buf),"Content-Length: %ld\r\n",
-                   (long)(hc->range_end - hc->range_start + 1));
+          (void)snprintf(buf, sizeof(buf),"Content-Length: %ld\r\n",
+                         (long)(hc->range_end - hc->range_start + 1));
           add_response(hc, buf);
         }
       else if (length >= 0)
         {
-          snprintf(buf, sizeof(buf), "Content-Length: %ld\r\n", (long)length);
+          (void)snprintf(buf, sizeof(buf), "Content-Length: %ld\r\n", (long)length);
           add_response(hc, buf);
         }
 
 #ifdef CONFIG_THTTPD_P3P
-      snprintf(buf, sizeof(buf), "P3P: %s\r\n", CONFIG_THTTPD_P3P);
+      (void)snprintf(buf, sizeof(buf), "P3P: %s\r\n", CONFIG_THTTPD_P3P);
       add_response(hc, buf);
 #endif
 
 #ifdef CONFIG_THTTPD_MAXAGE
       expires = now + CONFIG_THTTPD_MAXAGE;
-      strftime(expbuf, sizeof(expbuf), rfc1123fmt, gmtime(&expires));
-      snprintf(buf, sizeof(buf),
-               "Cache-Control: max-age=%d\r\nExpires: %s\r\n",
-               CONFIG_THTTPD_MAXAGE, expbuf);
+      (void)strftime(expbuf, sizeof(expbuf), rfc1123fmt, gmtime(&expires));
+      (void)snprintf(buf, sizeof(buf),
+                     "Cache-Control: max-age=%d\r\nExpires: %s\r\n",
+                     CONFIG_THTTPD_MAXAGE, expbuf);
       add_response(hc, buf);
 #endif
 
@@ -424,7 +424,7 @@ static void send_response(httpd_conn *hc, int status, const char *title, const c
   send_mime(hc, status, title, "", extraheads, "text/html; charset=%s", (off_t)-1, (time_t)0);
   add_response(hc, html_html);
   add_response(hc, html_hdtitle);
-  snprintf(buf, sizeof(buf), "%d %s", status, title);
+  (void)snprintf(buf, sizeof(buf), "%d %s", status, title);
   add_response(hc, buf);
   add_response(hc, html_titlehd);
   add_response(hc, html_body);
@@ -433,7 +433,7 @@ static void send_response(httpd_conn *hc, int status, const char *title, const c
   add_response(hc, html_endhdr2);
 
   defang(arg, defanged, sizeof(defanged));
-  snprintf(buf, sizeof(buf), form, defanged);
+  (void)snprintf(buf, sizeof(buf), form, defanged);
   add_response(hc, buf);
 
   if (match("**MSIE**", hc->useragent))
@@ -514,7 +514,7 @@ static int send_err_file(httpd_conn *hc, int status, char *title, char *extrahea
       buf[nread] = '\0';
       add_response(hc, buf);
     }
-  fclose(fp);
+  (void)fclose(fp);
 
 #ifdef ERR_APPEND_SERVER_INFO
   send_response_tail(hc);
@@ -532,7 +532,7 @@ static void send_authenticate(httpd_conn *hc, char *realm)
   static char headstr[] = "WWW-Authenticate: Basic realm=\"";
 
   httpd_realloc_str(&header, &maxheader, sizeof(headstr) + strlen(realm) + 3);
-  snprintf(header, maxheader, "%s%s\"\r\n", headstr, realm);
+  (void)snprintf(header, maxheader, "%s%s\"\r\n", headstr, realm);
   httpd_send_err(hc, 401, err401title, header, err401form, hc->encodedurl);
 
   /* If the request was a POST then there might still be data to be read, so
@@ -698,7 +698,7 @@ static int auth_check2(httpd_conn *hc, char *dirname)
 
   httpd_realloc_str(&authpath, &maxauthpath,
                     strlen(dirname) + 1 + sizeof(CONFIG_THTTPD_AUTH_FILE));
-  snprintf(authpath, maxauthpath, "%s/%s", dirname, CONFIG_THTTPD_AUTH_FILE);
+  (void)snprintf(authpath, maxauthpath, "%s/%s", dirname, CONFIG_THTTPD_AUTH_FILE);
 
   /* Does this directory have an auth file? */
 
@@ -759,7 +759,7 @@ static int auth_check2(httpd_conn *hc, char *dirname)
 
           httpd_realloc_str(&hc->remoteuser, &hc->maxremoteuser,
                             strlen(authinfo));
-          strcpy(hc->remoteuser, authinfo);
+          (void)strcpy(hc->remoteuser, authinfo);
           return 1;
         }
       else
@@ -816,7 +816,7 @@ static int auth_check2(httpd_conn *hc, char *dirname)
         {
           /* Yes. */
 
-          fclose(fp);
+          (void)fclose(fp);
 
           /* So is the password right? */
 
@@ -825,17 +825,17 @@ static int auth_check2(httpd_conn *hc, char *dirname)
               /* Ok! */
 
               httpd_realloc_str(&hc->remoteuser, &hc->maxremoteuser, strlen(line));
-              strcpy(hc->remoteuser, line);
+              (void)strcpy(hc->remoteuser, line);
 
               /* And cache this user's info for next time. */
 
               httpd_realloc_str(&prevauthpath, &maxprevauthpath, strlen(authpath));
-              strcpy(prevauthpath, authpath);
+              (void)strcpy(prevauthpath, authpath);
               prevmtime = sb.st_mtime;
               httpd_realloc_str(&prevuser, &maxprevuser, strlen(authinfo));
-              strcpy(prevuser, authinfo);
+              (void)strcpy(prevuser, authinfo);
               httpd_realloc_str(&prevcryp, &maxprevcryp, strlen(cryp));
-              strcpy(prevcryp, cryp);
+              (void)strcpy(prevcryp, cryp);
               return 1;
             }
           else
@@ -850,7 +850,7 @@ static int auth_check2(httpd_conn *hc, char *dirname)
 
   /* Didn't find that user.  Access denied. */
 
-  fclose(fp);
+  (void)fclose(fp);
   send_authenticate(hc, dirname);
   return -1;
 }
@@ -873,16 +873,16 @@ static void send_dirredirect(httpd_conn *hc)
         }
 
       httpd_realloc_str(&location, &maxlocation, strlen(hc->encodedurl) + 2 + strlen(hc->query));
-      snprintf(location, maxlocation, "%s/?%s", hc->encodedurl, hc->query);
+      (void)snprintf(location, maxlocation, "%s/?%s", hc->encodedurl, hc->query);
     }
   else
     {
       httpd_realloc_str(&location, &maxlocation, strlen(hc->encodedurl) + 1);
-      snprintf(location, maxlocation, "%s/", hc->encodedurl);
+      (void)snprintf(location, maxlocation, "%s/", hc->encodedurl);
     }
 
   httpd_realloc_str(&header, &maxheader, sizeof(headstr) + strlen(location));
-  snprintf(header, maxheader, "%s%s\r\n", headstr, location);
+  (void)snprintf(header, maxheader, "%s%s\r\n", headstr, location);
   send_response(hc, 302, err302title, header, err302form, location);
 }
 
@@ -898,17 +898,17 @@ static int httpd_tilde_map1(httpd_conn *hc)
 
   len = strlen(hc->expnfilename) - 1;
   httpd_realloc_str(&temp, &maxtemp, len);
-  strcpy(temp, &hc->expnfilename[1]);
+  (void)strcpy(temp, &hc->expnfilename[1]);
 
   httpd_realloc_str(&hc->expnfilename, &hc->maxexpnfilename, strlen(prefix) + 1 + len);
-  strcpy(hc->expnfilename, prefix);
+  (void)strcpy(hc->expnfilename, prefix);
 
   if (prefix[0] != '\0')
     {
-      strcat(hc->expnfilename, "/");
+      (void)strcat(hc->expnfilename, "/");
     }
 
-  strcat(hc->expnfilename, temp);
+  (void)strcat(hc->expnfilename, temp);
   return 1;
 }
 #endif /* CONFIG_THTTPD_TILDE_MAP1 */
@@ -929,7 +929,7 @@ static int httpd_tilde_map2(httpd_conn *hc)
   /* Get the username. */
 
   httpd_realloc_str(&temp, &maxtemp, strlen(hc->expnfilename) - 1);
-  strcpy(temp, &hc->expnfilename[1]);
+  (void)strcpy(temp, &hc->expnfilename[1]);
 
   cp = strchr(temp, '/');
   if (cp)
@@ -952,11 +952,11 @@ static int httpd_tilde_map2(httpd_conn *hc)
   /* Set up altdir. */
 
   httpd_realloc_str(&hc->altdir, &hc->maxaltdir, strlen(pw->pw_dir) + 1 + strlen(postfix));
-  strcpy(hc->altdir, pw->pw_dir);
+  (void)strcpy(hc->altdir, pw->pw_dir);
   if (postfix[0] != '\0')
     {
-      strcat(hc->altdir, "/");
-      strcat(hc->altdir, postfix);
+      (void)strcat(hc->altdir, "/");
+      (void)strcat(hc->altdir, postfix);
     }
 
   alt = expand_filename(hc->altdir, &rest, true);
@@ -966,12 +966,12 @@ static int httpd_tilde_map2(httpd_conn *hc)
     }
 
   httpd_realloc_str(&hc->altdir, &hc->maxaltdir, strlen(alt));
-  strcpy(hc->altdir, alt);
+  (void)strcpy(hc->altdir, alt);
 
   /* And the filename becomes altdir plus the post-~ part of the original. */
 
   httpd_realloc_str(&hc->expnfilename, &hc->maxexpnfilename, strlen(hc->altdir) + 1 + strlen(cp));
-  snprintf(hc->expnfilename, hc->maxexpnfilename, "%s/%s", hc->altdir, cp);
+  (void)snprintf(hc->expnfilename, hc->maxexpnfilename, "%s/%s", hc->altdir, cp);
 
   /* For this type of tilde mapping, we want to defeat vhost mapping. */
 
@@ -1075,12 +1075,12 @@ static int vhost_map(httpd_conn *hc)
 
       *cp2++ = '/';
     }
-  strcpy(cp2, hc->vhostname);
+  (void)strcpy(cp2, hc->vhostname);
 
 #else /* VHOST_DIRLEVELS */
 
   httpd_realloc_str(&hc->hostdir, &hc->maxhostdir, strlen(hc->vhostname));
-  strcpy(hc->hostdir, hc->vhostname);
+  (void)strcpy(hc->hostdir, hc->vhostname);
 
 #endif /* VHOST_DIRLEVELS */
 
@@ -1088,11 +1088,11 @@ static int vhost_map(httpd_conn *hc)
 
   len = strlen(hc->expnfilename);
   httpd_realloc_str(&tempfilename, &maxtempfilename, len);
-  strcpy(tempfilename, hc->expnfilename);
+  (void)strcpy(tempfilename, hc->expnfilename);
   httpd_realloc_str(&hc->expnfilename, &hc->maxexpnfilename, strlen(hc->hostdir) + 1 + len);
-  strcpy(hc->expnfilename, hc->hostdir);
-  strcat(hc->expnfilename, "/");
-  strcat(hc->expnfilename, tempfilename);
+  (void)strcpy(hc->expnfilename, hc->hostdir);
+  (void)strcat(hc->expnfilename, "/");
+  (void)strcat(hc->expnfilename, tempfilename);
   return 1;
 }
 #endif
@@ -1129,7 +1129,7 @@ static char *expand_filename(char *path, char **restP, bool tildemapped)
     {
       checkedlen = strlen(path);
       httpd_realloc_str(&checked, &maxchecked, checkedlen);
-      strcpy(checked, path);
+      (void)strcpy(checked, path);
 
       /* Trim trailing slashes. */
 
@@ -1186,7 +1186,7 @@ static char *expand_filename(char *path, char **restP, bool tildemapped)
 
   restlen = strlen(path);
   httpd_realloc_str(&rest, &maxrest, restlen+1);
-  strcpy(rest, path);
+  (void)strcpy(rest, path);
 
   /* trim trailing slash */
 
@@ -1212,7 +1212,7 @@ static char *expand_filename(char *path, char **restP, bool tildemapped)
               /* Special case for absolute paths. */
 
               httpd_realloc_str(&checked, &maxchecked, checkedlen + 1);
-              strncpy(&checked[checkedlen], r, 1);
+              (void)strncpy(&checked[checkedlen], r, 1);
               checkedlen += 1;
             }
           else if (strncmp(r, "..", MAX(i, 2)) == 0)
@@ -1244,7 +1244,7 @@ static char *expand_filename(char *path, char **restP, bool tildemapped)
                   checked[checkedlen++] = '/';
                 }
 
-              strncpy(&checked[checkedlen], r, i);
+              (void)strncpy(&checked[checkedlen], r, i);
               checkedlen += i;
             }
 
@@ -1287,7 +1287,7 @@ static char *expand_filename(char *path, char **restP, bool tildemapped)
                   checked[checkedlen++] = '/';
                 }
 
-              strcpy(&checked[checkedlen], r);
+              (void)strcpy(&checked[checkedlen], r);
               checkedlen += restlen;
             }
 
@@ -1301,7 +1301,7 @@ static char *expand_filename(char *path, char **restP, bool tildemapped)
   *restP = r;
   if (checked[0] == '\0')
     {
-      strcpy(checked, httpd_root);
+      (void)strcpy(checked, httpd_root);
     }
 
   ninfo("checked: \"%s\"\n", checked);
@@ -1347,19 +1347,19 @@ static void de_dotdot(char *file)
           continue;
         }
 
-      strcpy(cp + 1, cp2);
+      (void)strcpy(cp + 1, cp2);
     }
 
   /* Remove leading ./ and any /./ sequences. */
 
   while (strncmp(file, "./", 2) == 0)
     {
-      strcpy(file, file + 2);
+      (void)strcpy(file, file + 2);
     }
 
   while ((cp = strstr(file, "/./")) != NULL)
     {
-    strcpy(cp, cp + 2);
+    (void)strcpy(cp, cp + 2);
     }
 
   /* Alternate between removing leading ../ and removing xxx/../ */
@@ -1368,7 +1368,7 @@ static void de_dotdot(char *file)
     {
       while (strncmp(file, "../", 3) == 0)
         {
-          strcpy(file, file + 3);
+          (void)strcpy(file, file + 3);
         }
 
       cp = strstr(file, "/../");
@@ -1382,7 +1382,7 @@ static void de_dotdot(char *file)
           continue;
         }
 
-      strcpy(cp2 + 1, cp + 4);
+      (void)strcpy(cp2 + 1, cp + 4);
     }
 
   /* Also elide any xxx/.. at the end. */
@@ -1528,11 +1528,11 @@ done:
                         encodings_len + enc_tab[me_indexes[i]].val_len + 1);
       if (hc->encodings[0] != '\0')
         {
-          strcpy(&hc->encodings[encodings_len], ",");
+          (void)strcpy(&hc->encodings[encodings_len], ",");
           ++encodings_len;
         }
 
-      strcpy(&hc->encodings[encodings_len], enc_tab[me_indexes[i]].val);
+      (void)strcpy(&hc->encodings[encodings_len], enc_tab[me_indexes[i]].val);
       encodings_len += enc_tab[me_indexes[i]].val_len;
     }
 }
@@ -1600,11 +1600,11 @@ static void ls_child(int argc, char **argv)
 
   fputs(html_html, fp);
   fputs(html_hdtitle, fp);
-  fprintf(fp, "Index of %s", hc->encodedurl, hc->encodedurl);
+  (void)fprintf(fp, "Index of %s", hc->encodedurl, hc->encodedurl);
   fputs(html_titlehd, fp);
   fputs(html_body, fp);
   fputs(html_hdr2, fp);
-  fprintf(fp, "Index of %s", hc->encodedurl, hc->encodedurl);
+  (void)fprintf(fp, "Index of %s", hc->encodedurl, hc->encodedurl);
   fputs(html_endhdr2, fp);
   fputs(html_crlf, fp);
   fputs("<PRE>\r\nmode  links  bytes  last-changed  name\r\n<HR>", fp);
@@ -1643,7 +1643,7 @@ static void ls_child(int argc, char **argv)
         }
 
       namlen = NAMLEN(de);
-      strncpy(nameptrs[nnames], de->d_name, namlen);
+      (void)strncpy(nameptrs[nnames], de->d_name, namlen);
       nameptrs[nnames][namlen] = '\0';
       ++nnames;
     }
@@ -1667,19 +1667,19 @@ static void ls_child(int argc, char **argv)
 
       if (hc->expnfilename[0] == '\0' || strcmp(hc->expnfilename, ".") == 0)
         {
-          strcpy(name, nameptrs[i]);
-          strcpy(rname, nameptrs[i]);
+          (void)strcpy(name, nameptrs[i]);
+          (void)strcpy(rname, nameptrs[i]);
         }
       else
         {
-          snprintf(name, maxname, "%s/%s", hc->expnfilename, nameptrs[i]);
+          (void)snprintf(name, maxname, "%s/%s", hc->expnfilename, nameptrs[i]);
           if (strcmp(hc->origfilename, ".") == 0)
             {
-              snprintf(rname, maxrname, "%s", nameptrs[i]);
+              (void)snprintf(rname, maxrname, "%s", nameptrs[i]);
             }
           else
             {
-              snprintf(rname, maxrname, "%s%s", hc->origfilename, nameptrs[i]);
+              (void)snprintf(rname, maxrname, "%s%s", hc->origfilename, nameptrs[i]);
             }
         }
 
@@ -1792,17 +1792,17 @@ static void ls_child(int argc, char **argv)
 
       /* And print. */
 
-      fprintf(fp,
-              "%s %3ld  %10lld  %s  <A HREF=\"/%.500s%s\">%s</A>%s%s%s\n",
-              modestr, 0, (int16_t)sb.st_size, timestr, encrname,
-              S_ISDIR(sb.st_mode) ? "/" : "", nameptrs[i], linkprefix,
-              link, fileclass);
+      (void)fprintf(fp,
+                    "%s %3ld  %10lld  %s  <A HREF=\"/%.500s%s\">%s</A>%s%s%s\n",
+                    modestr, 0, (int16_t)sb.st_size, timestr, encrname,
+                    S_ISDIR(sb.st_mode) ? "/" : "", nameptrs[i], linkprefix,
+                    link, fileclass);
     }
 
   fputs("</PRE>", fp);
   fputs(html_endbody, fp);
   fputs(html_endhtml, fp);
-  fclose(fp);
+  (void)fclose(fp);
   exit(0);
 }
 
@@ -2142,7 +2142,7 @@ void httpd_unlisten(httpd_server * hs)
 {
   if (hs->listen_fd != -1)
     {
-      close(hs->listen_fd);
+      (void)close(hs->listen_fd);
       hs->listen_fd = -1;
     }
 }
@@ -2162,7 +2162,7 @@ void httpd_write_response(httpd_conn *hc)
 
   if (hc->buflen > 0)
     {
-      httpd_write(hc->conn_fd, hc->buffer, hc->buflen);
+      (void)httpd_write(hc->conn_fd, hc->buffer, hc->buflen);
       hc->buflen = 0;
     }
 }
@@ -2178,7 +2178,7 @@ void httpd_set_ndelay(int fd)
     {
       newflags = flags | (int)O_NDELAY;
       if (newflags != flags)
-        fcntl(fd, F_SETFL, newflags);
+        (void)fcntl(fd, F_SETFL, newflags);
     }
 }
 
@@ -2194,7 +2194,7 @@ void httpd_clear_ndelay(int fd)
       newflags = flags & ~(int)O_NDELAY;
       if (newflags != flags)
         {
-          fcntl(fd, F_SETFL, newflags);
+          (void)fcntl(fd, F_SETFL, newflags);
         }
     }
 }
@@ -2212,8 +2212,8 @@ void httpd_send_err(httpd_conn *hc, int status, const char *title, const char *e
 #ifdef CONFIG_THTTPD_VHOST
   if (hc->hostdir[0] != '\0')
     {
-      snprintf(filename, sizeof(filename),
-               "%s/%s/err%d.html", hc->hostdir, CONFIG_THTTPD_ERROR_DIRECTORY, status);
+      (void)snprintf(filename, sizeof(filename),
+                     "%s/%s/err%d.html", hc->hostdir, CONFIG_THTTPD_ERROR_DIRECTORY, status);
       if (send_err_file(hc, status, title, extraheads, filename))
         {
           ninfo("Sent VHOST error file\n");
@@ -2224,7 +2224,7 @@ void httpd_send_err(httpd_conn *hc, int status, const char *title, const char *e
 
   /* Try server-wide error page. */
 
-  snprintf(filename, sizeof(filename), "%s/err%d.html", CONFIG_THTTPD_ERROR_DIRECTORY, status);
+  (void)snprintf(filename, sizeof(filename), "%s/err%d.html", CONFIG_THTTPD_ERROR_DIRECTORY, status);
   if (send_err_file(hc, status, title, extraheads, filename))
     {
       ninfo("Sent server-wide error page\n");
@@ -2321,8 +2321,8 @@ int httpd_get_conn(httpd_server *hs, int listen_fd, httpd_conn *hc)
 #endif
 
   hc->hs = hs;
-  memset(&hc->client_addr, 0, sizeof(hc->client_addr));
-  memmove(&hc->client_addr, &sa, sockaddr_len(&sa));
+  (void)memset(&hc->client_addr, 0, sizeof(hc->client_addr));
+  (void)memmove(&hc->client_addr, &sa, sockaddr_len(&sa));
   hc->read_idx          = 0;
   hc->checked_idx       = 0;
   hc->checked_state     = CHST_FIRSTWORD;
@@ -2671,7 +2671,7 @@ int httpd_parse_request(httpd_conn *hc)
         }
 
       httpd_realloc_str(&hc->reqhost, &hc->maxreqhost, strlen(reqhost));
-      strcpy(hc->reqhost, reqhost);
+      (void)strcpy(hc->reqhost, reqhost);
       *url = '/';
     }
 
@@ -2706,13 +2706,13 @@ int httpd_parse_request(httpd_conn *hc)
   httpd_strdecode(hc->decodedurl, hc->encodedurl);
 
   httpd_realloc_str(&hc->origfilename, &hc->maxorigfilename, strlen(hc->decodedurl));
-  strcpy(hc->origfilename, &hc->decodedurl[1]);
+  (void)strcpy(hc->origfilename, &hc->decodedurl[1]);
 
   /* Special case for top-level URL. */
 
   if (hc->origfilename[0] == '\0')
     {
-      strcpy(hc->origfilename, ".");
+      (void)strcpy(hc->origfilename, ".");
     }
 
   /* Extract query string from encoded URL. */
@@ -2722,7 +2722,7 @@ int httpd_parse_request(httpd_conn *hc)
     {
       ++cp;
       httpd_realloc_str(&hc->query, &hc->maxquery, strlen(cp));
-      strcpy(hc->query, cp);
+      (void)strcpy(hc->query, cp);
 
       /* Remove query from (decoded) origfilename. */
 
@@ -2796,13 +2796,13 @@ int httpd_parse_request(httpd_conn *hc)
                       continue;
                     }
                   httpd_realloc_str(&hc->accept, &hc->maxaccept, strlen(hc->accept) + 2 + strlen(cp));
-                  strcat(hc->accept, ", ");
+                  (void)strcat(hc->accept, ", ");
                 }
               else
                 {
                   httpd_realloc_str(&hc->accept, &hc->maxaccept, strlen(cp));
                 }
-              strcat(hc->accept, cp);
+              (void)strcat(hc->accept, cp);
             }
           else if (strncasecmp(buf, "Accept-Encoding:", 16) == 0)
             {
@@ -2817,13 +2817,13 @@ int httpd_parse_request(httpd_conn *hc)
                       continue;
                     }
                   httpd_realloc_str(&hc->accepte, &hc->maxaccepte, strlen(hc->accepte) + 2 + strlen(cp));
-                  strcat(hc->accepte, ", ");
+                  (void)strcat(hc->accepte, ", ");
                 }
               else
                 {
                   httpd_realloc_str(&hc->accepte, &hc->maxaccepte, strlen(cp));
                 }
-             strcpy(hc->accepte, cp);
+             (void)strcpy(hc->accepte, cp);
             }
           else if (strncasecmp(buf, "Accept-Language:", 16) == 0)
             {
@@ -2983,7 +2983,7 @@ int httpd_parse_request(httpd_conn *hc)
 
   httpd_realloc_str(&hc->expnfilename, &hc->maxexpnfilename,
                     strlen(hc->origfilename));
-  strcpy(hc->expnfilename, hc->origfilename);
+  (void)strcpy(hc->expnfilename, hc->origfilename);
 
   /* Tilde mapping. */
 
@@ -3027,9 +3027,9 @@ int httpd_parse_request(httpd_conn *hc)
     }
 
   httpd_realloc_str(&hc->expnfilename, &hc->maxexpnfilename, strlen(cp));
-  strcpy(hc->expnfilename, cp);
+  (void)strcpy(hc->expnfilename, cp);
   httpd_realloc_str(&hc->pathinfo, &hc->maxpathinfo, strlen(pi));
-  strcpy(hc->pathinfo, pi);
+  (void)strcpy(hc->pathinfo, pi);
   ninfo("expnfilename: \"%s\" pathinfo: \"%s\"\n", hc->expnfilename, hc->pathinfo);
 
   /* Remove pathinfo stuff from the original filename too. */
@@ -3080,13 +3080,13 @@ void httpd_close_conn(httpd_conn *hc)
 {
   if (hc->file_fd >= 0)
     {
-      close(hc->file_fd);
+      (void)close(hc->file_fd);
       hc->file_fd = -1;
     }
 
   if (hc->conn_fd >= 0)
     {
-      close(hc->conn_fd);
+      (void)close(hc->conn_fd);
       hc->conn_fd = -1;
     }
 }
@@ -3197,11 +3197,11 @@ int httpd_start_request(httpd_conn *hc, struct timeval *nowP)
         {
           httpd_realloc_str(&indexname, &maxindexname,
                             expnlen + 1 + strlen(index_names[i]));
-          strcpy(indexname, hc->expnfilename);
+          (void)strcpy(indexname, hc->expnfilename);
           indxlen = strlen(indexname);
           if (indxlen == 0 || indexname[indxlen - 1] != '/')
             {
-              strcat(indexname, "/");
+              (void)strcat(indexname, "/");
             }
 
           if (strcmp(indexname, "./") == 0)
@@ -3209,7 +3209,7 @@ int httpd_start_request(httpd_conn *hc, struct timeval *nowP)
               indexname[0] = '\0';
             }
 
-          strcat(indexname, index_names[i]);
+          (void)strcat(indexname, index_names[i]);
           if (stat(indexname, &hc->sb) >= 0)
             {
               goto got_one;
@@ -3278,7 +3278,7 @@ int httpd_start_request(httpd_conn *hc, struct timeval *nowP)
 
       expnlen = strlen(cp);
       httpd_realloc_str(&hc->expnfilename, &hc->maxexpnfilename, expnlen);
-      strcpy(hc->expnfilename, cp);
+      (void)strcpy(hc->expnfilename, cp);
 
       /* Now, is the index version world-readable or world-executable? */
 
@@ -3298,11 +3298,11 @@ int httpd_start_request(httpd_conn *hc, struct timeval *nowP)
 
 #ifdef CONFIG_THTTPD_AUTH_FILE
   httpd_realloc_str(&dirname, &maxdirname, expnlen);
-  strcpy(dirname, hc->expnfilename);
+  (void)strcpy(dirname, hc->expnfilename);
   cp = strrchr(dirname, '/');
   if (!cp)
     {
-      strcpy(dirname, httpd_root);
+      (void)strcpy(dirname, httpd_root);
     }
   else
     {
@@ -3439,7 +3439,7 @@ char *httpd_ntoa(httpd_sockaddr *saP)
     {
       /* Elide IPv6ish prefix for IPv4 addresses. */
 
-      strcpy(str, &str[7]);
+      (void)strcpy(str, &str[7]);
     }
 
   return str;

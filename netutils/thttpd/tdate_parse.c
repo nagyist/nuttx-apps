@@ -139,8 +139,8 @@ static int scan_wday(char *str_wday, long *tm_wdayP)
 
   if (!sorted)
     {
-      qsort(wday_tab, sizeof(wday_tab) / sizeof(struct strlong),
-            sizeof(struct strlong), strlong_compare);
+      (void)qsort(wday_tab, sizeof(wday_tab) / sizeof(struct strlong),
+                  sizeof(struct strlong), strlong_compare);
       sorted = 1;
     }
   pound_case(str_wday);
@@ -170,8 +170,8 @@ static int scan_mon(char *str_mon, long *tm_monP)
 
   if (!sorted)
     {
-      qsort(mon_tab, sizeof(mon_tab) / sizeof(struct strlong),
-            sizeof(struct strlong), strlong_compare);
+      (void)qsort(mon_tab, sizeof(mon_tab) / sizeof(struct strlong),
+                  sizeof(struct strlong), strlong_compare);
       sorted = 1;
     }
   pound_case(str_mon);
@@ -204,7 +204,7 @@ time_t tdate_parse(char *str)
 
   /* Initialize. */
 
-  memset((char *)&tm, 0, sizeof(struct tm));
+  (void)memset((char *)&tm, 0, sizeof(struct tm));
 
   /* Skip initial whitespace ourselves - sscanf is clumsy at this. */
 

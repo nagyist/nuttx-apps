@@ -426,7 +426,7 @@ void CButtonArray::drawContents(CGraphicsPort *port)
 
       // Just one.  Get the row/column indices from the last click
 
-      posToButton(m_clickX, m_clickY, column, row);
+      (void)posToButton(m_clickX, m_clickY, column, row);
 
       // And draw that button
 

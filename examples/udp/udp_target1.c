@@ -57,7 +57,7 @@ int main(int argc, FAR char *argv[])
 #ifdef CONFIG_EXAMPLES_UDP_NETINIT
   /* Initialize the network */
 
-  udp_netinit();
+  (void)udp_netinit();
 #endif
 
   /* Run the server or client, depending upon how we are configured */

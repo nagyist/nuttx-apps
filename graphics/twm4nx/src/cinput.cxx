@@ -135,7 +135,7 @@ CInput::~CInput(void)
   // to receive data
   // REVISIT:  Need wait here for the listener thread to terminate
 
-  pthread_kill(m_thread, CONFIG_TWM4NX_INPUT_SIGNO);
+  (void)pthread_kill(m_thread, CONFIG_TWM4NX_INPUT_SIGNO);
 
 #ifndef CONFIG_TWM4NX_NOKEYBOARD
   // Close the keyboard device
@@ -170,13 +170,13 @@ bool CInput::start(void)
 
   // Start a separate thread to listen for keyboard events
 
-  pthread_attr_init(&attr);
+  (void)pthread_attr_init(&attr);
 
   struct sched_param param;
   param.sched_priority = CONFIG_TWM4NX_INPUT_LISTENERPRIO;
-  pthread_attr_setschedparam(&attr, &param);
+  (void)pthread_attr_setschedparam(&attr, &param);
 
-  pthread_attr_setstacksize(&attr, CONFIG_TWM4NX_INPUT_LISTENERSTACK);
+  (void)pthread_attr_setstacksize(&attr, CONFIG_TWM4NX_INPUT_LISTENERSTACK);
 
   m_state  = LISTENER_STARTED; // The listener thread has been started, but is not yet running
 
@@ -189,7 +189,7 @@ bool CInput::start(void)
 
   // Detach from the thread
 
-  pthread_detach(m_thread);
+  (void)pthread_detach(m_thread);
 
   // Don't return until we are sure that the listener thread is running
   // (or until it reports an error).
@@ -199,7 +199,7 @@ bool CInput::start(void)
       // Wait for the listener thread to wake us up when we really
       // are connected.
 
-      sem_wait(&m_waitSem);
+      (void)sem_wait(&m_waitSem);
     }
 
   // Then return true only if the listener thread reported successful
@@ -971,14 +971,14 @@ FAR void *CInput::listener(FAR void *arg)
 #ifndef CONFIG_TWM4NX_NOKEYBOARD
       // Close the keyboard device
 
-      std::close(This->m_kbdFd);
+      (void)std::close(This->m_kbdFd);
       This->m_kbdFd = -1;
 #endif
 
 #ifndef CONFIG_TWM4NX_NOMOUSE
       // Close the mouse device
 
-      std::close(This->m_mouseFd);
+      (void)std::close(This->m_mouseFd);
       This->m_mouseFd = -1;
 #endif
     }

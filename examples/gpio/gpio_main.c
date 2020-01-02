@@ -268,14 +268,14 @@ int main(int argc, FAR char *argv[])
 
               /* Wait up to 5 seconds for the signal */
 
-              sigemptyset(&set);
-              sigaddset(&set, signo);
+              (void)sigemptyset(&set);
+              (void)sigaddset(&set, signo);
 
               ts.tv_sec  = 5;
               ts.tv_nsec = 0;
 
               ret = sigtimedwait(&set, NULL, &ts);
-              ioctl(fd, GPIOC_UNREGISTER, 0);
+              (void)ioctl(fd, GPIOC_UNREGISTER, 0);
 
               if (ret < 0)
                 {

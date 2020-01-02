@@ -256,7 +256,7 @@ bool CNxTerm::run(void)
 
   // Get the size of the window
 
-  window->getSize(&g_nxtermvars.wndo.wsize);
+  (void)window->getSize(&g_nxtermvars.wndo.wsize);
 
   // Start the NxTerm task
 
@@ -357,7 +357,7 @@ void CNxTerm::stop(void)
       char devname[32];
       snprintf(devname, 32, "/dev/nxterm%d", m_minor);
 
-      unlink(devname);
+      (void)unlink(devname);
       m_nxterm = 0;
     }
 }
@@ -407,7 +407,7 @@ void CNxTerm::redraw(void)
   // Get the size of the window
 
   struct nxgl_size_s windowSize;
-  window->getSize(&windowSize);
+  (void)window->getSize(&windowSize);
 
   // Redraw the entire NxTerm window
 
@@ -424,7 +424,7 @@ void CNxTerm::redraw(void)
   iocargs.cmd       = NXTERMIOC_NXTERM_REDRAW;
   iocargs.arg       = (uintptr_t)&redraw;
 
-  boardctl(BOARDIOC_NXTERM_IOCTL, (uintptr_t)&iocargs);
+  (void)boardctl(BOARDIOC_NXTERM_IOCTL, (uintptr_t)&iocargs);
 }
 
 /**
@@ -500,7 +500,7 @@ int CNxTerm::nxterm(int argc, char *argv[])
   if (fd < 0)
     {
       gerr("ERROR: Failed open the console device\n");
-      unlink(devname);
+      (void)unlink(devname);
       goto errout;
     }
 
@@ -509,26 +509,26 @@ int CNxTerm::nxterm(int argc, char *argv[])
   // console).  (2) Don't bother trying to put debug instrumentation in the
   // following becaue it will end up in the NxTerm window.
 
-  std::fflush(stdout);
-  std::fflush(stderr);
+  (void)std::fflush(stdout);
+  (void)std::fflush(stderr);
 
 #ifdef CONFIG_NXTERM_NXKBDIN
-  std::fclose(stdin);
+  (void)std::fclose(stdin);
 #endif
-  std::fclose(stdout);
-  std::fclose(stderr);
+  (void)std::fclose(stdout);
+  (void)std::fclose(stderr);
 
 #ifdef CONFIG_NXTERM_NXKBDIN
-  std::dup2(fd, 0);
+  (void)std::dup2(fd, 0);
 #endif
-  std::dup2(fd, 1);
-  std::dup2(fd, 2);
+  (void)std::dup2(fd, 1);
+  (void)std::dup2(fd, 2);
 
 #ifdef CONFIG_NXTERM_NXKBDIN
-  std::fdopen(0, "r");
+  (void)std::fdopen(0, "r");
 #endif
-  std::fdopen(1, "w");
-  std::fdopen(2, "w");
+  (void)std::fdopen(1, "w");
+  (void)std::fdopen(2, "w");
 
   // And we can close our original driver file descriptor
 
@@ -545,7 +545,7 @@ int CNxTerm::nxterm(int argc, char *argv[])
   // Run the NSH console
 
 #ifdef CONFIG_NSH_CONSOLE
-  nsh_consolemain(argc, argv);
+  (void)nsh_consolemain(argc, argv);
 #endif
 
   // We get here if the NSH console should exits.  nsh_consolemain() ALWAYS

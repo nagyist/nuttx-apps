@@ -413,7 +413,7 @@ void *net_listener(pthread_addr_t pvarg)
               nsds--;
               if (i == nls.listensd)
                 {
-                  net_connection(&nls);
+                  (void)net_connection(&nls);
                 }
               else
                 {

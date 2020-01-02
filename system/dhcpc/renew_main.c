@@ -105,7 +105,7 @@ int main(int argc, FAR char *argv[])
   ret = dhcpc_request(handle, &ds);
   if (ret < 0)
     {
-      dhcpc_close(handle);
+      (void)dhcpc_close(handle);
       fprintf(stderr, "ERROR: dhcpc_request() failed\n");
       return EXIT_FAILURE;
     }

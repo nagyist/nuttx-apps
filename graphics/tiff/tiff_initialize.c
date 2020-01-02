@@ -421,11 +421,11 @@ static int tiff_datetime(FAR char *timbuf, unsigned int buflen)
 
   /* Break the current time up into the format needed by strftime */
 
-  gmtime_r((FAR const time_t*)&ts.tv_sec, &tm);
+  (void)gmtime_r((FAR const time_t*)&ts.tv_sec, &tm);
 
   /* Comvert the current time in the TIFF format */
 
-  strftime(timbuf, buflen, TIFF_DATETIME_FORMAT, &tm);
+  (void)strftime(timbuf, buflen, TIFF_DATETIME_FORMAT, &tm);
   return OK;
 }
 

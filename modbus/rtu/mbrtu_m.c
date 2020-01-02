@@ -278,7 +278,7 @@ bool xMBMasterRTUReceiveFSM(void)
 
   /* Always read the character. */
 
-  xMBMasterPortSerialGetByte((uint8_t *) & ucByte);
+  (void)xMBMasterPortSerialGetByte((uint8_t *) & ucByte);
 
   switch (eRcvState)
     {

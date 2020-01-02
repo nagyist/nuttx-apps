@@ -170,11 +170,11 @@ int system(FAR const char *cmd)
       rc = ERROR;
     }
 
-  posix_spawnattr_destroy(&attr);
+  (void)posix_spawnattr_destroy(&attr);
   return rc;
 
 errout_with_attrs:
-  posix_spawnattr_destroy(&attr);
+  (void)posix_spawnattr_destroy(&attr);
 
 errout:
   set_errno(errcode);

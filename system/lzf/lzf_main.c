@@ -82,7 +82,7 @@ static uint8_t g_buf2[MAX_BLOCKSIZE + LZF_MAX_HDR_SIZE + 16];
 static void lzf_exit(int exitcode) noreturn_function;
 static void lzf_exit(int exitcode)
 {
-  sem_post(&g_exclsem);
+  (void)sem_post(&g_exclsem);
   exit(exitcode);
 }
 #else

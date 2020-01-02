@@ -93,7 +93,7 @@ CKeyboard::~CKeyboard(void)
   // to receive data
   // REVISIT:  Need wait here for the listener thread to terminate
 
-  pthread_kill(m_thread, CONFIG_NXWM_KEYBOARD_SIGNO);
+  (void)pthread_kill(m_thread, CONFIG_NXWM_KEYBOARD_SIGNO);
 
   // Close the keyboard device (or should these be done when the thread exits?)
 
@@ -117,13 +117,13 @@ bool CKeyboard::start(void)
 
   // Start a separate thread to listen for keyboard events
 
-  pthread_attr_init(&attr);
+  (void)pthread_attr_init(&attr);
 
   struct sched_param param;
   param.sched_priority = CONFIG_NXWM_KEYBOARD_LISTENERPRIO;
-  pthread_attr_setschedparam(&attr, &param);
+  (void)pthread_attr_setschedparam(&attr, &param);
 
-  pthread_attr_setstacksize(&attr, CONFIG_NXWM_KEYBOARD_LISTENERSTACK);
+  (void)pthread_attr_setstacksize(&attr, CONFIG_NXWM_KEYBOARD_LISTENERSTACK);
 
   m_state  = LISTENER_STARTED; // The listener thread has been started, but is not yet running
 
@@ -136,7 +136,7 @@ bool CKeyboard::start(void)
 
   // Detach from the thread
 
-  pthread_detach(m_thread);
+  (void)pthread_detach(m_thread);
 
   // Don't return until we are sure that the listener thread is running
   // (or until it reports an error).
@@ -146,7 +146,7 @@ bool CKeyboard::start(void)
       // Wait for the listener thread to wake us up when we really
       // are connected.
 
-      sem_wait(&m_waitSem);
+      (void)sem_wait(&m_waitSem);
     }
 
   // Then return true only if the listener thread reported successful
@@ -381,7 +381,7 @@ FAR void *CKeyboard::listener(FAR void *arg)
 
       // Close the keyboard device
 
-      std::close(This->m_kbdFd);
+      (void)std::close(This->m_kbdFd);
       This->m_kbdFd = -1;
     }
 

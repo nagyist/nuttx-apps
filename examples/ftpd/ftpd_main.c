@@ -196,7 +196,7 @@ int ftpd_daemon(int s_argc, char **s_argv)
 
   /* Configure acounts */
 
-  ftpd_accounts(handle);
+  (void)ftpd_accounts(handle);
 
   /* Then drive the FTPD server. */
 

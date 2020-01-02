@@ -111,7 +111,7 @@ void *poll_listener(pthread_addr_t pvarg)
     {
       printf("poll_listener: ERROR Failed to open FIFO %s: %d\n",
              FIFO_PATH1, errno);
-      close(fd);
+      (void)close(fd);
       return (void*)-1;
     }
 
@@ -261,6 +261,6 @@ void *poll_listener(pthread_addr_t pvarg)
 
   /* Won't get here */
 
-  close(fd);
+  (void)close(fd);
   return NULL;
 }

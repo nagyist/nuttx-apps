@@ -102,6 +102,6 @@ int passwd_adduser(FAR const char *username, FAR const char *password)
   ret = OK;
 
 errout_with_lock:
-  passwd_unlock(sem);
+  (void)passwd_unlock(sem);
   return ret;
 }

@@ -179,7 +179,7 @@ static void configdata_loopmemusage(void)
 #ifdef CONFIG_CAN_PASS_STRUCTS
   g_mmafter = mallinfo();
 #else
-  mallinfo(&g_mmafter);
+  (void)mallinfo(&g_mmafter);
 #endif
 
   /* Show the change from the previous loop */
@@ -206,7 +206,7 @@ static void configdata_endmemusage(void)
 #ifdef CONFIG_CAN_PASS_STRUCTS
   g_mmafter = mallinfo();
 #else
-  mallinfo(&g_mmafter);
+  (void)mallinfo(&g_mmafter);
 #endif
   printf("\nFinal memory usage:\n");
   configdata_showmemusage(&g_mmbefore, &g_mmafter);
@@ -682,7 +682,7 @@ int main(int argc, FAR char *argv[])
 #ifdef CONFIG_CAN_PASS_STRUCTS
   g_mmbefore = mallinfo();
 #else
-  mallinfo(&g_mmbefore);
+  (void)mallinfo(&g_mmbefore);
 #endif
 
   /* Loop seveal times ... create some config data items, delete them
@@ -706,7 +706,7 @@ int main(int argc, FAR char *argv[])
 #ifndef CONFIG_EXAMPLES_CONFIGDATA_SILENT
       printf("\n=== FILLING %u =============================\n", i);
 #endif
-      configdata_fillconfig();
+      (void)configdata_fillconfig();
 #ifndef CONFIG_EXAMPLES_CONFIGDATA_SILENT
       printf("Filled /dev/config\n");
       printf("  Number of entries: %d\n", g_nentries);
