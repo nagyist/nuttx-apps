@@ -177,10 +177,6 @@ static int button_daemon(int argc, char *argv[])
       goto errout_with_fd;
     }
 
-  /* Ignore the default signal action */
-
-  signal(BUTTON_SIGNO, SIG_IGN);
-
   /* Now loop forever, waiting BUTTONs events */
 
   for (; ; )
@@ -196,7 +192,8 @@ static int button_daemon(int argc, char *argv[])
       if (ret < 0)
         {
           int errcode = errno;
-          printf("button_daemon: ERROR: sigwaitinfo() failed: %d\n", errcode);
+          printf("button_daemon: ERROR: sigwaitinfo() failed: %d\n",
+                 errcode);
           goto errout_with_fd;
         }
 
@@ -445,7 +442,7 @@ int main(int argc, FAR char *argv[])
 
           sec = sec % 60;
 
-          sprintf(str, "%02d:%02d:%01d", min, sec,
+          sprintf(str, "%02ld:%02ld:%01ld", min, sec,
                   (priv->ts_end.tv_nsec / 100000000));
 
           /* Print it into LCD */

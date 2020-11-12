@@ -1,5 +1,7 @@
-############################################################################
-# system/libuv/Make.defs
+#############################################################################
+#
+# netutils/netcat/Makefile
+# Netcat networking application
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -16,17 +18,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-############################################################################
+#############################################################################
 
-# Set up build configuration and environment
+include $(APPDIR)/Make.defs
 
-LIBUV_DIR := $(APPDIR)/system/libuv
+# built-in application info
 
-CONFIG_LIBUV_URL ?= "https://github.com/libuv/libuv/archive"
-CONFIG_LIBUV_VERSION ?= 1.38.1
-CONFIG_LIBUV_TARBALL ?= v$(CONFIG_LIBUV_VERSION).zip
+MODULE = $(CONFIG_NETUTILS_NETCAT)
+PRIORITY = $(CONFIG_NETUTILS_NETCAT_PRIORITY)
+PROGNAME = $(CONFIG_NETUTILS_NETCAT_PROGNAME)
+STACKSIZE = $(CONFIG_NETUTILS_NETCAT_STACKSIZE)
 
-LIBUV_UNPACKNAME := libuv-$(CONFIG_LIBUV_VERSION)
-LIBUV_UNPACKDIR := $(LIBUV_DIR)/$(LIBUV_UNPACKNAME)
+# Example
 
-include $(wildcard $(APPDIR)/system/libuv/*/Make.defs)
+MAINSRC = netcat_main.c
+
+include $(APPDIR)/Application.mk

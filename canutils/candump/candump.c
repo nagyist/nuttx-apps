@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
@@ -456,14 +457,14 @@ int main(int argc, char **argv)
 				ptr = nptr+1; /* hop behind the ',' */
 				nptr = strchr(ptr, ','); /* update exit condition */
 
-				if (sscanf(ptr, "%x:%x",
+				if (sscanf(ptr, "%" SCNx32 ":%" SCNx32,
 					   &rfilter[numfilter].can_id, 
 					   &rfilter[numfilter].can_mask) == 2) {
  					rfilter[numfilter].can_mask &= ~CAN_ERR_FLAG;
 					if (*(ptr+8) == ':')
 						rfilter[numfilter].can_id |= CAN_EFF_FLAG;
 					numfilter++;
-				} else if (sscanf(ptr, "%x~%x",
+				} else if (sscanf(ptr, "%" SCNx32 "~%" SCNx32,
 						  &rfilter[numfilter].can_id, 
 						  &rfilter[numfilter].can_mask) == 2) {
  					rfilter[numfilter].can_id |= CAN_INV_FILTER;
@@ -473,7 +474,7 @@ int main(int argc, char **argv)
 					numfilter++;
 				} else if (*ptr == 'j' || *ptr == 'J') {
 					join_filter = 1;
-				} else if (sscanf(ptr, "#%x", &err_mask) != 1) { 
+				} else if (sscanf(ptr, "#%" SCNx32, &err_mask) != 1) {
 					fprintf(stderr, "Error in filter option parsing: '%s'\n", ptr);
 					return 1;
 				}
@@ -689,12 +690,12 @@ int main(int argc, char **argv)
 					__u32 frames = dropcnt[i] - last_dropcnt[i];
 
 					if (silent != SILENT_ON)
-						printf("DROPCOUNT: dropped %d CAN frame%s on '%s' socket (total drops %d)\n",
-						       frames, (frames > 1)?"s":"", devname[idx], dropcnt[i]);
+						printf("DROPCOUNT: dropped %" PRId32 " CAN frame%s on '%s' socket (total drops %" PRId32 ")\n",
+						       (uint32_t)frames, (frames > 1)?"s":"", devname[idx], (uint32_t)dropcnt[i]);
 
 					if (log)
-						fprintf(logfile, "DROPCOUNT: dropped %d CAN frame%s on '%s' socket (total drops %d)\n",
-							frames, (frames > 1)?"s":"", devname[idx], dropcnt[i]);
+						fprintf(logfile, "DROPCOUNT: dropped %" PRId32 " CAN frame%s on '%s' socket (total drops %" PRId32 ")\n",
+							(uint32_t)frames, (frames > 1)?"s":"", devname[idx], (uint32_t)dropcnt[i]);
 
 					last_dropcnt[i] = dropcnt[i];
 				}
