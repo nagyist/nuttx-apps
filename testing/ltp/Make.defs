@@ -1,7 +1,5 @@
-#############################################################################
-#
-# netutils/netcat/Make.defs
-# netcat sample networking application
+############################################################################
+# apps/testing/ltp/ltp/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,8 +16,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-#############################################################################
+#
+############################################################################
 
-ifneq ($(CONFIG_NETUTILS_NETCAT),)
-CONFIGURED_APPS += $(APPDIR)/netutils/netcat
+ifneq ($(CONFIG_TESTING_LTP),)
+CONFIGURED_APPS += $(APPDIR)/testing/ltp
 endif

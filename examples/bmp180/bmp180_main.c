@@ -38,7 +38,6 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <inttypes.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -67,7 +66,7 @@ int main(int argc, FAR char *argv[])
           break;
         }
 
-      printf("Pressure value = %05" PRId32 "\n", sample);
+      printf("Pressure value = %05d\n", sample);
 
       usleep(500000);
     }

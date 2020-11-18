@@ -48,7 +48,6 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -2287,7 +2286,7 @@ static int ftpd_listbuffer(FAR struct ftpd_session_s *session,
       /* size */
 
       offset += snprintf(&buffer[offset], buflen - offset,
-                         " %8ju", (uintmax_t)st->st_size);
+                         " %8u", st->st_size);
 
       /* time */
 

@@ -381,8 +381,7 @@ static int modulation_set(int fd, uint8_t modulation)
           printf("LORA modulation\n");
 
           modulation = SX127X_MODULATION_LORA;
-          ret = ioctl(fd, SX127XIOC_MODULATIONSET,
-                      (unsigned long)&modulation);
+          ret = ioctl(fd, SX127XIOC_MODULATIONSET, (unsigned long)&modulation);
           if (ret < 0)
             {
               printf("failed change modulation %d!\n", ret);
@@ -396,8 +395,7 @@ static int modulation_set(int fd, uint8_t modulation)
           printf("FSK modulation\n");
 
           modulation = SX127X_MODULATION_FSK;
-          ret = ioctl(fd, SX127XIOC_MODULATIONSET,
-                      (unsigned long)&modulation);
+          ret = ioctl(fd, SX127XIOC_MODULATIONSET, (unsigned long)&modulation);
           if (ret < 0)
             {
               printf("failed change modulation %d!\n", ret);
@@ -411,8 +409,7 @@ static int modulation_set(int fd, uint8_t modulation)
           printf("OOK modulation\n");
 
           modulation = SX127X_MODULATION_OOK;
-          ret = ioctl(fd, SX127XIOC_MODULATIONSET,
-                      (unsigned long)&modulation);
+          ret = ioctl(fd, SX127XIOC_MODULATIONSET, (unsigned long)&modulation);
           if (ret < 0)
             {
               printf("failed change modulation %d!\n", ret);
@@ -505,7 +502,7 @@ int main(int argc, FAR char *argv[])
 
   /* Set RF frequency */
 
-  printf("Set frequency to %" PRId32 "\n", args->frequency);
+  printf("Set frequency to %d\n", args->frequency);
 
   ret = ioctl(fd, WLIOC_SETRADIOFREQ, (unsigned long)&args->frequency);
   if (ret < 0)
@@ -616,8 +613,7 @@ int main(int argc, FAR char *argv[])
                   goto errout;
                 }
 
-              printf("freq = %" PRId32 " max = %d min = %d free = %d\n",
-                     chanscan.freq,
+              printf("freq = %d max = %d min = %d free = %d\n", chanscan.freq,
                      chanscan.rssi_max, chanscan.rssi_min, chanscan.free);
 
               break;
