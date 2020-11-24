@@ -177,10 +177,6 @@ static int chrono_daemon(int argc, char *argv[])
       goto errout_with_fd;
     }
 
-  /* Ignore the default signal action */
-
-  signal(BUTTON_SIGNO, SIG_IGN);
-
   /* Now loop forever, waiting BUTTONs events */
 
   for (; ; )
