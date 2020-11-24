@@ -1,5 +1,5 @@
 ############################################################################
-# system/libuv/Make.defs
+# apps/examples/esp32himem/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,15 +18,17 @@
 #
 ############################################################################
 
-# Set up build configuration and environment
+include $(APPDIR)/Make.defs
 
-LIBUV_DIR := $(APPDIR)/system/libuv
+# ESP32 HIMEM built-in application info
 
-CONFIG_LIBUV_URL ?= "https://github.com/libuv/libuv/archive"
-CONFIG_LIBUV_VERSION ?= 1.38.1
-CONFIG_LIBUV_TARBALL ?= v$(CONFIG_LIBUV_VERSION).zip
+PROGNAME  = $(CONFIG_EXAMPLES_ESP32_HIMEM_PROGNAME)
+PRIORITY  = $(CONFIG_EXAMPLES_ESP32_HIMEM_PRIORITY)
+STACKSIZE = $(CONFIG_EXAMPLES_ESP32_HIMEM_STACKSIZE)
+MODULE    = $(CONFIG_EXAMPLES_ESP32_HIMEM)
 
-LIBUV_UNPACKNAME := libuv-$(CONFIG_LIBUV_VERSION)
-LIBUV_UNPACKDIR := $(LIBUV_DIR)/$(LIBUV_UNPACKNAME)
+# ESP32 HIMEM Example
 
-include $(wildcard $(APPDIR)/system/libuv/*/Make.defs)
+MAINSRC = esp32_himem_main.c
+
+include $(APPDIR)/Application.mk

@@ -115,10 +115,10 @@ static void i2schar_help(FAR struct i2schar_state_s *i2schar)
          "Default: %d Current: %d\n",
          CONFIG_EXAMPLES_I2SCHAR_TXBUFFERS, i2schar->txcount);
 #endif
-#ifdef CONFIG_EXAMPLES_I2SCHAR_RX
+#ifdef CONFIG_EXAMPLES_I2SCHAR_TX
   printf("  [-r count] selects the number of audio buffers to receive.  "
          "Default: %d Current: %d\n",
-         CONFIG_EXAMPLES_I2SCHAR_RXBUFFERS, i2schar->rxcount);
+         CONFIG_EXAMPLES_I2SCHAR_RXBUFFERS, i2schar->txcount);
 #endif
   printf("  [-h] shows this message and exits\n");
 }
@@ -188,7 +188,6 @@ static void parse_args(FAR struct i2schar_state_s *i2schar,
             index += nargs;
             break;
 
-#ifdef CONFIG_EXAMPLES_I2SCHAR_RX
           case 'r':
             nargs = arg_decimal(&argv[index], &value);
             if (value < 0)
@@ -200,9 +199,7 @@ static void parse_args(FAR struct i2schar_state_s *i2schar,
             i2schar->rxcount = (uint32_t)value;
             index += nargs;
             break;
-#endif
 
-#ifdef CONFIG_EXAMPLES_I2SCHAR_TX
           case 't':
             nargs = arg_decimal(&argv[index], &value);
             if (value < 0)
@@ -214,7 +211,6 @@ static void parse_args(FAR struct i2schar_state_s *i2schar,
             i2schar->txcount = (uint32_t)value;
             index += nargs;
             break;
-#endif
 
           case 'h':
             i2schar_help(i2schar);
@@ -252,8 +248,6 @@ int main(int argc, FAR char *argv[])
 #endif
   int ret;
 
-  UNUSED(ret);
-
   /* Check if we have initialized */
 
   if (!g_i2schar.initialized)
@@ -278,8 +272,7 @@ int main(int argc, FAR char *argv[])
 
 #ifdef CONFIG_EXAMPLES_I2SCHAR_TX
       g_i2schar.txcount = CONFIG_EXAMPLES_I2SCHAR_TXBUFFERS;
-#endif
-#ifdef CONFIG_EXAMPLES_I2SCHAR_RX
+#else
       g_i2schar.rxcount = CONFIG_EXAMPLES_I2SCHAR_RXBUFFERS;
 #endif
 
