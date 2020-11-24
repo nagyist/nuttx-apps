@@ -39,7 +39,6 @@
 
 #include <nuttx/config.h>
 
-#include <inttypes.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -554,7 +553,7 @@ static int cle_getcursor(FAR struct cle_s *priv, FAR uint16_t *prow,
 
       /* ...we are done */
 
-      cleinfo("row=%" PRId32 " column=%" PRId32 "\n", row, column);
+      cleinfo("row=%ld column=%ld\n", row, column);
 
       /* Make sure that the values are within range */
 
@@ -759,7 +758,7 @@ static void cle_showtext(FAR struct cle_s *priv)
 
 static void cle_insertch(FAR struct cle_s *priv, char ch)
 {
-  cleinfo("curpos=%" PRId16 " ch=%c[%02x]\n", priv->curpos,
+  cleinfo("curpos=%ld ch=%c[%02x]\n", priv->curpos,
           isprint(ch) ? ch : '.', ch);
 
   /* Make space in the buffer for the new character */

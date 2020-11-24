@@ -241,7 +241,7 @@ int main(int argc, FAR char *argv[])
                  int errcode = errno;
                  fprintf(stderr,
                          "ERROR: Failed to write value %u from %s: %d\n",
-                         (unsigned int)outvalue, devpath, errcode);
+                         devpath, (unsigned int)outvalue, errcode);
                  close(fd);
                  return EXIT_FAILURE;
                }

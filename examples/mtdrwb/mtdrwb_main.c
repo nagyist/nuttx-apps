@@ -55,7 +55,6 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-
 /* Configuration ************************************************************/
 
 #if !defined(CONFIG_MTD_WRBUFFER) && !defined(CONFIG_MTD_READAHEAD)
@@ -76,9 +75,7 @@
 #    error "CONFIG_RAMMTD is required without CONFIG_EXAMPLES_MTDRWB_ARCHINIT"
 #  endif
 
-/* This must exactly match the default configuration in
- * drivers/mtd/rammtd.c
- */
+/* This must exactly match the default configuration in drivers/mtd/rammtd.c */
 
 #  ifndef CONFIG_RAMMTD_ERASESIZE
 #    define CONFIG_RAMMTD_ERASESIZE 4096
@@ -113,7 +110,6 @@ struct mtdweb_filedesc_s
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-
 /* Pre-allocated simulated flash */
 
 #ifndef CONFIG_EXAMPLES_MTDRWB_ARCHINIT
@@ -213,8 +209,7 @@ int main(int argc, FAR char *argv[])
 
   /* Get the geometry of the FLASH device */
 
-  ret = mtdrwb->ioctl(mtdrwb, MTDIOC_GEOMETRY,
-                      (unsigned long)((uintptr_t)&geo));
+  ret = mtdrwb->ioctl(mtdrwb, MTDIOC_GEOMETRY, (unsigned long)((uintptr_t)&geo));
   if (ret < 0)
     {
       ferr("ERROR: mtdrwb->ioctl failed: %d\n", ret);
@@ -375,7 +370,7 @@ int main(int argc, FAR char *argv[])
   nbytes = read(fd, buffer, geo.blocksize);
   if (nbytes != 0)
     {
-      printf("ERROR: Expected end-of-file from /dev/mtd0 failed: %zd %d\n",
+      printf("ERROR: Expected end-of-file from /dev/mtd0 failed: %d %d\n",
              nbytes, errno);
       fflush(stdout);
       exit(20);

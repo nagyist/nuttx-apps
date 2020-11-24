@@ -45,7 +45,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <inttypes.h>
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
@@ -457,14 +456,14 @@ int main(int argc, char **argv)
 				ptr = nptr+1; /* hop behind the ',' */
 				nptr = strchr(ptr, ','); /* update exit condition */
 
-				if (sscanf(ptr, "%" SCNx32 ":%" SCNx32,
+				if (sscanf(ptr, "%x:%x",
 					   &rfilter[numfilter].can_id, 
 					   &rfilter[numfilter].can_mask) == 2) {
  					rfilter[numfilter].can_mask &= ~CAN_ERR_FLAG;
 					if (*(ptr+8) == ':')
 						rfilter[numfilter].can_id |= CAN_EFF_FLAG;
 					numfilter++;
-				} else if (sscanf(ptr, "%" SCNx32 "~%" SCNx32,
+				} else if (sscanf(ptr, "%x~%x",
 						  &rfilter[numfilter].can_id, 
 						  &rfilter[numfilter].can_mask) == 2) {
  					rfilter[numfilter].can_id |= CAN_INV_FILTER;
@@ -474,7 +473,7 @@ int main(int argc, char **argv)
 					numfilter++;
 				} else if (*ptr == 'j' || *ptr == 'J') {
 					join_filter = 1;
-				} else if (sscanf(ptr, "#%" SCNx32, &err_mask) != 1) {
+				} else if (sscanf(ptr, "#%x", &err_mask) != 1) { 
 					fprintf(stderr, "Error in filter option parsing: '%s'\n", ptr);
 					return 1;
 				}
@@ -690,12 +689,12 @@ int main(int argc, char **argv)
 					__u32 frames = dropcnt[i] - last_dropcnt[i];
 
 					if (silent != SILENT_ON)
-						printf("DROPCOUNT: dropped %" PRId32 " CAN frame%s on '%s' socket (total drops %" PRId32 ")\n",
-						       (uint32_t)frames, (frames > 1)?"s":"", devname[idx], (uint32_t)dropcnt[i]);
+						printf("DROPCOUNT: dropped %d CAN frame%s on '%s' socket (total drops %d)\n",
+						       frames, (frames > 1)?"s":"", devname[idx], dropcnt[i]);
 
 					if (log)
-						fprintf(logfile, "DROPCOUNT: dropped %" PRId32 " CAN frame%s on '%s' socket (total drops %" PRId32 ")\n",
-							(uint32_t)frames, (frames > 1)?"s":"", devname[idx], (uint32_t)dropcnt[i]);
+						fprintf(logfile, "DROPCOUNT: dropped %d CAN frame%s on '%s' socket (total drops %d)\n",
+							frames, (frames > 1)?"s":"", devname[idx], dropcnt[i]);
 
 					last_dropcnt[i] = dropcnt[i];
 				}
@@ -709,8 +708,8 @@ int main(int argc, char **argv)
 
 					/* log CAN frame with absolute timestamp & device */
 					sprint_canframe(buf, &frame, 0, maxdlen);
-					fprintf(logfile, "(%010ju.%06ld) %*s %s\n",
-						(uintmax_t)tv.tv_sec, tv.tv_usec,
+					fprintf(logfile, "(%010ld.%06ld) %*s %s\n",
+						tv.tv_sec, tv.tv_usec,
 						max_devname_len, devname[idx], buf);
 				}
 
@@ -719,8 +718,8 @@ int main(int argc, char **argv)
 
 					/* print CAN frame in log file style to stdout */
 					sprint_canframe(buf, &frame, 0, maxdlen);
-					printf("(%010ju.%06ld) %*s %s\n",
-					       (uintmax_t)tv.tv_sec, tv.tv_usec,
+					printf("(%010ld.%06ld) %*s %s\n",
+					       tv.tv_sec, tv.tv_usec,
 					       max_devname_len, devname[idx], buf);
 					goto out_fflush; /* no other output to stdout */
 				}
@@ -738,8 +737,7 @@ int main(int argc, char **argv)
 				switch (timestamp) {
 
 				case 'a': /* absolute with timestamp */
-					printf("(%010ju.%06ld) ",
-						   (uintmax_t)tv.tv_sec, tv.tv_usec);
+					printf("(%010ld.%06ld) ", tv.tv_sec, tv.tv_usec);
 					break;
 
 				case 'A': /* absolute with date */
@@ -766,8 +764,7 @@ int main(int argc, char **argv)
 						diff.tv_sec--, diff.tv_usec += 1000000;
 					if (diff.tv_sec < 0)
 						diff.tv_sec = diff.tv_usec = 0;
-					printf("(%03ju.%06ld) ",
-						   (uintmax_t)diff.tv_sec, diff.tv_usec);
+					printf("(%03ld.%06ld) ", diff.tv_sec, diff.tv_usec);
 				
 					if (timestamp == 'd')
 						last_tv = tv; /* update for delta calculation */

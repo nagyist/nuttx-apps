@@ -208,8 +208,7 @@ static int dac_put(FAR const char *devpath,
         }
       else
         {
-          printf("wrote: chan=%d, data=%" PRId32 "\n", msg[i].am_channel,
-                 msg[i].am_data);
+          printf("wrote: chan=%d, data=%d\n", msg[i].am_channel, msg[i].am_data);
           i++;
           retries = 0;
           ret = OK;
@@ -278,8 +277,7 @@ static int cmd_dac_putv(int argc, FAR const char *argv[])
 static void dac_help(void)
 {
   printf("Usage: dac [OPTIONS] command [CMD OPTIONS]\n");
-  printf("\nGlobal arguments are \"sticky\".  "
-         "For example, once the DAC device is\n");
+  printf("\nGlobal arguments are \"sticky\".  For example, once the DAC device is\n");
   printf("specified, that device will be re-used until it is changed.\n");
   printf("\n\"sticky\" OPTIONS include:\n");
   printf("  [-c channel] selects the DAC channel.  "
@@ -290,8 +288,7 @@ static void dac_help(void)
          "Default: 1 Current: %d\n", g_dacstate.count);
   printf("  [-p devpath] selects the DAC device.  "
          "Default: %s Current: %s\n",
-         CONFIG_EXAMPLES_DAC_DEVPATH,
-         g_dacstate.devpath ? g_dacstate.devpath : "NONE");
+         CONFIG_EXAMPLES_DAC_DEVPATH, g_dacstate.devpath ? g_dacstate.devpath : "NONE");
   print_cmds("\nCommands:\n", commands, ARRAY_SIZE(commands), "\n");
 }
 
@@ -411,8 +408,8 @@ int main(int argc, FAR const char *argv[])
 
   if (!g_dacstate.initialized)
     {
-      /* Initialization of the DAC hardware must be performed by
-       * board-specific logic prior to running this test.
+      /* Initialization of the DAC hardware must be performed by board-specific
+       * logic prior to running this test.
        */
 
       /* Set the default values */
