@@ -1,5 +1,5 @@
 ############################################################################
-# system/libuv/Make.defs
+# apps/testing/ltp/ltp/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -16,17 +16,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
+#
 ############################################################################
 
-# Set up build configuration and environment
-
-LIBUV_DIR := $(APPDIR)/system/libuv
-
-CONFIG_LIBUV_URL ?= "https://github.com/libuv/libuv/archive"
-CONFIG_LIBUV_VERSION ?= 1.38.1
-CONFIG_LIBUV_TARBALL ?= v$(CONFIG_LIBUV_VERSION).zip
-
-LIBUV_UNPACKNAME := libuv-src
-LIBUV_UNPACKDIR := $(LIBUV_DIR)/$(LIBUV_UNPACKNAME)
-
-include $(wildcard $(APPDIR)/system/libuv/*/Make.defs)
+ifneq ($(CONFIG_TESTING_LTP),)
+CONFIGURED_APPS += $(APPDIR)/testing/ltp
+endif
