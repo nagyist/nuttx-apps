@@ -1,5 +1,5 @@
 ############################################################################
-# apps/wireless/bluetooth/nimble/Makefile
+# apps/testing/ltp/ltp/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -16,32 +16,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
+#
 ############################################################################
 
-include $(APPDIR)/Make.defs
-
-PRIORITY  = 255
-STACKSIZE = 16384
-
-NIMBLE_ROOT = $(APPDIR)/wireless/bluetooth/nimble/mynewt-nimble
-
--include $(NIMBLE_ROOT)/porting/examples/nuttx/Make.defs
-
-NIMBLE_TAR := $(CONFIG_NIMBLE_REF).tar.gz
-NIMBLE_URL := https://github.com/v01d/mynewt-nimble/archive/$(NIMBLE_TAR)
-
-$(NIMBLE_TAR):
-	wget $(NIMBLE_URL) -O $(NIMBLE_TAR)
-
-$(NIMBLE_ROOT): $(NIMBLE_TAR)
-	tar zxf $(NIMBLE_TAR)
-	mv mynewt-nimble-$(CONFIG_NIMBLE_REF) mynewt-nimble 
-
-context:: $(NIMBLE_ROOT)
-
-distclean::
-	$(call CLEAN,$(NIMBLE_TAR))
-	$(call DELDIR,$(NIMBLE_ROOT))
-
-           
-include $(APPDIR)/Application.mk
+ifneq ($(CONFIG_TESTING_LTP),)
+CONFIGURED_APPS += $(APPDIR)/testing/ltp
+endif
