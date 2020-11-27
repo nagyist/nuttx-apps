@@ -36,7 +36,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define ARRAYSIZE(a)       (sizeof(a) / sizeof(a)[0])
 #define DEVNAME_FMT        "/dev/sensor/%s"
 #define DEVNAME_MAX        64
 
@@ -152,17 +151,15 @@ static void print_gps(const char *buffer, const char *name)
 
 static void usage(void)
 {
-  printf("sensortest [arguments...] <command>\n");
+  printf("sensortest <command> [arguments...]\n");
+  printf(" Commands:\n");
+  printf("\t<sensor_node_name> ex, accel0(/dev/sensor/accel0)\n");
+
   printf("\t[-h      ]  sensotest commands help\n");
   printf("\t[-i <val>]  The output data period of sensor in us\n");
   printf("\t            default: 1000000\n");
   printf("\t[-b <val>]  The maximum report latency of sensor in us\n");
   printf("\t            default: 0\n");
-  printf("\t[-n <val>]  The specify number of output data\n");
-  printf("\t            default: 0\n");
-
-  printf(" Commands:\n");
-  printf("\t<sensor_node_name> ex, accel0(/dev/sensor/accel0)\n");
 }
 
 static void exit_handler(int signo)
@@ -181,9 +178,7 @@ static void exit_handler(int signo)
 int main(int argc, FAR char *argv[])
 {
   unsigned int interval = 1000000;
-  unsigned int received = 0;
   unsigned int latency = 0;
-  unsigned int count = 0;
   char devname[PATH_MAX];
   struct pollfd fds;
   FAR char *buffer;
@@ -205,20 +200,40 @@ int main(int argc, FAR char *argv[])
     }
 
   g_should_exit = false;
-  while ((ret = getopt(argc, argv, "i:b:n:h")) != EOF)
+  name = argv[1];
+  for (idx = 0; idx < SENSOR_TYPE_COUNT; idx++)
+    {
+      if (!strncmp(name, g_sensor_info[idx].name,
+          strlen(g_sensor_info[idx].name)))
+        {
+          len = g_sensor_info[idx].esize;
+          buffer = calloc(1, len);
+          break;
+        }
+    }
+
+  if (!len)
+    {
+      printf("The sensor node name:%s is invaild\n", name);
+      usage();
+      return -EINVAL;
+    }
+
+  if (!buffer)
+    {
+      return -ENOMEM;
+    }
+
+  while ((ret = getopt(argc, argv, "i:b:h")) != EOF)
     {
       switch (ret)
         {
           case 'i':
-            interval = strtoul(optarg, NULL, 0);
+            interval = strtol(optarg, NULL, 0);
             break;
 
           case 'b':
-            latency = strtoul(optarg, NULL, 0);
-            break;
-
-          case 'n':
-            count = strtoul(optarg, NULL, 0);
+            latency = strtol(optarg, NULL, 0);
             break;
 
           case 'h':
@@ -227,41 +242,6 @@ int main(int argc, FAR char *argv[])
             goto opt_err;
             break;
         }
-    }
-
-  if (optind < argc)
-    {
-      name = argv[optind];
-      for (idx = 0; idx < ARRAYSIZE(g_sensor_info); idx++)
-        {
-          if (!strncmp(name, g_sensor_info[idx].name,
-              strlen(g_sensor_info[idx].name)))
-            {
-              len = g_sensor_info[idx].esize;
-              buffer = calloc(1, len);
-              break;
-            }
-        }
-
-      if (!len)
-        {
-          printf("The sensor node name:%s is invaild\n", name);
-          usage();
-          ret = -EINVAL;
-          goto name_err;
-        }
-
-      if (!buffer)
-        {
-          ret = -ENOMEM;
-          goto name_err;
-        }
-    }
-  else
-    {
-      usage();
-      ret = -EINVAL;
-      goto name_err;
     }
 
   snprintf(devname, PATH_MAX, DEVNAME_FMT, name);
@@ -316,19 +296,16 @@ int main(int argc, FAR char *argv[])
   fds.fd = fd;
   fds.events = POLLIN;
 
-  while ((!count || received < count) &&!g_should_exit)
+  while (!g_should_exit)
     {
       if (poll(&fds, 1, -1) > 0)
         {
           if (read(fd, buffer, len) >= len)
             {
-              received++;
               g_sensor_info[idx].print(buffer, name);
             }
         }
     }
-
-  printf("SensorTest: Received message: %s, number:%d/%d\n", name, received, count);
 
   ret = ioctl(fd, SNIOC_ACTIVATE, 0);
   if (ret < 0)
@@ -343,7 +320,6 @@ ctl_err:
   close(fd);
 opt_err:
   free(buffer);
-name_err:
   optind = 0;
   return ret;
 }

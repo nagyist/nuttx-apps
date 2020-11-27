@@ -40,6 +40,10 @@ include $(APPDIR)/Make.defs
 LVGL_DIR = .
 LVGL_DIR_NAME = lvgl
 
+# Relax format check for LVGL to avoid errors on prinf() use
+
+CFLAGS += -Wno-format
+
 # LVGL Libraries
 
 -include ./lvgl/src/lv_core/lv_core.mk
@@ -77,10 +81,10 @@ $(LVGL_UNPACKNAME): $(LVGL_TARBALL)
 	$(Q) mv	lvgl-$(LVGL_VERSION) $(LVGL_UNPACKNAME)
 	$(Q) touch $(LVGL_UNPACKNAME)
 
-context::# $(LVGL_UNPACKNAME)
+context:: $(LVGL_UNPACKNAME)
 
 distclean::
-#	$(call DELDIR, $(LVGL_UNPACKNAME))
-#	$(call DELFILE, $(LVGL_TARBALL))
+	$(call DELDIR, $(LVGL_UNPACKNAME))
+	$(call DELFILE, $(LVGL_TARBALL))
 
 include $(APPDIR)/Application.mk
