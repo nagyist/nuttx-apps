@@ -307,7 +307,6 @@ FAR void *wapi_load_config(FAR const char *ifname,
                            FAR const char *confname,
                            FAR struct wpa_wconfig_s *conf)
 {
-  FAR struct ether_addr *ap;
   FAR cJSON *ifobj;
   FAR cJSON *root;
   FAR cJSON *obj;
@@ -336,8 +335,6 @@ FAR void *wapi_load_config(FAR const char *ifname,
     {
       goto errout;
     }
-
-  memset(conf, 0, sizeof(*conf));
 
   obj = cJSON_GetObjectItem(ifobj, "mode");
   if (!obj)
@@ -385,11 +382,7 @@ FAR void *wapi_load_config(FAR const char *ifname,
       goto errout;
     }
 
-  ap = ether_aton(obj->valuestring);
-  if (ap != NULL)
-    {
-      conf->bssid = (FAR const char *)ap->ether_addr_octet;
-    }
+  conf->bssid = (FAR const char *)obj->valuestring;
 
   obj = cJSON_GetObjectItem(ifobj, "psk");
   if (!obj || !obj->valuestring)
