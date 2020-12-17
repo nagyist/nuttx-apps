@@ -55,13 +55,7 @@ CFLAGS += -Wno-format
 -include ./lvgl/src/lv_draw/lv_draw.mk
 -include ./lvgl/src/lv_gpu/lv_gpu.mk
 
-CSRCS += fbdev.c tp.c tp_cal.c lv_tick_interface.c
-
-# File system interface
-
-ifneq ($(CONFIG_USE_LV_FILESYSTEM),)
-CSRCS += lv_fs_if/lv_fs_if.c lv_fs_if/lv_fs_pc.c
-endif
+CSRCS += lv_tick_interface.c
 
 # Set up build configuration and environment
 

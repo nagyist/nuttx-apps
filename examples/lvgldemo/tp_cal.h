@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/lvgldemo/demo.h
+ * examples/touchscreen/tp_cal.h
  *
  *   Copyright (C) 2018 Gregory Nutt. All rights reserved.
  *   Author: Gábor Kiss-Vámosi <kisvegabor@gmail.com>
@@ -33,15 +33,12 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_WATCHX_FBDEV_H
-#define __APPS_EXAMPLES_WATCHX_FBDEV_H
+#ifndef __APPS_EXAMPLES_LVGLDEMO_TP_CAL_H
+#define __APPS_EXAMPLES_LVGLDEMO_TP_CAL_H
 
 /****************************************************************************
- * Included Files
+ * Public Function Prototypes
  ****************************************************************************/
-
-#include <stdint.h>
-#include <lvgl/lvgl.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -49,19 +46,23 @@ extern "C"
 #endif
 
 /****************************************************************************
- * Public Function Prototypes
+ * Name: tp_cal_create
+ *
+ * Description:
+ *   Create a touchpad calibration screen
+ *
+ * Input Parameters:
+ *   None
+ *
+ * Returned Value:
+ *   None
+ *
  ****************************************************************************/
 
-int fbdev_init(void);
-void fbdev_flush(struct _disp_drv_t *disp_drv, const lv_area_t *area,
-                 lv_color_t *color_p);
-void fbdev_fill(int32_t x1, int32_t y1, int32_t x2, int32_t y2,
-                lv_color_t color);
-void fbdev_map(int32_t x1, int32_t y1, int32_t x2, int32_t y2,
-               FAR const lv_color_t *color_p);
+void tp_cal_create(void);
 
 #ifdef __cplusplus
-}
+} /* extern "C" */
 #endif
 
-#endif /* __APPS_EXAMPLES_LVGLDEMO_FBDEV_H */
+#endif /*__APPS_EXAMPLES_LVGLDEMO_TP_CAL_H*/

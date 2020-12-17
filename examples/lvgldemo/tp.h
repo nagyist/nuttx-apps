@@ -33,13 +33,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_WATCHX_TP_H
-#define __APPS_EXAMPLES_WATCHX_TP_H
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#ifndef __APPS_EXAMPLES_LVGLDEMO_TP_H
+#define __APPS_EXAMPLES_LVGLDEMO_TP_H
 
 /****************************************************************************
  * Included Files
@@ -67,8 +62,6 @@ extern "C"
 #ifndef CONFIG_INPUT
 #  error "Input device support is not enabled (CONFIG_INPUT)"
 #endif
-
-#define CONFIG_EXAMPLES_LGVLDEMO_DEVPATH "/dev/input0"
 
 #ifndef CONFIG_EXAMPLES_LGVLDEMO_MINOR
 #  undef  CONFIG_EXAMPLES_LGVLDEMO_DEVPATH
@@ -147,9 +140,5 @@ bool tp_read(FAR struct _lv_indev_drv_t *indev_drv,
 
 void tp_set_cal_values(FAR lv_point_t *ul, FAR lv_point_t *ur,
                        FAR lv_point_t *lr, FAR lv_point_t *ll);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __APPS_EXAMPLES_LVGLDEMO_TP_H */
