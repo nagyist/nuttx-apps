@@ -68,7 +68,6 @@ CONFIG_GRAPH_LV_FS_IF_URL ?= "https://github.com/lvgl/lv_fs_if/archive"
 
 LVGL_VERSION = $(patsubst "%",%,$(strip $(CONFIG_LVGL_VERSION)))
 LVGL_TARBALL = v$(LVGL_VERSION).zip
-WGET ?= wget
 
 LVGL_UNPACKNAME = lvgl
 UNPACK ?= unzip -o
@@ -80,7 +79,7 @@ LVGL_UNPACKDIR =  $(WD)/$(LVGL_UNPACKNAME)
 
 $(LVGL_TARBALL):
 	@echo "Downloading: $(LVGL_TARBALL)"
-	$(Q) $(WGET) $(CONFIG_GRAPH_LVGL_URL)/$(LVGL_TARBALL)
+	$(Q) curl -O -L $(CONFIG_GRAPH_LVGL_URL)/$(LVGL_TARBALL)
 
 $(LV_FS_IF_TARBALL):
 	@echo "Downloading: $(LV_FS_IF_TARBALL)"
