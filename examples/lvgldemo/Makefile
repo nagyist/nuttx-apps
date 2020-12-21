@@ -53,8 +53,6 @@ MODULE = $(CONFIG_EXAMPLES_LVGLDEMO)
 
 # LittleVGL demo Example
 
-CSRCS += fbdev.c tp.c tp_cal.c
-
 # static common assets used in mutiple example
 
 LV_EXAMPLE_ASSETS = $(wildcard ./lv_examples/assets/*.c)
@@ -86,8 +84,8 @@ endif
 
 MAINSRC = lvgldemo.c
 
-CFLAGS += ${shell $(DEFINE) "$(CC)" LV_LVGL_H_INCLUDE_SIMPLE} -Wno-format
-CXXFLAGS += ${shell $(DEFINE) "$(CC)" LV_LVGL_H_INCLUDE_SIMPLE} -Wno-format
+CFLAGS += ${shell $(DEFINE) "$(CC)" LV_LVGL_H_INCLUDE_SIMPLE}
+CXXFLAGS += ${shell $(DEFINE) "$(CC)" LV_LVGL_H_INCLUDE_SIMPLE}
 
 $(LVGL_EXAMPLES_TARBALL):
 	@echo "Downloading: $(LVGL_EXAMPLES_TARBALL)"
@@ -99,10 +97,10 @@ $(LVGL_EXAMPLES_UNPACKNAME): $(LVGL_EXAMPLES_TARBALL)
 	$(Q) mv	lv_examples-$(LVGL_EXAMPLES_VERSION) $(LVGL_EXAMPLES_UNPACKNAME)
 	$(Q) touch $(LVGL_EXAMPLES_UNPACKNAME)
 
-context:: $(LVGL_EXAMPLES_UNPACKNAME)
+context::# $(LVGL_EXAMPLES_UNPACKNAME)
 
 distclean::
-	$(call DELDIR, $(LVGL_EXAMPLES_UNPACKNAME))
-	$(call DELFILE, $(LVGL_EXAMPLES_TARBALL))
+#	$(call DELDIR, $(LVGL_EXAMPLES_UNPACKNAME))
+#	$(call DELFILE, $(LVGL_EXAMPLES_TARBALL))
 
 include $(APPDIR)/Application.mk

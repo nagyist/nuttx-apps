@@ -318,6 +318,14 @@ typedef void * lv_group_user_data_t;
  */
 
 typedef void * lv_fs_drv_user_data_t;
+
+/* File system interface */
+
+#define LV_USE_FS_IF      LV_USE_FILESYSTEM
+#define LV_FS_IF_FATFS    '\0'
+#define LV_FS_IF_PC       '/'
+#define LV_FS_PC_PATH     CONFIG_LV_FS_PC_PATH
+
 #endif
 
 /* 1: Add a `user_data` to drivers and objects */
@@ -753,7 +761,7 @@ typedef void * lv_font_user_data_t;
 
 /* Change the built in (v)snprintf functions */
 
-#define LV_SPRINTF_CUSTOM   1
+#define LV_SPRINTF_CUSTOM   0
 #if LV_SPRINTF_CUSTOM
 #  define LV_SPRINTF_INCLUDE <stdio.h>
 #  define lv_snprintf     snprintf

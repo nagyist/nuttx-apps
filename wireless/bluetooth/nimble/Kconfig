@@ -4,12 +4,12 @@ config NIMBLE
   depends on !WIRELESS_BLUETOOTH_HOST
   ---help---
     Enable Apache nimBLE Bluetooth Low Energy
-    host-layer stack.
+    host-layer stack. 
 
 if NIMBLE
   config NIMBLE_REF
   string "Version"
-  default "master"
+  default "nuttx"
   ---help---
     Git ref name to use when downloading from nimBLE repo
 endif
