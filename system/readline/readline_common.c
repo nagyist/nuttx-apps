@@ -733,17 +733,11 @@ ssize_t readline_common(FAR struct rl_common_s *vtbl, FAR char *buf,
           return nch;
         }
 
-#ifdef CONFIG_READLINE_TABCOMPLETION
-      else if (ch == '\t') /* TAB character */
-        {
-          tab_completion(vtbl, buf, buflen, &nch);
-        }
-#endif
       /* Otherwise, check if the character is printable and, if so, put the
        * character in the line buffer
        */
 
-      else
+      else if (isprint(ch))
         {
           buf[nch++] = ch;
 
@@ -762,5 +756,11 @@ ssize_t readline_common(FAR struct rl_common_s *vtbl, FAR char *buf,
               return nch;
             }
         }
+#ifdef CONFIG_READLINE_TABCOMPLETION
+      else if (ch == '\t') /* TAB character */
+        {
+          tab_completion(vtbl, buf, buflen, &nch);
+        }
+#endif
     }
 }
