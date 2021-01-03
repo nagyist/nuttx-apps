@@ -230,7 +230,7 @@ int shell_pipe_exec(char * const argv[], shell_pipe_t *apipe,
 
   ret = task_create("ADB shell", CONFIG_SYSTEM_NSH_PRIORITY,
                     CONFIG_SYSTEM_NSH_STACKSIZE, nsh_consolemain,
-                    &argv[1]);
+                    argv);
 
   /* Close stdin and stdout */
 
