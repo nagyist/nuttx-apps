@@ -15,8 +15,12 @@
 
 include $(APPDIR)/Make.defs
 
-TESTDIR      = $(CURDIR)/ltp/testcases/open_posix_testsuite
+LTP_UNPACK   = ltp
+LTP_URL      = https://github.com/linux-test-project/ltp.git
 
+TESTDIR      = $(LTP_UNPACK)/testcases/open_posix_testsuite
+
+ifneq ($(wildcard $(TESTDIR)),)
 ifeq ($(CONFIG_FS_AIO),)
 BLACKWORDS  += "aio.h"
 BLACKWORDS  += "SIGPOLL"
@@ -97,7 +101,17 @@ STACKSIZE     = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE        = $(CONFIG_TESTING_LTP)
 
 CSRCS        := $(LTP_CSRCS)
-CFLAGS       += -I$(CURDIR)
+CFLAGS       += -I$(LTP_UNPACK)
 CFLAGS       += -I$(TESTDIR)/include
+endif
+
+$(LTP_UNPACK):
+	$(Q) echo "git clone $(LTP_URL)"
+	$(Q) git clone $(LTP_URL)
+
+context:: $(LTP_UNPACK)
+
+distclean::
+	$(Q) rm -rf $(LTP_UNPACK)
 
 include $(APPDIR)/Application.mk
