@@ -96,6 +96,7 @@ static int wapi_bitrate_cmd      (int sock, int argc, FAR char **argv);
 static int wapi_txpower_cmd      (int sock, int argc, FAR char **argv);
 static int wapi_scan_results_cmd (int sock, int argc, FAR char **argv);
 static int wapi_scan_cmd         (int sock, int argc, FAR char **argv);
+static int wapi_country_cmd      (int sock, int argc, FAR char **argv);
 #ifdef CONFIG_WIRELESS_WAPI_INITCONF
 static int wapi_reconnect_cmd    (int sock, int argc, FAR char **argv);
 static int wapi_save_config_cmd  (int sock, int argc, FAR char **argv);
@@ -121,6 +122,7 @@ static const struct wapi_command_s g_wapi_commands[] =
   {"ap",           2, 2, wapi_ap_cmd},
   {"bitrate",      3, 3, wapi_bitrate_cmd},
   {"txpower",      3, 3, wapi_txpower_cmd},
+  {"country",      2, 2, wapi_country_cmd},
 #ifdef CONFIG_WIRELESS_WAPI_INITCONF
   {"reconnect",    1, 1, wapi_reconnect_cmd},
   {"save_config",  1, 1, wapi_save_config_cmd},
@@ -745,6 +747,22 @@ static int wapi_scan_cmd(int sock, int argc, FAR char **argv)
   return wapi_scan_results_cmd(sock, 1, argv);
 }
 
+/****************************************************************************
+ * Name: wapi_country_cmd
+ *
+ * Description:
+ *  Set the country code
+ *
+ * Returned Value:
+ *   None
+ *
+ ****************************************************************************/
+
+static int wapi_country_cmd(int sock, int argc, FAR char **argv)
+{
+  return wapi_set_country(sock, argv[0], argv[1]);
+}
+
 #ifdef CONFIG_WIRELESS_WAPI_INITCONF
 
 /****************************************************************************
@@ -911,9 +929,9 @@ static void wapi_showusage(FAR const char *progname, int exitcode)
   fprintf(stderr, "\t%s psk          <ifname> <passphrase> <index/flag>\n",
                    progname);
   fprintf(stderr, "\t%s disconnect   <ifname>\n", progname);
-  fprintf(stderr, "\t%s mode         <ifname>              <index/mode>\n",
+  fprintf(stderr, "\t%s mode         <ifname> <ifname>     <index/mode>\n",
                    progname);
-  fprintf(stderr, "\t%s ap           <ifname>              <MAC address>\n",
+  fprintf(stderr, "\t%s ap           <ifname> <ifname>     <MAC address>\n",
                    progname);
   fprintf(stderr, "\t%s bitrate      <ifname> <bitrate>    <index/flag>\n",
                    progname);

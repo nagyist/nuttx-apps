@@ -316,8 +316,7 @@ static int nxplayer_opendevice(FAR struct nxplayer_s *pplayer, int format,
           int errcode = errno;
           DEBUGASSERT(errcode > 0);
 
-          auderr("ERROR: Failed to open %s: %d\n",
-                 pplayer->prefdevice, -errcode);
+          auderr("ERROR: Failed to open %s: %d\n", -errcode);
           UNUSED(errcode);
           return -ENOENT;
         }
@@ -1083,9 +1082,7 @@ static void *nxplayer_playthread(pthread_addr_t pvarg)
 
             /* Send a stop message to the device */
 
-#ifdef CONFIG_DEBUG_FEATURES
             audinfo("Stopping! outstanding=%d\n", outstanding);
-#endif
 
 #ifdef CONFIG_AUDIO_MULTI_SESSION
             ioctl(pplayer->dev_fd, AUDIOIOC_STOP,
@@ -1104,9 +1101,7 @@ static void *nxplayer_playthread(pthread_addr_t pvarg)
           /* Message indicating the playback is complete */
 
           case AUDIO_MSG_COMPLETE:
-#ifdef CONFIG_DEBUG_FEATURES
             audinfo("Play complete.  outstanding=%d\n", outstanding);
-#endif
             DEBUGASSERT(outstanding == 0);
             running = false;
             break;
@@ -1954,7 +1949,7 @@ static int nxplayer_playinternal(FAR struct nxplayer_s *pplayer,
            (unsigned long)((uintptr_t)pplayer));
 
   pplayer->mq = mq_open(pplayer->mqname, O_RDWR | O_CREAT, 0644, &attr);
-  if (pplayer->mq == (mqd_t) -1)
+  if (pplayer->mq == NULL)
     {
       /* Unable to open message queue! */
 
@@ -2148,7 +2143,7 @@ FAR struct nxplayer_s *nxplayer_create(void)
   pplayer->prefformat = 0;
   pplayer->preftype = 0;
 #endif
-  pplayer->mq = 0;
+  pplayer->mq = NULL;
   pplayer->play_id = 0;
   pplayer->crefs = 1;
 
