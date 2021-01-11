@@ -23,7 +23,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <time.h>
+#include <stdio.h>
 #include "lv_tick_interface.h"
 
 /****************************************************************************
@@ -52,13 +52,22 @@
 
 uint32_t lv_tick_interface(void)
 {
-  struct timespec ts;
+  static bool first_time = true;
+  static struct timeval t0;
 
-#ifdef CONFIG_CLOCK_MONOTONIC
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-#else
-  clock_gettime(CLOCK_REALTIME, &ts);
-#endif
+  if (first_time)
+    {
+      gettimeofday(&t0, NULL);
+      first_time = false;
+      return 0;
+    }
+  else
+    {
+      struct timeval t;
+      struct timeval delta;
 
-  return ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+      gettimeofday(&t, NULL);
+      timersub(&t, &t0, &delta);
+      return delta.tv_sec * 1000 + delta.tv_usec / 1000;
+    }
 }
