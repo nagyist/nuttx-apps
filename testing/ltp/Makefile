@@ -15,12 +15,8 @@
 
 include $(APPDIR)/Make.defs
 
-LTP_UNPACK   = ltp
-LTP_URL      = https://github.com/linux-test-project/ltp.git
+TESTDIR      = $(CURDIR)/ltp/testcases/open_posix_testsuite
 
-TESTDIR      = $(LTP_UNPACK)/testcases/open_posix_testsuite
-
-ifneq ($(wildcard $(TESTDIR)),)
 ifeq ($(CONFIG_FS_AIO),)
 BLACKWORDS  += "aio.h"
 BLACKWORDS  += "SIGPOLL"
@@ -83,10 +79,12 @@ BLACKSRCS += 35-2-buildonly.c
 
 MAINWORDS    += "main("
 
-$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell find $(TESTDIR) -name *.c |xargs grep -lr $(word))))
-$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(shell find $(TESTDIR) -name *.c))))
+LTP_ORIGINS  := $(shell find $(TESTDIR) -name *.c)
 
-LTP_ORIGINS  := $(filter-out $(BLACKLIST), $(shell find $(TESTDIR) -name *.c))
+$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(LTP_ORIGINS))))
+$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGINS))))
+
+LTP_ORIGINS  := $(filter-out $(BLACKLIST), $(LTP_ORIGINS))
 
 $(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS+=$(shell grep -lr $(word) $(LTP_ORIGINS))))
 
@@ -99,17 +97,7 @@ STACKSIZE     = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE        = $(CONFIG_TESTING_LTP)
 
 CSRCS        := $(LTP_CSRCS)
-CFLAGS       += -I$(LTP_UNPACK)
+CFLAGS       += -I$(CURDIR)
 CFLAGS       += -I$(TESTDIR)/include
-endif
-
-$(LTP_UNPACK):
-	$(Q) echo "git clone $(LTP_URL)"
-	$(Q) git clone $(LTP_URL)
-
-context:: $(LTP_UNPACK)
-
-distclean::
-	$(Q) rm -rf $(LTP_UNPACK)
 
 include $(APPDIR)/Application.mk
