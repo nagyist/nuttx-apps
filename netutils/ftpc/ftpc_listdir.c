@@ -52,10 +52,22 @@
 #include "ftpc_internal.h"
 
 /****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/****************************************************************************
  * Private Types
  ****************************************************************************/
 
 typedef void (*callback_t)(FAR const char *name, FAR void *arg);
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
 
 /****************************************************************************
  * Private Functions
@@ -99,9 +111,8 @@ static void ftpc_addname(FAR const char *name, FAR void *arg)
  *   sequence of pathnames. Each pathname is terminated by \r\n.
  *
  *   If a pathname starts with a slash, it represents the pathname. If a
- *   pathname does not start with a slash, it represents the pathname
- *   obtained by concatenating the pathname of the directory and the
- *   pathname.
+ *   pathname does not start with a slash, it represents the pathname obtained
+ *   by concatenating the pathname of the directory and the pathname.
  *
  *   IF NLST of directory /pub produces foo\r\nbar\r\n, it refers to the
  *   pathnames /pub/foo and /pub/bar.
@@ -111,11 +122,11 @@ static void ftpc_addname(FAR const char *name, FAR void *arg)
 static void ftpc_nlstparse(FAR FILE *instream, callback_t callback,
                            FAR void *arg)
 {
-  char buffer[CONFIG_FTP_MAXPATH + 1];
+  char buffer[CONFIG_FTP_MAXPATH+1];
 
   /* Read every filename from the temporary file */
 
-  for (; ; )
+  for (;;)
     {
       /* Read the next line from the file */
 
@@ -134,7 +145,6 @@ static void ftpc_nlstparse(FAR FILE *instream, callback_t callback,
         {
           break;
         }
-
       ninfo("File: %s\n", buffer);
 
       /* Perform the callback operation */
@@ -255,7 +265,7 @@ static int ftpc_recvdir(FAR struct ftpc_session_s *session,
  *   expansion "~/xyz" and relative paths (abc/def) because we do have
  *   special knowledge about the home and current directories.  But otherwise
  *   the paths are expected to be pre-sanitized:  No . or .. in paths,
- *   no multiple consecutive '/' in paths, etc.
+ *   no '//' in paths, etc.
  *
  ****************************************************************************/
 
@@ -272,21 +282,9 @@ FAR struct ftpc_dirlist_s *ftpc_listdir(SESSION handle,
   int allocsize;
   int ret;
 
-  /* If no remote current directory, we are not logged in. */
-
-  if (!session->currdir)
-    {
-      return NULL;
-    }
-
   /* Get the absolute path to the directory */
 
   absrpath = ftpc_absrpath(session, dirpath);
-  if (!absrpath)
-    {
-      return NULL;
-    }
-
   ftpc_stripslash(absrpath);
 
   /* Is the directory also the remote current working directory? */
@@ -295,13 +293,7 @@ FAR struct ftpc_dirlist_s *ftpc_listdir(SESSION handle,
 
   /* Create a temporary file to hold the directory listing */
 
-  ret = asprintf(&tmpfname, "%s/TMP%d.dat", CONFIG_FTP_TMPDIR, getpid());
-  if (ret < 0)
-    {
-      free(absrpath);
-      return NULL;
-    }
-
+  asprintf(&tmpfname, "%s/TMP%d.dat", CONFIG_FTP_TMPDIR, getpid());
   filestream = fopen(tmpfname, "w+");
   if (!filestream)
     {
@@ -357,7 +349,6 @@ FAR struct ftpc_dirlist_s *ftpc_listdir(SESSION handle,
           nwarn("WARNING: Nothing found in directory\n");
           goto errout;
         }
-
       ninfo("nnames: %d\n", nnames);
 
       /* Allocate and initialize a directory container */
