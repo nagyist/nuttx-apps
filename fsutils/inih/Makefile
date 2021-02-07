@@ -35,6 +35,7 @@
 
 include $(APPDIR)/Make.defs
 
+WGET = wget
 CP = cp -R
 UNPACK = tar -xzf
 PACKEXT = .tar.gz
@@ -80,7 +81,7 @@ CFLAGS += -DINI_HANDLER_LINENO=1
 
 $(INIH_TARBALL):
 	@echo "Downloading: $@"
-	$(Q) curl -L -o $@ $(INIH_URL)/$@
+	$(Q) $(WGET) -O $@ $(INIH_URL)/$@
 	${Q} $(NXTOOLSDIR)/check-hash.sh sha256 $(INIH_SRC_SHA256) $@
 
 $(INIH_SOURCES): $(INIH_TARBALL)
