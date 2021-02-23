@@ -112,4 +112,7 @@ context:: $(LTP_UNPACK)
 distclean::
 	$(Q) rm -rf $(LTP_UNPACK)
 
+depend::
+	$(Q) touch $(MAINSRC)
+
 include $(APPDIR)/Application.mk
