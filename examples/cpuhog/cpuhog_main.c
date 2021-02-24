@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/cpuhog/cpuhog_main.c
+ * apps/examples/cpuhog/cpuhog_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -42,7 +42,6 @@
  *
  ****************************************************************************/
 
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
@@ -55,6 +54,7 @@
 #include <nuttx/clock.h>
 #include <nuttx/arch.h>
 #include <semaphore.h>
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -95,7 +95,7 @@ int main(int argc, FAR char *argv[])
       printf("cpuhog initialized\n");
     }
 
-  while(1)
+  while (1)
     {
       /* To test semaphore interaction (debugging system crashes...) */
 

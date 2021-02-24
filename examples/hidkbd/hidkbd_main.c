@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/hidkbd/hidkbd_main.c
+ * apps/examples/hidkbd/hidkbd_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <assert.h>
 #include <errno.h>
 
 #include <nuttx/usb/usbhost.h>

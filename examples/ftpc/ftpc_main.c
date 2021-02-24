@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/ftpc/ftpc_main.c
+ * apps/examples/ftpc/ftpc_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <assert.h>
 #include <errno.h>
 
 #include <sys/types.h>

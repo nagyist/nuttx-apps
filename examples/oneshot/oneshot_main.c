@@ -172,10 +172,6 @@ int main(int argc, FAR char *argv[])
 
   signal(CONFIG_EXAMPLES_ONESHOT_SIGNO, SIG_IGN);
 
-  /* Ignore the default signal action */
-
-  signal(CONFIG_EXAMPLES_ONESHOT_SIGNO, SIG_IGN);
-
   /* Loop waiting until the full delay expires */
 
   while (usecs > 0)

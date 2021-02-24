@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/pwm/pwm_main.c
+ * apps/examples/pwm/pwm_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -212,7 +212,7 @@ static void pwm_help(FAR struct pwm_state_s *pwm)
 #endif
 #ifdef CONFIG_PWM_PULSECOUNT
   printf("  [-n count] selects the pulse count.  "
-         "Default: %d Current: %u\n",
+         "Default: %d Current: %" PRIx32 "\n",
          CONFIG_EXAMPLES_PWM_PULSECOUNT, pwm->count);
 #endif
   printf("  [-t duration] is the duration of the pulse train in seconds.  "
@@ -497,7 +497,8 @@ int main(int argc, FAR char *argv[])
   info.count     = g_pwmstate.count;
 
   printf("pwm_main: starting output "
-         "with frequency: %" PRIu32 " duty: %08" PRIx32 " count: %u\n",
+         "with frequency: %" PRIu32 " duty: %08" PRIx32
+         " count: %" PRIx32 "\n",
          info.frequency, (uint32_t)info.duty, info.count);
 
 #  else
