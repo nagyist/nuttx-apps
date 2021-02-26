@@ -47,6 +47,26 @@
 #include "ftpc_internal.h"
 
 /****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+/****************************************************************************
  * Public Functions
  ****************************************************************************/
 
@@ -62,7 +82,6 @@ off_t ftpc_filesize(SESSION handle, FAR const char *path)
 {
   FAR struct ftpc_session_s *session = (FAR struct ftpc_session_s *)handle;
   unsigned long ret;
-  uint8_t mode = FTPC_XFRMODE_ASCII;
 
   /* Check if the host supports the SIZE command */
 
@@ -71,11 +90,7 @@ off_t ftpc_filesize(SESSION handle, FAR const char *path)
       return ERROR;
     }
 
-#ifdef CONFIG_FTP_SIZE_CMD_MODE_BINARY
-  mode = FTPC_XFRMODE_BINARY;
-#endif
-
-  if (ftpc_xfrmode(session, mode) != 0)
+  if (ftpc_xfrmode(session, FTPC_XFRMODE_ASCII) != 0)
     {
       return ERROR;
     }
