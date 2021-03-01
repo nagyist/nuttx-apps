@@ -23,31 +23,25 @@ include $(APPDIR)/Make.defs
 PRIORITY  = 255
 STACKSIZE = 16384
 
-NIMBLE_UNPACKDIR = mynewt-nimble
-NIMBLE_ROOT = $(APPDIR)/wireless/bluetooth/nimble/$(NIMBLE_UNPACKDIR)
+NIMBLE_ROOT = $(APPDIR)/wireless/bluetooth/nimble/mynewt-nimble
 
 -include $(NIMBLE_ROOT)/porting/examples/nuttx/Make.defs
 
-CONFIG_NIMBLE_REF := $(patsubst "%",%,$(strip $(CONFIG_NIMBLE_REF)))
 NIMBLE_TAR := $(CONFIG_NIMBLE_REF).tar.gz
-NIMBLE_URL := https://github.com/apache/mynewt-nimble/archive/$(NIMBLE_TAR)
+NIMBLE_URL := https://github.com/v01d/mynewt-nimble/archive/$(NIMBLE_TAR)
 
 $(NIMBLE_TAR):
-	$(Q) curl -L $(NIMBLE_URL) -o $(NIMBLE_TAR)
+	wget $(NIMBLE_URL) -O $(NIMBLE_TAR)
 
-$(NIMBLE_UNPACKDIR): $(NIMBLE_TAR)
-	$(Q) tar zxf $(NIMBLE_TAR)
-	$(Q) mv mynewt-nimble-$(CONFIG_NIMBLE_REF) $(NIMBLE_UNPACKDIR)
-	$(Q) touch $(NIMBLE_UNPACKDIR)
+$(NIMBLE_ROOT): $(NIMBLE_TAR)
+	tar zxf $(NIMBLE_TAR)
+	mv mynewt-nimble-$(CONFIG_NIMBLE_REF) mynewt-nimble 
 
-context:: $(NIMBLE_UNPACKDIR)
+context:: $(NIMBLE_ROOT)
 
 distclean::
-	$(call DELFILE,$(NIMBLE_TAR))
-	$(call DELDIR,$(NIMBLE_UNPACKDIR))
+	$(call CLEAN,$(NIMBLE_TAR))
+	$(call DELDIR,$(NIMBLE_ROOT))
 
-# nimBLE assumes this flag since it expects undefined macros to be zero value
-
-CFLAGS += -Wno-undef
-
+           
 include $(APPDIR)/Application.mk

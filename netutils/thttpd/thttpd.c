@@ -7,7 +7,7 @@
  *
  * Derived from the file of the same name in the original THTTPD package:
  *
- *   Copyright (C) 1995,1998,1999,2000,2001 by
+ *   Copyright © 1995,1998,1999,2000,2001 by
  *   Jef Poskanzer <jef@mail.acme.com>. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -696,7 +696,7 @@ int thttpd_main(int argc, char **argv)
    * socket descriptors
    */
 
-  fw = fdwatch_initialize(CONFIG_NFILE_DESCRIPTORS);
+  fw = fdwatch_initialize(CONFIG_NSOCKET_DESCRIPTORS);
   if (!fw)
     {
       nerr("ERROR: fdwatch initialization failure\n");
