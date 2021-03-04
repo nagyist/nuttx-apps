@@ -168,7 +168,7 @@ struct cle_s
  ****************************************************************************/
 
 #if CONFIG_SYSTEM_CLE_DEBUGLEVEL > 0
-static void     cle_debug(FAR const char *fmt, ...);
+static int      cle_debug(FAR const char *fmt, ...);
 #endif
 
 /* Low-level display and data entry functions */
@@ -248,15 +248,17 @@ static const char g_setcolor[]     = VT100_FMT_FORE_COLOR;
  ****************************************************************************/
 
 #if CONFIG_SYSTEM_CLE_DEBUGLEVEL > 0
-static void cle_debug(FAR const char *fmt, ...)
+static int cle_debug(FAR const char *fmt, ...)
 {
   va_list ap;
+  int ret;
 
   /* Let vsyslog do the real work */
 
   va_start(ap, fmt);
-  vsyslog(LOG_DEBUG, fmt, ap);
+  ret = vsyslog(LOG_DEBUG, fmt, ap);
   va_end(ap);
+  return ret;
 }
 #endif
 
@@ -1196,7 +1198,7 @@ int cle(FAR char *line, const char *prompt, uint16_t linelen,
       return -EINVAL;
     }
 
-  priv.coloffs = column;
+  priv.coloffs = column - 1;
 
   cleinfo("row=%d column=%d\n", priv.row, column);
 
