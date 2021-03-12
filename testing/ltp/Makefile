@@ -15,16 +15,37 @@
 
 include $(APPDIR)/Make.defs
 
-LTP_UNPACK   = ltp
-LTP_URL      = https://github.com/linux-test-project/ltp.git
+TESTDIR      = $(CURDIR)/ltp/testcases/open_posix_testsuite
 
-TESTDIR      = $(LTP_UNPACK)/testcases/open_posix_testsuite
-
-ifneq ($(wildcard $(TESTDIR)),)
 ifeq ($(CONFIG_FS_AIO),)
 BLACKWORDS  += "aio.h"
 BLACKWORDS  += "SIGPOLL"
 endif
+BLACKWORDS  += "SA_RESTART"
+BLACKWORDS  += "pthread_atfork"
+BLACKWORDS  += "pthread_condattr_setpshared"
+BLACKWORDS  += "pthread_condattr_getpshared"
+BLACKWORDS  += "pthread_mutex_getprioceiling"
+BLACKWORDS  += "pthread_mutexattr_setprioceiling"
+BLACKWORDS  += "pthread_mutexattr_getprioceiling"
+BLACKWORDS  += "pthread_getattr_np"
+BLACKWORDS  += "pthread_getcpuclockid"
+BLACKWORDS  += "pthread_rwlockattr_init"
+BLACKWORDS  += "pthread_rwlockattr_destroy"
+BLACKWORDS  += "pthread_mutex_getprioceiling"
+BLACKWORDS  += "clock_getcpuclockid"
+BLACKWORDS  += "shm_unlink"
+BLACKWORDS  += "shm_open"
+BLACKWORDS  += "mlock"
+BLACKWORDS  += "munlock"
+BLACKWORDS  += "mlockall"
+BLACKWORDS  += "msync"
+BLACKWORDS  += "getpgrp"
+BLACKWORDS  += "lfind"
+BLACKWORDS += "killpg"
+BLACKWORDS  += "setpwent"
+
+
 BLACKWORDS  += "affinity.h"
 BLACKWORDS  += "langinfo.h"
 BLACKWORDS  += "ucontext.h"
@@ -83,10 +104,12 @@ BLACKSRCS += 35-2-buildonly.c
 
 MAINWORDS    += "main("
 
-$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell find $(TESTDIR) -name *.c |xargs grep -lr $(word))))
-$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(shell find $(TESTDIR) -name *.c))))
+LTP_ORIGINS  := $(shell find $(TESTDIR) -name *.c)
 
-LTP_ORIGINS  := $(filter-out $(BLACKLIST), $(shell find $(TESTDIR) -name *.c))
+$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(LTP_ORIGINS))))
+$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGINS))))
+
+LTP_ORIGINS  := $(filter-out $(BLACKLIST), $(LTP_ORIGINS))
 
 $(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS+=$(shell grep -lr $(word) $(LTP_ORIGINS))))
 
@@ -99,17 +122,10 @@ STACKSIZE     = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE        = $(CONFIG_TESTING_LTP)
 
 CSRCS        := $(LTP_CSRCS)
-CFLAGS       += -I$(LTP_UNPACK)
+CFLAGS       += -I$(CURDIR)
 CFLAGS       += -I$(TESTDIR)/include
-endif
 
-$(LTP_UNPACK):
-	$(Q) echo "git clone $(LTP_URL)"
-	$(Q) git clone $(LTP_URL)
-
-context:: $(LTP_UNPACK)
-
-distclean::
-	$(Q) rm -rf $(LTP_UNPACK)
+depend::
+	$(Q) touch $(MAINSRC)
 
 include $(APPDIR)/Application.mk

@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/tftp/tftpc_put.c
+ * netuils/tftp/tftpc_put.c
  *
  *   Copyright (C) 2008-2009, 2011, 2018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

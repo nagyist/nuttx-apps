@@ -35,7 +35,7 @@
 
 include $(APPDIR)/Make.defs
 
-# DHCP Daemon Library
+# DHCP Daemn Library
 
 ifeq ($(CONFIG_NET_UDP),y)
 CSRCS = dhcpd.c
