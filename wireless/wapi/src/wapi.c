@@ -956,8 +956,10 @@ static void wapi_showusage(FAR const char *progname, int exitcode)
   fprintf(stderr, "\t%s psk          <ifname> <passphrase> <index/flag>\n",
                    progname);
   fprintf(stderr, "\t%s disconnect   <ifname>\n", progname);
-  fprintf(stderr, "\t%s mode         <ifname> <index/mode>\n", progname);
-  fprintf(stderr, "\t%s ap           <ifname> <MAC address>\n", progname);
+  fprintf(stderr, "\t%s mode         <ifname>              <index/mode>\n",
+                   progname);
+  fprintf(stderr, "\t%s ap           <ifname>              <MAC address>\n",
+                   progname);
   fprintf(stderr, "\t%s bitrate      <ifname> <bitrate>    <index/flag>\n",
                    progname);
   fprintf(stderr, "\t%s txpower      <ifname> <txpower>    <index/flag>\n",

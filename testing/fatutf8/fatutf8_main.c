@@ -99,7 +99,6 @@ int main(int argc, FAR char *argv[])
   if (ret != 0)
     {
       printf("mkdir failed: %d\n", errno);
-      exit(ret);
     }
   else
     {
@@ -125,7 +124,6 @@ int main(int argc, FAR char *argv[])
       else
         {
           printf("write failed: %d\n", errno);
-          exit(len);
         }
 
       fsync(fd);
@@ -134,7 +132,6 @@ int main(int argc, FAR char *argv[])
   else
     {
       printf("open failed: %d\n", errno);
-      exit(fd);
     }
 
   printf("\n");
@@ -155,7 +152,6 @@ int main(int argc, FAR char *argv[])
       else
         {
           printf("read failed: %d\n", errno);
-          exit(len);
         }
 
       close(fd);
@@ -163,7 +159,6 @@ int main(int argc, FAR char *argv[])
   else
     {
       printf("open failed: %d\n", errno);
-      exit(fd);
     }
 
   return EXIT_SUCCESS;

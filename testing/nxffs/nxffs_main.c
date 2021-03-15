@@ -854,7 +854,6 @@ int main(int argc, FAR char *argv[])
           printf("ERROR: Failed to verify files\n");
           printf("  Number of files: %d\n", g_nfiles);
           printf("  Number deleted:  %d\n", g_ndeleted);
-          exit(ret);
         }
       else
         {
@@ -874,7 +873,6 @@ int main(int argc, FAR char *argv[])
           printf("ERROR: Failed to delete files\n");
           printf("  Number of files: %d\n", g_nfiles);
           printf("  Number deleted:  %d\n", g_ndeleted);
-          exit(ret);
         }
       else
         {
@@ -897,7 +895,6 @@ int main(int argc, FAR char *argv[])
           printf("ERROR: Failed to verify files\n");
           printf("  Number of files: %d\n", g_nfiles);
           printf("  Number deleted:  %d\n", g_ndeleted);
-          exit(ret);
         }
       else
         {
