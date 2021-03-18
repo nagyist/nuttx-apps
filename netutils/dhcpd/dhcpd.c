@@ -1,5 +1,5 @@
 /****************************************************************************
- * netutils/dhcpd/dhcpd.c
+ * apps/netutils/dhcpd/dhcpd.c
  *
  *   Copyright (C) 2007-2009, 2011-2014, 2017, 2020 Gregory Nutt. All rights
  *     reserved.
