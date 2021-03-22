@@ -258,7 +258,7 @@ static int cmd_codecs_proc(FAR struct nsh_vtbl_s *vtbl, int argc,
   MD5_CTX ctx;
   unsigned char mac[16];
   FAR unsigned char *src;
-  FAR char *dest;
+  FAR unsigned char *dest;
 #endif
 
   FAR char *localfile = NULL;
