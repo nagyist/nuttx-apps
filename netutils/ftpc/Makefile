@@ -35,6 +35,8 @@
 
 include $(APPDIR)/Make.defs
 
+# DHCP Daemn Library
+
 ifeq ($(CONFIG_NET_TCP),y)
 # FTP connection management
 CSRCS += ftpc_connect.c ftpc_disconnect.c

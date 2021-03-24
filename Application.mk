@@ -98,7 +98,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: $(OBJS)
+all:: .built
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -138,12 +138,13 @@ $(CXXOBJS): %$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CXXELFFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
-archive:
+.built: $(OBJS)
 ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
-	$(call ARCHIVE_ADD, "${shell cygpath -w $(BIN)}", $(OBJS))
+	$(call ARLOCK, "${shell cygpath -w $(BIN)}", $^)
 else
-	$(call ARCHIVE_ADD, $(BIN), $(OBJS))
+	$(call ARLOCK, $(BIN), $^)
 endif
+	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -199,7 +200,10 @@ endif # BUILD_MODULE
 
 context::
 
+ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
 ifneq ($(PROGNAME),)
+ifneq ($(PRIORITY),)
+ifneq ($(STACKSIZE),)
 
 REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
 APPLIST := $(PROGNAME)
@@ -211,6 +215,15 @@ $(REGLIST): $(DEPCONFIG) Makefile
 	$(if $(filter-out $(firstword $(STACKSIZE)),$(STACKSIZE)),$(eval STACKSIZE=$(filter-out $(firstword $(STACKSIZE)),$(STACKSIZE))))
 
 register:: $(REGLIST)
+else
+register::
+endif
+else
+register::
+endif
+else
+register::
+endif
 else
 register::
 endif
@@ -226,6 +239,7 @@ endif
 depend:: .depend
 
 clean::
+	$(call DELFILE, .built)
 	$(call CLEAN)
 
 distclean:: clean

@@ -39,7 +39,6 @@
 #include <errno.h>
 #include <crc32.h>
 #include <debug.h>
-#include <assert.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -91,7 +90,6 @@ struct fstest_filedesc_s
   bool failed;
   size_t len;
   uint32_t crc;
-  uint32_t hash;
 };
 
 /****************************************************************************
@@ -190,29 +188,6 @@ static inline char fstest_randchar(void)
 }
 
 /****************************************************************************
- * Name: fstest_checkexit
- ****************************************************************************/
-
-static bool fstest_checkexit(FAR struct fstest_filedesc_s *file)
-{
-  int i;
-  bool ret = false;
-
-  for (i = 0; i < CONFIG_TESTING_FSTEST_MAXOPEN; i++)
-    {
-      if (!g_files[i].deleted &&
-          &g_files[i] != file &&
-          g_files[i].hash == file->hash)
-        {
-          ret = true;
-          break;
-        }
-    }
-
-  return ret;
-}
-
-/****************************************************************************
  * Name: fstest_randname
  ****************************************************************************/
 
@@ -225,11 +200,8 @@ static inline void fstest_randname(FAR struct fstest_filedesc_s *file)
   int i;
 
   dirlen   = strlen(g_mountdir);
-
-  /* Force the max filename lengh and also the min name len = 4 */
-
-  maxname  = CONFIG_TESTING_FSTEST_MAXNAME - dirlen - 3;
-  namelen  = (rand() % maxname) + 4;
+  maxname  = CONFIG_TESTING_FSTEST_MAXNAME - dirlen;
+  namelen  = (rand() % maxname) + 1;
   alloclen = namelen + dirlen;
 
   file->name = (FAR char *)malloc(alloclen + 1);
@@ -241,19 +213,12 @@ static inline void fstest_randname(FAR struct fstest_filedesc_s *file)
     }
 
   memcpy(file->name, g_mountdir, dirlen);
-
-  do
+  for (i = dirlen; i < alloclen; i++)
     {
-      for (i = dirlen; i < alloclen; i++)
-        {
-          file->name[i] = fstest_randchar();
-        }
-
-      file->name[alloclen] = '\0';
-      file->hash = crc32((const uint8_t *)file->name + dirlen,
-                         alloclen - dirlen);
+      file->name[i] = fstest_randchar();
     }
-  while (fstest_checkexit(file));
+
+  file->name[alloclen] = '\0';
 }
 
 /****************************************************************************
@@ -282,7 +247,6 @@ static void fstest_freefile(FAR struct fstest_filedesc_s *file)
   if (file->name)
     {
       free(file->name);
-      file->name = NULL;
     }
 
   memset(file, 0, sizeof(struct fstest_filedesc_s));
@@ -411,7 +375,7 @@ static inline int fstest_wrfile(FAR struct fstest_filedesc_s *file)
   fstest_randname(file);
   fstest_randfile(file);
 
-  fd = open(file->name, O_WRONLY | O_CREAT | O_EXCL, 0666);
+  fd = open(file->name, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC, 0666);
   if (fd < 0)
     {
       /* If it failed because there is no space on the device, then don't
@@ -1021,6 +985,7 @@ int main(int argc, FAR char *argv[])
           printf("ERROR: Failed to verify files\n");
           printf("  Number of files: %d\n", g_nfiles);
           printf("  Number deleted:  %d\n", g_ndeleted);
+          exit(ret);
         }
       else
         {
@@ -1040,6 +1005,7 @@ int main(int argc, FAR char *argv[])
           printf("ERROR: Failed to delete files\n");
           printf("  Number of files: %d\n", g_nfiles);
           printf("  Number deleted:  %d\n", g_ndeleted);
+          exit(ret);
         }
       else
         {
@@ -1065,6 +1031,7 @@ int main(int argc, FAR char *argv[])
           printf("ERROR: Failed to verify files\n");
           printf("  Number of files: %d\n", g_nfiles);
           printf("  Number deleted:  %d\n", g_ndeleted);
+          exit(ret);
         }
       else
         {
@@ -1081,6 +1048,7 @@ int main(int argc, FAR char *argv[])
       if (ret < 0)
         {
            printf("ERROR: statfs failed: %d\n", errno);
+           exit(ret);
         }
       else
         {

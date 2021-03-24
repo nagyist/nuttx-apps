@@ -33,6 +33,8 @@
 #
 ############################################################################
 
+compile_rtu=
+
 ifeq ($(CONFIG_MB_RTU_ENABLED),y)
 compile_rtu=yes
 endif
