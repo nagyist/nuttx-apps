@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/libtest/Make.defs
+# apps/system/libuv/tests/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -16,10 +16,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-############################################################################/
+############################################################################
 
-ifneq ($(CONFIG_EXAMPLES_LIBTEST),)
-EXTRA_LIBS += -ltest
-EXTRA_LIBPATHS += -L$(APPDIR)/examples/libtest
-CONFIGURED_APPS += $(APPDIR)/examples/libtest
+ifneq ($(CONFIG_LIBUV_UNIT_TESTS),)
+CONFIGURED_APPS += $(APPDIR)/system/libuv/tests
 endif

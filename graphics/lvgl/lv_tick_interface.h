@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/graphics/lvgl/lv_porting/lv_tick_interface.c
+ * apps/graphics/lvgl/lv_tick_interface.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,48 +18,45 @@
  *
  ****************************************************************************/
 
+#ifndef __LV_TICK_INTERFACE_H__
+#define __LV_TICK_INTERFACE_H__
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <time.h>
-#include "lv_tick_interface.h"
+#include <sys/time.h>
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
 /****************************************************************************
- * Private Type Declarations
+ * Type Definitions
  ****************************************************************************/
 
 /****************************************************************************
- * Private Function Prototypes
+ * Public Data
  ****************************************************************************/
 
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-uint32_t millis(void)
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
 {
-  struct timespec ts;
-
-#ifdef CONFIG_CLOCK_MONOTONIC
-  clock_gettime(CLOCK_MONOTONIC, &ts);
 #else
-  clock_gettime(CLOCK_REALTIME, &ts);
+#define EXTERN extern
 #endif
-  uint32_t tick = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 
-  return tick;
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
+
+uint32_t lv_tick_interface(void);
+
+#undef EXTERN
+#ifdef __cplusplus
 }
+#endif
+
+#endif // __LV_TICK_INTERFACE_H__

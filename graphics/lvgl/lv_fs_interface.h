@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/graphics/lvgl/lv_porting/lv_lcddev_interface.h
+ * apps/graphics/lvgl/lv_fs_interface.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __LV_LCDDEV_INTERFACE_H__
-#define __LV_LCDDEV_INTERFACE_H__
+#ifndef __LV_FS_INTERFACE_H__
+#define __LV_FS_INTERFACE_H__
 
 /****************************************************************************
  * Included Files
@@ -32,7 +32,7 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#if defined(CONFIG_LV_USE_LCDDEV_INTERFACE)
+#if LV_USE_FILESYSTEM
 
 /****************************************************************************
  * Type Definitions
@@ -54,29 +54,13 @@ extern "C"
  * Public Function Prototypes
  ****************************************************************************/
 
-/****************************************************************************
- * Name: lv_lcddev_interface_init
- *
- * Description:
- *   lcddev interface initialization.
- *
- * Input Parameters:
- *   dev_path - lcd device path, set to NULL to use the default path
- *   line_buf - Number of line buffers,
- *              set to 0 to use the default line buffer
- *
- * Returned Value:
- *   lv_disp object address on success; NULL on failure.
- *
- ****************************************************************************/
-
-lv_disp_t *lv_lcddev_interface_init(const char *dev_path, int line_buf);
+void lv_fs_interface_init(void);
 
 #undef EXTERN
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* CONFIG_LV_USE_LCDDEV_INTERFACE */
+#endif /* LV_USE_FILESYSTEM */
 
-#endif /* __LV_LCDDEV_INTERFACE_H__ */
+#endif /* __LV_FS_INTERFACE_H__ */

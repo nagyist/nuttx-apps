@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/graphics/lvgl/lv_porting/lv_tick_interface.h
+ * apps/examples/lvgldemo/lv_ex_conf.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,44 +18,55 @@
  *
  ****************************************************************************/
 
-#ifndef __LV_TICK_INTERFACE_H__
-#define __LV_TICK_INTERFACE_H__
-
-/****************************************************************************
- * Included Files
- ****************************************************************************/
-
-#include <nuttx/config.h>
+#ifndef __APPS_EXAMPLES_LVGLDEMO_LV_EX_CONF_H
+#define __APPS_EXAMPLES_LVGLDEMO_LV_EX_CONF_H
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-/****************************************************************************
- * Type Definitions
- ****************************************************************************/
+/* Enable printf-ing data in demoes and examples */
 
-/****************************************************************************
- * Public Data
- ****************************************************************************/
+#define LV_EX_PRINTF       1
 
-#ifdef __cplusplus
-#define EXTERN extern "C"
-extern "C"
-{
+/* Add PC keyboard support to some examples
+ * (`lv_drivers` repository is required)
+ */
+
+#define LV_EX_KEYBOARD     0
+
+/* Add 'encoder' (mouse wheel) support to some examples
+ * (`lv_drivers` repository is required)
+ */
+
+#define LV_EX_MOUSEWHEEL   0
+
+/* Show some widget */
+
+#define LV_USE_DEMO_WIDGETS        1
+#if LV_USE_DEMO_WIDGETS
+#ifdef CONFIG_EXAMPLES_LVGLDEMO_WIDGETS_SLIDESHOW
+#define LV_DEMO_WIDGETS_SLIDESHOW        CONFIG_EXAMPLES_LVGLDEMO_WIDGETS_SLIDESHOW
 #else
-#define EXTERN extern
+#define LV_DEMO_WIDGETS_SLIDESHOW        0
+#endif
 #endif
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+/* Printer demo, optimized for 800x480 */
 
-uint32_t millis(void);
+#define LV_USE_DEMO_PRINTER     1
 
-#undef EXTERN
-#ifdef __cplusplus
-}
-#endif
+/* Demonstrate the usage of encoder and keyboard */
 
-#endif // __LV_TICK_INTERFACE_H__
+#define LV_USE_DEMO_KEYPAD_AND_ENCODER     1
+
+/* Benchmark your system */
+
+#define LV_USE_DEMO_BENCHMARK   1
+
+/* Stress test for LVGL */
+
+#define LV_USE_DEMO_STRESS      1
+
+#endif /* __APPS_EXAMPLES_LVGLDEMO_LV_EX_CONF_H */
+

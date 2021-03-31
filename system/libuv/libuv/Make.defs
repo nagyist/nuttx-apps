@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/libtest/Makefile
+# apps/system/libuv/libuv/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -16,20 +16,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-############################################################################/
+############################################################################
 
+ifneq ($(CONFIG_LIBUV),)
+CONFIGURED_APPS += $(APPDIR)/system/libuv/libuv
 
-include $(APPDIR)/Make.defs
+# Enable <uv.h> include.
 
-BIN   = libtest$(LIBEXT)
-CSRCS = libtest.c
+CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
+	$(APPDIR)/system/libuv/$(LIBUV_UNPACKNAME)/include}
+CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" \
+	$(APPDIR)/system/libuv/$(LIBUV_UNPACKNAME)/include}
 
-ifneq ($(CONFIG_EXAMPLES_LIBTEST_CMDTOOL),)
-  PROGNAME  = $(CONFIG_EXAMPLES_LIBTEST_PROGNAME)
-  PRIORITY  = $(CONFIG_EXAMPLES_LIBTEST_PRIORITY)
-  STACKSIZE = $(CONFIG_EXAMPLES_LIBTEST_STACKSIZE)
-  MODULE    = $(CONFIG_EXAMPLES_LIBTEST_CMDTOOL)
-  MAINSRC   = libtest_main.c
 endif
-
-include $(APPDIR)/Application.mk
