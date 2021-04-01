@@ -542,11 +542,11 @@ config NETINIT_WAPI_ALG
 
 config NETINIT_WAPI_SSID
 	string "SSID"
-	default ""
+	default "myApSSID"
 
 config NETINIT_WAPI_PASSPHRASE
 	string "Passprhase"
-	default ""
+	default "mySSIDpassphrase"
 
 endmenu # WAPI Configuration
 endif # NETUTILS_NETINIT

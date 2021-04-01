@@ -44,6 +44,8 @@ STACKSIZE = $(CONFIG_EXAMPLES_SIXAXIS_STACKSIZE)
 
 # sixaxis Example
 
+ASRCS =
+CSRCS =
 MAINSRC = sixaxis_main.c
 
 include $(APPDIR)/Application.mk

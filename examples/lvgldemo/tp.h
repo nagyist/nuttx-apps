@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/lvgldemo/tp.h
+ * examples/touchscreen/tc.h
  *
  *   Copyright (C) 2018 Gregory Nutt. All rights reserved.
  *   Author: Gábor Kiss-Vámosi <kisvegabor@gmail.com>
@@ -59,8 +59,8 @@
  *   configured to work with a mouse driver by setting this option.
  */
 
-#if !defined(CONFIG_INPUT_TOUCHSCREEN) && !defined(CONFIG_INPUT_MOUSE)
-#  error "Input device support is not enabled (CONFIG_INPUT_TOUCHSCREEN || CONFIG_INPUT_MOUSE)"
+#ifndef CONFIG_INPUT
+#  error "Input device support is not enabled (CONFIG_INPUT)"
 #endif
 
 #ifndef CONFIG_EXAMPLES_LGVLDEMO_MINOR
