@@ -57,15 +57,6 @@
 #define ICMP_POLL_DELAY    1000  /* 1 second in milliseconds */
 
 /****************************************************************************
- * Private Types
- ****************************************************************************/
-
-struct ping_priv_s
-{
-  int code;                      /* Notice code ICMP_I/E/W_XXX */
-};
-
-/****************************************************************************
  * Private Functions
  ****************************************************************************/
 
@@ -114,10 +105,6 @@ static void show_usage(FAR const char *progname, int exitcode)
 
 static void ping_result(FAR const struct ping_result_s *result)
 {
-  FAR struct ping_priv_s *priv = result->info->priv;
-
-  priv->code = result->code;
-
   switch (result->code)
     {
       case ICMP_E_HOSTIP:
@@ -243,7 +230,6 @@ static void ping_result(FAR const struct ping_result_s *result)
 int main(int argc, FAR char *argv[])
 {
   struct ping_info_s info;
-  struct ping_priv_s priv;
   FAR char *endptr;
   int exitcode;
   int option;
@@ -253,8 +239,6 @@ int main(int argc, FAR char *argv[])
   info.delay     = ICMP_POLL_DELAY;
   info.timeout   = ICMP_POLL_DELAY;
   info.callback  = ping_result;
-  info.priv      = &priv;
-  priv.code      = ICMP_I_BEGIN;
 
   /* Parse command line options */
 
@@ -345,7 +329,7 @@ int main(int argc, FAR char *argv[])
 
   info.hostname = argv[optind];
   icmp_ping(&info);
-  return priv.code < 0 ? EXIT_FAILURE: EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 
 errout_with_usage:
   optind = 0;

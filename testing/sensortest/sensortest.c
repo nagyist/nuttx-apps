@@ -142,11 +142,11 @@ static void print_gps(const char *buffer, const char *name)
 {
   struct sensor_event_gps *event = (struct sensor_event_gps *)buffer;
 
-  printf("%s: year: %d month: %d day: %d hour: %d min: %d sec: %d msec: %d\n",
+  printf("%s: year: %d month: %d day: %d hour: %d min: %d sec: %d msec: %d",
          name, event->year, event->month, event->day, event->hour,
          event->min, event->sec, event->msec);
   printf("%s: yaw: %.4f height: %.4f speed: %.4f latitude: %.4f"
-         "longitude: %.4f\n", name, event->yaw, event->height, event->speed,
+         "longitude: %.4f", name, event->yaw, event->height, event->speed,
          event->latitude, event->longitude);
 }
 
@@ -224,7 +224,8 @@ int main(int argc, FAR char *argv[])
           case 'h':
           default:
             usage();
-            goto name_err;
+            optind = 0;
+            return 0;
         }
     }
 
@@ -246,21 +247,18 @@ int main(int argc, FAR char *argv[])
         {
           printf("The sensor node name:%s is invaild\n", name);
           usage();
-          ret = -EINVAL;
-          goto name_err;
+          return -EINVAL;
         }
 
       if (!buffer)
         {
-          ret = -ENOMEM;
-          goto name_err;
+          return -ENOMEM;
         }
     }
   else
     {
       usage();
-      ret = -EINVAL;
-      goto name_err;
+      return -EINVAL;
     }
 
   snprintf(devname, PATH_MAX, DEVNAME_FMT, name);
@@ -270,7 +268,7 @@ int main(int argc, FAR char *argv[])
       ret = -errno;
       printf("Failed to open device:%s, ret:%s\n",
              devname, strerror(errno));
-      goto opt_err;
+      goto open_err;
     }
 
   ret = ioctl(fd, SNIOC_ACTIVATE, 1);
@@ -315,7 +313,7 @@ int main(int argc, FAR char *argv[])
   fds.fd = fd;
   fds.events = POLLIN;
 
-  while ((!count || received < count) &&!g_should_exit)
+  while ((!count || received < count) && !g_should_exit)
     {
       if (poll(&fds, 1, -1) > 0)
         {
@@ -327,7 +325,8 @@ int main(int argc, FAR char *argv[])
         }
     }
 
-  printf("SensorTest: Received message: %s, number:%d/%d\n", name, received, count);
+  printf("SensorTest: Received message: %s, number:%d/%d\n",
+         name, received, count);
 
   ret = ioctl(fd, SNIOC_ACTIVATE, 0);
   if (ret < 0)
@@ -340,9 +339,7 @@ int main(int argc, FAR char *argv[])
 
 ctl_err:
   close(fd);
-opt_err:
+open_err:
   free(buffer);
-name_err:
-  optind = 0;
   return ret;
 }
