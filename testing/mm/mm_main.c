@@ -288,7 +288,15 @@ static void do_frees(FAR void **mem, FAR const int *size,
     }
 }
 
-static void mm_test(void)
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: mm_main
+ ****************************************************************************/
+
+int main(int argc, FAR char *argv[])
 {
   mm_showmallinfo();
 
@@ -315,78 +323,5 @@ static void mm_test(void)
   do_frees(g_allocs, g_alloc_sizes, g_random1, NTEST_ALLOCS);
 
   printf("TEST COMPLETE\n");
-}
-
-static void mm_stress_test(int delay)
-{
-  FAR char *tmp;
-  int i, size;
-
-  while (1)
-    {
-      size = random() % 1024 + 1;
-      tmp = malloc(size);
-      assert(tmp);
-
-      memset(tmp, 0xfe, size);
-      usleep(delay);
-
-      for (i = 0; i < size; i++)
-        {
-          assert(tmp[i] == 0xfe);
-        }
-
-      free(tmp);
-    }
-}
-
-static void show_usage(FAR const char *progname, int exitcode)
-{
-  printf("\nUsage: %s [-d <delay_us>]\n", progname);
-  printf("\nWhere:\n");
-  printf("  <delay_us> delay when loop malloc/free.\n");
-  exit(exitcode);
-}
-
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Name: mm_main
- ****************************************************************************/
-
-int main(int argc, FAR char *argv[])
-{
-  int delay = 0;
-  int option;
-
-  while ((option = getopt(argc, argv, "d:")) != ERROR)
-    {
-      if (option == 'd')
-        {
-          delay = atoi(optarg);
-        }
-      else
-        {
-          printf("Unrecognized option: '%c'\n", option);
-          show_usage(argv[0], EXIT_FAILURE);
-        }
-    }
-
-  if (optind != argc)
-    {
-      show_usage(argv[0], EXIT_FAILURE);
-    }
-
-  if (delay)
-    {
-      mm_stress_test(delay);
-    }
-  else
-    {
-      mm_test();
-    }
-
   return 0;
 }
