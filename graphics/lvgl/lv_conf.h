@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/graphics/littlevgl/lv_conf.h
+ * apps/graphics/lvgl/lv_conf.h
  *
  *   Copyright (C) 2018 Gregory Nutt. All rights reserved.
  *   Author: Gábor Kiss-Vámosi <kisvegabor@gmail.com>
@@ -330,7 +330,11 @@ typedef void * lv_fs_drv_user_data_t;
 
 /* 1: Show CPU usage and FPS count in the right bottom corner */
 
-#define LV_USE_PERF_MONITOR     0
+#ifdef CONFIG_LV_USE_PERF_MONITOR
+#define LV_USE_PERF_MONITOR        CONFIG_LV_USE_PERF_MONITOR
+#else
+#define LV_USE_PERF_MONITOR        0
+#endif
 
 /* 1: Use the functions and types from the older API if possible */
 
@@ -753,7 +757,7 @@ typedef void * lv_font_user_data_t;
 
 /* Change the built in (v)snprintf functions */
 
-#define LV_SPRINTF_CUSTOM   0
+#define LV_SPRINTF_CUSTOM   1
 #if LV_SPRINTF_CUSTOM
 #  define LV_SPRINTF_INCLUDE <stdio.h>
 #  define lv_snprintf     snprintf
@@ -786,13 +790,7 @@ typedef void * lv_obj_user_data_t;
  * in all 4 directions (-32k..+32k px)
  */
 
-#if defined(CONFIG_LV_EXT_CLICK_AREA_OFF)
-#define LV_USE_EXT_CLICK_AREA  LV_EXT_CLICK_AREA_OFF
-#elif defined(CONFIG_LV_EXT_CLICK_AREA_TINY)
 #define LV_USE_EXT_CLICK_AREA  LV_EXT_CLICK_AREA_TINY
-#elif defined(CONFIG_LV_EXT_CLICK_AREA_FULL)
-#define LV_USE_EXT_CLICK_AREA  LV_EXT_CLICK_AREA_FULL
-#endif
 
 /****************************************************************************
  *  LV OBJ X USAGE
