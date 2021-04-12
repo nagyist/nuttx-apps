@@ -168,7 +168,7 @@ config PDCURSES_DJOYSTICK
 	bool "Discrete Joystick"
 	default n
 	select PDCURSES_HAVE_INPUT
-	depends on INPUT_DJOYSTICK
+	depends on DJOYSTICK
 
 config PDCURSES_DJOYDEV
 	string "Discrete Joystick Device"

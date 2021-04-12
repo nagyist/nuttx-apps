@@ -36,7 +36,7 @@
 #define __APPS_EXAMPLES_FTPD_FTPD_H
 
 /****************************************************************************
- * Included Files
+ * Pre-processor Definitions
  ****************************************************************************/
 
 #include <nuttx/config.h>
@@ -48,9 +48,7 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-
 /* Configuration ************************************************************/
-
 /* CONFIG_EXAMPLES_FTPD_PRIO - Priority of the FTP daemon.
  *   Default: SCHED_PRIORITY_DEFAULT
  * CONFIG_EXAMPLES_FTPD_STACKSIZE - Stack size allocated for the

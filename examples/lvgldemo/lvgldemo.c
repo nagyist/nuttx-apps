@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/lvgldemo/lvgldemo.c
+ * examples/lvgdemo/lvgldemo.c
  *
  *   Copyright (C) 2019 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -41,20 +41,16 @@
 
 #include <sys/boardctl.h>
 #include <unistd.h>
-#include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
 #include <time.h>
-#include <debug.h>
 
 #include <lvgl/lvgl.h>
 
 #include "fbdev.h"
-#include "lcddev.h"
-
-#ifdef CONFIG_INPUT
 #include "tp.h"
 #include "tp_cal.h"
-#endif
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -94,31 +90,6 @@ void lv_demo_widgets(void);
  ****************************************************************************/
 
 /****************************************************************************
- * Name: monitor_cb
- *
- * Description:
- *   Monitoring callback from lvgl every time the screen is flushed.
- *
- ****************************************************************************/
-
-static void monitor_cb(lv_disp_drv_t * disp_drv, uint32_t time, uint32_t px)
-{
-  ginfo("%" PRIu32 " px refreshed in %" PRIu32 " ms\n", px, time);
-}
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
-static lv_color_t buffer1[DISPLAY_BUFFER_SIZE];
-
-#ifdef CONFIG_EXAMPLES_LVGLDEMO_DOUBLE_BUFFERING
-static lv_color_t buffer2[DISPLAY_BUFFER_SIZE];
-#else
-# define buffer2 NULL
-#endif
-
-/****************************************************************************
  * Public Functions
  ****************************************************************************/
 
@@ -138,7 +109,9 @@ static lv_color_t buffer2[DISPLAY_BUFFER_SIZE];
 int main(int argc, FAR char *argv[])
 {
   lv_disp_drv_t disp_drv;
+
   lv_disp_buf_t disp_buf;
+  static lv_color_t buf[DISPLAY_BUFFER_SIZE];
 
 #ifndef CONFIG_EXAMPLES_LVGLDEMO_CALIBRATE
   lv_point_t p[4];
@@ -176,34 +149,22 @@ int main(int argc, FAR char *argv[])
 #endif
 #endif
 
-  /* LVGL initialization */
+  /* LittlevGL initialization */
 
   lv_init();
 
-  /* Basic LVGL display driver initialization */
-
-  lv_disp_buf_init(&disp_buf, buffer1, buffer2, DISPLAY_BUFFER_SIZE);
-  lv_disp_drv_init(&disp_drv);
-  disp_drv.buffer = &disp_buf;
-  disp_drv.monitor_cb = monitor_cb;
-
   /* Display interface initialization */
 
-  if (fbdev_init(&disp_drv) != EXIT_SUCCESS)
-    {
-      /* Failed to use framebuffer falling back to lcd driver */
+  fbdev_init();
 
-      if (lcddev_init(&disp_drv) != EXIT_SUCCESS)
-        {
-          /* No possible drivers left, fail */
+  /* Basic LittlevGL display driver initialization */
 
-          return EXIT_FAILURE;
-        }
-    }
-
+  lv_disp_buf_init(&disp_buf, buf, NULL, DISPLAY_BUFFER_SIZE);
+  lv_disp_drv_init(&disp_drv);
+  disp_drv.flush_cb = fbdev_flush;
+  disp_drv.buffer = &disp_buf;
   lv_disp_drv_register(&disp_drv);
 
-#ifdef CONFIG_INPUT
   /* Touchpad Initialization */
 
   tp_init();
@@ -217,7 +178,6 @@ int main(int argc, FAR char *argv[])
 
   indev_drv.read_cb = tp_read;
   lv_indev_drv_register(&indev_drv);
-#endif
 
 #if defined(CONFIG_EXAMPLES_LVGLDEMO_BENCHMARK)
   lv_demo_benchmark();
@@ -229,7 +189,6 @@ int main(int argc, FAR char *argv[])
   lv_demo_widgets();
 #endif
 
-#ifdef CONFIG_INPUT
   /* Start TP calibration */
 
 #ifdef CONFIG_EXAMPLES_LVGLDEMO_CALIBRATE
@@ -237,8 +196,6 @@ int main(int argc, FAR char *argv[])
 #else
   tp_set_cal_values(p, p + 1, p + 2, p + 3);
 #endif
-#endif
-
   /* Handle LVGL tasks */
 
   while (1)
