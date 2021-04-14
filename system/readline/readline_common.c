@@ -617,8 +617,6 @@ ssize_t readline_common(FAR struct rl_common_s *vtbl, FAR char *buf,
                           buf[nch++] = g_cmdhist.buf[idx][i];
                           RL_PUTC(vtbl, g_cmdhist.buf[idx][i]);
                         }
-
-                      buf[nch] = '\0';
                     }
                 }
 #endif /* CONFIG_READLINE_CMD_HISTORY */
@@ -700,8 +698,7 @@ ssize_t readline_common(FAR struct rl_common_s *vtbl, FAR char *buf,
                * buffer, don't save it again.
                */
 
-              g_cmdhist.offset = 1;
-              if (strncmp(buf, g_cmdhist.buf[g_cmdhist.head], nch + 1) != 0)
+              if (strncmp(buf, g_cmdhist.buf[g_cmdhist.head], nch) != 0)
                 {
                   g_cmdhist.head = (g_cmdhist.head + 1) % RL_CMDHIST_LEN;
 
@@ -711,6 +708,7 @@ ssize_t readline_common(FAR struct rl_common_s *vtbl, FAR char *buf,
                     }
 
                   g_cmdhist.buf[g_cmdhist.head][i] = '\0';
+                  g_cmdhist.offset = 1;
 
                   if (g_cmdhist.len < RL_CMDHIST_LEN)
                     {

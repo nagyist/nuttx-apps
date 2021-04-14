@@ -40,6 +40,10 @@ include $(APPDIR)/Make.defs
 LVGL_DIR = .
 LVGL_DIR_NAME = lvgl
 
+# Relax format check for LVGL to avoid errors on prinf() use
+
+CFLAGS += -Wno-format
+
 # LVGL Libraries
 
 -include ./lvgl/src/lv_core/lv_core.mk
@@ -55,26 +59,6 @@ CSRCS += lv_tick_interface.c
 
 ifneq ($(CONFIG_USE_LV_FILESYSTEM),)
 CSRCS += lv_fs_interface.c
-endif
-
-ifneq ($(CONFIG_LV_USE_BUTTON_INTERFACE),)
-CSRCS += lv_button_interface.c
-endif
-
-ifneq ($(CONFIG_LV_USE_KEYPAD_INTERFACE),)
-CSRCS += lv_keypad_interface.c
-endif
-
-ifneq ($(CONFIG_LV_USE_TOUCHPAD_INTERFACE),)
-CSRCS += lv_touchpad_interface.c
-endif
-
-ifneq ($(CONFIG_LV_USE_LCD_INTERFACE),)
-CSRCS += lv_lcd_interface.c
-endif
-
-ifneq ($(CONFIG_LV_USE_FBDEV_INTERFACE),)
-CSRCS += lv_fbdev_interface.c
 endif
 
 # Set up build configuration and environment
@@ -101,10 +85,10 @@ $(LVGL_UNPACKNAME): $(LVGL_TARBALL)
 	$(Q) mv	lvgl-$(LVGL_VERSION) $(LVGL_UNPACKNAME)
 	$(Q) touch $(LVGL_UNPACKNAME)
 
-context::# $(LVGL_UNPACKNAME)
+context:: $(LVGL_UNPACKNAME)
 
 distclean::
-#	$(call DELDIR, $(LVGL_UNPACKNAME))
-#	$(call DELFILE, $(LVGL_TARBALL))
+	$(call DELDIR, $(LVGL_UNPACKNAME))
+	$(call DELFILE, $(LVGL_TARBALL))
 
 include $(APPDIR)/Application.mk
