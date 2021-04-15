@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/oneshot/oneshot_main.c
+ * examples/oneshot/oneshot_main.c
  *
  *   Copyright (C) 2015 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -90,10 +90,10 @@ static void show_usage(FAR const char *progname)
   fprintf(stderr, "USAGE: %s [-d <usecs>] [<devname>]\n", progname);
   fprintf(stderr, "Where:\n");
   fprintf(stderr, "\t-d <usecs>:\n");
-  fprintf(stderr, "\tSpecifies the oneshot delay in microseconds."
-          " Default %ld\n", (unsigned long)CONFIG_EXAMPLES_ONESHOT_DELAY);
+  fprintf(stderr, "\tSpecifies the oneshot delay in microseconds.  Default %ld\n",
+          (unsigned long)CONFIG_EXAMPLES_ONESHOT_DELAY);
   fprintf(stderr, "\t<devname>:\n");
-  fprintf(stderr, "\tSpecifies the path to the oneshot driver. Default %s\n",
+  fprintf(stderr, "\tSpecifies the path to the oneshot driver.  Default %s\n",
           CONFIG_EXAMPLES_ONESHOT_DEVNAME);
   exit(EXIT_FAILURE);
 }
@@ -149,8 +149,7 @@ int main(int argc, FAR char *argv[])
         }
       else
         {
-          fprintf(stderr, "ERROR: Unsupported number of arguments: %d\n",
-                  argc);
+          fprintf(stderr, "ERROR: Unsupported number of arguments: %d\n", argc);
           show_usage(argv[0]);
         }
     }
@@ -178,10 +177,9 @@ int main(int argc, FAR char *argv[])
       return EXIT_FAILURE;
     }
 
-  maxus = (uint64_t)ts.tv_sec * USEC_PER_SEC +
-          (uint64_t)ts.tv_nsec / NSEC_PER_USEC;
+  maxus = (uint64_t)ts.tv_sec * 1000 + (uint64_t)ts.tv_nsec / 1000;
 
-  printf("Maximum delay is %" PRIu64 "\n", maxus);
+  printf("Maximum delay is %llu\n", maxus);
 
   /* Ignore the default signal action */
 
@@ -203,12 +201,13 @@ int main(int argc, FAR char *argv[])
           printf("Starting oneshot timer with delay %lu microseconds\n",
                  usecs);
 
-          start.pid  = 0;
-          secs       = usecs / USEC_PER_SEC;
-          usecs     -= USEC_PER_SEC * secs;
+          start.pid        = 0;
+
+          secs             = usecs / 1000000;
+          usecs           -= 1000000 * secs;
 
           start.ts.tv_sec  = secs;
-          start.ts.tv_nsec = usecs * NSEC_PER_USEC;
+          start.ts.tv_nsec = usecs * 1000;
 
           start.event.sigev_notify = SIGEV_SIGNAL;
           start.event.sigev_signo  = CONFIG_EXAMPLES_ONESHOT_SIGNO;
@@ -228,16 +227,16 @@ int main(int argc, FAR char *argv[])
           start.ts.tv_sec  = ts.tv_sec;
           start.ts.tv_nsec = ts.tv_nsec;
 
-          usecs -= maxus;
+          usecs           -= maxus;
 
 #if FUDGE_FACTOR > 0
           if (usecs > FUDGE_FACTOR)
             {
-              usecs -= FUDGE_FACTOR;
+              usecs      -= FUDGE_FACTOR;
             }
           else
             {
-              usecs = 0;
+              usecs       = 0;
             }
 #endif
         }
@@ -245,7 +244,7 @@ int main(int argc, FAR char *argv[])
       ret = ioctl(fd, OSIOC_START, (unsigned long)((uintptr_t)&start));
       if (ret < 0)
         {
-          fprintf(stderr, "ERROR: Failed to start the oneshot: %d\n",
+          fprintf(stderr, "ERROR: Failed to start the oneshot interval: %d\n",
                  errno);
           close(fd);
           return EXIT_FAILURE;

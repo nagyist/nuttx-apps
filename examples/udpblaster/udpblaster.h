@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/udpblaster/udpblaster.h
+ * examples/udpblaster/udpblaster.h
  *
  *   Copyright (C) 2015, 2018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
