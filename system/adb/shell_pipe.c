@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/adb/shell_pipe.c
+ * system/adb/shell_pipe.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -187,7 +187,7 @@ int shell_pipe_exec(char * const argv[], shell_pipe_t *apipe,
   /* Setup stdout (read: adb, write: child) */
 
   ret = dup2(out_fds[1], 1);
-  assert(ret == 1);
+  assert(ret == 0);
 
   ret = close(out_fds[1]);
   assert(ret == 0);
@@ -229,9 +229,8 @@ int shell_pipe_exec(char * const argv[], shell_pipe_t *apipe,
   /* Create shell process */
 
   ret = task_create("ADB shell", CONFIG_SYSTEM_NSH_PRIORITY,
-                    CONFIG_SYSTEM_NSH_STACKSIZE,
-                    argv ? nsh_system : nsh_consolemain,
-                    argv);
+                    CONFIG_SYSTEM_NSH_STACKSIZE, nsh_consolemain,
+                    &argv[1]);
 
   /* Close stdin and stdout */
 

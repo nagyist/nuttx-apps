@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/hidkbd/hidkbd_main.c
+ * examples/hidkbd/hidkbd_main.c
  *
  *   Copyright (C) 2011, 2013-2015, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -42,7 +42,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <assert.h>
 #include <errno.h>
 
 #include <nuttx/usb/usbhost.h>

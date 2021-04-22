@@ -34,7 +34,6 @@
 #include <strings.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include <assert.h>
 #include <errno.h>
 #include <dirent.h>
 #include <debug.h>

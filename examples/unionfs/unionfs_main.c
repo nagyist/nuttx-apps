@@ -43,7 +43,6 @@
 #include <sys/mount.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
-#include <sys/boardctl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -129,21 +128,15 @@
 int main(int argc, FAR char *argv[])
 {
   int ret;
-  struct boardioc_romdisk_s desc;
 
   /* Create a RAM disk for file system 1 */
 
-  desc.minor    = CONFIG_EXAMPLES_UNIONFS_RAMDEVNO_A;       /* Minor device number of the ROM disk. */
-  desc.nsectors = NSECTORS(atestdir_img_len);               /* The number of sectors in the ROM disk */
-  desc.sectsize = CONFIG_EXAMPLES_UNIONFS_SECTORSIZE;       /* The size of one sector in bytes */
-  desc.image    = (FAR uint8_t *)atestdir_img;              /* File system image */
-
-  ret = boardctl(BOARDIOC_ROMDISK, (uintptr_t)&desc);
-
+  ret = romdisk_register(CONFIG_EXAMPLES_UNIONFS_RAMDEVNO_A, atestdir_img,
+                         NSECTORS(atestdir_img_len),
+                         CONFIG_EXAMPLES_UNIONFS_SECTORSIZE);
   if (ret < 0)
     {
-      printf("ERROR: Failed to create file system 1 RAM disk: %s\n",
-             strerror(errno));
+      printf("ERROR: Failed to create file system 1 RAM disk\n");
       return EXIT_FAILURE;
     }
 
@@ -156,22 +149,18 @@ int main(int argc, FAR char *argv[])
               MS_RDONLY, NULL);
   if (ret < 0)
     {
-      printf("ERROR: File system 1 mount failed: %s\n", strerror(errno));
+      printf("ERROR: File system 1 mount failed: %d\n", errno);
       return EXIT_FAILURE;
     }
 
-  /* Create a RAM disk for file system 2  */
+  /* Create a RAM disk for file system 2 */
 
-  desc.minor    = CONFIG_EXAMPLES_UNIONFS_RAMDEVNO_B;      /* Minor device number of the ROM disk. */
-  desc.nsectors = NSECTORS(btestdir_img_len);              /* The number of sectors in the ROM disk */
-  desc.image    = (FAR uint8_t *)btestdir_img;             /* File system image */
-
-  ret = boardctl(BOARDIOC_ROMDISK, (uintptr_t)&desc);
-
+  ret = romdisk_register(CONFIG_EXAMPLES_UNIONFS_RAMDEVNO_B, btestdir_img,
+                         NSECTORS(btestdir_img_len),
+                         CONFIG_EXAMPLES_UNIONFS_SECTORSIZE);
   if (ret < 0)
     {
-      printf("ERROR: Failed to create file system 2 RAM disk: %s\n",
-             strerror(errno));
+      printf("ERROR: Failed to register file system 1: %d\n", ret);
       return EXIT_FAILURE;
     }
 
@@ -184,7 +173,7 @@ int main(int argc, FAR char *argv[])
               MS_RDONLY, NULL);
   if (ret < 0)
     {
-      printf("ERROR: File system 2 mount failed: %s\n", strerror(errno));
+      printf("ERROR: Failed to register file system 1: %d\n", ret);
       return EXIT_FAILURE;
     }
 
