@@ -71,12 +71,10 @@ int spicmd_exch(FAR struct spitool_s *spitool, int argc, FAR char **argv)
   {
     0
   };
-
   uint8_t rxdata[MAX_XDATA] =
   {
     0
   };
-
   uint8_t *txdatap = txdata;
   struct spi_trans_s trans;
   struct spi_sequence_s seq;
@@ -113,6 +111,7 @@ int spicmd_exch(FAR struct spitool_s *spitool, int argc, FAR char **argv)
       return ERROR;
     }
 
+
   while (argndx < argc)
     {
       FAR uint8_t *a = (uint8_t *)argv[argndx];
@@ -120,7 +119,7 @@ int spicmd_exch(FAR struct spitool_s *spitool, int argc, FAR char **argv)
         {
           if ((*(a + 1) == 0) || !ISHEX(*a) || !ISHEX(*(a + 1)))
             {
-              /* Uneven number of characters or illegal character error */
+              /* Uneven number of characters or illegal char .... that's an error */
 
               spitool_printf(spitool, g_spiincompleteparam, argv[0]);
               return ERROR;
@@ -132,21 +131,6 @@ int spicmd_exch(FAR struct spitool_s *spitool, int argc, FAR char **argv)
 
       argndx += 1;
     }
-
-  spitool_printf(spitool, "Sending:\t");
-  for (d = 0; d < spitool->count; d++)
-    {
-      if (spitool->width <= 8)
-        {
-          spitool_printf(spitool, "%02X ", txdata[d]);
-        }
-      else
-        {
-          spitool_printf(spitool, "%04X ", ((uint16_t *)txdata)[d]);
-        }
-    }
-
-  spitool_printf(spitool, "\n");
 
   /* Get a handle to the SPI bus */
 
@@ -184,7 +168,7 @@ int spicmd_exch(FAR struct spitool_s *spitool, int argc, FAR char **argv)
       return ret;
     }
 
-  spitool_printf(spitool, "Received:\t");
+  spitool_printf(spitool, "Received: ");
   for (d = 0; d < spitool->count; d++)
     {
       if (spitool->width <= 8)

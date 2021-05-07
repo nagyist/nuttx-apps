@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/ostest/mutex.c
+ * mutex.c
  *
  *   Copyright (C) 2007, 2008 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -57,16 +57,8 @@
 
 static pthread_mutex_t mut;
 static volatile int my_mutex = 0;
-static unsigned long nloops[2] =
-  {
-    0,
-    0
-  };
-static unsigned long nerrors[2] =
-  {
-    0,
-    0
-  };
+static unsigned long nloops[2] = {0, 0};
+static unsigned long nerrors[2] = {0, 0};
 
 /****************************************************************************
  * Private Functions
@@ -110,7 +102,6 @@ static void *thread_func(FAR void *parameter)
                  id, status);
         }
     }
-
   pthread_exit(NULL);
   return NULL; /* Non-reachable -- needed for some compilers */
 }
@@ -146,7 +137,7 @@ void mutex_test(void)
 #endif
   if (status != 0)
     {
-      printf("ERROR in thread#1 creation\n");
+      printf("Error in thread#1 creation\n");
     }
 
   printf("Starting thread 2\n");
@@ -157,7 +148,7 @@ void mutex_test(void)
 #endif
   if (status != 0)
     {
-      printf("ERROR in thread#2 creation\n");
+      printf("Error in thread#2 creation\n");
     }
 
 #ifdef SDCC

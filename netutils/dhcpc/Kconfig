@@ -7,7 +7,6 @@ config NETUTILS_DHCPC
 	bool "DHCP client"
 	default n
 	depends on NET_UDP && NET_BROADCAST && NET_IPv4
-	select NET_UDP_BINDTODEVICE if !NET_UDP_NO_STACK
 	---help---
 		Enable support for the DHCP client.
 
@@ -32,9 +31,9 @@ config NETUTILS_DHCPC_RETRIES
 
 config NETUTILS_DHCPC_BOOTP_FLAGS
 	hex "Flags of Bootstrap"
-	default 0x8000
+	default 0x0
 	---help---
-		This setting to set the BOOTP broadcast flags.
+		This setting to set the BOOTP boardcast flags.
 		Reference RFC1542: Clarifications and Extensions for the
 		Bootstrap Protocol.
 

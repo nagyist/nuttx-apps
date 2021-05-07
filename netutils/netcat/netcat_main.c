@@ -24,9 +24,8 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-
-#include <fcntl.h>
 #include <stdio.h>
+
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -46,44 +45,12 @@
  * Public Functions
  ****************************************************************************/
 
-int do_io(int infd, int outfd)
-{
-  size_t capacity = 256;
-  char buf[capacity];
-
-  while (true)
-    {
-      ssize_t avail = read(infd, buf, capacity);
-      if (avail == 0)
-        {
-          break;
-        }
-
-      if (avail == -1)
-        {
-          perror("do_io: read error");
-          return 5;
-        }
-
-      ssize_t written = write(outfd, buf, avail);
-      if (written == -1)
-        {
-          perror("do_io: write error");
-          return 6;
-        }
-    }
-
-  return EXIT_SUCCESS;
-}
-
 int netcat_server(int argc, char * argv[])
 {
-  int id = -1;
-  int outfd = STDOUT_FILENO;
+  FILE * fout = stdout;
   struct sockaddr_in server;
   struct sockaddr_in client;
   int port = NETCAT_PORT;
-  int result = EXIT_SUCCESS;
 
   if ((1 < argc) && (0 == strcmp("-l", argv[1])))
     {
@@ -94,23 +61,21 @@ int netcat_server(int argc, char * argv[])
 
       if (3 < argc)
         {
-          outfd = open(argv[3], O_WRONLY | O_CREAT | O_TRUNC, 0777);
-          if (outfd == -1)
+          fout = fopen(argv[3], "w");
+          if (0 > fout)
             {
               perror("error: io: Failed to create file");
-              outfd = STDOUT_FILENO;
-              result = 1;
-              goto out;
+              return 1;
             }
         }
     }
 
+  int id;
   id = socket(AF_INET , SOCK_STREAM , 0);
   if (0 > id)
     {
       perror("error: net: Failed to create socket");
-      result = 2;
-      goto out;
+      return 2;
     }
 
   server.sin_family = AF_INET;
@@ -119,53 +84,50 @@ int netcat_server(int argc, char * argv[])
   if (0 > bind(id, (struct sockaddr *)&server , sizeof(server)))
     {
       perror("error: net: Failed to bind");
-      result = 3;
-      goto out;
+      return 3;
     }
 
   fprintf(stderr, "log: net: listening on :%d\n", port);
-  if (listen(id , 3) == -1)
-    {
-      perror("error: net: Failed to listen");
-      result = 7;
-      goto out;
-    }
-
+  listen(id , 3);
+  int capacity = 256;
+  char buf[capacity];
   socklen_t addrlen;
   int conn;
-  if ((conn = accept(id, (struct sockaddr *)&client, &addrlen)) != -1)
+  while ((conn = accept(id, (struct sockaddr *)&client, &addrlen)))
     {
-      result = do_io(conn, outfd);
+      int avail = 1;
+      while (0 < avail)
+        {
+          avail = recv(conn, buf, capacity, 0);
+          buf[avail] = 0;
+          fprintf(fout, "%s", buf);
+          int status = fflush(fout);
+          if (0 != status)
+            {
+              perror("error: io: Failed to flush");
+            }
+        }
     }
 
   if (0 > conn)
     {
       perror("accept failed");
-      result = 4;
-      goto out;
+      return 4;
     }
 
-out:
-  if (id != -1)
+  if (stdout != fout)
     {
-      close(id);
+      fclose(fout);
     }
 
-  if (outfd != STDOUT_FILENO)
-    {
-      close(outfd);
-    }
-
-  return result;
+  return EXIT_SUCCESS;
 }
 
 int netcat_client(int argc, char * argv[])
 {
-  int id = -1;
-  int infd = STDIN_FILENO;
+  FILE *fin = stdin;
   char *host = "127.0.0.1";
   int port = NETCAT_PORT;
-  int result = EXIT_SUCCESS;
 
   if (argc > 1)
     {
@@ -179,22 +141,20 @@ int netcat_client(int argc, char * argv[])
 
   if (argc > 3)
     {
-      infd = open(argv[3], O_RDONLY);
-      if (infd == -1)
+      fin = fopen(argv[3], "r");
+      if (0 > fin)
         {
-          perror("error: io: Failed to open file");
-          infd = STDIN_FILENO;
-          result = 1;
-          goto out;
+          perror("error: io: Failed to create file");
+          return 1;
         }
     }
 
+  int id;
   id = socket(AF_INET , SOCK_STREAM , 0);
   if (0 > id)
     {
       perror("error: net: Failed to create socket");
-      result = 2;
-      goto out;
+      return 2;
     }
 
   struct sockaddr_in server;
@@ -203,31 +163,47 @@ int netcat_client(int argc, char * argv[])
   if (1 != inet_pton(AF_INET, host, &server.sin_addr))
     {
       perror("error: net: Invalid host");
-      result = 3;
-      goto out;
+      return 3;
     }
 
   if (connect(id, (struct sockaddr *) &server, sizeof(server)) < 0)
     {
       perror("error: net: Failed to connect");
-      result = 4;
-      goto out;
+      return 4;
     }
 
-  result = do_io(infd, id);
-
-out:
-  if (id != -1)
+  int capacity = 256;
+  char buf[capacity];
+  int avail;
+  while (true)
     {
-      close(id);
+      avail = -1;
+      if (fgets(buf, capacity, fin))
+        {
+          avail = strnlen(buf, capacity);
+        }
+
+      if (avail < 0)
+        {
+          exit(EXIT_SUCCESS);
+        }
+
+      buf[avail] = 0;
+      avail = write(id, buf, avail);
+      printf("%s", buf);
+      if (avail < 0)
+        {
+          perror("error: net: writing to socket");
+          exit(1);
+        }
     }
 
-  if (infd != STDIN_FILENO)
+  if (stdout != fin)
     {
-      close(infd);
+      fclose(fin);
     }
 
-  return result;
+  return EXIT_SUCCESS;
 }
 
 /****************************************************************************
@@ -240,8 +216,7 @@ int main(int argc, FAR char *argv[])
   if (2 > argc)
     {
       fprintf(stderr,
-              "Usage: netcat <destination> [port] [file]\n"
-              "Usage: netcat -l [port] [file]\n");
+              "Usage: netcat [-l] [destination] [port] [file]\n");
     }
   else if ((1 < argc) && (0 == strcmp("-l", argv[1])))
     {

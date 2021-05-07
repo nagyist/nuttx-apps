@@ -35,6 +35,9 @@
 
 include $(APPDIR)/Make.defs
 
+LDLIBPATH =
+LDLIBS =
+
 ifeq ($(CONFIG_EXAMPLES_SOTEST_LIBGCC),y)
 LIBGCC = "${shell $(CC) $(ARCHCPUFLAGS) -print-libgcc-file-name 2>/dev/null}"
 ifneq ($(LIBGCC),)
