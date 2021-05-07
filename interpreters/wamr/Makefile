@@ -1,5 +1,5 @@
 ############################################################################
-# interpreters/wamr/Makefile
+# apps/interpreters/wamr/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -55,11 +55,12 @@ $(WAMR_UNPACK): $(WAMR_TARBALL)
 	$(Q) echo "Unpacking $(WAMR_TARBALL) to $(WAMR_UNPACK)"
 	$(Q) unzip $(WAMR_TARBALL)
 	$(Q) mv wasm-micro-runtime-$(WAMR_VERSION_STUB)$(WAMR_VERSION) $(WAMR_UNPACK)
+	$(Q) touch $(WAMR_UNPACK)
 
-context:: # $(WAMR_UNPACK)
+context:: $(WAMR_UNPACK)
 
 distclean::
-	# $(call DELDIR, $(WAMR_UNPACK))
-	# $(call DELFILE, $(WAMR_TARBALL))
+	$(call DELDIR, $(WAMR_UNPACK))
+	$(call DELFILE, $(WAMR_TARBALL))
 
 include $(APPDIR)/Application.mk
