@@ -51,7 +51,6 @@
 #include <string.h>
 #include <signal.h>
 #include <libgen.h>
-#include <assert.h>
 #include <errno.h>
 #include <debug.h>
 

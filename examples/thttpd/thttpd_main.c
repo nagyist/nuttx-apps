@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/thttpd/thttpd_main.c
+ * examples/thttpd/thttpd_main.c
  *
  *   Copyright (C) 2009-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -59,10 +59,6 @@
 
 #include <nuttx/drivers/ramdisk.h>
 
-#ifdef CONFIG_THTTPD_NXFLAT
-#  include <sys/boardctl.h>
-#endif
-
 #ifdef CONFIG_THTTPD_BINFS
 #  include <nuttx/fs/unionfs.h>
 #endif
@@ -95,10 +91,6 @@
 #  ifdef CONFIG_DISABLE_MOUNTPOINT
 #    error "You must not disable mountpoints via CONFIG_DISABLE_MOUNTPOINT in your configuration file"
 #  endif
-
-#ifndef CONFIG_BOARDCTL_ROMDISK
-#  error "CONFIG_BOARDCTL_ROMDISK should be enabled in the configuration file"
-#endif
 #endif
 
 #ifdef CONFIG_THTTPD_BINFS
@@ -212,9 +204,6 @@ int main(int argc, FAR char *argv[])
 #endif
   char *thttpd_argv = "thttpd";
   int ret;
-#ifdef CONFIG_THTTPD_NXFLAT
-  struct boardioc_romdisk_s desc;
-#endif
 
   /* Configure SLIP */
 
@@ -263,18 +252,12 @@ int main(int argc, FAR char *argv[])
 
   netlib_ifup("eth0");
 
-#ifdef CONFIG_THTTPD_NXFLAT
   /* Create a ROM disk for the ROMFS filesystem */
 
   printf("Registering romdisk\n");
 
-  desc.minor    = 0;                                    /* Minor device number of the ROM disk. */
-  desc.nsectors = NSECTORS(romfs_img_len);              /* The number of sectors in the ROM disk */
-  desc.sectsize = SECTORSIZE;                           /* The size of one sector in bytes */
-  desc.image    = (FAR uint8_t *)romfs_img;             /* File system image */
-
-  ret = boardctl(BOARDIOC_ROMDISK, (uintptr_t)&desc);
-
+  ret = romdisk_register(0, (uint8_t *)romfs_img, NSECTORS(romfs_img_len),
+                         SECTORSIZE);
   if (ret < 0)
     {
       printf("ERROR: romdisk_register failed: %d\n", ret);
@@ -292,7 +275,6 @@ int main(int argc, FAR char *argv[])
       printf("ERROR: mount(%s,%s,romfs) failed: %d\n",
              ROMFSDEV, ROMFS_MOUNTPT, errno);
     }
-#endif
 
 #ifdef CONFIG_THTTPD_BINFS
   /* Mount the BINFS file system */

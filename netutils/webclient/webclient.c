@@ -152,7 +152,6 @@ struct wget_s
 
   char line[CONFIG_WEBCLIENT_MAXHTTPLINE];
   int  ndx;
-  bool skip_to_next_line;
 
 #ifdef CONFIG_WEBCLIENT_GETMIMETYPE
   char mimetype[CONFIG_WEBCLIENT_MAXMIMESIZE];
@@ -376,20 +375,9 @@ static inline int wget_parsestatus(struct webclient_context *ctx,
 
   while (offset < ws->datend)
     {
-      bool got_nl;
-
       ws->line[ndx] = ws->buffer[offset];
-      got_nl = ws->line[ndx] == ISO_NL;
-      if (got_nl || ndx == CONFIG_WEBCLIENT_MAXHTTPLINE - 1)
+      if (ws->line[ndx] == ISO_NL)
         {
-          if (!got_nl)
-            {
-              nerr("ERROR: HTTP status line didn't fit "
-                   "CONFIG_WEBCLIENT_MAXHTTPLINE: %.*s\n",
-                   ndx, ws->line);
-              return -E2BIG;
-            }
-
           ws->line[ndx] = '\0';
           if ((strncmp(ws->line, g_http10, strlen(g_http10)) == 0) ||
               (strncmp(ws->line, g_http11, strlen(g_http11)) == 0))
@@ -418,7 +406,6 @@ static inline int wget_parsestatus(struct webclient_context *ctx,
                 }
 
               ctx->http_status = http_status;
-              ninfo("Got HTTP status %lu\n", http_status);
               if (ctx->http_reason != NULL)
                 {
                   strncpy(ctx->http_reason,
@@ -459,7 +446,6 @@ static inline int wget_parsestatus(struct webclient_context *ctx,
            */
 
           ws->state = WEBCLIENT_STATE_HEADERS;
-          ndx = 0;
           break;
         }
       else
@@ -530,35 +516,15 @@ static inline int wget_parseheaders(struct wget_s *ws)
 
   while (offset < ws->datend)
     {
-      bool got_nl;
-
       ws->line[ndx] = ws->buffer[offset];
-      got_nl = ws->line[ndx] == ISO_NL;
-      if (got_nl || ndx == CONFIG_WEBCLIENT_MAXHTTPLINE - 1)
+      if (ws->line[ndx] == ISO_NL)
         {
-          bool found;
-
-          if (ws->skip_to_next_line)
-            {
-              if (got_nl)
-                {
-                  ws->skip_to_next_line = false;
-                }
-
-              ndx = 0;
-              continue;
-            }
-
-          /* We have an entire HTTP header line in ws->line, or
-           * our buffer is already full, so we start parsing it.
+          /* We have an entire HTTP header line in s.line, so
+           * we parse it.
            */
 
-          found = false;
           if (ndx > 0) /* Should always be true */
             {
-              ninfo("Got HTTP header line%s: %.*s\n",
-                    got_nl ? "" : " (truncated)",
-                    ndx - 1, &ws->line[0]);
               if (ws->line[0] == ISO_CR)
                 {
                   /* This was the last header line (i.e., and empty "\r\n"),
@@ -572,30 +538,7 @@ static inline int wget_parseheaders(struct wget_s *ws)
 
               /* Truncate the trailing \r\n */
 
-              if (got_nl)
-                {
-                  ndx--;
-                  if (ws->line[ndx] != ISO_CR)
-                    {
-                      nerr("ERROR: unexpected EOL from the server\n");
-                      return -EPROTO;
-                    }
-                }
-
-              ws->line[ndx] = '\0';
-
-              if (!strchr(ws->line, ':'))
-                {
-                  if (got_nl)
-                    {
-                      nerr("ERROR: invalid header possibly due to "
-                           "small CONFIG_WEBCLIENT_MAXHTTPLINE\n");
-                      return -E2BIG;
-                    }
-
-                  nerr("ERROR: invalid header\n");
-                  return -EPROTO;
-                }
+              ws->line[ndx - 1] = '\0';
 
               /* Check for specific HTTP header fields. */
 
@@ -613,7 +556,6 @@ static inline int wget_parseheaders(struct wget_s *ws)
 
                   strncpy(ws->mimetype, ws->line + strlen(g_httpcontenttype),
                           sizeof(ws->mimetype));
-                  found = true;
                 }
               else
 #endif
@@ -628,30 +570,14 @@ static inline int wget_parseheaders(struct wget_s *ws)
                   ret = parseurl(ws->line + strlen(g_httplocation), ws);
                   ninfo("New hostname='%s' filename='%s'\n",
                         ws->hostname, ws->filename);
-                  found = true;
                 }
             }
 
-          if (found && !got_nl)
-            {
-              /* We found something we might care.
-               * but we couldn't process it correctly.
-               */
-
-              nerr("ERROR: truncated a header due to "
-                   "small CONFIG_WEBCLIENT_MAXHTTPLINE\n");
-              return -E2BIG;
-            }
-
-          /* We're done parsing ws->line, so we reset the index.
-           *
-           * If we haven't seen the entire line yet (!got_nl),
-           * skip the rest of the line.
-           * Otherwise, start processing the next line.
+          /* We're done parsing this line, so we reset the index to the start
+           * of the next line.
            */
 
           ndx = 0;
-          ws->skip_to_next_line = !got_nl;
         }
       else
         {
@@ -896,15 +822,13 @@ int webclient_perform(FAR struct webclient_context *ctx)
           if (ret == -1)
             {
               ret = -errno;
-              close(conn.sockfd);
             }
         }
 
       if (ret < 0)
         {
           nerr("ERROR: connect failed: %d\n", errno);
-          free(ws);
-          return ret;
+          goto errout_with_errno;
         }
 
       /* Send the request */

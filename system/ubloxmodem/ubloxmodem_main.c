@@ -43,7 +43,6 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 
-#include <debug.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -80,12 +79,12 @@
  * Private Data
  ****************************************************************************/
 
-static int ubloxmodem_help  (FAR struct ubloxmodem_cxt *cxt);
-static int ubloxmodem_on    (FAR struct ubloxmodem_cxt *cxt);
-static int ubloxmodem_off   (FAR struct ubloxmodem_cxt *cxt);
-static int ubloxmodem_reset (FAR struct ubloxmodem_cxt *cxt);
-static int ubloxmodem_status(FAR struct ubloxmodem_cxt *cxt);
-static int ubloxmodem_at    (FAR struct ubloxmodem_cxt *cxt);
+static int ubloxmodem_help  (FAR struct ubloxmodem_cxt* cxt);
+static int ubloxmodem_on    (FAR struct ubloxmodem_cxt* cxt);
+static int ubloxmodem_off   (FAR struct ubloxmodem_cxt* cxt);
+static int ubloxmodem_reset (FAR struct ubloxmodem_cxt* cxt);
+static int ubloxmodem_status(FAR struct ubloxmodem_cxt* cxt);
+static int ubloxmodem_at    (FAR struct ubloxmodem_cxt* cxt);
 
 /* Mapping of command indices (@ubloxmodem_cmd@ implicit from the position in
  * the list) to tuples containing the command handler and descriptive
@@ -125,8 +124,7 @@ static int make_nonblock(int fd)
 
 static int ubloxmodem_open_tty(void)
 {
-  int fd;
-  int ret;
+  int fd, ret;
 
   fd = open(CONFIG_SYSTEM_UBLOXMODEM_TTY_DEVNODE, O_RDWR);
   if (fd < 0)
@@ -146,7 +144,7 @@ static int ubloxmodem_open_tty(void)
   return fd;
 }
 
-static int chat_readb(int fd, FAR char *dst, int timeout_ms)
+static int chat_readb(int fd, FAR char* dst, int timeout_ms)
 {
   struct pollfd fds;
   int ret;
@@ -172,7 +170,7 @@ static int chat_readb(int fd, FAR char *dst, int timeout_ms)
   return 0;
 }
 
-static int chat_match_response(int fd, FAR char *response, int timeout_ms)
+static int chat_match_response(int fd, FAR char* response, int timeout_ms)
 {
   char c;
   int ret;
@@ -205,7 +203,7 @@ static int chat_match_response(int fd, FAR char *response, int timeout_ms)
   return 0;
 }
 
-static int chat_single(int fd, FAR char *cmd, FAR char *resp)
+static int chat_single(int fd, FAR char* cmd, FAR char* resp)
 {
   int ret;
 
@@ -240,7 +238,7 @@ static int chat_single(int fd, FAR char *cmd, FAR char *resp)
   return ret;
 }
 
-static int ubloxmodem_help(FAR struct ubloxmodem_cxt *cxt)
+static int ubloxmodem_help(FAR struct ubloxmodem_cxt* cxt)
 {
   int i;
 
@@ -259,7 +257,7 @@ static int ubloxmodem_help(FAR struct ubloxmodem_cxt *cxt)
   return 0;
 }
 
-static int ubloxmodem_on(FAR struct ubloxmodem_cxt *cxt)
+static int ubloxmodem_on(FAR struct ubloxmodem_cxt* cxt)
 {
   int ret;
 
@@ -273,7 +271,7 @@ static int ubloxmodem_on(FAR struct ubloxmodem_cxt *cxt)
   return ret;
 }
 
-static int ubloxmodem_off(FAR struct ubloxmodem_cxt *cxt)
+static int ubloxmodem_off(FAR struct ubloxmodem_cxt* cxt)
 {
   int ret;
 
@@ -287,7 +285,7 @@ static int ubloxmodem_off(FAR struct ubloxmodem_cxt *cxt)
   return ret;
 }
 
-static int ubloxmodem_reset(FAR struct ubloxmodem_cxt *cxt)
+static int ubloxmodem_reset(FAR struct ubloxmodem_cxt* cxt)
 {
   int ret;
 
@@ -301,7 +299,7 @@ static int ubloxmodem_reset(FAR struct ubloxmodem_cxt *cxt)
   return ret;
 }
 
-static int ubloxmodem_status(FAR struct ubloxmodem_cxt *cxt)
+static int ubloxmodem_status(FAR struct ubloxmodem_cxt* cxt)
 {
   int ret, i;
   struct ubxmdm_status status;
@@ -340,11 +338,11 @@ static int ubloxmodem_status(FAR struct ubloxmodem_cxt *cxt)
   return ret;
 }
 
-static int ubloxmodem_at(FAR struct ubloxmodem_cxt *cxt)
+static int ubloxmodem_at(FAR struct ubloxmodem_cxt* cxt)
 {
   int fd, ret;
-  FAR char *atcmd;
-  FAR char *resp;
+  FAR char* atcmd;
+  FAR char* resp;
 
   atcmd = cxt->argv[2];
   resp  = cxt->argv[3];
@@ -370,7 +368,7 @@ static int ubloxmodem_at(FAR struct ubloxmodem_cxt *cxt)
   return ret;
 }
 
-static int ubloxmodem_parse(FAR struct ubloxmodem_cxt *cxt)
+static int ubloxmodem_parse(FAR struct ubloxmodem_cxt* cxt)
 {
   int i;
 
