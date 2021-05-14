@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/ntpc/ntpc_status.c
+ * system/ntpc/ntpc_status.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/dhcpc/dhcpc.c
+ * netutils/dhcpc/dhcpc.c
  *
  *   Copyright (C) 2007, 2009, 2011-2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
@@ -326,96 +326,50 @@ static uint8_t dhcpc_parseoptions(FAR struct dhcpc_state *presult,
 
             /* Get subnet mask in network order */
 
-            if (optptr + 6 <= end)
-              {
-                memcpy(&presult->netmask.s_addr, optptr + 2, 4);
-              }
-            else
-              {
-                nerr("Packet too short (netmask missing)\n");
-              }
+            memcpy(&presult->netmask.s_addr, optptr + 2, 4);
             break;
 
           case DHCP_OPTION_ROUTER:
 
             /* Get the default router address in network order */
 
-            if (optptr + 6 <= end)
-              {
-                memcpy(&presult->default_router.s_addr, optptr + 2, 4);
-              }
-            else
-              {
-                nerr("Packet too short (router address missing)\n");
-              }
+            memcpy(&presult->default_router.s_addr, optptr + 2, 4);
             break;
 
           case DHCP_OPTION_DNS_SERVER:
 
             /* Get the DNS server address in network order */
 
-            if (optptr + 6 <= end)
-              {
-                memcpy(&presult->dnsaddr.s_addr, optptr + 2, 4);
-              }
-            else
-              {
-                nerr("Packet too short (DNS address missing)\n");
-              }
+            memcpy(&presult->dnsaddr.s_addr, optptr + 2, 4);
             break;
 
           case DHCP_OPTION_MSG_TYPE:
 
             /* Get message type */
 
-            if (optptr + 3 <= end)
-              {
-                type = *(optptr + 2);
-              }
-            else
-              {
-                nerr("Packet too short (type missing)\n");
-              }
+            type = *(optptr + 2);
             break;
 
           case DHCP_OPTION_SERVER_ID:
 
             /* Get server address in network order */
 
-            if (optptr + 6 <= end)
-              {
-                memcpy(&presult->serverid.s_addr, optptr + 2, 4);
-              }
-            else
-              {
-                nerr("Packet too short (server address missing)\n");
-              }
+            memcpy(&presult->serverid.s_addr, optptr + 2, 4);
             break;
 
           case DHCP_OPTION_LEASE_TIME:
-
+            {
               /* Get lease time (in seconds) in host order */
 
-            if (optptr + 6 <= end)
-              {
-                uint16_t tmp[2];
-                memcpy(tmp, optptr + 2, 4);
-                presult->lease_time = ((uint32_t)ntohs(tmp[0])) << 16 |
-                                       (uint32_t)ntohs(tmp[1]);
-              }
-            else
-              {
-                nerr("Packet too short (lease time missing)\n");
-              }
+              uint16_t tmp[2];
+              memcpy(tmp, optptr + 2, 4);
+              presult->lease_time = ((uint32_t)ntohs(tmp[0])) << 16 |
+                                     (uint32_t)ntohs(tmp[1]);
+            }
             break;
 
           case DHCP_OPTION_END:
             return type;
-        }
-
-      if (optptr + 1 >= end)
-        {
-          break;
         }
 
       optptr += optptr[1] + 2;
@@ -431,15 +385,13 @@ static uint8_t dhcpc_parseoptions(FAR struct dhcpc_state *presult,
 static uint8_t dhcpc_parsemsg(FAR struct dhcpc_state_s *pdhcpc, int buflen,
                               FAR struct dhcpc_state *presult)
 {
-  if (buflen >= 44 && pdhcpc->packet.op == DHCP_REPLY &&
+  if (pdhcpc->packet.op == DHCP_REPLY &&
       memcmp(pdhcpc->packet.xid, xid, sizeof(xid)) == 0 &&
       memcmp(pdhcpc->packet.chaddr,
              pdhcpc->ds_macaddr, pdhcpc->ds_maclen) == 0)
     {
       memcpy(&presult->ipaddr.s_addr, pdhcpc->packet.yiaddr, 4);
-      return dhcpc_parseoptions(presult, &pdhcpc->packet.options[4],
-                                buflen -
-                                (offsetof(struct dhcp_msg, options) + 4));
+      return dhcpc_parseoptions(presult, &pdhcpc->packet.options[4], buflen);
     }
 
   return 0;

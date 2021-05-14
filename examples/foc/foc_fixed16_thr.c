@@ -26,7 +26,6 @@
 
 #include <stdio.h>
 #include <fcntl.h>
-#include <assert.h>
 
 #include <dspb16.h>
 

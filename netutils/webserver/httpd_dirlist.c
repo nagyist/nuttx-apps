@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/webserver/httpd_dirlist.c
+ * netutils/webserver/httpd_dirlist.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -32,7 +32,6 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <assert.h>
 #include <errno.h>
 #include <debug.h>
 #include <string.h>

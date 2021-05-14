@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/mlx90614/mlx90614_main.c
+ * examples/mlx90614/mlx90614_main.c
  *
  *   Copyright (C) 2017 Gregory Nutt. All rights reserved.
  *   Copyright (c) 2015-2017 Pololu Corporation.

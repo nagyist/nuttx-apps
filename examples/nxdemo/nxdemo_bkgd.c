@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/nxdemo/nxdemo_bkgd.c
+ * examples/nxdemo/nxdemo_bkgd.c
  *
  *   Copyright (C) 2018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

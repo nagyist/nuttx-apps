@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/usrsocktest/usrsocktest_multi_thread.c
+ * examples/usrsocktest/usrsocktest_multi_thread.c
  * Multi-threaded access to sockets
  *
  *   Copyright (C) 2015, 2017 Haltian Ltd. All rights reserved.

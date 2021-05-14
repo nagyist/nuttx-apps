@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/posix_spawn/spawn_main.c
+ * examples/posix_spawn/spawn_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -83,12 +83,12 @@
 #define NSECTORS(b)  (((b)+SECTORSIZE-1)/SECTORSIZE)
 #define MOUNTPT      "/mnt/romfs"
 
-#ifndef CONFIG_EXAMPLES_POSIXSPAWN_DEVMINOR
-#  define CONFIG_EXAMPLES_POSIXSPAWN_DEVMINOR 0
+#ifndef CONFIG_EXAMPLES_ELF_DEVMINOR
+#  define CONFIG_EXAMPLES_ELF_DEVMINOR 0
 #endif
 
-#ifndef CONFIG_EXAMPLES_POSIXSPAWN_DEVPATH
-#  define CONFIG_EXAMPLES_POSIXSPAWN_DEVPATH "/dev/ram0"
+#ifndef CONFIG_EXAMPLES_ELF_DEVPATH
+#  define CONFIG_EXAMPLES_ELF_DEVPATH "/dev/ram0"
 #endif
 
 /* If CONFIG_DEBUG_FEATURES is enabled, use info/err instead of printf so
@@ -117,18 +117,14 @@ static unsigned int g_mmstep;     /* Memory Usage at beginning of test step */
 static const char delimiter[] =
   "**************************************"
   "**************************************";
+static const char g_redirect[] = "redirect";
 static const char g_data[]     = "testdata.txt";
 
 static char fullpath[128];
 
-static char * const g_hello_argv[5] =
+static char * const g_argv[5] =
 {
   "hello", "Argument 1", "Argument 2", "Argument 3", NULL
-};
-
-static char * const g_redirect_argv[2] =
-{
-  "redirect", NULL
 };
 
 /****************************************************************************
@@ -210,7 +206,6 @@ int main(int argc, FAR char *argv[])
   FAR const char *filepath;
   pid_t pid;
   int ret;
-  struct boardioc_romdisk_s desc;
 
   /* Initialize the memory monitor */
 
@@ -218,19 +213,15 @@ int main(int argc, FAR char *argv[])
 
   /* Create a ROM disk for the ROMFS filesystem */
 
-  desc.minor    = CONFIG_EXAMPLES_POSIXSPAWN_DEVMINOR;  /* Minor device number of the ROM disk. */
-  desc.nsectors = NSECTORS(romfs_img_len);              /* The number of sectors in the ROM disk */
-  desc.sectsize = SECTORSIZE;                           /* The size of one sector in bytes */
-  desc.image    = (FAR uint8_t *)romfs_img;             /* File system image */
-
   message("Registering romdisk at /dev/ram%d\n",
-          CONFIG_EXAMPLES_POSIXSPAWN_DEVMINOR);
+          CONFIG_EXAMPLES_ELF_DEVMINOR);
 
-  ret = boardctl(BOARDIOC_ROMDISK, (uintptr_t)&desc);
-
+  ret = romdisk_register(CONFIG_EXAMPLES_ELF_DEVMINOR,
+                         (FAR uint8_t *)romfs_img, NSECTORS(romfs_img_len),
+                         SECTORSIZE);
   if (ret < 0)
     {
-      errmsg("ERROR: romdisk_register failed: %s\n", strerror(errno));
+      errmsg("ERROR: romdisk_register failed: %d\n", ret);
       exit(1);
     }
 
@@ -239,14 +230,14 @@ int main(int argc, FAR char *argv[])
   /* Mount the file system */
 
   message("Mounting ROMFS filesystem at target=%s with source=%s\n",
-          MOUNTPT, CONFIG_EXAMPLES_POSIXSPAWN_DEVPATH);
+         MOUNTPT, CONFIG_EXAMPLES_ELF_DEVPATH);
 
-  ret = mount(CONFIG_EXAMPLES_POSIXSPAWN_DEVPATH, MOUNTPT, "romfs",
+  ret = mount(CONFIG_EXAMPLES_ELF_DEVPATH, MOUNTPT, "romfs",
               MS_RDONLY, NULL);
   if (ret < 0)
     {
-      errmsg("ERROR: mount(%s,%s,romfs) failed: %s\n",
-             CONFIG_EXAMPLES_POSIXSPAWN_DEVPATH, MOUNTPT, strerror(errno));
+      errmsg("ERROR: mount(%s,%s,romfs) failed: %d\n",
+             CONFIG_EXAMPLES_ELF_DEVPATH, MOUNTPT, errno);
     }
 
   mm_update(&g_mmstep, "after mount");
@@ -274,7 +265,7 @@ int main(int argc, FAR char *argv[])
    * this program from the others.
    */
 
-  testheader(g_hello_argv[0]);
+  testheader(g_argv[0]);
 
   /* Initialize the attributes file actions structure */
 
@@ -303,9 +294,9 @@ int main(int argc, FAR char *argv[])
    */
 
 #ifdef CONFIG_LIB_ENVPATH
-  filepath = g_hello_argv[0];
+  filepath = g_argv[0];
 #else
-  snprintf(fullpath, 128, "%s/%s", MOUNTPT, g_hello_argv[0]);
+  snprintf(fullpath, 128, "%s/%s", MOUNTPT, g_argv[0]);
   filepath = fullpath;
 #endif
 
@@ -313,8 +304,8 @@ int main(int argc, FAR char *argv[])
 
   mm_update(&g_mmstep, "before posix_spawn");
 
-  ret = posix_spawn(&pid, filepath, &file_actions,
-                    &attr, g_hello_argv, NULL);
+  ret = posix_spawn(&pid, filepath, &file_actions, &attr, NULL,
+                    (FAR char * const *)&g_argv);
   if (ret != 0)
     {
       errmsg("ERROR: posix_spawn failed: %d\n", ret);
@@ -351,7 +342,7 @@ int main(int argc, FAR char *argv[])
    * this program from the others.
    */
 
-  testheader(g_redirect_argv[0]);
+  testheader(g_redirect);
 
   /* Initialize the attributes file actions structure */
 
@@ -402,9 +393,9 @@ int main(int argc, FAR char *argv[])
    */
 
 #ifdef CONFIG_LIB_ENVPATH
-  filepath = g_redirect_argv[0];
+  filepath = g_redirect;
 #else
-  snprintf(fullpath, 128, "%s/%s", MOUNTPT, g_redirect_argv[0]);
+  snprintf(fullpath, 128, "%s/%s", MOUNTPT, g_redirect);
   filepath = fullpath;
 #endif
 
@@ -412,8 +403,7 @@ int main(int argc, FAR char *argv[])
 
   mm_update(&g_mmstep, "before posix_spawn");
 
-  ret = posix_spawn(&pid, filepath, &file_actions,
-                    &attr, g_redirect_argv, NULL);
+  ret = posix_spawn(&pid, filepath, &file_actions, &attr, NULL, NULL);
   if (ret != 0)
     {
       errmsg("ERROR: posix_spawn failed: %d\n", ret);

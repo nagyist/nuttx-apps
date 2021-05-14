@@ -45,7 +45,6 @@
 #include <sys/types.h>
 #include <sys/select.h>
 #include <unistd.h>
-#include <assert.h>
 
 #include "pdcnuttx.h"
 

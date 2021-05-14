@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/thttpd/cgi-src/phf.c
+ * netutils/thttpd/cgi-src/phf.c
  * Cracker trap
  *
  *   Copyright (C) 2009, 2015 Gregory Nutt. All rights reserved.
