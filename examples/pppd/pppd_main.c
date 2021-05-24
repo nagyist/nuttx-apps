@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/pppd/pppd_main.c
+ * examples/pppd/pppd_main.c
  *
  *   Copyright (C) 2015 Brennan Ashton. All rights reserved.
  *   Author: Brennan Ashton <brennan@ombitron.com>

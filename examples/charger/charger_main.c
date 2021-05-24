@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/charger/charger_main.c
+ * examples/charger/charger_main.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

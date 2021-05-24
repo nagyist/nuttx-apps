@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/serialrx/serialrx_main.c
+ * examples/serialrx/serialrx_main.c
  *
  *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Copyright (C) 2015 Omni Hoverboards Inc. All rights reserved.

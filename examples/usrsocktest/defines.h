@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/usrsocktest/defines.h
+ * examples/usrsocktest/defines.h
  * Common defines for all usrsock testcases
  *
  *   Copyright (C) 2015, 2017 Haltian Ltd. All rights reserved.

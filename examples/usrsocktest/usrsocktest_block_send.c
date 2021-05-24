@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/usrsocktest/usrsocktest_block_send.c
+ * examples/usrsocktest/usrsocktest_block_send.c
  * Send through the socket in blocking mode
  *
  *   Copyright (C) 2015, 2017 Haltian Ltd. All rights reserved.

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/dac/dac_main.c
+ * examples/dac/dac_main.c
  *
  *   Copyright (C) 2017 Gregory Nutt. All rights reserved.
  *   Author: Juha Niskanen <juha.niskanen@haltian.com>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/usrsocktest/usrsocktest_chardev.c
+ * examples/usrsocktest/usrsocktest_chardev.c
  * Character device node tests
  *
  *   Copyright (C) 2015, 2017 Haltian Ltd. All rights reserved.

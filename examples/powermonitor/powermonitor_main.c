@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/powermonitor/powermonitor_main.c
+ * examples/powermonitor/powermonitor_main.c
  *
  *   Copyright (C) 2017 Giorgi Groß. All rights reserved.
  *   Author: Giorgio Groß <giorgio.gross@robodev.eu>

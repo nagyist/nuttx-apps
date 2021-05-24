@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/thttpd/cgi-src/ssi.c
+ * netutils/thttpd/cgi-src/ssi.c
  * Server-side-includes CGI program
  *
  *   Copyright (C) 2009, 2015 Gregory Nutt. All rights reserved.
