@@ -896,13 +896,15 @@ int webclient_perform(FAR struct webclient_context *ctx)
           if (ret == -1)
             {
               ret = -errno;
+              close(conn.sockfd);
             }
         }
 
       if (ret < 0)
         {
           nerr("ERROR: connect failed: %d\n", errno);
-          goto errout_with_errno;
+          free(ws);
+          return ret;
         }
 
       /* Send the request */

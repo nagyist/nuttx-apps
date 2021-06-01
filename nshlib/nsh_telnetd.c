@@ -47,6 +47,7 @@
 
 #include <arpa/inet.h>
 
+#include "netutils/netinit.h"
 #include "netutils/telnetd.h"
 
 #ifdef CONFIG_TELNET_CHARACTER_MODE
@@ -269,6 +270,12 @@ int nsh_telnetstart(sa_family_t family)
       pstate = nsh_newconsole();
       nsh_initscript(&pstate->cn_vtbl);
       nsh_release(&pstate->cn_vtbl);
+#endif
+
+#if defined(CONFIG_NSH_NETINIT) && !defined(CONFIG_NSH_CONSOLE)
+      /* Bring up the network */
+
+      netinit_bringup();
 #endif
 
       /* Perform architecture-specific final-initialization(if configured) */

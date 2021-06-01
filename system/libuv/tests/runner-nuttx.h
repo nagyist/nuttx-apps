@@ -1,5 +1,5 @@
 /****************************************************************************
- * graphics/lvgl/lv_tick_interface.h
+ * system/libuv/tests/runner-nuttx.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,45 +18,29 @@
  *
  ****************************************************************************/
 
-#ifndef __LV_TICK_INTERFACE_H__
-#define __LV_TICK_INTERFACE_H__
+#ifndef TEST_RUNNER_NUTTX_H
+#define TEST_RUNNER_NUTTX_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-#include <sys/time.h>
+#include <pthread.h>
+#include <stdio.h>
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Public Type Declarations
  ****************************************************************************/
 
-/****************************************************************************
- * Type Definitions
- ****************************************************************************/
+struct task_entry_s;
 
-/****************************************************************************
- * Public Data
- ****************************************************************************/
-
-#ifdef __cplusplus
-#define EXTERN extern "C"
-extern "C"
+struct process_info_s
 {
-#else
-#define EXTERN extern
-#endif
+  pthread_t tid;
+  sem_t sem;
+  struct task_entry_s *task;
+};
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+typedef struct process_info_s process_info_t;
 
-uint32_t lv_tick_interface(void);
-
-#undef EXTERN
-#ifdef __cplusplus
-}
-#endif
-
-#endif // __LV_TICK_INTERFACE_H__
+#endif  /* TEST_RUNNER_NUTTX_H */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * graphics/lvgl/lv_tick_interface.h
+ * system/libuv/tests/test_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,45 +18,39 @@
  *
  ****************************************************************************/
 
-#ifndef __LV_TICK_INTERFACE_H__
-#define __LV_TICK_INTERFACE_H__
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <sys/time.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "runner.h"
+#include "test-list.h"
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Public Functions
  ****************************************************************************/
 
-/****************************************************************************
- * Type Definitions
- ****************************************************************************/
-
-/****************************************************************************
- * Public Data
- ****************************************************************************/
-
-#ifdef __cplusplus
-#define EXTERN extern "C"
-extern "C"
+int main(int argc, FAR char **argv)
 {
-#else
-#define EXTERN extern
-#endif
+  platform_init(argc, argv);
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+  if (argc > 1)
+    {
+      if (strcmp(argv[1], "--list") == 0)
+        {
+          print_tests(stdout);
+          return 0;
+        }
 
-uint32_t lv_tick_interface(void);
+      if (argc > 2)
+        {
+          return run_test_part(argv[1], argv[2]);
+        }
+    }
 
-#undef EXTERN
-#ifdef __cplusplus
+  return run_tests(0);
 }
-#endif
 
-#endif // __LV_TICK_INTERFACE_H__
