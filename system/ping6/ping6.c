@@ -1,35 +1,20 @@
 /****************************************************************************
- * apps/system/ping/ping.c
+ * apps/system/ping6/ping6.c
  *
- *   Copyright (C) 2017-2018 Gregory Nutt. All rights reserved.
- *   Author: Gregory Nutt <gnutt@nuttx.org>
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.  The
+ * ASF licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- * 3. Neither the name NuttX nor the names of its contributors may be
- *    used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
- * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
- * BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
- * OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
- * AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
- * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  *
  ****************************************************************************/
 
@@ -59,15 +44,6 @@
 #define ICMPv6_POLL_DELAY    1000  /* 1 second in milliseconds */
 
 /****************************************************************************
- * Private Types
- ****************************************************************************/
-
-struct ping6_priv_s
-{
-  int code;                        /* Notice code ICMP_I/E/W_XXX */
-};
-
-/****************************************************************************
  * Private Functions
  ****************************************************************************/
 
@@ -75,28 +51,36 @@ struct ping6_priv_s
  * Name: show_usage
  ****************************************************************************/
 
-static void show_usage(FAR const char *progname, int exitcode) noreturn_function;
+static void show_usage(FAR const char *progname, int exitcode)
+                       noreturn_function;
 static void show_usage(FAR const char *progname, int exitcode)
 {
 #if defined(CONFIG_LIBC_NETDB) && defined(CONFIG_NETDB_DNSCLIENT)
-  printf("\nUsage: %s [-c <count>] [-i <interval>] [-W <timeout>] [-s <size>] <hostname>\n", progname);
+  printf("\nUsage: %s [-c <count>] [-i <interval>] "
+         "[-W <timeout>] [-s <size>] <hostname>\n", progname);
   printf("       %s -h\n", progname);
   printf("\nWhere:\n");
-  printf("  <hostname> is either an IPv6 address or the name of the remote host\n");
+  printf("  <hostname> is either an IPv6 address "
+         "or the name of the remote host\n");
   printf("   that is requested the ICMPv6 ECHO reply.\n");
 #else
-  printf("\nUsage: %s [-c <count>] [-i <interval>] [-W <timeout>] [-s <size>] <ip-address>\n", progname);
+  printf("\nUsage: %s [-c <count>] [-i <interval>] [-W <timeout>] "
+         "[-s <size>] <ip-address>\n", progname);
   printf("       %s -h\n", progname);
   printf("\nWhere:\n");
-  printf("  <ip-address> is the IPv6 address request the ICMPv6 ECHO reply.\n");
+  printf("  <ip-address> is the IPv6 address request "
+         "the ICMPv6 ECHO reply.\n");
 #endif
   printf("  -c <count> determines the number of pings.  Default %u.\n",
          ICMPv6_NPINGS);
-  printf("  -i <interval> is the default delay between pings (milliseconds).\n");
+  printf("  -i <interval> is the default delay between pings "
+         "(milliseconds).\n");
   printf("    Default %d.\n", ICMPv6_POLL_DELAY);
-  printf("  -W <timeout> is the timeout for wait response (milliseconds).\n");
+  printf("  -W <timeout> is the timeout for wait response "
+         "(milliseconds).\n");
   printf("    Default %d.\n", ICMPv6_POLL_DELAY);
-  printf("  -s <size> specifies the number of data bytes to be sent.  Default %u.\n",
+  printf("  -s <size> specifies the number of data bytes to be sent. "
+         " Default %u.\n",
          ICMPv6_PING6_DATALEN);
   printf("  -h shows this text and exits.\n");
   exit(exitcode);
@@ -108,10 +92,7 @@ static void show_usage(FAR const char *progname, int exitcode)
 
 static void ping6_result(FAR const struct ping6_result_s *result)
 {
-  FAR struct ping6_priv_s *priv = result->info->priv;
   char strbuffer[INET6_ADDRSTRLEN];
-
-  priv->code = result->code;
 
   switch (result->code)
     {
@@ -129,7 +110,8 @@ static void ping6_result(FAR const struct ping6_result_s *result)
         break;
 
       case ICMPv6_I_BEGIN:
-        inet_ntop(AF_INET6, result->dest.s6_addr16, strbuffer, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, result->dest.s6_addr16,
+                  strbuffer, INET6_ADDRSTRLEN);
         printf("PING6 %s: %u bytes of data\n",
                strbuffer, result->info->datalen);
         break;
@@ -216,7 +198,8 @@ static void ping6_result(FAR const struct ping6_result_s *result)
                    (result->nrequests >> 1)) /
                    result->nrequests;
 
-            printf("%u packets transmitted, %u received, %u%% packet loss, time %d ms\n",
+            printf("%u packets transmitted, %u received, "
+                   "%u%% packet loss, time %d ms\n",
                    result->nrequests, result->nreplies, tmp, result->extra);
           }
         break;
@@ -230,7 +213,6 @@ static void ping6_result(FAR const struct ping6_result_s *result)
 int main(int argc, FAR char *argv[])
 {
   struct ping6_info_s info;
-  struct ping6_priv_s priv;
   FAR char *endptr;
   int exitcode;
   int option;
@@ -240,8 +222,6 @@ int main(int argc, FAR char *argv[])
   info.delay     = ICMPv6_POLL_DELAY;
   info.timeout   = ICMPv6_POLL_DELAY;
   info.callback  = ping6_result;
-  info.priv      = &priv;
-  priv.code      = ICMPv6_I_BEGIN;
 
   /* Parse command line options */
 
@@ -256,7 +236,8 @@ int main(int argc, FAR char *argv[])
               long count = strtol(optarg, &endptr, 10);
               if (count < 1 || count > UINT16_MAX)
                 {
-                  fprintf(stderr, "ERROR: <count> out of range: %ld\n", count);
+                  fprintf(stderr, "ERROR: <count> out of range: %ld\n",
+                          count);
                   goto errout_with_usage;
                 }
 
@@ -269,7 +250,8 @@ int main(int argc, FAR char *argv[])
               long delay = strtol(optarg, &endptr, 10);
               if (delay < 1 || delay > UINT16_MAX)
                 {
-                  fprintf(stderr, "ERROR: <interval> out of range: %ld\n", delay);
+                  fprintf(stderr, "ERROR: <interval> out of range: %ld\n",
+                          delay);
                   goto errout_with_usage;
                 }
 
@@ -282,7 +264,8 @@ int main(int argc, FAR char *argv[])
               long timeout = strtol(optarg, &endptr, 10);
               if (timeout < 1 || timeout > UINT16_MAX)
                 {
-                  fprintf(stderr, "ERROR: <timeout> out of range: %ld\n", timeout);
+                  fprintf(stderr, "ERROR: <timeout> out of range: %ld\n",
+                          timeout);
                   goto errout_with_usage;
                 }
 
@@ -295,7 +278,8 @@ int main(int argc, FAR char *argv[])
               long datalen = strtol(optarg, &endptr, 10);
               if (datalen < 1 || datalen > UINT16_MAX)
                 {
-                  fprintf(stderr, "ERROR: <size> out of range: %ld\n", datalen);
+                  fprintf(stderr, "ERROR: <size> out of range: %ld\n",
+                          datalen);
                   goto errout_with_usage;
                 }
 
@@ -328,7 +312,7 @@ int main(int argc, FAR char *argv[])
 
   info.hostname = argv[optind];
   icmp6_ping(&info);
-  return priv.code < 0 ? EXIT_FAILURE: EXIT_SUCCESS;
+  return EXIT_SUCCESS;
 
 errout_with_usage:
   optind = 0;
