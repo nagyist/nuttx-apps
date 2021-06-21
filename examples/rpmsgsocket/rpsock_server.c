@@ -32,7 +32,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <poll.h>
-#include <assert.h>
 #include <errno.h>
 
 /****************************************************************************

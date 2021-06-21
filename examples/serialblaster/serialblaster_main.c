@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/serialblaster/serialblaster_main.c
+ * examples/serialblaster/serialblaster_main.c
  *
  *   Copyright (C) 2014 Gregory Nutt. All rights reserved.
  *   Authors: Gregory Nutt <gnutt@nuttx.org>

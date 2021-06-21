@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/nxdemo/nxdemo_main.c
+ * examples/nxdemo/nxdemo_main.c
  *
  *   Copyright (C) 2018-2019 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

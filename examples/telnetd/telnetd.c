@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/telnetd/telnetd.c
+ * examples/telnetd/telnetd.c
  *
  *   Copyright (C) 2012, 2017 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

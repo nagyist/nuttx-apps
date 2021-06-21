@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/thttpd/thttpd_cgi.h
+ * netutils/thttpd/thttpd_cgi.h
  * CGI support
  *
  *   Copyright (C) 2009 Gregory Nutt. All rights reserved.

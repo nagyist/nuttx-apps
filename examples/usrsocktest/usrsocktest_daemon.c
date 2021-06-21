@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/usrsocktest/usrsocktest_daemon.c
+ * examples/usrsocktest/usrsocktest_daemon.c
  *
  *   Copyright (C) 2015, 2017 Haltian Ltd. All rights reserved.
  *    Author: Jussi Kivilinna <jussi.kivilinna@haltian.com>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/webserver/httpd_cgi.h
+ * netutils/webserver/httpd_cgi.h
  *
  *   Copyright (C) 2007, 2009, 2012 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

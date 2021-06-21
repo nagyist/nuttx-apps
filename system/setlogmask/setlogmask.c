@@ -43,7 +43,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <syslog.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -65,6 +64,7 @@
  * Name: show_usage
  ****************************************************************************/
 
+static void show_usage(FAR const char *progname, int exitcode) noreturn_function;
 static void show_usage(FAR const char *progname, int exitcode)
 {
   printf("\nUsage: %s <d|i|n|w|e|c|a|r>\n", progname);

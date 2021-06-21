@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/thttpd/timers.c
+ * netutils/thttpd/timers.c
  * Simple Timer Routines
  *
  *   Copyright (C) 2009 Gregory Nutt. All rights reserved.

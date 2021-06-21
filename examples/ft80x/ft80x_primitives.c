@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/ft80x/ft80x_primitives.c
+ * examples/ft80x/ft80x_primitives.c
  *
  *   Copyright (C) 2018 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
