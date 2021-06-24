@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/fboverlay/fboverlay_main.c
+ * examples/fboverlay/fboverlay_main.c
  *
  *   Copyright (C) 2018 Gregory Nutt. All rights reserved.
  *   Author: Marco Krahl <ocram.lhark@gmail.com>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/bmi160/sixaxis_main.c
+ * examples/bmi160/sixaxis_main.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *

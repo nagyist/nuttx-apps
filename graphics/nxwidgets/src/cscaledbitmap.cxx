@@ -42,7 +42,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <cstring>
-#include <debug.h>
 
 #include <nuttx/nx/nxglib.h>
 

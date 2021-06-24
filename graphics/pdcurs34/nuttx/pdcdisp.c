@@ -38,7 +38,6 @@
  ****************************************************************************/
 
 #include <sys/ioctl.h>
-#include <assert.h>
 #include <errno.h>
 
 #ifdef CONFIG_SYSTEM_TERMCURSES
