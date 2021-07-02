@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/netlib/netlib.c
+ * netutils/netlib/netlib.c
  * Various uIP library functions.
  *
  *   Copyright (C) 2007, 2009, 2011, 2016 Gregory Nutt. All rights reserved.

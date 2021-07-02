@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/ostest/pthread_cleanup.c
+ * testing/ostest/pthread_cleanup.c
  *
  *   Copyright (C) 2017 Haltian Ltd. All rights reserved.
  *   Author: Juha Niskanen <juha.niskanen@haltian.com>

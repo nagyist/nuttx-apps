@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/usrsocktest/usrsocktest_basic_getsockopt.c
+ * examples/usrsocktest/usrsocktest_basic_getsockopt.c
  * Basic getsockopt tests
  *
  *   Copyright (C) 2015, 2017 Haltian Ltd. All rights reserved.

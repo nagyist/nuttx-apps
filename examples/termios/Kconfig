@@ -21,10 +21,4 @@ config EXAMPLES_TERMIOS_STACKSIZE
 	int "Termios stack size"
 	default DEFAULT_TASK_STACKSIZE
 
-config EXAMPLES_TERMIOS_DIS_HW_FC
-	bool "Disable HW flow control"
-	default n
-	---help---
-		Disable HW flow control using TERMIOS.
-
 endif

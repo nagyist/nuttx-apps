@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/bmi160/sixaxis_main.c
+ * examples/bmi160/sixaxis_main.c
  *
  *   Copyright 2018 Sony Semiconductor Solutions Corporation
  *
@@ -38,7 +38,6 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <inttypes.h>
 #include <fcntl.h>
 #include <stdio.h>
 
@@ -87,7 +86,7 @@ int main(int argc, FAR char *argv[])
 
       if (prev != data.sensor_time)
         {
-          printf("[%" PRIu32 "] %d, %d, %d / %d, %d, %d\n",
+          printf("[%d] %d, %d, %d / %d, %d, %d\n",
                  data.sensor_time,
                  data.gyro.x, data.gyro.y, data.gyro.z,
                  data.accel.x, data.accel.y, data.accel.z);

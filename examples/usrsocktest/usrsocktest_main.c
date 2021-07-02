@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/usrsocktest/usrsocktest_main.c
+ * examples/usrsocktest/usrsocktest_main.c
  *
  *   Copyright (C) 2015, 2017 Haltian Ltd. All rights reserved.
  *    Author: Jussi Kivilinna <jussi.kivilinna@haltian.com>
@@ -44,7 +44,6 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <stdio.h>
-#include <assert.h>
 #include <debug.h>
 #include <fcntl.h>
 #include <errno.h>

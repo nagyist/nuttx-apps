@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/netlib/netlib_ipv4addrconv.c
+ * netutils/netlib/netlib_ipv4addrconv.c
  *
  *   Copyright (C) 2007, 2009, 2011, 2016 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>

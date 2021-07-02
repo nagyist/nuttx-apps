@@ -73,15 +73,15 @@ PROGNAME := $(shell echo $(PROGNAME))
 RASRCS = $(filter %.s,$(ASRCS))
 CASRCS = $(filter %.S,$(ASRCS))
 
-RAOBJS = $(RASRCS:=$(SUFFIX)$(OBJEXT))
-CAOBJS = $(CASRCS:=$(SUFFIX)$(OBJEXT))
-COBJS = $(CSRCS:=$(SUFFIX)$(OBJEXT))
-CXXOBJS = $(CXXSRCS:=$(SUFFIX)$(OBJEXT))
+RAOBJS = $(RASRCS:.s=$(SUFFIX)$(OBJEXT))
+CAOBJS = $(CASRCS:.S=$(SUFFIX)$(OBJEXT))
+COBJS = $(CSRCS:.c=$(SUFFIX)$(OBJEXT))
+CXXOBJS = $(CXXSRCS:$(CXXEXT)=$(SUFFIX)$(OBJEXT))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
-MAINCXXOBJ = $(MAINCXXSRCS:=$(SUFFIX)$(OBJEXT))
-MAINCOBJ = $(MAINCSRCS:=$(SUFFIX)$(OBJEXT))
+MAINCXXOBJ = $(MAINCXXSRCS:$(CXXEXT)=$(SUFFIX)$(OBJEXT))
+MAINCOBJ = $(MAINCSRCS:.c=$(SUFFIX)$(OBJEXT))
 
 SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS) $(MAINSRC)
 OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS)
@@ -92,12 +92,13 @@ endif
 
 DEPPATH += --dep-path .
 DEPPATH += --obj-path .
+DEPPATH += --obj-suffix $(SUFFIX)$(OBJEXT)
 
 VPATH += :.
 
 # Targets follow
 
-all:: $(OBJS)
+all:: .built
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -121,36 +122,37 @@ define ELFLD
 	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) $(ARCHCRT0OBJ) $1 $(LDLIBS) -o $2
 endef
 
-$(RAOBJS): %.s$(SUFFIX)$(OBJEXT): %.s
+$(RAOBJS): %$(SUFFIX)$(OBJEXT): %.s
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(AELFFLAGS)), \
 		$(call ELFASSEMBLE, $<, $@), $(call ASSEMBLE, $<, $@))
 
-$(CAOBJS): %.S$(SUFFIX)$(OBJEXT): %.S
+$(CAOBJS): %$(SUFFIX)$(OBJEXT): %.S
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(AELFFLAGS)), \
 		$(call ELFASSEMBLE, $<, $@), $(call ASSEMBLE, $<, $@))
 
-$(COBJS): %.c$(SUFFIX)$(OBJEXT): %.c
+$(COBJS): %$(SUFFIX)$(OBJEXT): %.c
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
 
-$(CXXOBJS): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
+$(CXXOBJS): %$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CXXELFFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
-archive:
+.built: $(OBJS)
 ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
-	$(call ARCHIVE_ADD, "${shell cygpath -w $(BIN)}", $(OBJS))
+	$(call ARLOCK, "${shell cygpath -w $(BIN)}", $^)
 else
-	$(call ARCHIVE_ADD, $(BIN), $(OBJS))
+	$(call ARLOCK, $(BIN), $^)
 endif
+	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
-$(MAINCXXOBJ): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
+$(MAINCXXOBJ): %$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CXXELFFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
-$(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
+$(MAINCOBJ): %$(SUFFIX)$(OBJEXT): %.c
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
 
@@ -178,14 +180,14 @@ else
 
 MAINNAME := $(addsuffix _main,$(PROGNAME))
 
-$(MAINCXXOBJ): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
+$(MAINCXXOBJ): %$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 	$(eval $<_CXXFLAGS += ${shell $(DEFINE) "$(CXX)" main=$(firstword $(MAINNAME))})
 	$(eval $<_CXXELFFLAGS += ${shell $(DEFINE) "$(CXX)" main=$(firstword $(MAINNAME))})
 	$(eval MAINNAME=$(filter-out $(firstword $(MAINNAME)),$(MAINNAME)))
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CXXELFFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
-$(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
+$(MAINCOBJ): %$(SUFFIX)$(OBJEXT): %.c
 	$(eval $<_CFLAGS += ${shell $(DEFINE) "$(CC)" main=$(firstword $(MAINNAME))})
 	$(eval $<_CELFFLAGS += ${shell $(DEFINE) "$(CC)" main=$(firstword $(MAINNAME))})
 	$(eval MAINNAME=$(filter-out $(firstword $(MAINNAME)),$(MAINNAME)))
@@ -215,13 +217,17 @@ register::
 endif
 
 .depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
-	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter-out %$(CXXEXT) Makefile $(DEPCONFIG),$^) >Make.dep
-	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter-out %.c Makefile $(DEPCONFIG),$^) >>Make.dep
+ifeq ($(filter %$(CXXEXT),$(SRCS)),)
+	$(Q) $(MKDEP) $(DEPPATH) "$(CC)" -- $(CFLAGS) -- $(filter-out Makefile,$(filter-out $(DEPCONFIG),$^)) >Make.dep
+else
+	$(Q) $(MKDEP) $(DEPPATH) "$(CXX)" -- $(CXXFLAGS) -- $(filter-out Makefile,$(filter-out $(DEPCONFIG),$^)) >Make.dep
+endif
 	$(Q) touch $@
 
 depend:: .depend
 
 clean::
+	$(call DELFILE, .built)
 	$(call CLEAN)
 
 distclean:: clean
