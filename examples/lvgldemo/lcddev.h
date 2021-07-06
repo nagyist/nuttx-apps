@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/graphics/lvgl/lv_porting/lv_tick_interface.h
+ * apps/examples/lvgldemo/lcddev.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,44 +18,29 @@
  *
  ****************************************************************************/
 
-#ifndef __LV_TICK_INTERFACE_H__
-#define __LV_TICK_INTERFACE_H__
+#ifndef __APPS_EXAMPLES_LVGLDEMO_LCDDEV_H
+#define __APPS_EXAMPLES_LVGLDEMO_LCDDEV_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-/****************************************************************************
- * Type Definitions
- ****************************************************************************/
-
-/****************************************************************************
- * Public Data
- ****************************************************************************/
+#include <stdint.h>
+#include <lvgl/lvgl.h>
 
 #ifdef __cplusplus
-#define EXTERN extern "C"
 extern "C"
 {
-#else
-#define EXTERN extern
 #endif
 
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 
-uint32_t millis(void);
+int lcddev_init(lv_disp_drv_t *lv_drvr);
 
-#undef EXTERN
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __LV_TICK_INTERFACE_H__
+#endif /* __APPS_EXAMPLES_LVGLDEMO_LCDDEV_H */

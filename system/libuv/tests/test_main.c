@@ -1,5 +1,5 @@
 /****************************************************************************
- * examples/libtest/libtest.h
+ * apps/system/libuv/tests/test_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,13 +18,39 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_LIBTEST_LIBTEST_H
-#define __APPS_EXAMPLES_LIBTEST_LIBTEST_H
-
 /****************************************************************************
- * Public Function Prototypes
+ * Included Files
  ****************************************************************************/
 
-void library_test(void);
+#include <nuttx/config.h>
+#include <stdio.h>
+#include <string.h>
 
-#endif /* __APPS_EXAMPLES_LIBTEST_LIBTEST_H */
+#include "runner.h"
+#include "test-list.h"
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+int main(int argc, FAR char **argv)
+{
+  platform_init(argc, argv);
+
+  if (argc > 1)
+    {
+      if (strcmp(argv[1], "--list") == 0)
+        {
+          print_tests(stdout);
+          return 0;
+        }
+
+      if (argc > 2)
+        {
+          return run_test_part(argv[1], argv[2]);
+        }
+    }
+
+  return run_tests(0);
+}
+
