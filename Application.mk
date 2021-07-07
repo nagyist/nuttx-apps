@@ -97,7 +97,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: .built
+all:: $(OBJS)
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -137,13 +137,12 @@ $(CXXOBJS): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CXXELFFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
-.built: $(OBJS)
+archive:
 ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
-	$(call ARLOCK, "${shell cygpath -w $(BIN)}", $^)
+	$(call ARCHIVE_ADD, "${shell cygpath -w $(BIN)}", $(OBJS))
 else
-	$(call ARLOCK, $(BIN), $^)
+	$(call ARCHIVE_ADD, $(BIN), $(OBJS))
 endif
-	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -216,15 +215,13 @@ register::
 endif
 
 .depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
-	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$^) >Make.dep
-	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$^) >>Make.dep
-	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$^) >>Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter-out %$(CXXEXT) Makefile $(DEPCONFIG),$^) >Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter-out %.c Makefile $(DEPCONFIG),$^) >>Make.dep
 	$(Q) touch $@
 
 depend:: .depend
 
 clean::
-	$(call DELFILE, .built)
 	$(call CLEAN)
 
 distclean:: clean
