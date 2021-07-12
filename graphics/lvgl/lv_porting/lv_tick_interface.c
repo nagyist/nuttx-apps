@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/lvgldemo/lcddev.h
+ * apps/graphics/lvgl/lv_porting/lv_tick_interface.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,29 +18,48 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_LVGLDEMO_LCDDEV_H
-#define __APPS_EXAMPLES_LVGLDEMO_LCDDEV_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <stdint.h>
-#include <lvgl/lvgl.h>
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#include <nuttx/config.h>
+#include <time.h>
+#include "lv_tick_interface.h"
 
 /****************************************************************************
- * Public Function Prototypes
+ * Pre-processor Definitions
  ****************************************************************************/
 
-int lcddev_init(lv_disp_drv_t *lv_drvr);
+/****************************************************************************
+ * Private Type Declarations
+ ****************************************************************************/
 
-#ifdef __cplusplus
-}
+/****************************************************************************
+ * Private Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+uint32_t millis(void)
+{
+  struct timespec ts;
+
+#ifdef CONFIG_CLOCK_MONOTONIC
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+#else
+  clock_gettime(CLOCK_REALTIME, &ts);
 #endif
+  uint32_t tick = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 
-#endif /* __APPS_EXAMPLES_LVGLDEMO_LCDDEV_H */
+  return tick;
+}

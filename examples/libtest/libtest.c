@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/pipe/pipe.h
+ * examples/libtest/libtest.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,38 +18,22 @@
  *
  ****************************************************************************/
 
-#ifndef __EXAMPLES_PIPE_PIPE_H
-#define __EXAMPLES_PIPE_PIPE_H
-
-/****************************************************************************
- * Compilation Switches
- ****************************************************************************/
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#define FIFO_PATH1 "/tmp/testfifo-1"
-#define FIFO_PATH2 "/tmp/testfifo-2"
+#include <nuttx/config.h>
+#include <stdio.h>
 
 /****************************************************************************
- * Public Types
+ * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Public Data
+ * library_test
  ****************************************************************************/
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
-
-extern int transfer_test(int fdin, int fdout);
-extern int interlock_test(void);
-extern int redirection_test(void);
-
-#endif /* __EXAMPLES_PIPE_PIPE_H */
+void library_test(void)
+{
+  printf("Hello, Library!!\n");
+}

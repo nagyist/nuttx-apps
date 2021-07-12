@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/pipe/pipe.h
+ * apps/graphics/lvgl/lv_porting/lv_touchpad_interface.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,38 +18,63 @@
  *
  ****************************************************************************/
 
-#ifndef __EXAMPLES_PIPE_PIPE_H
-#define __EXAMPLES_PIPE_PIPE_H
-
-/****************************************************************************
- * Compilation Switches
- ****************************************************************************/
+#ifndef __LV_TOUCHPAD_INTERFACE_H__
+#define __LV_TOUCHPAD_INTERFACE_H__
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/config.h>
+#include <lvgl/lvgl.h>
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define FIFO_PATH1 "/tmp/testfifo-1"
-#define FIFO_PATH2 "/tmp/testfifo-2"
+#if defined(CONFIG_LV_USE_TOUCHPAD_INTERFACE)
 
 /****************************************************************************
- * Public Types
+ * Type Definitions
  ****************************************************************************/
 
 /****************************************************************************
  * Public Data
  ****************************************************************************/
 
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 
-extern int transfer_test(int fdin, int fdout);
-extern int interlock_test(void);
-extern int redirection_test(void);
+/****************************************************************************
+ * Name: lv_touchpad_interface_init
+ *
+ * Description:
+ *   Touchpad interface initialization.
+ *
+ * Input Parameters:
+ *   dev_path - input device path, set to NULL to use the default path
+ *
+ * Returned Value:
+ *   lv_indev object address on success; NULL on failure.
+ *
+ ****************************************************************************/
 
-#endif /* __EXAMPLES_PIPE_PIPE_H */
+lv_indev_t *lv_touchpad_interface_init(const char *dev_path);
+
+#undef EXTERN
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* CONFIG_LV_USE_TOUCHPAD_INTERFACE */
+
+#endif /* __LV_TOUCHPAD_INTERFACE_H__ */

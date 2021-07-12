@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/libuv/tests/runner-nuttx.h
+ * examples/libtest/libtest_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,29 +18,24 @@
  *
  ****************************************************************************/
 
-#ifndef TEST_RUNNER_NUTTX_H
-#define TEST_RUNNER_NUTTX_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <pthread.h>
+#include <nuttx/config.h>
 #include <stdio.h>
+#include "libtest.h"
 
 /****************************************************************************
- * Public Type Declarations
+ * Public Functions
  ****************************************************************************/
 
-struct task_entry_s;
+/****************************************************************************
+ * main
+ ****************************************************************************/
 
-struct process_info_s
+int main(int argc, FAR char *argv[])
 {
-  pthread_t tid;
-  sem_t sem;
-  struct task_entry_s *task;
-};
-
-typedef struct process_info_s process_info_t;
-
-#endif  /* TEST_RUNNER_NUTTX_H */
+  library_test();
+  return 0;
+}

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/graphics/lvgl/lv_tick_interface.h
+ * apps/graphics/lvgl/lv_porting/lv_tick_interface.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -26,7 +26,6 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <sys/time.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -52,7 +51,7 @@ extern "C"
  * Public Function Prototypes
  ****************************************************************************/
 
-uint32_t lv_tick_interface(void);
+uint32_t millis(void);
 
 #undef EXTERN
 #ifdef __cplusplus
