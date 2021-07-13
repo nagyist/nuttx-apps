@@ -1,5 +1,5 @@
 ############################################################################
-# apps/graphics/lvgl/Make.defs
+# apps/examples/libtest/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -16,21 +16,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-############################################################################
+############################################################################/
 
-ifeq ($(CONFIG_GRAPHICS_LVGL),y)
-CONFIGURED_APPS += $(APPDIR)/graphics/lvgl
 
-# It allows `<lvgl/lvgl.h>` import.
+include $(APPDIR)/Make.defs
 
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/graphics/lvgl}
-CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/graphics/lvgl}
+BIN   = libtest$(LIBEXT)
+CSRCS = libtest.c
 
-# It allows `<lvgl.h>` import.
-
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/graphics/lvgl/lvgl}
-CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/graphics/lvgl/lvgl}
-
--include $(APPDIR)/graphics/lvgl/ext/Make.defs
-
+ifneq ($(CONFIG_EXAMPLES_LIBTEST_CMDTOOL),)
+  PROGNAME  = $(CONFIG_EXAMPLES_LIBTEST_PROGNAME)
+  PRIORITY  = $(CONFIG_EXAMPLES_LIBTEST_PRIORITY)
+  STACKSIZE = $(CONFIG_EXAMPLES_LIBTEST_STACKSIZE)
+  MODULE    = $(CONFIG_EXAMPLES_LIBTEST_CMDTOOL)
+  MAINSRC   = libtest_main.c
 endif
+
+include $(APPDIR)/Application.mk

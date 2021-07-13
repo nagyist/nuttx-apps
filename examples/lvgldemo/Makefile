@@ -37,39 +37,35 @@ MODULE = $(CONFIG_EXAMPLES_LVGLDEMO)
 
 # LittleVGL demo Example
 
-CSRCS += fbdev.c lcddev.c
-
-ifneq ($(CONFIG_INPUT_TOUCHSCREEN)$(CONFIG_INPUT_MOUSE),)
-CSRCS += tp.c tp_cal.c
-endif
-
-# static common assets used in multiple examples
-
-LV_EXAMPLE_ASSETS = $(wildcard ./lv_demos/assets/*.c)
-CSRCS += $(notdir $(LV_EXAMPLE_ASSETS))
-VPATH += lv_demos/assets
+# static common assets used in mutiple example
 
 ifneq ($(CONFIG_EXAMPLES_LVGLDEMO_BENCHMARK),)
 CSRCS += lv_demo_benchmark.c
-VPATH += lv_demos/src/lv_demo_benchmark
+CSRCS += $(wildcard ./lv_examples/src/lv_demo_stress/assets/*.c)
+VPATH += lv_examples/src/lv_demo_benchmark
 endif
 
-ifneq ($(CONFIG_EXAMPLES_LVGLDEMO_PRINTER),)
-LV_PRINTER_IMAGES = $(wildcard ./lv_demos/src/lv_demo_printer/images/*.c)
-CSRCS += lv_demo_printer.c lv_demo_printer_theme.c
-CSRCS += $(notdir $(LV_PRINTER_IMAGES))
-VPATH += lv_demos/src/lv_demo_printer
-VPATH += lv_demos/src/lv_demo_printer/images
+ifneq ($(CONFIG_EXAMPLES_LVGLDEMO_KEYPAD_ENCODER),)
+CSRCS += lv_demo_keypad_encoder.c
+VPATH += lv_examples/src/lv_demo_keypad_encoder
+endif
+
+ifneq ($(CONFIG_EXAMPLES_LVGLDEMO_MUSIC),)
+CSRCS += $(wildcard ./lv_examples/src/lv_demo_music/*.c)
+CSRCS += $(wildcard ./lv_examples/src/lv_demo_music/assets/*.c)
+VPATH += lv_examples/src/lv_demo_music
 endif
 
 ifneq ($(CONFIG_EXAMPLES_LVGLDEMO_STRESS),)
 CSRCS += lv_demo_stress.c
-VPATH += lv_demos/src/lv_demo_stress
+CSRCS += $(wildcard ./lv_examples/src/lv_demo_stress/assets/*.c)
+VPATH += lv_examples/src/lv_demo_stress
 endif
 
 ifneq ($(CONFIG_EXAMPLES_LVGLDEMO_WIDGETS),)
 CSRCS += lv_demo_widgets.c
-VPATH += lv_demos/src/lv_demo_widgets
+CSRCS += $(wildcard ./lv_examples/src/lv_demo_widgets/assets/*.c)
+VPATH += lv_examples/src/lv_demo_widgets
 endif
 
 MAINSRC = lvgldemo.c
@@ -87,10 +83,10 @@ $(LVGL_EXAMPLES_UNPACKNAME): $(LVGL_EXAMPLES_TARBALL)
 	$(Q) mv	lv_demos-$(LVGL_EXAMPLES_VERSION) $(LVGL_EXAMPLES_UNPACKNAME)
 	$(Q) touch $(LVGL_EXAMPLES_UNPACKNAME)
 
-context:: $(LVGL_EXAMPLES_UNPACKNAME)
+context::# $(LVGL_EXAMPLES_UNPACKNAME)
 
 distclean::
-	$(call DELDIR, $(LVGL_EXAMPLES_UNPACKNAME))
-	$(call DELFILE, $(LVGL_EXAMPLES_TARBALL))
+#	$(call DELDIR, $(LVGL_EXAMPLES_UNPACKNAME))
+#	$(call DELFILE, $(LVGL_EXAMPLES_TARBALL))
 
 include $(APPDIR)/Application.mk

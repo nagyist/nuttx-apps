@@ -1,5 +1,5 @@
 ############################################################################
-# apps/graphics/lvgl/Make.defs
+# apps/system/dmalloc/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,19 +18,6 @@
 #
 ############################################################################
 
-ifeq ($(CONFIG_GRAPHICS_LVGL),y)
-CONFIGURED_APPS += $(APPDIR)/graphics/lvgl
-
-# It allows `<lvgl/lvgl.h>` import.
-
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/graphics/lvgl}
-CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/graphics/lvgl}
-
-# It allows `<lvgl.h>` import.
-
-CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/graphics/lvgl/lvgl}
-CXXFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/graphics/lvgl/lvgl}
-
--include $(APPDIR)/graphics/lvgl/ext/Make.defs
-
+ifneq ($(CONFIG_SYSTEM_DMALLOC),)
+CONFIGURED_APPS += $(APPDIR)/system/dmalloc
 endif
