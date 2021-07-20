@@ -77,7 +77,7 @@ int nsh_consolemain(int argc, FAR char *argv[])
   usbtrace_enable(TRACE_BITSET);
 #endif
 
-#if defined(CONFIG_NSH_ROMFSETC) && !defined(CONFIG_NSH_DISABLESCRIPT)
+#ifdef CONFIG_NSH_ROMFSETC
   /* Execute the start-up script */
 
   nsh_initscript(&pstate->cn_vtbl);
