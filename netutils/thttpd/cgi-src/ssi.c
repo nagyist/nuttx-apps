@@ -7,7 +7,7 @@
  *
  * Derived from the file of the same name in the original THTTPD package:
  *
- *   Copyright 1995 by Jef Poskanzer <jef@mail.acme.com>.
+ *   Copyright © 1995 by Jef Poskanzer <jef@mail.acme.com>.
  *   All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -46,7 +46,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <fnmatch.h>
+
+#include <nuttx/lib/regex.h>
 
 #include "config.h"
 
@@ -338,7 +339,7 @@ static int check_filename(char *filename)
 
   /* Ensure that we are not reading a CGI file. */
 
-  if (cgi_pattern != (char *)0 && !fnmatch(cgi_pattern, filename, 0))
+  if (cgi_pattern != (char *)0 && match(cgi_pattern, filename))
     {
       return 0;
     }
