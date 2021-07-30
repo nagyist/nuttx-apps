@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/media/media_main.c
+ * apps/examples/media/hello_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -185,7 +185,7 @@ int main(int argc, FAR char *argv[])
 
   for (blockno = 0; info.nblocks == 0 || blockno < info.nblocks; blockno++)
     {
-      printf("Write/Verify: Block %ju\n", (uintmax_t)blockno);
+      printf("Write/Verify: Block %lu\n", (unsigned long)blockno);
 
       /* Fill buffer with a (possibly) unique pattern */
 
@@ -205,8 +205,7 @@ int main(int argc, FAR char *argv[])
 
           fprintf(stderr, "ERROR: lseek to %ju failed: %d\n",
                   (uintmax_t)pos, errcode);
-          fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                  (uintmax_t)blockno);
+          fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
           info.nblocks = blockno;
           break;
         }
@@ -214,8 +213,7 @@ int main(int argc, FAR char *argv[])
         {
           fprintf(stderr, "ERROR: lseek failed: %ju vs %ju\n",
                   (uintmax_t)seekpos, (uintmax_t) pos);
-          fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                  (uintmax_t)blockno);
+          fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
           info.nblocks = blockno;
           break;
         }
@@ -228,8 +226,7 @@ int main(int argc, FAR char *argv[])
           fprintf(stderr, "ERROR: write failed: %d\n", errcode);
           if (errno != EINTR)
             {
-              fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                      (uintmax_t)blockno);
+              fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
               info.nblocks = blockno;
               break;
             }
@@ -238,8 +235,7 @@ int main(int argc, FAR char *argv[])
         {
           fprintf(stderr, "ERROR: Unexpected write size: %lu vs. %lu\n",
                   (unsigned long)nwritten, (unsigned long)info.blocksize);
-          fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                  (uintmax_t)blockno);
+          fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
           info.nblocks = blockno;
           break;
         }
@@ -251,8 +247,7 @@ int main(int argc, FAR char *argv[])
 
           fprintf(stderr, "ERROR: lseek to %ju failed: %d\n",
                   (uintmax_t)pos, errcode);
-          fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                  (uintmax_t)blockno);
+          fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
           info.nblocks = blockno;
           break;
         }
@@ -260,8 +255,7 @@ int main(int argc, FAR char *argv[])
         {
           fprintf(stderr, "ERROR: lseek failed: %ju vs %ju\n",
                   (uintmax_t)seekpos, (uintmax_t)pos);
-          fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                  (uintmax_t)blockno);
+          fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
           info.nblocks = blockno;
           break;
         }
@@ -274,8 +268,7 @@ int main(int argc, FAR char *argv[])
           fprintf(stderr, "ERROR: read failed: %d\n", errcode);
           if (errno != EINTR)
             {
-              fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                      (uintmax_t)blockno);
+              fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
               info.nblocks = blockno;
               break;
             }
@@ -284,8 +277,7 @@ int main(int argc, FAR char *argv[])
         {
           fprintf(stderr, "ERROR: Unexpected read size: %lu vs. %lu\n",
                   (unsigned long)nread, (unsigned long)info.blocksize);
-          fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                  (uintmax_t)blockno);
+          fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
           info.nblocks = blockno;
           break;
         }
@@ -306,8 +298,7 @@ int main(int argc, FAR char *argv[])
           if (nerrors > 100)
             {
               fprintf(stderr, "ERROR: Too many errors\n");
-              fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                      (uintmax_t)blockno);
+              fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
               info.nblocks = blockno;
               break;
             }
@@ -344,7 +335,7 @@ int main(int argc, FAR char *argv[])
 
   for (blockno = 0; blockno < info.nblocks; blockno++)
     {
-      printf("Re-read/Verify: Block %ju\n", (uintmax_t)blockno);
+      printf("Re-read/Verify: Block %lu\n", (unsigned long)blockno);
 
       /* Fill buffer with a (possibly) unique pattern */
 
@@ -365,8 +356,7 @@ int main(int argc, FAR char *argv[])
           fprintf(stderr, "ERROR: read failed: %d\n", errcode);
           if (errno != EINTR)
             {
-              fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                      (uintmax_t)blockno);
+              fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
               break;
             }
         }
@@ -374,8 +364,7 @@ int main(int argc, FAR char *argv[])
         {
           fprintf(stderr, "ERROR: Unexpected read size: %lu vs. %lu\n",
                   (unsigned long)nread, (unsigned long)info.blocksize);
-          fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                  (uintmax_t)blockno);
+          fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
           break;
         }
       else
@@ -395,8 +384,7 @@ int main(int argc, FAR char *argv[])
           if (nerrors > 100)
             {
               fprintf(stderr, "ERROR: Too many errors\n");
-              fprintf(stderr, "ERROR: Aborting at block: %ju\n",
-                      (uintmax_t)blockno);
+              fprintf(stderr, "ERROR: Aborting at block: %lu\n", blockno);
               info.nblocks = blockno;
               break;
             }
