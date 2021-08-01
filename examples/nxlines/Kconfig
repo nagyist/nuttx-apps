@@ -7,7 +7,7 @@ config EXAMPLES_NXLINES
 	tristate "NX graphics lines example"
 	default n
 	depends on NX
-	select BOARDCTL
+	select LIB_BOARDCTL
 	---help---
 		Enable the X graphics lines example
 
