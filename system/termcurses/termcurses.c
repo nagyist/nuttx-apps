@@ -62,7 +62,7 @@ static struct termcurses_dev_s *g_termcurses_devices[] =
  ************************************************************************************/
 
 int termcurses_initterm(FAR const char *term_type, int in_fd, int out_fd,
-                        FAR struct termcurses_s **term)
+                        FAR struct termcurses_s **dev)
 {
   FAR struct termcurses_dev_s *pnext;
   int c;
@@ -94,11 +94,11 @@ int termcurses_initterm(FAR const char *term_type, int in_fd, int out_fd,
         {
           /* Allocate a new structure for this termcurses */
 
-          if (*term == NULL)
+          if (*dev == NULL)
             {
               /* Call the termcurses_dev init function */
 
-              *term = pnext->ops->init(in_fd, out_fd);
+              *dev = pnext->ops->init(in_fd, out_fd);
             }
 
           return OK;
@@ -111,7 +111,7 @@ int termcurses_initterm(FAR const char *term_type, int in_fd, int out_fd,
 
   /* Not found! */
 
-  *term = NULL;
+  *dev = NULL;
   return -ENOSYS;
 }
 
@@ -124,24 +124,26 @@ int termcurses_initterm(FAR const char *term_type, int in_fd, int out_fd,
  *
  ************************************************************************************/
 
-int termcurses_deinitterm(FAR struct termcurses_s *term)
+int termcurses_deinitterm(FAR struct termcurses_s *dev)
 {
-  FAR struct termcurses_dev_s *dev = (FAR struct termcurses_dev_s *) term;
-  int result = OK;
+  struct termcurses_colors_s colors;
 
-  /* Call the dev function */
+  /* Ensure terminal has default color scheme */
 
-  if (dev->ops->terminate)
-    {
-      result = dev->ops->terminate(term);
-    }
+  colors.fg_red     = 255;
+  colors.fg_green   = 255;
+  colors.fg_blue    = 255;
+  colors.bg_red     = 0;
+  colors.bg_green   = 0;
+  colors.bg_blue    = 0;
+  colors.color_mask = 0xff;
+  termcurses_setcolors(dev, &colors);
 
-  /* Free the memory if termination is successful. */
+  /* For now, simply free the memory */
 
-  if (result == OK)
-    free(dev);
+  free(dev);
 
-  return result;
+  return OK;
 }
 
 /************************************************************************************
