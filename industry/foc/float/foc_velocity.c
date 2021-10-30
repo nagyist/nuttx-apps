@@ -131,43 +131,6 @@ int foc_velocity_cfg_f32(FAR foc_velocity_f32_t *h, FAR void *cfg)
 }
 
 /****************************************************************************
- * Name: foc_velocity_zero_f32
- *
- * Description:
- *   Zero the FOC velocity handler (float32)
- *
- * Input Parameter:
- *   h   - pointer to FOC velocity handler
- *
- ****************************************************************************/
-
-int foc_velocity_zero_f32(FAR foc_velocity_f32_t *h)
-{
-  DEBUGASSERT(h);
-
-  return h->ops->zero(h);
-}
-
-/****************************************************************************
- * Name: foc_velocity_dir_f32
- *
- * Description:
- *   Set the FOC velocity handler direction (float32)
- *
- * Input Parameter:
- *   h   - pointer to FOC velocity handler
- *   dir - sensor direction (1 if normal -1 if inverted)
- *
- ****************************************************************************/
-
-int foc_velocity_dir_f32(FAR foc_velocity_f32_t *h, float dir)
-{
-  DEBUGASSERT(h);
-
-  return h->ops->dir(h, dir);
-}
-
-/****************************************************************************
  * Name: foc_velocity_run_f32
  *
  * Description:
@@ -180,7 +143,7 @@ int foc_velocity_dir_f32(FAR foc_velocity_f32_t *h, float dir)
  *
  ****************************************************************************/
 
-int foc_velocity_run_f32(FAR foc_velocity_f32_t *h,
+void foc_velocity_run_f32(FAR foc_velocity_f32_t *h,
                          FAR struct foc_velocity_in_f32_s *in,
                          FAR struct foc_velocity_out_f32_s *out)
 {
@@ -190,5 +153,5 @@ int foc_velocity_run_f32(FAR foc_velocity_f32_t *h,
 
   /* Run velocity handler */
 
-  return h->ops->run(h, in, out);
+  h->ops->run(h, in, out);
 }
