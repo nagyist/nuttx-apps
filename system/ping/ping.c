@@ -23,7 +23,6 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/clock.h>
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -181,14 +180,13 @@ static void ping_result(FAR const struct ping_result_s *result)
         break;
 
       case ICMP_I_ROUNDTRIP:
-        printf("%u bytes from %u.%u.%u.%u: icmp_seq=%u time=%d.%d ms\n",
+        printf("%u bytes from %u.%u.%u.%u: icmp_seq=%u time=%d ms\n",
                result->info->datalen,
                (unsigned int)(result->dest.s_addr) & 0xff,
                (unsigned int)(result->dest.s_addr >> 8) & 0xff,
                (unsigned int)(result->dest.s_addr >> 16) & 0xff,
                (unsigned int)(result->dest.s_addr >> 24) & 0xff,
-               result->seqno, result->extra / USEC_PER_MSEC,
-               result->extra % USEC_PER_MSEC / MSEC_PER_DSEC);
+               result->seqno, result->extra);
         break;
 
       case ICMP_W_RECVBIG:
@@ -220,8 +218,7 @@ static void ping_result(FAR const struct ping_result_s *result)
 
             printf("%u packets transmitted, %u received, %u%% packet loss, "
                    "time %d ms\n",
-                   result->nrequests, result->nreplies, tmp,
-                   result->extra / USEC_PER_MSEC);
+                   result->nrequests, result->nreplies, tmp, result->extra);
           }
         break;
     }
