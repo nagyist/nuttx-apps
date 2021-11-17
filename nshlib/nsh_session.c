@@ -92,17 +92,17 @@ int nsh_session(FAR struct console_stdio_s *pstate,
       fputs(g_nshgreeting, pstate->cn_outstream);
 
 #ifdef CONFIG_NSH_MOTD
-#ifdef CONFIG_NSH_PLATFORM_MOTD
+# ifdef CONFIG_NSH_PLATFORM_MOTD
       /* Output the platform message of the day */
 
       platform_motd(vtbl->iobuffer, IOBUFFERSIZE);
       fprintf(pstate->cn_outstream, "%s\n", vtbl->iobuffer);
 
-#else
+# else
       /* Output the fixed message of the day */
 
       fprintf(pstate->cn_outstream, "%s\n", g_nshmotd);
-#endif
+# endif
 #endif
 
       fflush(pstate->cn_outstream);
@@ -143,12 +143,15 @@ int nsh_session(FAR struct console_stdio_s *pstate,
           break;
         }
 
-      /* Ignore all unknown option */
+      /* Unknown option */
+
+      nsh_error(vtbl, g_fmtsyntax, argv[0]);
+      return EXIT_FAILURE;
     }
 
   if (i < argc)
     {
-#if defined(CONFIG_FILE_STREAM) && !defined(CONFIG_NSH_DISABLESCRIPT)
+#ifndef CONFIG_NSH_DISABLESCRIPT
       /* Execute the shell script */
 
       return nsh_script(vtbl, argv[0], argv[i]);
