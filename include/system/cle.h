@@ -53,7 +53,7 @@ extern "C"
  ****************************************************************************/
 
 /****************************************************************************
- * Name: cle/cle_fd
+ * Name: cle
  *
  * Description:
  *   EMACS-like command line editor.  This is actually more like readline
@@ -61,13 +61,8 @@ extern "C"
  *
  ****************************************************************************/
 
-int cle_fd(FAR char *line, FAR const char *prompt, uint16_t linelen,
-           int infd, int outfd);
-
-#ifdef CONFIG_FILE_STREAM
 int cle(FAR char *line, FAR const char *prompt, uint16_t linelen,
         FAR FILE *instream, FAR FILE *outstream);
-#endif
 
 #undef EXTERN
 #ifdef __cplusplus
