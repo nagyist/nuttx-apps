@@ -14,7 +14,7 @@ if BOOT_MCUBOOT
 
 config MCUBOOT_VERSION
 	string "MCUboot version"
-	default "7c890f4b075aed73e4c825ccf875b2fb9ebf2ded"
+	default "fca1aa4764eef4da008aeaf7e570184281aa79fa"
 
 config MCUBOOT_ENABLE_LOGGING
 	bool "Enable MCUboot logging"
@@ -25,10 +25,6 @@ config MCUBOOT_ENABLE_LOGGING
 choice
 	prompt "Cryptographic backend"
 	default MCUBOOT_USE_TINYCRYPT
-
-config MCUBOOT_USE_MBED_TLS
-	bool "Mbed TLS"
-	depends on CRYPTO_MBEDTLS
 
 config MCUBOOT_USE_TINYCRYPT
 	bool "TinyCrypt"
