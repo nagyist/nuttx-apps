@@ -36,6 +36,10 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+#ifndef NULL
+# define NULL (void*)0
+#endif
+
 #define WAKEUP_SIGNAL 17
 #define SIGVALUE_INT  42
 
