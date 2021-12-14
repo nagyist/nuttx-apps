@@ -57,6 +57,11 @@ CFLAGS += -DCONFIG_BIGNUM
 CSRCS  += qjscalc.c
 endif
 
+ifeq ($(CONFIG_INTERPRETERS_QUICKJS_DEBUG),y)
+CSRCS  += quickjs-debugger.c
+CSRCS  += quickjs-debugger-transport.c
+endif
+
 VPATH += $(QUICKJS_UNPACK)
 
 PROGNAME  = qjs
@@ -77,7 +82,7 @@ $(QUICKJS_UNPACK): $(QUICKJS_TARBALL)
 $(QUICKJS_UNPACK)/.patch: $(QUICKJS_UNPACK)
 	$(Q) touch $(QUICKJS_UNPACK)/.patch
 
-build_host: $(QUICKJS_UNPACK)/.patch
+build_host: # $(QUICKJS_UNPACK)/.patch
 	make -C $(QUICKJS_UNPACK) \
 		CONFIG_BIGNUM=$(CONFIG_INTERPRETERS_QUICKJS_BIGNUM)
 
@@ -87,7 +92,7 @@ clean::
 	$(Q) test ! -d $(QUICKJS_UNPACK) || make -C $(QUICKJS_UNPACK) clean
 
 distclean::
-	$(call DELDIR, $(QUICKJS_UNPACK))
-	$(call DELFILE, $(QUICKJS_TARBALL))
+	# $(call DELDIR, $(QUICKJS_UNPACK))
+	# $(call DELFILE, $(QUICKJS_TARBALL))
 
 include $(APPDIR)/Application.mk
