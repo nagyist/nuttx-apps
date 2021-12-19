@@ -30,7 +30,6 @@
 #include <dspb16.h>
 
 #include "industry/foc/fixed16/foc_handler.h"
-#include "industry/foc/foc_common.h"
 
 /****************************************************************************
  * Public Type Definition
@@ -50,8 +49,7 @@ struct foc_angle_in_b16_s
 
 struct foc_angle_out_b16_s
 {
-  uint8_t type;                 /* Angle type */
-  b16_t angle;                  /* Agnle */
+  b16_t angle;
 };
 
 /* Forward declaration */
@@ -74,19 +72,11 @@ struct foc_angle_ops_b16_s
 
   CODE int (*cfg)(FAR foc_angle_b16_t *h, FAR void *cfg);
 
-  /* Zero */
-
-  CODE int (*zero)(FAR foc_angle_b16_t *h);
-
-  /* Direction */
-
-  CODE int (*dir)(FAR foc_angle_b16_t *h, b16_t dir);
-
   /* Run */
 
-  CODE int (*run)(FAR foc_angle_b16_t *h,
-                  FAR struct foc_angle_in_b16_s *in,
-                  FAR struct foc_angle_out_b16_s *out);
+  CODE void (*run)(FAR foc_angle_b16_t *h,
+                   FAR struct foc_angle_in_b16_s *in,
+                   FAR struct foc_angle_out_b16_s *out);
 };
 
 /* Angle handler - sensor or sensorless */
@@ -106,26 +96,6 @@ struct foc_openloop_cfg_b16_s
 };
 #endif
 
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_QENCO
-/* Qencoder configuration data */
-
-struct foc_qenco_cfg_b16_s
-{
-  FAR char *devpath;
-  uint32_t  posmax;
-};
-#endif
-
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_HALL
-/* Hall configuration data */
-
-struct foc_hall_cfg_b16_s
-{
-  FAR char *devpath;
-  b16_t     per;
-};
-#endif
-
 /****************************************************************************
  * Public Data
  ****************************************************************************/
@@ -134,18 +104,6 @@ struct foc_hall_cfg_b16_s
 /* Open-loop angle operations (fixed16) */
 
 extern struct foc_angle_ops_b16_s g_foc_angle_ol_b16;
-#endif
-
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_QENCO
-/* Qencoder angle operations (fixed16) */
-
-extern struct foc_angle_ops_b16_s g_foc_angle_qe_b16;
-#endif
-
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_HALL
-/* Hall angle operations (fixed16) */
-
-extern struct foc_angle_ops_b16_s g_foc_angle_hl_b16;
 #endif
 
 /****************************************************************************
@@ -172,23 +130,11 @@ int foc_angle_deinit_b16(FAR foc_angle_b16_t *h);
 int foc_angle_cfg_b16(FAR foc_angle_b16_t *h, FAR void *cfg);
 
 /****************************************************************************
- * Name: foc_angle_zero_b16
- ****************************************************************************/
-
-int foc_angle_zero_b16(FAR foc_angle_b16_t *h);
-
-/****************************************************************************
- * Name: foc_angle_dir_b16
- ****************************************************************************/
-
-int foc_angle_dir_b16(FAR foc_angle_b16_t *h, b16_t dir);
-
-/****************************************************************************
  * Name: foc_angle_run_b16
  ****************************************************************************/
 
-int foc_angle_run_b16(FAR foc_angle_b16_t *h,
-                      FAR struct foc_angle_in_b16_s *in,
-                      FAR struct foc_angle_out_b16_s *out);
+void foc_angle_run_b16(FAR foc_angle_b16_t *h,
+                       FAR struct foc_angle_in_b16_s *in,
+                       FAR struct foc_angle_out_b16_s *out);
 
 #endif /* __INDUSTRY_FOC_FIXED16_FOC_ANGLE_H */
