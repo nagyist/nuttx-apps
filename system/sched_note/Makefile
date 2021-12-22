@@ -20,14 +20,14 @@
 
 include $(APPDIR)/Make.defs
 
-# Note driver test built-in application info
+# LED driver test built-in application info
 
 PROGNAME = $(CONFIG_SYSTEM_NOTE_PROGNAME)
 PRIORITY = $(CONFIG_SYSTEM_NOTE_PRIORITY)
 STACKSIZE = $(CONFIG_SYSTEM_NOTE_STACKSIZE)
 MODULE = $(CONFIG_SYSTEM_NOTE)
 
-# Note driver test
+# LED driver test
 
 MAINSRC = note_main.c
 

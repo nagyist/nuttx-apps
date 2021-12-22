@@ -153,10 +153,9 @@ static int initserver(const FAR struct mqttc_cfg_s *cfg)
   printf("Connecting to %s:%s...\n", cfg->host, cfg->port);
 
   ret = getaddrinfo(cfg->host, cfg->port, &hints, &servinfo);
-  if (ret != OK)
+  if (ret < 0)
     {
       printf("ERROR! getaddrinfo() failed: %s\n", gai_strerror(ret));
-      return -1;
     }
 
   itr = servinfo;

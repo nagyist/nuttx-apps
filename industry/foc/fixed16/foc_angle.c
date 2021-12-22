@@ -131,42 +131,6 @@ int foc_angle_cfg_b16(FAR foc_angle_b16_t *h, FAR void *cfg)
 }
 
 /****************************************************************************
- * Name: foc_angle_zero_b16
- *
- * Description:
- *   Reset the FOC angle handler (fixed16)
- *
- * Input Parameter:
- *   h   - pointer to FOC angle handler
- *
- ****************************************************************************/
-
-int foc_angle_zero_b16(FAR foc_angle_b16_t *h)
-{
-  DEBUGASSERT(h);
-
-  return h->ops->zero(h);
-}
-
-/****************************************************************************
- * Name: foc_angle_dir_b16
- *
- * Description:
- *   Set the FOC angle handler direction (fixed16)
- *
- * Input Parameter:
- *   h   - pointer to FOC angle handler
- *
- ****************************************************************************/
-
-int foc_angle_dir_b16(FAR foc_angle_b16_t *h, b16_t dir)
-{
-  DEBUGASSERT(h);
-
-  return h->ops->dir(h, dir);
-}
-
-/****************************************************************************
  * Name: foc_angle_run_b16
  *
  * Description:
@@ -179,7 +143,7 @@ int foc_angle_dir_b16(FAR foc_angle_b16_t *h, b16_t dir)
  *
  ****************************************************************************/
 
-int foc_angle_run_b16(FAR foc_angle_b16_t *h,
+void foc_angle_run_b16(FAR foc_angle_b16_t *h,
                        FAR struct foc_angle_in_b16_s *in,
                        FAR struct foc_angle_out_b16_s *out)
 {
@@ -189,5 +153,5 @@ int foc_angle_run_b16(FAR foc_angle_b16_t *h,
 
   /* Run angle handler */
 
-  return h->ops->run(h, in, out);
+  h->ops->run(h, in, out);
 }
