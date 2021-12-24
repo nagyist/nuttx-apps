@@ -27,23 +27,50 @@ LVGL_DIR_NAME = lvgl
 
 # Relax format check for LVGL to avoid errors on prinf() use
 
-CFLAGS += -Wno-format
+-include ./lvgl/lvgl.mk
 
-# LVGL Libraries
+-include ./ext/Makefile
 
--include ./lvgl/src/lv_core/lv_core.mk
--include ./lvgl/src/lv_hal/lv_hal.mk
--include ./lvgl/src/lv_widgets/lv_widgets.mk
--include ./lvgl/src/lv_font/lv_font.mk
--include ./lvgl/src/lv_misc/lv_misc.mk
--include ./lvgl/src/lv_themes/lv_themes.mk
--include ./lvgl/src/lv_draw/lv_draw.mk
--include ./lvgl/src/lv_gpu/lv_gpu.mk
+CSRCS += lv_porting/lv_tick_interface.c
+CSRCS += lv_porting/lv_fs_interface.c
 
-CSRCS += lv_tick_interface.c
+ifneq ($(CONFIG_LV_USE_BUTTON_INTERFACE),)
+CSRCS += lv_porting/lv_button_interface.c
+endif
 
-ifneq ($(CONFIG_USE_LV_FILESYSTEM),)
-CSRCS += lv_fs_interface.c
+ifneq ($(CONFIG_LV_USE_KEYPAD_INTERFACE),)
+CSRCS += lv_porting/lv_keypad_interface.c
+endif
+
+ifneq ($(CONFIG_LV_USE_TOUCHPAD_INTERFACE),)
+CSRCS += lv_porting/lv_touchpad_interface.c
+endif
+
+ifneq ($(CONFIG_LV_USE_ENCODER_INTERFACE),)
+CSRCS += lv_porting/lv_encoder_interface.c
+endif
+
+ifneq ($(CONFIG_LV_USE_LCDDEV_INTERFACE),)
+CSRCS += lv_porting/lv_lcddev_interface.c
+endif
+
+ifneq ($(CONFIG_LV_USE_FBDEV_INTERFACE),)
+CSRCS += lv_porting/lv_fbdev_interface.c
+endif
+
+ifneq ($(CONFIG_LV_USE_GPU_INTERFACE),)
+CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/../vendor/bes/framework/services/platform/drivers/graphic/gpu/drv/vglite/inc}
+CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/../vendor/bes/framework/services/platform/drivers/graphic/gpu}
+CSRCS += lv_porting/lv_gpu_interface.c
+CSRCS += lv_porting/lv_gpu_decoder.c
+endif
+
+ifneq ($(CONFIG_LV_USE_FFMPEG),)
+CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/../external/ffmpeg}
+endif
+
+ifneq ($(CONFIG_LV_USE_RLOTTIE),)
+CFLAGS += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" $(APPDIR)/../external/rlottie/inc}
 endif
 
 # Set up build configuration and environment
@@ -70,10 +97,10 @@ $(LVGL_UNPACKNAME): $(LVGL_TARBALL)
 	$(Q) mv	lvgl-$(LVGL_VERSION) $(LVGL_UNPACKNAME)
 	$(Q) touch $(LVGL_UNPACKNAME)
 
-context:: $(LVGL_UNPACKNAME)
+context::# $(LVGL_UNPACKNAME)
 
 distclean::
-	$(call DELDIR, $(LVGL_UNPACKNAME))
-	$(call DELFILE, $(LVGL_TARBALL))
+#	$(call DELDIR, $(LVGL_UNPACKNAME))
+#	$(call DELFILE, $(LVGL_TARBALL))
 
 include $(APPDIR)/Application.mk

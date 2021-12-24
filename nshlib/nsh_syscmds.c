@@ -326,6 +326,7 @@ int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
 int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
+  unsigned long val = 0;
   int fd;
   int cmd;
 
@@ -343,6 +344,19 @@ int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       cmd = RPTUNIOC_STOP;
     }
+  else if (strcmp(argv[1], "reset") == 0)
+    {
+      if (argc > 3)
+        {
+          val = atoi(argv[3]);
+        }
+
+      cmd = RPTUNIOC_RESET;
+    }
+  else if (strcmp(argv[1], "panic") == 0)
+    {
+      cmd = RPTUNIOC_PANIC;
+    }
   else
     {
       nsh_output(vtbl, g_fmtarginvalid, argv[1]);
@@ -356,7 +370,7 @@ int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       return ERROR;
     }
 
-  ioctl(fd, cmd, 0);
+  ioctl(fd, cmd, val);
 
   close(fd);
   return 0;
