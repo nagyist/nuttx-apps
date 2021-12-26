@@ -28,13 +28,18 @@
 #include <unistd.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <time.h>
 #include <debug.h>
 
 #include <lvgl/lvgl.h>
-#include <lv_porting/lv_porting.h>
-#include "lv_demos/lv_demo.h"
+
+#include "fbdev.h"
+#include "lcddev.h"
+
+#if defined(CONFIG_INPUT_TOUCHSCREEN) || defined(CONFIG_INPUT_MOUSE)
+#include "tp.h"
+#include "tp_cal.h"
+#endif
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -57,72 +62,46 @@
 #  define NEED_BOARDINIT 1
 #endif
 
-/****************************************************************************
- * Private Type Declarations
- ****************************************************************************/
-
-typedef void (*demo_create_func_t)(void);
-
-struct func_key_pair_s
-{
-  FAR const char *name;
-  demo_create_func_t func;
-};
+#define DISPLAY_BUFFER_SIZE (CONFIG_LV_HOR_RES * \
+                              CONFIG_EXAMPLES_LVGLDEMO_BUFF_SIZE)
 
 /****************************************************************************
- * Private Data
+ * Public Functions Prototypes
  ****************************************************************************/
 
-static const struct func_key_pair_s func_key_pair[] =
-{
-  { "benchmark",      lv_demo_benchmark      },
-  { "keypad_encoder", lv_demo_keypad_encoder },
-  { "music",          lv_demo_music          },
-  { "stress",         lv_demo_stress         },
-  { "widgets",        lv_demo_widgets        }
-};
+void lv_demo_benchmark(void);
+void lv_demo_printer(void);
+void lv_demo_stress(void);
+void lv_demo_widgets(void);
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: show_usage
+ * Name: monitor_cb
+ *
+ * Description:
+ *   Monitoring callback from lvgl every time the screen is flushed.
+ *
  ****************************************************************************/
 
-static void show_usage(void)
+static void monitor_cb(lv_disp_drv_t * disp_drv, uint32_t time, uint32_t px)
 {
-  printf("\nUsage: lvgldemo demo_name\n");
-  printf("\ndemo_name:\n");
-  printf("  benchmark\n");
-  printf("  keypad_encoder\n");
-  printf("  music\n");
-  printf("  stress\n");
-  printf("  widgets\n");
-  exit(EXIT_FAILURE);
+  ginfo("%" PRIu32 " px refreshed in %" PRIu32 " ms\n", px, time);
 }
 
 /****************************************************************************
- * Name: find_demo_create_func
+ * Private Data
  ****************************************************************************/
 
-static demo_create_func_t find_demo_create_func(FAR const char *name)
-{
-  int i;
-  const int len = sizeof(func_key_pair)
-                  / sizeof(struct func_key_pair_s);
+static lv_color_t buffer1[DISPLAY_BUFFER_SIZE];
 
-  for (i = 0; i < len; i++)
-    {
-      if (strcmp(name, func_key_pair[i].name) == 0)
-        {
-          return func_key_pair[i].func;
-        }
-    }
-
-  printf("lvgldemo: %s not found.\n", name);
-  return NULL;
-}
+#ifdef CONFIG_EXAMPLES_LVGLDEMO_DOUBLE_BUFFERING
+static lv_color_t buffer2[DISPLAY_BUFFER_SIZE];
+#else
+# define buffer2 NULL
+#endif
 
 /****************************************************************************
  * Public Functions
@@ -143,21 +122,34 @@ static demo_create_func_t find_demo_create_func(FAR const char *name)
 
 int main(int argc, FAR char *argv[])
 {
-  demo_create_func_t demo_create_func;
+  lv_disp_drv_t disp_drv;
+  lv_disp_buf_t disp_buf;
 
-  if (argc != 2)
-    {
-      show_usage();
-      return EXIT_FAILURE;
-    }
+#if defined(CONFIG_INPUT_TOUCHSCREEN) || defined(CONFIG_INPUT_MOUSE)
+#ifndef CONFIG_EXAMPLES_LVGLDEMO_CALIBRATE
+  lv_point_t p[4];
 
-  demo_create_func = find_demo_create_func(argv[1]);
+  /* top left */
 
-  if (demo_create_func == NULL)
-    {
-      show_usage();
-      return EXIT_FAILURE;
-    }
+  p[0].x = 0;
+  p[0].y = 0;
+
+  /* top right */
+
+  p[1].x = LV_HOR_RES;
+  p[1].y = 0;
+
+  /* bottom left */
+
+  p[2].x = 0;
+  p[2].y = LV_VER_RES;
+
+  /* bottom right */
+
+  p[3].x = LV_HOR_RES;
+  p[3].y = LV_VER_RES;
+#endif
+#endif
 
 #ifdef NEED_BOARDINIT
   /* Perform board-specific driver initialization */
@@ -175,48 +167,71 @@ int main(int argc, FAR char *argv[])
 
   lv_init();
 
-  /* LVGL interface initialization */
+  /* Basic LVGL display driver initialization */
 
-  lv_fs_interface_init();
+  lv_disp_buf_init(&disp_buf, buffer1, buffer2, DISPLAY_BUFFER_SIZE);
+  lv_disp_drv_init(&disp_drv);
+  disp_drv.buffer = &disp_buf;
+  disp_drv.monitor_cb = monitor_cb;
 
-#if defined(CONFIG_LV_USE_LCDDEV_INTERFACE)
-  lv_lcddev_interface_init(NULL, 0);
+  /* Display interface initialization */
+
+  if (fbdev_init(&disp_drv) != EXIT_SUCCESS)
+    {
+      /* Failed to use framebuffer falling back to lcd driver */
+
+      if (lcddev_init(&disp_drv) != EXIT_SUCCESS)
+        {
+          /* No possible drivers left, fail */
+
+          return EXIT_FAILURE;
+        }
+    }
+
+  lv_disp_drv_register(&disp_drv);
+
+#if defined(CONFIG_INPUT_TOUCHSCREEN) || defined(CONFIG_INPUT_MOUSE)
+  /* Touchpad Initialization */
+
+  tp_init();
+  lv_indev_drv_t indev_drv;
+  lv_indev_drv_init(&indev_drv);
+  indev_drv.type = LV_INDEV_TYPE_POINTER;
+
+  /* This function will be called periodically (by the library) to get the
+   * mouse position and state.
+   */
+
+  indev_drv.read_cb = tp_read;
+  lv_indev_drv_register(&indev_drv);
 #endif
 
-#if defined(CONFIG_LV_USE_GPU_INTERFACE)
-  lv_gpu_interface_init();
+#if defined(CONFIG_EXAMPLES_LVGLDEMO_BENCHMARK)
+  lv_demo_benchmark();
+#elif defined(CONFIG_EXAMPLES_LVGLDEMO_PRINTER)
+  lv_demo_printer();
+#elif defined(CONFIG_EXAMPLES_LVGLDEMO_STRESS)
+  lv_demo_stress();
+#elif defined(CONFIG_EXAMPLES_LVGLDEMO_WIDGETS)
+  lv_demo_widgets();
 #endif
 
-#if defined(CONFIG_LV_USE_FBDEV_INTERFACE)
-  lv_fbdev_interface_init(NULL, 0);
+#if defined(CONFIG_INPUT_TOUCHSCREEN) || defined(CONFIG_INPUT_MOUSE)
+  /* Start TP calibration */
+
+#ifdef CONFIG_EXAMPLES_LVGLDEMO_CALIBRATE
+  tp_cal_create();
+#else
+  tp_set_cal_values(p, p + 1, p + 2, p + 3);
 #endif
-
-#if defined(CONFIG_LV_USE_BUTTON_INTERFACE)
-  lv_button_interface_init(NULL);
 #endif
-
-#if defined(CONFIG_LV_USE_KEYPAD_INTERFACE)
-  lv_keypad_interface_init(NULL);
-#endif
-
-#if defined(CONFIG_LV_USE_TOUCHPAD_INTERFACE)
-  lv_touchpad_interface_init(NULL);
-#endif
-
-#if defined(CONFIG_LV_USE_ENCODER_INTERFACE)
-  lv_encoder_interface_init(NULL);
-#endif
-
-  /* LVGL demo creation */
-
-  demo_create_func();
 
   /* Handle LVGL tasks */
 
   while (1)
     {
-      lv_timer_handler();
-      usleep(5000);
+      lv_task_handler();
+      usleep(10000);
     }
 
   return EXIT_SUCCESS;
