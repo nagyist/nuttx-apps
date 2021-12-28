@@ -31,9 +31,7 @@ SYMTABOBJ = $(SYMTABSRC:.c=$(OBJEXT))
 # We first remove libapps.a before letting the other rules add objects to it
 # so that we ensure libapps.a does not contain objects from prior build
 
-all:
-	$(RM) $(BIN)
-	$(MAKE) $(BIN)
+all: $(BIN)
 
 .PHONY: import install dirlinks export .depdirs preconfig depend clean distclean
 .PHONY: context clean_context context_all register register_all
@@ -79,17 +77,11 @@ else
 ifeq ($(CONFIG_BUILD_LOADABLE),)
 
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) for app in ${CONFIGURED_APPS}; do \
-		$(MAKE) -C "$${app}" archive ; \
-	done
 
 else
 
 $(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) for app in ${CONFIGURED_APPS}; do \
-		$(MAKE) -C "$${app}" archive ; \
-	done
-	$(Q) $(MAKE) install
+	$(Q) $(MAKE) install 
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINDIR) >$@.tmp
 	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
 
@@ -98,9 +90,9 @@ $(SYMTABOBJ): %$(OBJEXT): %.c
 
 $(BIN): $(SYMTABOBJ)
 ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
-	$(call ARCHIVE_ADD, "${shell cygpath -w $(BIN)}", $^)
+	$(call ARLOCK, "${shell cygpath -w $(BIN)}", $^)
 else
-	$(call ARCHIVE_ADD, $(BIN), $^)
+	$(call ARLOCK, $(BIN), $^)
 endif
 
 endif # !CONFIG_BUILD_LOADABLE
@@ -196,6 +188,7 @@ else
 		fi; \
 	)
 endif
+	$(call DELFILE, *.lock)
 	$(call DELFILE, .depend)
 	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(SYMTABOBJ))
