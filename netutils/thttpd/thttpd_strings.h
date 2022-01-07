@@ -7,8 +7,8 @@
  *
  * Derived from the file of the same name in the original THTTPD package:
  *
- *   Copyright (C) 1995,1998,1999,2000,2001 by Jef Poskanzer
- *   <jef@mail.acme.com>. All rights reserved.
+ *   Copyright © 1995,1998,1999,2000,2001 by Jef Poskanzer <jef@mail.acme.com>.
+ *   All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,8 +34,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_NETUTILS_THTTPD_THTTPD_STRINGS_H
-#define __APPS_NETUTILS_THTTPD_THTTPD_STRINGS_H
+#ifndef __NETUTILS_THTTPD_THTTPD_STRINGS_H
+#define __NETUTILS_THTTPD_THTTPD_STRINGS_H
 
 /****************************************************************************
  * Included Files
@@ -106,12 +106,10 @@ extern const char html_hdr2[];
 extern const char html_endhdr2[];
 
 /****************************************************************************
- * Public Function Prototypes
+ * Public Functions
  ****************************************************************************/
 
-/* Copies and decodes a string.
- * It's ok for from and to to be the same string.
- */
+/* Copies and decodes a string.  It's ok for from and to to be the same string. */
 
 void httpd_strdecode(char *to, char *from);
 
@@ -122,4 +120,4 @@ void httpd_strencode(char *to, int tosize, char *from);
 #endif
 
 #endif /* CONFIG_THTTPD */
-#endif /* __APPS_NETUTILS_THTTPD_THTTPD_STRINGS_H */
+#endif /* __NETUTILS_THTTPD_THTTPD_STRINGS_H */

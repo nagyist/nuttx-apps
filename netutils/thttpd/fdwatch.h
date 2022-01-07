@@ -6,7 +6,7 @@
  *
  * Derived from the file of the same name in THTTPD:
  *
- *   Copyright (C) 1999 by Jef Poskanzer <jef@mail.acme.com>.
+ *   Copyright © 1999 by Jef Poskanzer <jef@mail.acme.com>.
  *   All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_NETUTILS_THTTPD_FDWATCH_H
-#define __APPS_NETUTILS_THTTPD_FDWATCH_H
+#ifndef __NETUTILS_THTTPD_FDWATCH_H
+#define __NETUTILS_THTTPD_FDWATCH_H
 
 /****************************************************************************
  * Included Files
@@ -56,7 +56,7 @@
 #endif
 
 /****************************************************************************
- * Public Types
+ * Private Types
  ****************************************************************************/
 
 struct fdwatch_s
@@ -107,4 +107,4 @@ extern int fdwatch_check_fd(struct fdwatch_s *fw, int fd);
 
 extern void *fdwatch_get_next_client_data(struct fdwatch_s *fw);
 
-#endif /* __APPS_NETUTILS_THTTPD_FDWATCH_H */
+#endif /* __NETUTILS_THTTPD_FDWATCH_H */
