@@ -57,16 +57,16 @@
 #define UNAME_KERNEL   (1 << 0)
 #define UNAME_NODE     (1 << 1)
 #define UNAME_RELEASE  (1 << 2)
-#define UNAME_VERSION  (1 << 3)
+#define UNAME_VERISON  (1 << 3)
 #define UNAME_MACHINE  (1 << 4)
 #define UNAME_PLATFORM (1 << 5)
 #define UNAME_UNKNOWN  (1 << 6)
 
 #ifdef CONFIG_NET
 #  define UNAME_ALL    (UNAME_KERNEL | UNAME_NODE | UNAME_RELEASE | \
-                        UNAME_VERSION | UNAME_MACHINE | UNAME_PLATFORM)
+                        UNAME_VERISON | UNAME_MACHINE | UNAME_PLATFORM)
 #else
-#  define UNAME_ALL    (UNAME_KERNEL | UNAME_RELEASE | UNAME_VERSION | \
+#  define UNAME_ALL    (UNAME_KERNEL | UNAME_RELEASE | UNAME_VERISON | \
                         UNAME_MACHINE | UNAME_PLATFORM)
 #endif
 
@@ -157,7 +157,7 @@ int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   boardctl(BOARDIOC_POWEROFF, 0);
 #endif
 
-  /* boardctl() will not return in any case.  It if does, it means that
+  /* boarctl() will not return in any case.  It if does, it means that
    * there was a problem with the shutdown/resaet operation.
    */
 
@@ -280,7 +280,7 @@ int cmd_poweroff(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       boardctl(BOARDIOC_POWEROFF, 0);
     }
 
-  /* boardctl() will not return in any case.  It if does, it means that
+  /* boarctl() will not return in any case.  It if does, it means that
    * there was a problem with the shutdown operation.
    */
 
@@ -310,7 +310,7 @@ int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       boardctl(BOARDIOC_RESET, 0);
     }
 
-  /* boardctl() will not return in this case.  It if does, it means that
+  /* boarctl() will not return in this case.  It if does, it means that
    * there was a problem with the reset operation.
    */
 
@@ -326,6 +326,7 @@ int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
 int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
+  unsigned long val = 0;
   int fd;
   int cmd;
 
@@ -343,6 +344,23 @@ int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       cmd = RPTUNIOC_STOP;
     }
+  else if (strcmp(argv[1], "reset") == 0)
+    {
+      if (argc > 3)
+        {
+          val = atoi(argv[3]);
+        }
+
+      cmd = RPTUNIOC_RESET;
+    }
+  else if (strcmp(argv[1], "panic") == 0)
+    {
+      cmd = RPTUNIOC_PANIC;
+    }
+  else if (strcmp(argv[1], "dump") == 0)
+    {
+      cmd = RPTUNIOC_DUMP;
+    }
   else
     {
       nsh_output(vtbl, g_fmtarginvalid, argv[1]);
@@ -356,7 +374,7 @@ int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       return ERROR;
     }
 
-  ioctl(fd, cmd, 0);
+  ioctl(fd, cmd, val);
 
   close(fd);
   return 0;
@@ -408,7 +426,7 @@ int cmd_uname(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
             break;
 
           case 'v':
-            set |= UNAME_VERSION;
+            set |= UNAME_VERISON;
             break;
 
           case 'm':
