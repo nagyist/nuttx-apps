@@ -71,15 +71,6 @@ enum foc_ramp_mode_e
   RAMP_MODE_NORMAL    = 3,      /* Normal operation */
 };
 
-/* Angle handler type */
-
-enum foc_angle_type_e
-{
-  FOC_ANGLE_TYPE_INVALID = 0,  /* Reserved */
-  FOC_ANGLE_TYPE_ELE     = 1,  /* Electrical angle */
-  FOC_ANGLE_TYPE_MECH    = 2,  /* Mechanical angle */
-};
-
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/

@@ -35,8 +35,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_USRSOCKTEST_DEFINES_H
-#define __APPS_EXAMPLES_USRSOCKTEST_DEFINES_H
+#ifndef __EXAMPLES_USRSOCKTEST_DEFINES_H
+#define __EXAMPLES_USRSOCKTEST_DEFINES_H
 
 /****************************************************************************
  * Included Files
@@ -183,8 +183,7 @@ bool usrsocktest_assert_print_buf(FAR const char *func,
                                   FAR const void *expect_buf,
                                   size_t buflen);
 
-int usrsocktest_daemon_start(
-  FAR const struct usrsocktest_daemon_conf_s *conf);
+int usrsocktest_daemon_start(FAR const struct usrsocktest_daemon_conf_s *conf);
 
 int usrsocktest_daemon_stop(void);
 
@@ -210,4 +209,4 @@ bool usrsocktest_send_delayed_command(char cmd, unsigned int delay_msec);
 
 int usrsocktest_daemon_pause_usrsock_handling(bool pause);
 
-#endif /* __APPS_EXAMPLES_USRSOCKTEST_DEFINES_H */
+#endif /* __EXAMPLES_USRSOCKTEST_DEFINES_H */
