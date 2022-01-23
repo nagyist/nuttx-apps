@@ -829,7 +829,7 @@ static FAR char *nsh_filecat(FAR struct nsh_vtbl_s *vtbl, FAR char *s1,
   fd = open(filename, O_RDONLY);
   if (fd < 0)
     {
-      nsh_error(vtbl, g_fmtcmdfailed, "``", "open", NSH_ERRNO);
+      nsh_error(vtbl, g_fmtcmdfailed,  "``", "open", NSH_ERRNO);
       goto errout_with_alloc;
     }
 
@@ -876,13 +876,6 @@ static FAR char *nsh_filecat(FAR struct nsh_vtbl_s *vtbl, FAR char *s1,
 
       index += nbytesread;
     }
-
-  /* Remove trailing whitespace */
-
-  for (;
-       index > s1size &&
-       strchr(g_token_separator, argument[index - 1]) != NULL;
-       index--);
 
   /* Make sure that the new string is null terminated */
 
@@ -950,15 +943,8 @@ static FAR char *nsh_cmdparm(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline,
 
   /* Concatenate the file contents with the current allocation */
 
-  argument = nsh_filecat(vtbl, *allocation, tmpfile);
-  if (argument == NULL)
-    {
-      argument = (FAR char *)g_nullstring;
-    }
-  else
-    {
-      *allocation = argument;
-    }
+  argument    = nsh_filecat(vtbl, *allocation, tmpfile);
+  *allocation = argument;
 
   /* We can now unlink the tmpfile and free the tmpfile string */
 
@@ -2319,8 +2305,8 @@ static int nsh_parse_cmdparm(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline,
        * status.
        */
 
-      ret = 0;
-      goto exit;
+      NSH_MEMLIST_FREE(&memlist);
+      return OK;
     }
 
   /* Parse all of the arguments following the command name.  The form
@@ -2360,7 +2346,6 @@ static int nsh_parse_cmdparm(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline,
 
   /* Restore the backgrounding and redirection state */
 
-exit:
 #ifndef CONFIG_NSH_DISABLEBG
   vtbl->np.np_bg       = bgsave;
 #endif
@@ -2537,12 +2522,17 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
         }
     }
 
+  /* Last argument vector must be empty */
+
+  argv[argc] = NULL;
+
   /* Check if the command should run in background */
 
 #ifndef CONFIG_NSH_DISABLEBG
   if (argc > 1 && strcmp(argv[argc - 1], "&") == 0)
     {
       vtbl->np.np_bg = true;
+      argv[argc - 1] = NULL;
       argc--;
     }
 #endif
@@ -2575,10 +2565,6 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
         }
     }
 #endif
-
-  /* Last argument vector must be empty */
-
-  argv[argc] = NULL;
 
   /* Check if the maximum number of arguments was exceeded */
 
