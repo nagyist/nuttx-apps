@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_GRAPHICS_LV_TICK_INTERFACE_H
-#define __APPS_GRAPHICS_LV_TICK_INTERFACE_H
+#ifndef __LV_TICK_INTERFACE_H__
+#define __LV_TICK_INTERFACE_H__
 
 /****************************************************************************
  * Included Files
@@ -58,4 +58,4 @@ uint32_t millis(void);
 }
 #endif
 
-#endif // __APPS_GRAPHICS_LV_TICK_INTERFACE_H
+#endif // __LV_TICK_INTERFACE_H__

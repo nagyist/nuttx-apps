@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_NETUTILS_IPERF_IPERF_H
-#define __APPS_NETUTILS_IPERF_IPERF_H
+#ifndef __IPERF_H_
+#define __IPERF_H_
 
 /****************************************************************************
  * Included Files
@@ -94,4 +94,4 @@ int iperf_stop(void);
 #undef EXTERN
 
 #endif /* __ASSEMBLY__ */
-#endif /* __APPS_NETUTILS_IPERF_IPERF_H */
+#endif

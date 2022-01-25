@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_FOC_FOC_DEBUG_H
-#define __APPS_EXAMPLES_FOC_FOC_DEBUG_H
+#ifndef __EXAMPLES_FOC_FOC_DEBUG_H
+#define __EXAMPLES_FOC_FOC_DEBUG_H
 
 /****************************************************************************
  * Included Files
@@ -57,4 +57,4 @@
 #  endif
 #endif
 
-#endif /* __APPS_EXAMPLES_FOC_FOC_DEBUG_H */
+#endif /* __EXAMPLES_FOC_FOC_DEBUG_H */

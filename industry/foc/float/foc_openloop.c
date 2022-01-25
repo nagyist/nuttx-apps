@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/industry/foc/float/foc_ang_openloop.c
+ * apps/industry/foc/float/foc_openloop.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -32,7 +32,7 @@
 #include "industry/foc/float/foc_angle.h"
 
 /****************************************************************************
- * Private Data Types
+ * Private Function Prototypes
  ****************************************************************************/
 
 /* Open-loop data */
@@ -41,7 +41,6 @@ struct foc_openloop_f32_s
 {
   struct foc_openloop_cfg_f32_s cfg;
   struct openloop_data_f32_s    data;
-  float                         dir;
 };
 
 /****************************************************************************
@@ -51,11 +50,9 @@ struct foc_openloop_f32_s
 static int foc_angle_ol_init_f32(FAR foc_angle_f32_t *h);
 static void foc_angle_ol_deinit_f32(FAR foc_angle_f32_t *h);
 static int foc_angle_ol_cfg_f32(FAR foc_angle_f32_t *h, FAR void *cfg);
-static int foc_angle_ol_zero_f32(FAR foc_angle_f32_t *h);
-static int foc_angle_ol_dir_f32(FAR foc_angle_f32_t *h, float dir);
-static int foc_angle_ol_run_f32(FAR foc_angle_f32_t *h,
-                                FAR struct foc_angle_in_f32_s *in,
-                                FAR struct foc_angle_out_f32_s *out);
+static void foc_angle_ol_run_f32(FAR foc_angle_f32_t *h,
+                                 FAR struct foc_angle_in_f32_s *in,
+                                 FAR struct foc_angle_out_f32_s *out);
 
 /****************************************************************************
  * Public Data
@@ -68,8 +65,6 @@ struct foc_angle_ops_f32_s g_foc_angle_ol_f32 =
   .init   = foc_angle_ol_init_f32,
   .deinit = foc_angle_ol_deinit_f32,
   .cfg    = foc_angle_ol_cfg_f32,
-  .zero   = foc_angle_ol_zero_f32,
-  .dir    = foc_angle_ol_dir_f32,
   .run    = foc_angle_ol_run_f32,
 };
 
@@ -149,7 +144,7 @@ static int foc_angle_ol_cfg_f32(FAR foc_angle_f32_t *h, FAR void *cfg)
 
   DEBUGASSERT(h);
 
-  /* Get open-loop data */
+  /* Get modulation data */
 
   DEBUGASSERT(h->data);
   ol = h->data;
@@ -162,72 +157,6 @@ static int foc_angle_ol_cfg_f32(FAR foc_angle_f32_t *h, FAR void *cfg)
 
   DEBUGASSERT(ol->cfg.per > 0.0f);
   motor_openloop_init(&ol->data, ol->cfg.per);
-
-  /* Initialize with CW direction */
-
-  ol->dir = DIR_CW;
-
-  return OK;
-}
-
-/****************************************************************************
- * Name: foc_angle_ol_zero_f32
- *
- * Description:
- *   Zero the open-loop FOC angle handler (float32)
- *
- * Input Parameter:
- *   h   - pointer to FOC angle handler
- *   dir - sensor direction (1 if normal -1 if inverted)
- *
- ****************************************************************************/
-
-static int foc_angle_ol_zero_f32(FAR foc_angle_f32_t *h)
-{
-  FAR struct foc_openloop_f32_s *ol = NULL;
-
-  DEBUGASSERT(h);
-
-  /* Get open-loop data */
-
-  DEBUGASSERT(h->data);
-  ol = h->data;
-
-  /* Reset angle */
-
-  ol->data.angle = 0.0f;
-
-  return OK;
-}
-
-/****************************************************************************
- * Name: foc_angle_ol_dir_f32
- *
- * Description:
- *   Set the open-loop FOC angle handler direction (float32)
- *
- * Input Parameter:
- *   h   - pointer to FOC angle handler
- *   dir - sensor direction (1 if normal -1 if inverted)
- *
- ****************************************************************************/
-
-static int foc_angle_ol_dir_f32(FAR foc_angle_f32_t *h, float dir)
-{
-  FAR struct foc_openloop_f32_s *ol = NULL;
-
-  DEBUGASSERT(h);
-
-  UNUSED(dir);
-
-  /* Get open-loop data */
-
-  DEBUGASSERT(h->data);
-  ol = h->data;
-
-  /* Configure direction */
-
-  ol->dir = dir;
 
   return OK;
 }
@@ -245,15 +174,15 @@ static int foc_angle_ol_dir_f32(FAR foc_angle_f32_t *h, float dir)
  *
  ****************************************************************************/
 
-static int foc_angle_ol_run_f32(FAR foc_angle_f32_t *h,
-                                FAR struct foc_angle_in_f32_s *in,
-                                FAR struct foc_angle_out_f32_s *out)
+static void foc_angle_ol_run_f32(FAR foc_angle_f32_t *h,
+                                 FAR struct foc_angle_in_f32_s *in,
+                                 FAR struct foc_angle_out_f32_s *out)
 {
   FAR struct foc_openloop_f32_s *ol = NULL;
 
   DEBUGASSERT(h);
 
-  /* Get open-loop data */
+  /* Get modulation data */
 
   DEBUGASSERT(h->data);
   ol = h->data;
@@ -264,8 +193,5 @@ static int foc_angle_ol_run_f32(FAR foc_angle_f32_t *h,
 
   /* Get open-loop angle */
 
-  out->type  = FOC_ANGLE_TYPE_ELE;
-  out->angle = ol->dir * motor_openloop_angle_get(&ol->data);
-
-  return OK;
+  out->angle = motor_openloop_angle_get(&ol->data);
 }

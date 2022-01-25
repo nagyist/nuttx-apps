@@ -59,14 +59,10 @@ else
 CWD = $(CURDIR)
 endif
 
-# Add the static application library to the linked libraries. Don't do this
-# with CONFIG_BUILD_KERNEL as there is no static app library
-ifneq ($(CONFIG_BUILD_KERNEL),y)
-  ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
-    LDLIBS += "${shell cygpath -w $(BIN)}"
-  else
-    LDLIBS += $(BIN)
-  endif
+ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+  LDLIBS += "${shell cygpath -w $(BIN)}"
+else
+  LDLIBS += $(BIN)
 endif
 
 SUFFIX = $(subst $(DELIM),.,$(CWD))
