@@ -565,15 +565,9 @@
 #  define CONFIG_NSH_DISABLE_FREE 1
 #endif
 
-#if !defined(CONFIG_FS_PROCFS) || defined(CONFIG_FS_PROCFS_EXCLUDE_MEMDUMP)
-#  undef  CONFIG_NSH_DISABLE_MEMDUMP
-#  define CONFIG_NSH_DISABLE_MEMDUMP 1
-#endif
-
 /* Suppress unused file utilities */
 
 #define NSH_HAVE_CATFILE          1
-#define NSH_HAVE_WRITEFILE        1
 #define NSH_HAVE_READFILE         1
 #define NSH_HAVE_FOREACH_DIRENTRY 1
 #define NSH_HAVE_TRIMDIR          1
@@ -946,9 +940,6 @@ void nsh_usbtrace(void);
 #ifndef CONFIG_NSH_DISABLE_FREE
   int cmd_free(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #endif
-#ifndef CONFIG_NSH_DISABLE_MEMDUMP
-  int cmd_memdump(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#endif
 #ifndef CONFIG_NSH_DISABLE_TIME
   int cmd_time(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #endif
@@ -1282,7 +1273,7 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
  *
  * Description:
  *   Read a small file into a user-provided buffer.  The data is assumed to
- *   be a string and is guaranteed to be NUL-termined.  An error occurs if
+ *   be a string and is guaranteed to be NULL-terminated.  An error occurs if
  *   the file content (+terminator)  will not fit into the provided 'buffer'.
  *
  * Input Parameters:
@@ -1301,30 +1292,6 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
 #ifdef NSH_HAVE_READFILE
 int nsh_readfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
                  FAR const char *filepath, FAR char *buffer, size_t buflen);
-#endif
-
-/****************************************************************************
- * Name: nsh_writefile
- *
- * Description:
- *   Dump the contents of a file to the current NSH terminal.
- *
- * Input Paratemets:
- *   vtbl     - session vtbl
- *   cmd      - NSH command name to use in error reporting
- *   buffer   - The pointer of writting buffer
- *   len      - The length of writting buffer
- *   filepath - The full path to the file to be dumped
- *
- * Returned Value:
- *   Zero (OK) on success; -1 (ERROR) on failure.
- *
- ****************************************************************************/
-
-#ifdef NSH_HAVE_WRITEFILE
-int nsh_writefile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
-                  FAR const char *buffer, size_t len,
-                  FAR const char *filepath);
 #endif
 
 /****************************************************************************
