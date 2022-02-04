@@ -216,12 +216,6 @@ static const struct cmdmap_s g_cmdmap[] =
   { "free",     cmd_free,     1, 1, NULL },
 #endif
 
-#ifdef CONFIG_DEBUG_MM
-# ifndef CONFIG_NSH_DISABLE_MEMDUMP
-  { "memdump",  cmd_memdump,  1, 3, "[pid/used/free]" },
-# endif
-#endif
-
 #ifdef CONFIG_NET_UDP
 # ifndef CONFIG_NSH_DISABLE_GET
   { "get",      cmd_get,      4, 7,
@@ -466,7 +460,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
-  { "rptun",    cmd_rptun,    3, 4, "start|stop|reset|panic <dev-path> [value]" },
+  { "rptun",    cmd_rptun,    3, 3, "start|stop <dev-path>" },
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_SET
