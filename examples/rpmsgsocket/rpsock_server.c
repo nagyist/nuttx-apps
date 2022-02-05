@@ -43,6 +43,7 @@ struct rpsock_arg_s
 {
   int  fd;
   bool nonblock;
+  bool skippoll;
 };
 
 /****************************************************************************
@@ -61,7 +62,7 @@ static void *rpsock_thread(pthread_addr_t pvarg)
       char *tmp;
       int snd;
 
-      if (args->nonblock)
+      if (args->nonblock && !args->skippoll)
         {
           memset(&pfd, 0, sizeof(struct pollfd));
           pfd.fd = args->fd;
@@ -75,6 +76,8 @@ static void *rpsock_thread(pthread_addr_t pvarg)
             }
         }
 
+      args->skippoll = false;
+
       ret = recv(args->fd, buf, sizeof(buf), 0);
       if (ret == 0 || (ret < 0 && errno == ECONNRESET))
         {
@@ -84,19 +87,6 @@ static void *rpsock_thread(pthread_addr_t pvarg)
       else if (ret < 0 && errno == EAGAIN)
         {
           usleep(10);
-          continue;
-        }
-      else if (ret < 0 && errno == EINPROGRESS)
-        {
-          memset(&pfd, 0, sizeof(struct pollfd));
-          pfd.fd = args->fd;
-          pfd.events = POLLOUT;
-          ret = poll(&pfd, 1, -1);
-          if (ret < 0)
-            {
-              printf("server: poll failure: %d\n", errno);
-              break;
-            }
           continue;
         }
       else if (ret < 0)
@@ -248,6 +238,7 @@ static int rpsock_stream_server(int argc, char *argv[])
 
       args->fd       = new;
       args->nonblock = nonblock;
+      args->skippoll = false;
 
       pthread_create(&thread, NULL, rpsock_thread,
                      (pthread_addr_t)args);
@@ -312,23 +303,7 @@ static int rpsock_dgram_server(int argc, char *argv[])
   printf("server: bind cpu %s, name %s ...\n",
           myaddr.rp_cpu, myaddr.rp_name);
   ret = bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr));
-  ret = connect(fd, (struct sockaddr *)&myaddr, sizeof(myaddr));
-  if (ret < 0 && errno == EINPROGRESS)
-    {
-      struct pollfd pfd;
-      memset(&pfd, 0, sizeof(struct pollfd));
-      pfd.fd = fd;
-      pfd.events = POLLOUT;
-
-      ret = poll(&pfd, 1, -1);
-      if (ret < 0)
-        {
-          printf("server: poll failure: %d\n", errno);
-          close(fd);
-          return ret;
-        }
-    }
-  else if (ret < 0)
+  if (ret < 0)
     {
       printf("server: bind failure: %d\n", errno);
       close(fd);
@@ -340,6 +315,7 @@ static int rpsock_dgram_server(int argc, char *argv[])
 
   args->fd       = fd;
   args->nonblock = nonblock;
+  args->skippoll = true;
 
   rpsock_thread(args);
 

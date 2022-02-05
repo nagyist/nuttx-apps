@@ -31,7 +31,9 @@ SYMTABOBJ = $(SYMTABSRC:.c=$(OBJEXT))
 # We first remove libapps.a before letting the other rules add objects to it
 # so that we ensure libapps.a does not contain objects from prior build
 
-all: $(BIN)
+all:
+	$(RM) $(BIN)
+	$(MAKE) $(BIN)
 
 .PHONY: import install dirlinks export .depdirs preconfig depend clean distclean
 .PHONY: context clean_context context_all register register_all
@@ -61,6 +63,10 @@ ifeq ($(CONFIG_BUILD_KERNEL),y)
 install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
 .import: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) for app in ${CONFIGURED_APPS}; do \
+		$(MAKE) -C "$${app}" archive ; \
+	done
+	$(Q) install libapps.a $(APPDIR)$(DELIM)import$(DELIM)libs
 	$(Q) $(MAKE) install
 
 import: $(IMPORT_TOOLS)
@@ -77,11 +83,17 @@ else
 ifeq ($(CONFIG_BUILD_LOADABLE),)
 
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) for app in ${CONFIGURED_APPS}; do \
+		$(MAKE) -C "$${app}" archive ; \
+	done
 
 else
 
 $(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) $(MAKE) install 
+	$(Q) for app in ${CONFIGURED_APPS}; do \
+		$(MAKE) -C "$${app}" archive ; \
+	done
+	$(Q) $(MAKE) install
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINDIR) >$@.tmp
 	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
 
@@ -89,11 +101,7 @@ $(SYMTABOBJ): %$(OBJEXT): %.c
 	$(call COMPILE, -fno-lto $<, $@)
 
 $(BIN): $(SYMTABOBJ)
-ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
-	$(call ARLOCK, "${shell cygpath -w $(BIN)}", $^)
-else
-	$(call ARLOCK, $(BIN), $^)
-endif
+	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $^)
 
 endif # !CONFIG_BUILD_LOADABLE
 
@@ -146,11 +154,13 @@ preconfig: Kconfig
 
 export:
 ifneq ($(EXPORTDIR),)
+	$(Q) mkdir -p "${EXPORTDIR}"$(DELIM)registry || exit 1;
+ifneq ($(CONFIG_BUILD_KERNEL),y)
 ifneq ($(BUILTIN_REGISTRY),)
-	$(Q) mkdir -p "${EXPORTDIR}"/registry || exit 1; \
-	for f in "${BUILTIN_REGISTRY}"/*.bdat "${BUILTIN_REGISTRY}"/*.pdat ; do \
-		[ -f "$${f}" ] && cp -f "$${f}" "${EXPORTDIR}"/registry ; \
+	for f in "${BUILTIN_REGISTRY}"$(DELIM)*.bdat "${BUILTIN_REGISTRY}"$(DELIM)*.pdat ; do \
+		[ -f "$${f}" ] && cp -f "$${f}" "${EXPORTDIR}"$(DELIM)registry ; \
 	done
+endif
 endif
 endif
 
@@ -188,7 +198,6 @@ else
 		fi; \
 	)
 endif
-	$(call DELFILE, *.lock)
 	$(call DELFILE, .depend)
 	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(SYMTABOBJ))
