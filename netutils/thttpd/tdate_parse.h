@@ -1,12 +1,12 @@
 /****************************************************************************
- * apps/netutils/thttpd/tdate_parse.h
+ * apps/netutils/thttpd/fdwatch.h
  *
  *   Copyright (C) 2009 Gregory Nutt. All rights reserved.
  *   Author: Gregory Nutt <gnutt@nuttx.org>
  *
  * Derived from the file of the same name in THTTPD:
  *
- *   Copyright (C) 1995 by Jef Poskanzer <jef@mail.acme.com>.
+ *   Copyright © 1995 by Jef Poskanzer <jef@mail.acme.com>.
  *   All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,9 +33,9 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_NETUTILS_THTTPD_TDATE_PARSE_H
-#define __APPS_NETUTILS_THTTPD_TDATE_PARSE_H
+#ifndef __NETUTILS_TDATE_PARSE_H
+#define __NETUTILS_TDATE_PARSE_H
 
 extern time_t tdate_parse(char *str);
 
-#endif /* __APPS_NETUTILS_THTTPD_TDATE_PARSE_H */
+#endif /* __NETUTILS_TDATE_PARSE_H */

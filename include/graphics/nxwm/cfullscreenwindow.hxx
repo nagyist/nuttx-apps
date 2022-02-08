@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_INCLUDE_GRAPHICS_NXWM_CFULLSCREENWINDOW_HXX
-#define __APPS_INCLUDE_GRAPHICS_NXWM_CFULLSCREENWINDOW_HXX
+#ifndef __APPS_INCLUDE_GRAPHICS_NXWM_CFULLSCREENWINDOW_NXX
+#define __APPS_INCLUDE_GRAPHICS_NXWM_CFULLSCREENWINDOW_NXX
 
 /****************************************************************************
  * Included Files
@@ -145,4 +145,4 @@ namespace NxWM
 
 #endif // __cplusplus
 
-#endif // __APPS_INCLUDE_GRAPHICS_NXWM_CFULLSCREENWINDOW_HXX
+#endif // __APPS_INCLUDE_GRAPHICS_NXWM_CFULLSCREENWINDOW_NXX
