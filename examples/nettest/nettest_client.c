@@ -144,7 +144,7 @@ void nettest_client(void)
         }
       else if (nbytessent != SENDSIZE)
         {
-          printf("client: Bad send length=%d: of %d\n",
+          printf("client: Bad send length=%d: %d of \n",
                   nbytessent, SENDSIZE);
           goto errout_with_socket;
         }

@@ -43,13 +43,11 @@
 #undef HAVE_FPU
 #ifdef CONFIG_ARCH_FPU
 #  if defined(CONFIG_TESTING_OSTEST_FPUSIZE) && \
-      (CONFIG_TESTING_OSTEST_FPUSIZE != 0) && \
       defined(CONFIG_SCHED_WAITPID) && \
       defined(CONFIG_BUILD_FLAT)
 #    define HAVE_FPU 1
 #  else
-#    if defined(CONFIG_TESTING_OSTEST_FPUSIZE) && \
-        (CONFIG_TESTING_OSTEST_FPUSIZE == 0)
+#    ifndef CONFIG_TESTING_OSTEST_FPUSIZE
 #      warning "FPU test not built; CONFIG_TESTING_OSTEST_FPUSIZE not defined"
 #    endif
 #    ifndef CONFIG_SCHED_WAITPID
@@ -87,6 +85,10 @@
 
 #define FPU_WORDSIZE ((CONFIG_TESTING_OSTEST_FPUSIZE+3)>>2)
 #define FPU_NTHREADS  2
+
+#ifndef NULL
+# define NULL (void*)0
+#endif
 
 /****************************************************************************
  * External Dependencies
