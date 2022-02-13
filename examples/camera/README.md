@@ -1,6 +1,6 @@
 # Examples / `camera` Camera Snapshot
 
-This sample is implemented as `camera` command on NuttX Shell. The synopsis of
+This sample is implemented as `camera` command on NuttX Shell. The synopsys of
 the command is as below.
 
 ```

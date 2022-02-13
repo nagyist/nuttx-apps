@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_NXTERM_NXTERM_INTERNAL_H
-#define __APPS_EXAMPLES_NXTERM_NXTERM_INTERNAL_H
+#ifndef __EXAMPLES_NXTERM_NXTERM_INTERNAL_H
+#define __EXAMPLES_NXTERM_NXTERM_INTERNAL_H
 
 /****************************************************************************
  * Included Files
@@ -41,9 +41,7 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-
 /* Configuration ************************************************************/
-
 /* Need NX graphics support */
 
 #ifndef CONFIG_NX
@@ -92,8 +90,8 @@
 #    define CONFIG_EXAMPLES_NXTERM_BPP 8
 #  elif !defined(CONFIG_NX_DISABLE_16BPP)
 #    define CONFIG_EXAMPLES_NXTERM_BPP 16
-#  elif !defined(CONFIG_NX_DISABLE_24BPP)
-#    define CONFIG_EXAMPLES_NXTERM_BPP 24
+//#elif !defined(CONFIG_NX_DISABLE_24BPP)
+//#    define CONFIG_NXTERM_BPP 24
 #  elif !defined(CONFIG_NX_DISABLE_32BPP)
 #    define CONFIG_EXAMPLES_NXTERM_BPP 32
 #  else
@@ -235,7 +233,6 @@ struct nxterm_state_s
 /****************************************************************************
  * Public Data
  ****************************************************************************/
-
 /* All example global variables are retained in a structure to minimize
  * the chance of name collisions.
  */
@@ -255,4 +252,4 @@ extern const struct nx_callback_s g_nxtoolcb;
 
 FAR void *nxterm_listener(FAR void *arg);
 
-#endif /* __APPS_EXAMPLES_NXTERM_NXTERM_INTERNAL_H */
+#endif /* __EXAMPLES_NXTERM_NXTERM_INTERNAL_H */
