@@ -18,8 +18,8 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef __APPS_INCLUDE_GRAPHICS_SLCD_HXX
-#define __APPS_INCLUDE_GRAPHICS_SLCD_HXX
+#ifndef __APPS_INCLUDE_GRAPHICS_SLCD_H
+#define __APPS_INCLUDE_GRAPHICS_SLCD_H
 
 /////////////////////////////////////////////////////////////////////////////
 // Included Files
@@ -194,4 +194,4 @@ namespace SLcd
   };
 }
 
-#endif /* __APPS_INCLUDE_GRAPHICS_SLCD_HXX */
+#endif /* __APPS_INCLUDE_GRAPHICS_SLCD_H */
