@@ -45,11 +45,7 @@
 #  endif
 #endif
 
-#ifdef CONFIG_SMP
-#  define NCPUS CONFIG_SMP_NCPUS
-#else
-#  define NCPUS 1
-#endif
+#define NCPUS CONFIG_SMP_NCPUS
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -85,7 +81,7 @@ struct trace_dump_task_context_s
   FAR struct trace_dump_task_context_s *next;
   pid_t pid;                              /* Task PID */
   int syscall_nest;                       /* Syscall nest level */
-  char name[CONFIG_TASK_NAME_SIZE + 1];   /* Task name (with NUL terminator) */
+  char name[CONFIG_TASK_NAME_SIZE + 1];   /* Task name (with NULL terminator) */
 };
 
 struct trace_dump_context_s
