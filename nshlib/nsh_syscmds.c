@@ -28,6 +28,7 @@
 #include <sys/boardctl.h>
 #include <sys/ioctl.h>
 #include <sys/utsname.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,16 +58,16 @@
 #define UNAME_KERNEL   (1 << 0)
 #define UNAME_NODE     (1 << 1)
 #define UNAME_RELEASE  (1 << 2)
-#define UNAME_VERSION  (1 << 3)
+#define UNAME_VERISON  (1 << 3)
 #define UNAME_MACHINE  (1 << 4)
 #define UNAME_PLATFORM (1 << 5)
 #define UNAME_UNKNOWN  (1 << 6)
 
 #ifdef CONFIG_NET
 #  define UNAME_ALL    (UNAME_KERNEL | UNAME_NODE | UNAME_RELEASE | \
-                        UNAME_VERSION | UNAME_MACHINE | UNAME_PLATFORM)
+                        UNAME_VERISON | UNAME_MACHINE | UNAME_PLATFORM)
 #else
-#  define UNAME_ALL    (UNAME_KERNEL | UNAME_RELEASE | UNAME_VERSION | \
+#  define UNAME_ALL    (UNAME_KERNEL | UNAME_RELEASE | UNAME_VERISON | \
                         UNAME_MACHINE | UNAME_PLATFORM)
 #endif
 
@@ -157,7 +158,7 @@ int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   boardctl(BOARDIOC_POWEROFF, 0);
 #endif
 
-  /* boardctl() will not return in any case.  It if does, it means that
+  /* boarctl() will not return in any case.  It if does, it means that
    * there was a problem with the shutdown/resaet operation.
    */
 
@@ -280,7 +281,7 @@ int cmd_poweroff(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       boardctl(BOARDIOC_POWEROFF, 0);
     }
 
-  /* boardctl() will not return in any case.  It if does, it means that
+  /* boarctl() will not return in any case.  It if does, it means that
    * there was a problem with the shutdown operation.
    */
 
@@ -310,7 +311,7 @@ int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       boardctl(BOARDIOC_RESET, 0);
     }
 
-  /* boardctl() will not return in this case.  It if does, it means that
+  /* boarctl() will not return in this case.  It if does, it means that
    * there was a problem with the reset operation.
    */
 
@@ -324,16 +325,12 @@ int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
  ****************************************************************************/
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
-int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
+static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl, char *path,
+                          int argc, char **argv)
 {
-  int fd;
+  unsigned long val = 0;
   int cmd;
-
-  if (argc < 3)
-    {
-      nsh_output(vtbl, g_fmtargrequired, argv[0]);
-      return ERROR;
-    }
+  int fd;
 
   if (strcmp(argv[1], "start") == 0)
     {
@@ -343,23 +340,79 @@ int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       cmd = RPTUNIOC_STOP;
     }
+  else if (strcmp(argv[1], "reset") == 0)
+    {
+      if (argc > 3)
+        {
+          val = atoi(argv[3]);
+        }
+
+      cmd = RPTUNIOC_RESET;
+    }
+  else if (strcmp(argv[1], "panic") == 0)
+    {
+      cmd = RPTUNIOC_PANIC;
+    }
+  else if (strcmp(argv[1], "dump") == 0)
+    {
+      cmd = RPTUNIOC_DUMP;
+    }
   else
     {
       nsh_output(vtbl, g_fmtarginvalid, argv[1]);
       return ERROR;
     }
 
-  fd = open(argv[2], 0);
+  fd = open(path, 0);
   if (fd < 0)
     {
       nsh_output(vtbl, g_fmtarginvalid, argv[2]);
       return ERROR;
     }
 
-  ioctl(fd, cmd, 0);
+  cmd = ioctl(fd, cmd, val);
 
   close(fd);
-  return 0;
+
+  return cmd;
+}
+
+static int cmd_rptun_recursive(FAR struct nsh_vtbl_s *vtbl,
+                               const char *dirpath,
+                               struct dirent *entryp, void *pvarg)
+{
+  char *path;
+  int ret;
+
+  if (DIRENT_ISDIRECTORY(entryp->d_type))
+    {
+      return 0;
+    }
+
+  path = nsh_getdirpath(vtbl, dirpath, entryp->d_name);
+
+  ret = cmd_rptun_once(vtbl, path, 2, pvarg);
+
+  free(path);
+
+  return ret;
+}
+
+int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
+{
+  if (argc < 2)
+    {
+      nsh_output(vtbl, g_fmtargrequired, argv[0]);
+      return ERROR;
+    }
+
+  if (argc == 2)
+    {
+      return nsh_foreach_direntry(vtbl, "rptun", "/dev/rptun",
+                                  cmd_rptun_recursive, argv);
+    }
+
+  return cmd_rptun_once(vtbl, argv[2], argc, argv);
 }
 #endif
 
@@ -408,7 +461,7 @@ int cmd_uname(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
             break;
 
           case 'v':
-            set |= UNAME_VERSION;
+            set |= UNAME_VERISON;
             break;
 
           case 'm':

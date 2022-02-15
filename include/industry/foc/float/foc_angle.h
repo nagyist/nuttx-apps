@@ -30,7 +30,6 @@
 #include <dsp.h>
 
 #include "industry/foc/float/foc_handler.h"
-#include "industry/foc/foc_common.h"
 
 /****************************************************************************
  * Public Type Definition
@@ -50,8 +49,7 @@ struct foc_angle_in_f32_s
 
 struct foc_angle_out_f32_s
 {
-  uint8_t type;                 /* Angle type */
-  float   angle;                /* Angle */
+  float angle;
 };
 
 /* Forward declaration */
@@ -74,19 +72,11 @@ struct foc_angle_ops_f32_s
 
   CODE int (*cfg)(FAR foc_angle_f32_t *h, FAR void *cfg);
 
-  /* Zero */
-
-  CODE int (*zero)(FAR foc_angle_f32_t *h);
-
-  /* Direction */
-
-  CODE int (*dir)(FAR foc_angle_f32_t *h, float dir);
-
   /* Run angle handler */
 
-  CODE int (*run)(FAR foc_angle_f32_t *h,
-                  FAR struct foc_angle_in_f32_s *in,
-                  FAR struct foc_angle_out_f32_s *out);
+  CODE void (*run)(FAR foc_angle_f32_t *h,
+                   FAR struct foc_angle_in_f32_s *in,
+                   FAR struct foc_angle_out_f32_s *out);
 };
 
 /* Angle handler - sensor or sensorless */
@@ -106,46 +96,6 @@ struct foc_openloop_cfg_f32_s
 };
 #endif  /* CONFIG_INDUSTRY_FOC_ANGLE_OPENLOOP */
 
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_ONFO
-struct foc_angle_onfo_cfg_f32_s
-{
-  float per;            /* Controller period */
-  float gain;
-  float gain_slow;
-  struct motor_phy_params_f32_s phy;
-};
-#endif
-
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_OSMO
-struct foc_angle_osmo_cfg_f32_s
-{
-  float per;            /* Controller period */
-  float k_slide;        /* Bang-bang controller gain */
-  float err_max;        /* Linear mode threshold */
-  struct motor_phy_params_f32_s phy;
-};
-#endif
-
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_QENCO
-/* Qencoder configuration data */
-
-struct foc_qenco_cfg_f32_s
-{
-  FAR char *devpath;
-  uint32_t  posmax;
-};
-#endif
-
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_HALL
-/* Hall configuration data */
-
-struct foc_hall_cfg_f32_s
-{
-  FAR char *devpath;
-  float     per;
-};
-#endif
-
 /****************************************************************************
  * Public Data
  ****************************************************************************/
@@ -154,30 +104,6 @@ struct foc_hall_cfg_f32_s
 /* Open-loop angle operations (float) */
 
 extern struct foc_angle_ops_f32_s g_foc_angle_ol_f32;
-#endif
-
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_ONFO
-/* NFO oberver angle operations (float) */
-
-extern struct foc_angle_ops_f32_s g_foc_angle_onfo_f32;
-#endif
-
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_OSMO
-/* SMO oberver angle operations (float) */
-
-extern struct foc_angle_ops_f32_s g_foc_angle_osmo_f32;
-#endif
-
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_QENCO
-/* Qencoder angle operations (float) */
-
-extern struct foc_angle_ops_f32_s g_foc_angle_qe_f32;
-#endif
-
-#ifdef CONFIG_INDUSTRY_FOC_ANGLE_HALL
-/* Hall angle operations (float) */
-
-extern struct foc_angle_ops_f32_s g_foc_angle_hl_f32;
 #endif
 
 /****************************************************************************
@@ -204,23 +130,11 @@ int foc_angle_deinit_f32(FAR foc_angle_f32_t *h);
 int foc_angle_cfg_f32(FAR foc_angle_f32_t *h, FAR void *cfg);
 
 /****************************************************************************
- * Name: foc_angle_zero_f32
- ****************************************************************************/
-
-int foc_angle_zero_f32(FAR foc_angle_f32_t *h);
-
-/****************************************************************************
- * Name: foc_angle_dir_f32
- ****************************************************************************/
-
-int foc_angle_dir_f32(FAR foc_angle_f32_t *h, float dir);
-
-/****************************************************************************
  * Name: foc_angle_run_f32
  ****************************************************************************/
 
-int foc_angle_run_f32(FAR foc_angle_f32_t *h,
-                      FAR struct foc_angle_in_f32_s *in,
-                      FAR struct foc_angle_out_f32_s *out);
+void foc_angle_run_f32(FAR foc_angle_f32_t *h,
+                       FAR struct foc_angle_in_f32_s *in,
+                       FAR struct foc_angle_out_f32_s *out);
 
 #endif /* __INDUSTRY_FOC_FLOAT_FOC_ANGLE_H */

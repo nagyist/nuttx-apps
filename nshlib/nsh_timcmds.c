@@ -91,6 +91,7 @@ static inline int date_month(FAR const char *abbrev)
 static inline int date_showtime(FAR struct nsh_vtbl_s *vtbl,
                                 FAR const char *name, bool utc)
 {
+  static const char format[] = "%a, %b %d %H:%M:%S %Y";
   struct timespec ts;
   struct tm tm;
   char timbuf[MAX_TIME_STRING];
@@ -126,7 +127,7 @@ static inline int date_showtime(FAR struct nsh_vtbl_s *vtbl,
 
   /* Show the current time in the requested format */
 
-  ret = strftime(timbuf, MAX_TIME_STRING, "%a, %b %d %H:%M:%S %Y", &tm);
+  ret = strftime(timbuf, MAX_TIME_STRING, format, &tm);
   if (ret < 0)
     {
       nsh_error(vtbl, g_fmtcmdfailed, name, "strftime", NSH_ERRNO);
