@@ -32,7 +32,6 @@
 #include <poll.h>
 #include <string.h>
 #include <errno.h>
-#include <signal.h>
 
 #ifdef CONFIG_LIBC_NETDB
 #  include <netdb.h>
@@ -59,20 +58,10 @@
  */
 
 static uint16_t g_ping6_id = 0;
-static volatile int exiting = 0;
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-
-/****************************************************************************
- * Name: sigexit
- ****************************************************************************/
-
-static void sigexit(int signo)
-{
-  exiting = 1;
-}
 
 /****************************************************************************
  * Name: ping6_newid
@@ -183,9 +172,6 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
   int ch;
   int i;
 
-  exiting = 0;
-  signal(SIGINT, sigexit);
-
   /* Initialize result structure */
 
   memset(&result, 0, sizeof(result));
@@ -231,11 +217,6 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
 
   while (result.nrequests < info->count)
     {
-      if (exiting)
-        {
-          break;
-        }
-
       /* Copy the ICMP header into the I/O buffer */
 
       memcpy(iobuffer, &outhdr, SIZEOF_ICMPV6_ECHO_REQUEST_S(0));
@@ -280,7 +261,7 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
           recvfd.events   = POLLIN;
           recvfd.revents  = 0;
 
-          ret = poll(&recvfd, 1, info->timeout - elapsed / USEC_PER_MSEC);
+          ret = poll(&recvfd, 1, info->timeout - elapsed);
           if (ret < 0)
             {
               icmp6_callback(&result, ICMPv6_E_POLL, errno);
@@ -308,20 +289,17 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
               goto done;
             }
 
-          elapsed = (unsigned int)TICK2USEC(clock() - start);
+          elapsed = (unsigned int)TICK2MSEC(clock() - start);
           inhdr   = (FAR struct icmpv6_echo_reply_s *)iobuffer;
 
           if (inhdr->type == ICMPv6_ECHO_REPLY)
             {
-#ifndef CONFIG_SIM_NETUSRSOCK
               if (ntohs(inhdr->id) != result.id)
                 {
                   icmp6_callback(&result, ICMPv6_W_IDDIFF, ntohs(inhdr->id));
                   retry = true;
                 }
-              else
-#endif
-              if (ntohs(inhdr->seqno) > result.seqno)
+              else if (ntohs(inhdr->seqno) > result.seqno)
                 {
                   icmp6_callback(&result, ICMPv6_W_SEQNOBIG,
                                  ntohs(inhdr->seqno));
@@ -336,7 +314,7 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
                     {
                       icmp6_callback(&result, ICMPv6_W_SEQNOSMALL,
                                      ntohs(inhdr->seqno));
-                      pktdelay += info->delay * USEC_PER_MSEC;
+                      pktdelay += info->delay;
                       retry     = true;
                     }
 
@@ -383,8 +361,7 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
               icmp6_callback(&result, ICMPv6_W_TYPE, inhdr->type);
             }
         }
-      while (retry && info->delay > elapsed / USEC_PER_MSEC &&
-             info->timeout > elapsed / USEC_PER_MSEC);
+      while (retry && info->delay > elapsed && info->timeout > elapsed);
 
       /* Wait if necessary to preserved the requested ping rate */
 
@@ -410,7 +387,7 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
     }
 
 done:
-  icmp6_callback(&result, ICMPv6_I_FINISH, TICK2USEC(clock() - kickoff));
+  icmp6_callback(&result, ICMPv6_I_FINISH, TICK2MSEC(clock() - kickoff));
   close(sockfd);
   free(iobuffer);
 }
