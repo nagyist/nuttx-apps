@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_FOC_FOC_THR_H
-#define __APPS_EXAMPLES_FOC_FOC_THR_H
+#ifndef __EXAMPLES_FOC_FOC_THR_H
+#define __EXAMPLES_FOC_FOC_THR_H
 
 /****************************************************************************
  * Included Files
@@ -27,10 +27,9 @@
 
 #include <nuttx/config.h>
 
-#include <pthread.h>
-#include <mqueue.h>
-
 #include <nuttx/motor/foc/foc.h>
+
+#include <mqueue.h>
 
 #include "foc_device.h"
 
@@ -49,76 +48,38 @@ enum foc_example_state_e
   FOC_EXAMPLE_STATE_CCW     = 4, /* CCW direction */
 };
 
-/* FOC control mode */
+/* Operation modes */
 
-enum foc_foc_mode_e
+enum foc_operation_mode_e
 {
-  FOC_FMODE_INVALID  = 0, /* Reserved */
-  FOC_FMODE_IDLE     = 1, /* IDLE */
-  FOC_FMODE_VOLTAGE  = 2, /* Voltage mode */
-  FOC_FMODE_CURRENT  = 3, /* Current mode */
-};
+  FOC_OPMODE_INVALID  = 0, /* Reserved */
+  FOC_OPMODE_IDLE     = 1, /* IDLE */
+  FOC_OPMODE_OL_V_VEL = 2, /* Voltage open-loop velocity controller */
+  FOC_OPMODE_OL_C_VEL = 3, /* Current open-loop velocity controller */
 
-/* Motor control mode */
+  /* Not supported yet */
 
-enum foc_motor_mode_e
-{
-  FOC_MMODE_INVALID = 0,     /* Reserved */
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_TORQ
-  FOC_MMODE_TORQ    = 1,     /* Torque control */
+#if 0
+  FOC_OPMODE_CL_C_TRQ = 3, /* Current closed-loop torque controller */
+  FOC_OPMODE_CL_C_VEL = 4, /* Current closed-loop velocity controller */
+  FOC_OPMODE_CL_C_POS = 5  /* Current closed-loop position controller */
 #endif
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_VEL
-  FOC_MMODE_VEL     = 2,     /* Velocity control */
-#endif
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_POS
-  FOC_MMODE_POS     = 3      /* Position control */
-#endif
-};
-
-/* Controller state */
-
-enum foc_controller_state_e
-{
-  FOC_CTRL_STATE_INVALID = 0,
-  FOC_CTRL_STATE_INIT,
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_ALIGN
-  FOC_CTRL_STATE_ALIGN,
-#endif
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_RUN
-  FOC_CTRL_STATE_RUN_INIT,
-  FOC_CTRL_STATE_RUN,
-#endif
-  FOC_CTRL_STATE_IDLE
 };
 
 /* FOC thread data */
 
 struct foc_ctrl_env_s
 {
+  struct foc_device_s dev;      /* FOC device */
   mqd_t               mqd;      /* Control msg queue */
   int                 id;       /* FOC device id */
   int                 inst;     /* Type specific instance counter */
   int                 type;     /* Controller type */
-  int                 fmode;    /* FOC control mode */
-  int                 mmode;    /* Motor control mode */
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_OPENLOOP
   int                 qparam;   /* Open-loop Q setting (x1000) */
-#endif
-
-#ifdef CONFIG_EXAMPLES_FOC_CONTROL_PI
-  uint32_t            foc_pi_kp; /* FOC PI Kp (x1000) */
-  uint32_t            foc_pi_ki; /* FOC PI Ki (x1000) */
-#endif
-
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_TORQ
-  uint32_t            torqmax;  /* Torque max (x1000) */
-#endif
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_VEL
+  int                 mode;     /* Operation mode */
+  uint32_t            pi_kp;    /* FOC PI Kp (x1000) */
+  uint32_t            pi_ki;    /* FOC PI Ki (x1000) */
   uint32_t            velmax;   /* Velocity max (x1000) */
-#endif
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_POS
-  uint32_t            posmax;   /* Position max (x1000) */
-#endif
 };
 
 /****************************************************************************
@@ -129,10 +90,12 @@ struct foc_ctrl_env_s
  * Public Function Prototypes
  ****************************************************************************/
 
-int foc_threads_init(void);
-void foc_threads_deinit(void);
-bool foc_threads_terminated(void);
-int foc_ctrlthr_init(FAR struct foc_ctrl_env_s *foc, int i, FAR mqd_t *mqd,
-                     FAR pthread_t *thread);
+#ifdef CONFIG_INDUSTRY_FOC_FLOAT
+int foc_float_thr(FAR struct foc_ctrl_env_s *envp);
+#endif
 
-#endif /* __APPS_EXAMPLES_FOC_FOC_THR_H */
+#ifdef CONFIG_INDUSTRY_FOC_FIXED16
+int foc_fixed16_thr(FAR struct foc_ctrl_env_s *envp);
+#endif
+
+#endif /* __EXAMPLES_FOC_FOC_THR_H */

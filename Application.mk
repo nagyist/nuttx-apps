@@ -59,26 +59,10 @@ else
 CWD = $(CURDIR)
 endif
 
-# Add the static application library to the linked libraries. Don't do this
-# with CONFIG_BUILD_KERNEL as there is no static app library
-ifneq ($(CONFIG_BUILD_KERNEL),y)
-  ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
-    LDLIBS += "${shell cygpath -w $(BIN)}"
-  else
-    LDLIBS += $(BIN)
-  endif
-endif
-
-# When building a module, link with the compiler runtime.
-# This should be linked after libapps. Consider that mbedtls in libapps
-# uses __udivdi3.
-ifeq ($(BUILD_MODULE),y)
-  # Revisit: This only works for gcc and clang.
-  # Do other compilers have similar?
-  COMPILER_RT_LIB = $(shell $(CC) $(ARCHCPUFLAGS) --print-libgcc-file-name)
-  ifneq ($(COMPILER_RT_LIB),)
-    LDLIBS += $(COMPILER_RT_LIB)
-  endif
+ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+  LDLIBS += "${shell cygpath -w $(BIN)}"
+else
+  LDLIBS += $(BIN)
 endif
 
 SUFFIX = $(subst $(DELIM),.,$(CWD))
@@ -93,20 +77,17 @@ RAOBJS = $(RASRCS:=$(SUFFIX)$(OBJEXT))
 CAOBJS = $(CASRCS:=$(SUFFIX)$(OBJEXT))
 COBJS = $(CSRCS:=$(SUFFIX)$(OBJEXT))
 CXXOBJS = $(CXXSRCS:=$(SUFFIX)$(OBJEXT))
-RUSTOBJS = $(RUSTSRCS:=$(SUFFIX)$(OBJEXT))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
-MAINRUSTSRCS = $(filter %$(RUSTEXT),$(MAINSRC))
 MAINCXXOBJ = $(MAINCXXSRCS:=$(SUFFIX)$(OBJEXT))
 MAINCOBJ = $(MAINCSRCS:=$(SUFFIX)$(OBJEXT))
-MAINRUSTOBJ = $(MAINRUSTSRCS:=$(SUFFIX)$(OBJEXT))
 
 SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS) $(MAINSRC)
-OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS) $(RUSTOBJS)
+OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS)
 
 ifneq ($(BUILD_MODULE),y)
-  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
+  OBJS += $(MAINCOBJ) $(MAINCXXOBJ)
 endif
 
 DEPPATH += --dep-path .
@@ -116,7 +97,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: $(OBJS)
+all:: .built
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -133,11 +114,6 @@ endef
 define ELFCOMPILEXX
 	@echo "CXX: $1"
 	$(Q) $(CXX) -c $(CXXELFFLAGS) $($(strip $1)_CXXELFFLAGS) $1 -o $2
-endef
-
-define ELFCOMPILERUST
-	@echo "RUSTC: $1"
-	$(Q) $(RUSTC) --emit obj $(RUSTELFFLAGS) $($(strip $1)_RUSTELFFLAGS) $1 -o $2
 endef
 
 define ELFLD
@@ -161,16 +137,13 @@ $(CXXOBJS): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CXXELFFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
-$(RUSTOBJS): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
-	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
-		$(call ELFCOMPILERUST, $<, $@), $(call COMPILERUST, $<, $@))
-
-archive:
+.built: $(OBJS)
 ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
-	$(call ARCHIVE_ADD, "${shell cygpath -w $(BIN)}", $(OBJS))
+	$(call ARLOCK, "${shell cygpath -w $(BIN)}", $^)
 else
-	$(call ARCHIVE_ADD, $(BIN), $(OBJS))
+	$(call ARLOCK, $(BIN), $^)
 endif
+	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -182,11 +155,11 @@ $(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
 
-PROGLIST := $(wordlist 1,$(words $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)),$(PROGNAME))
+PROGLIST := $(wordlist 1,$(words $(MAINCOBJ) $(MAINCXXOBJ)),$(PROGNAME))
 PROGLIST := $(addprefix $(BINDIR)$(DELIM),$(PROGLIST))
-PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
+PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ)
 
-$(PROGLIST): $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
+$(PROGLIST): $(MAINCOBJ) $(MAINCXXOBJ)
 	$(Q) mkdir -p $(BINDIR)
 ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
 	$(call ELFLD,$(firstword $(PROGOBJ)),"${shell cygpath -w $(firstword $(PROGLIST))}")
@@ -220,10 +193,6 @@ $(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
 
-$(MAINRUSTOBJ): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
-	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
-		$(call ELFCOMPILERUST, $<, $@), $(call COMPILERUST, $<, $@))
-
 install::
 
 endif # BUILD_MODULE
@@ -255,6 +224,7 @@ endif
 depend:: .depend
 
 clean::
+	$(call DELFILE, .built)
 	$(call CLEAN)
 
 distclean:: clean

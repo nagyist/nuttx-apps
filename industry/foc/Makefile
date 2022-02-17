@@ -32,15 +32,8 @@ CSRCS += float/foc_ramp.c
 CSRCS += float/foc_handler.c
 CSRCS += float/foc_angle.c
 CSRCS += float/foc_velocity.c
-CSRCS += float/foc_routine.c
 ifeq ($(CONFIG_INDUSTRY_FOC_ANGLE_OPENLOOP),y)
-CSRCS += float/foc_ang_openloop.c
-endif
-ifeq ($(CONFIG_INDUSTRY_FOC_ANGLE_QENCO),y)
-CSRCS += float/foc_ang_qenco.c
-endif
-ifeq ($(CONFIG_INDUSTRY_FOC_ANGLE_HALL),y)
-CSRCS += float/foc_ang_hall.c
+CSRCS += float/foc_openloop.c
 endif
 ifeq ($(CONFIG_INDUSTRY_FOC_CORDIC),y)
 CSRCS += float/foc_cordic.c
@@ -57,18 +50,6 @@ endif
 ifeq ($(CONFIG_INDUSTRY_FOC_MODEL_PMSM),y)
 CSRCS += float/foc_model_pmsm.c
 endif
-ifeq ($(CONFIG_INDUSTRY_FOC_ALIGN),y)
-CSRCS += float/foc_align.c
-endif
-ifeq ($(CONFIG_INDUSTRY_FOC_IDENT),y)
-CSRCS += float/foc_ident.c
-endif
-ifeq ($(CONFIG_INDUSTRY_FOC_VELOCITY_ODIV),y)
-CSRCS += float/foc_vel_odiv.c
-endif
-ifeq ($(CONFIG_INDUSTRY_FOC_VELOCITY_OPLL),y)
-CSRCS += float/foc_vel_opll.c
-endif
 
 endif
 
@@ -80,15 +61,8 @@ CSRCS += fixed16/foc_ramp.c
 CSRCS += fixed16/foc_handler.c
 CSRCS += fixed16/foc_angle.c
 CSRCS += fixed16/foc_velocity.c
-CSRCS += fixed16/foc_routine.c
 ifeq ($(CONFIG_INDUSTRY_FOC_ANGLE_OPENLOOP),y)
-CSRCS += fixed16/foc_ang_openloop.c
-endif
-ifeq ($(CONFIG_INDUSTRY_FOC_ANGLE_QENCO),y)
-CSRCS += fixed16/foc_ang_qenco.c
-endif
-ifeq ($(CONFIG_INDUSTRY_FOC_ANGLE_HALL),y)
-CSRCS += fixed16/foc_ang_hall.c
+CSRCS += fixed16/foc_openloop.c
 endif
 ifeq ($(CONFIG_INDUSTRY_FOC_CORDIC),y)
 CSRCS += fixed16/foc_cordic.c
@@ -104,12 +78,6 @@ CSRCS += fixed16/foc_model.c
 endif
 ifeq ($(CONFIG_INDUSTRY_FOC_MODEL_PMSM),y)
 CSRCS += fixed16/foc_model_pmsm.c
-endif
-ifeq ($(CONFIG_INDUSTRY_FOC_ALIGN),y)
-CSRCS += fixed16/foc_align.c
-endif
-ifeq ($(CONFIG_INDUSTRY_FOC_IDENT),y)
-CSRCS += fixed16/foc_ident.c
 endif
 
 endif
