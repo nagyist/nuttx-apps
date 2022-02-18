@@ -23,15 +23,12 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/clock.h>
 
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <math.h>
-#include <limits.h>
 
 #include "netutils/icmp_ping.h"
 
@@ -51,10 +48,6 @@
 struct ping_priv_s
 {
   int code;                      /* Notice code ICMP_I/E/W_XXX */
-  int tmin;                      /* Minimum round trip time */
-  int tmax;                      /* Maximum round trip time */
-  long long tsum;                /* Sum of all times, for doing average */
-  long long tsum2;               /* Sum2 is the sum of the squares of sum ,for doing mean deviation */
 };
 
 /****************************************************************************
@@ -187,26 +180,13 @@ static void ping_result(FAR const struct ping_result_s *result)
         break;
 
       case ICMP_I_ROUNDTRIP:
-        priv->tsum += result->extra;
-        priv->tsum2 += (long long)result->extra * result->extra;
-        if (result->extra < priv->tmin)
-          {
-            priv->tmin = result->extra;
-          }
-
-        if (result->extra > priv->tmax)
-          {
-            priv->tmax = result->extra;
-          }
-
-        printf("%u bytes from %u.%u.%u.%u: icmp_seq=%u time=%d.%d ms\n",
+        printf("%u bytes from %u.%u.%u.%u: icmp_seq=%u time=%d ms\n",
                result->info->datalen,
                (unsigned int)(result->dest.s_addr) & 0xff,
                (unsigned int)(result->dest.s_addr >> 8) & 0xff,
                (unsigned int)(result->dest.s_addr >> 16) & 0xff,
                (unsigned int)(result->dest.s_addr >> 24) & 0xff,
-               result->seqno, result->extra / USEC_PER_MSEC,
-               result->extra % USEC_PER_MSEC / MSEC_PER_DSEC);
+               result->seqno, result->extra);
         break;
 
       case ICMP_W_RECVBIG:
@@ -238,23 +218,7 @@ static void ping_result(FAR const struct ping_result_s *result)
 
             printf("%u packets transmitted, %u received, %u%% packet loss, "
                    "time %d ms\n",
-                   result->nrequests, result->nreplies, tmp,
-                   result->extra / USEC_PER_MSEC);
-            if (result->nreplies > 0)
-              {
-                int avg = priv->tsum / result->nreplies;
-                int tmdev = sqrt(priv->tsum2 / result->nreplies -
-                                 (long long)avg * avg);
-
-                printf("rtt min/avg/max/mdev = %d.%03d/%u.%03u/"
-                       "%d.%03d/%d.%03d ms\n",
-                       priv->tmin / USEC_PER_MSEC,
-                       priv->tmin % USEC_PER_MSEC,
-                       avg / USEC_PER_MSEC, avg % USEC_PER_MSEC,
-                       priv->tmax / USEC_PER_MSEC,
-                       priv->tmax % USEC_PER_MSEC,
-                       tmdev / USEC_PER_MSEC, tmdev % USEC_PER_MSEC);
-              }
+                   result->nrequests, result->nreplies, tmp, result->extra);
           }
         break;
     }
@@ -279,10 +243,6 @@ int main(int argc, FAR char *argv[])
   info.callback  = ping_result;
   info.priv      = &priv;
   priv.code      = ICMP_I_OK;
-  priv.tmin      = INT_MAX;
-  priv.tmax      = 0;
-  priv.tsum      = 0;
-  priv.tsum2     = 0;
 
   /* Parse command line options */
 

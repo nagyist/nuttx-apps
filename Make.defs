@@ -57,6 +57,7 @@ $(foreach BDIR, $(BUILDIRS), $(eval $(call Add_Application,$(BDIR))))
 # File extensions
 
 CXXEXT ?= .cxx
+RUSTEXT ?= .rs
 
 # Library path
 
@@ -90,10 +91,6 @@ define REGISTER
 	        echo "int $4(int argc, char *argv[]);" > "$(BUILTIN_REGISTRY)$(DELIM)$1.pdat"; \
 	     fi;
 	$(Q) touch "$(BUILTIN_REGISTRY)$(DELIM).updated"
-endef
-
-define ARLOCK
-	$(Q) flock $1.lock $(call ARCHIVE, $1, $(2))
 endef
 
 # Standard include path
