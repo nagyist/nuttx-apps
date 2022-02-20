@@ -85,30 +85,6 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: nsh_getdirpath
- ****************************************************************************/
-
-#if !defined(CONFIG_NSH_DISABLE_LS) || !defined(CONFIG_NSH_DISABLE_CP)
-static char *nsh_getdirpath(FAR struct nsh_vtbl_s *vtbl,
-                            FAR const char *path, FAR const char *file)
-{
-  /* Handle the case where all that is left is '/' */
-
-  if (strcmp(path, "/") == 0)
-    {
-      snprintf(vtbl->iobuffer, IOBUFFERSIZE, "/%s", file);
-    }
-  else
-    {
-      snprintf(vtbl->iobuffer, IOBUFFERSIZE, "%s/%s", path, file);
-    }
-
-  vtbl->iobuffer[PATH_MAX] = '\0';
-  return strdup(vtbl->iobuffer);
-}
-#endif
-
-/****************************************************************************
  * Name: ls_specialdir
  ****************************************************************************/
 
@@ -361,8 +337,9 @@ static int ls_recursive(FAR struct nsh_vtbl_s *vtbl, const char *dirpath,
 
           ret = nsh_foreach_direntry(vtbl, "ls", newpath, ls_recursive,
                                      pvarg);
-          free(newpath);
         }
+
+      free(newpath);
     }
 
   return ret;
@@ -1307,7 +1284,7 @@ int cmd_mkfatfs(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
           return ERROR;
         }
     }
-  else if (optind < argc)
+  else if (optind >= argc)
     {
       nsh_error(vtbl, g_fmttoomanyargs, argv[0]);
       return ERROR;
@@ -1426,7 +1403,7 @@ int cmd_mkrd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       nsectors = (uint32_t)atoi(argv[optind]);
     }
-  else if (optind < argc)
+  else if (optind >= argc)
     {
       fmt = g_fmttoomanyargs;
       goto errout_with_fmt;
@@ -1447,7 +1424,7 @@ int cmd_mkrd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   ret = boardctl(BOARDIOC_MKRD, (uintptr_t)&desc);
   if (ret < 0)
     {
-      nsh_error(vtbl, g_fmtcmdfailed, argv[0], "boardctl(BOARDIOC_MKRD)",
+      nsh_error(vtbl, g_fmtcmdfailed, argv[0], "boarctl(BOARDIOC_MKRD)",
                 NSH_ERRNO_OF(-ret));
       return ERROR;
     }

@@ -26,7 +26,12 @@ include $(TOPDIR)/scripts/Make.defs
 # Tool related definitions
 # Compiler
 
-ARCHCRT0OBJ = $(call CONVERT_PATH,$(TOPDIR)$(DELIM)startup$(DELIM)crt0$(OBJEXT))
+ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+  ARCHCRT0OBJ = "${shell cygpath -w $(TOPDIR)$(DELIM)startup$(DELIM)crt0$(OBJEXT)}"
+else
+  ARCHCRT0OBJ = $(TOPDIR)$(DELIM)startup$(DELIM)crt0$(OBJEXT)
+endif
+
 ARCHINCLUDES += ${shell $(INCDIR) -s "$(CC)" $(TOPDIR)$(DELIM)include}
 
 ARCHXXINCLUDES += ${shell $(INCDIR) -s "$(CC)" $(TOPDIR)$(DELIM)include}
@@ -61,26 +66,19 @@ AFLAGS = $(CFLAGS) -D__ASSEMBLY__
 
 # Linker
 
-LDLIBPATH = $(addprefix -L,$(call CONVERT_PATH,$(TOPDIR)$(DELIM)libs))
-
-# Link with user libraries
-
-ifeq ($(CONFIG_BUILD_KERNEL),y)
-  LDLIBS = -lapps -lxx -lmm -lc -lproxies
-ifneq ($(CONFIG_LIBM),y)
-  LIBM = ${shell "$(CC)" $(ARCHCPUFLAGS) --print-file-name=libm.a}
-ifneq ($(LIBM),".")
-  LDLIBPATH += -L "${shell dirname $(LIBM)}"
-  LDLIBS += -lm
-endif
-endif
+ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+  # Windows-native toolchains
+  LDLIBPATH = -L "${shell cygpath -w $(APPDIR)}" -L "${shell cygpath -w $(TOPDIR)$(DELIM)libs}"
+else
+  # Linux/Cygwin-native toolchain
+  LDLIBPATH = -L $(TOPDIR)$(DELIM)libs
 endif
 
 # Try to get the path to libgcc.a.  Of course, this only works for GCC
 # toolchains.
 
-LIBGCC = ${shell "$(CC)" $(ARCHCPUFLAGS) --print-file-name=libgcc.a}
-ifneq ($(LIBGCC),".")
+LIBGCC = ${shell "$(CC)" $(ARCHCPUFLAGS) -print-file-name=libgcc.a}
+ifneq ($(LIBGCC),)
   LDLIBPATH += -L "${shell dirname $(LIBGCC)}"
   LDLIBS += -lgcc
 endif
@@ -88,4 +86,8 @@ endif
 # ELF module definitions
 
 LDELFFLAGS = -r -e _start -Bstatic
-LDELFFLAGS += $(addprefix -T,$(call CONVERT_PATH,$(TOPDIR)/scripts/gnu-elf.ld))
+ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+  LDELFFLAGS += -T "${shell cygpath -w $(TOPDIR)/scripts/gnu-elf.ld}"
+else
+  LDELFFLAGS += -T $(TOPDIR)/scripts/gnu-elf.ld
+endif

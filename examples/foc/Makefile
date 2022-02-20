@@ -32,22 +32,18 @@ MODULE    = $(CONFIG_EXAMPLES_FOC)
 MAINSRC = foc_main.c
 
 ASRCS =
-CSRCS = foc_device.c foc_mq.c foc_thr.c foc_intf.c
-
-ifeq ($(CONFIG_BUILTIN),y)
-CSRCS += foc_parseargs.c
-endif
+CSRCS = foc_device.c foc_mq.c
 
 # fixed16 support
 
 ifeq ($(CONFIG_INDUSTRY_FOC_FIXED16),y)
-  CSRCS += foc_fixed16_thr.c foc_motor_b16.c
+  CSRCS += foc_fixed16_thr.c
 endif
 
 # float32 support
 
 ifeq ($(CONFIG_INDUSTRY_FOC_FLOAT),y)
-  CSRCS += foc_float_thr.c foc_motor_f32.c
+  CSRCS += foc_float_thr.c
 endif
 
 include $(APPDIR)/Application.mk
