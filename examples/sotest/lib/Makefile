@@ -63,8 +63,7 @@ $(ROMFS_IMG): install
 # Create the romfs.c file from the romfs.img file
 
 $(ROMFS_SRC): $(ROMFS_IMG)
-	$(Q) (cd $(LIB_DIR) && echo "#include <nuttx/compiler.h>" >$@ && \
-		xxd -i romfs.img | sed -e "s/^unsigned char/const unsigned char aligned_data(4)/g" >>$@)
+	$(Q) (cd $(LIB_DIR); xxd -i romfs.img | sed -e "s/^unsigned/const unsigned/g" >$@)
 endif
 
 # Create the exported symbol table
