@@ -57,7 +57,6 @@ $(foreach BDIR, $(BUILDIRS), $(eval $(call Add_Application,$(BDIR))))
 # File extensions
 
 CXXEXT ?= .cxx
-RUSTEXT ?= .rs
 
 # Library path
 
@@ -93,9 +92,17 @@ define REGISTER
 	$(Q) touch "$(BUILTIN_REGISTRY)$(DELIM).updated"
 endef
 
+define ARLOCK
+	$(Q) flock $1.lock $(call ARCHIVE, $1, $(2))
+endef
+
 # Standard include path
 
 CFLAGS   += ${shell $(INCDIR) "$(CC)" "$(APPDIR)$(DELIM)include"}
 CXXFLAGS += ${shell $(INCDIR) "$(CC)" "$(APPDIR)$(DELIM)include"}
 
-NUTTXLIB ?= $(call CONVERT_PATH,$(TOPDIR)$(DELIM)staging)
+ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+  NUTTXLIB ?= "${shell cygpath -w $(TOPDIR)$(DELIM)staging}"
+else
+  NUTTXLIB ?= "$(TOPDIR)$(DELIM)staging"
+endif

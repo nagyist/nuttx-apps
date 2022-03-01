@@ -45,7 +45,11 @@
 #  endif
 #endif
 
-#define NCPUS CONFIG_SMP_NCPUS
+#ifdef CONFIG_SMP
+#  define NCPUS CONFIG_SMP_NCPUS
+#else
+#  define NCPUS 1
+#endif
 
 /****************************************************************************
  * Pre-processor Definitions
