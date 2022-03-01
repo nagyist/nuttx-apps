@@ -35,7 +35,7 @@ while [ ! -z "$1" ]; do
 			;;
 		-x )
 			shift
-			EXPORT=$(realpath $1)
+			EXPORT=$1
 			;;
 		-z )
 			TGZ=y

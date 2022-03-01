@@ -18,16 +18,15 @@ config LIBUV_THREADPOOL_SIZE
 
 choice
 	prompt "libuv utils"
-	default LIBUV_UTILS_NONE
 
 config LIBUV_UTILS_NONE
-	bool "none"
+	tristate "none"
 
 config LIBUV_UTILS_TEST
-	bool "uv_run_tests"
+	tristate "uv_run_tests"
 
 config LIBUV_UTILS_BENCHMARK
-	bool "uv_run_benchmarks"
+	tristate "uv_run_benchmarks"
 
 endchoice
 
@@ -41,5 +40,37 @@ config LIBUV_UTILS_STACKSIZE
 	int "libuv utils stack size"
 	default 8192
 endif
+
+menu "libuv extension"
+
+config LIBUV_EXTENSION
+	bool "Enable libuv extension"
+	default n
+	---help---
+		Enable libuv extension
+
+if LIBUV_EXTENSION
+
+config LIBUV_EXTENSION_TEST
+	bool "libuv extension test"
+	default n
+	---help---
+		Enable libuv extension test
+
+if LIBUV_EXTENSION_TEST
+
+config LIBUV_EXTENSION_TEST_PRIORITY
+	int "libuv extension test priority"
+	default 100
+
+config LIBUV_EXTENSION_TEST_TASK_STACKSIZE
+	int "libuv extension test stack size"
+	default 65535
+
+endif
+
+endif
+
+endmenu
 
 endif
