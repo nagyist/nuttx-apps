@@ -74,15 +74,16 @@ CSRCS += logcat_service.c
 endif
 
 ifeq ($(CONFIG_ADBD_SHELL_SERVICE),y)
-CSRCS += $(ADB_UNPACKNAME)/hal/shell_service_uv.c
+CSRCS += shell_service.c
+CSRCS += shell_pipe.c
 endif
 
-context:: $(ADB_UNPACKDIR)
+context::# $(ADB_UNPACKDIR)
 
 clean::
 	$(call DELFILE, $(OBJS))
 
 distclean::
-	$(call DELDIR, $(ADB_UNPACKDIR))
+#	$(call DELDIR, $(ADB_UNPACKDIR))
 
 include $(APPDIR)/Application.mk
