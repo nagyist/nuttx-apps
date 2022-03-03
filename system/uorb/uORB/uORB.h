@@ -60,8 +60,9 @@ struct orb_state
   uint32_t queue_size;          /* The maximum number of buffered elements,
                                  * if 1, no queuing is is used
                                  */
-  uint32_t nsubscribers;        /* Number of subscribers */
-  uint64_t generation;          /* Mainline generation */
+  bool     enable;              /* Indicates whether the current node is
+                                 * subscribed or activated
+                                 */
 };
 
 struct orb_object
@@ -78,7 +79,6 @@ typedef uint64_t orb_abstime;
 
 #define ORB_SENSOR_PATH        "/dev/sensor/"
 #define ORB_USENSOR_PATH       "/dev/usensor"
-#define ORB_PATH_MAX           (NAME_MAX + 16)
 
 #ifdef CONFIG_UORB_ALERT
 #  define uorbpanic(fmt, ...)  _alert(fmt "\n", ##__VA_ARGS__)
@@ -174,38 +174,6 @@ extern "C"
  ****************************************************************************/
 
 /****************************************************************************
- * Name: orb_open
- *
- * Description:
- *   Open device exist node with name, instance and flags.
- *
- * Input Parameters:
- *   name         The topic name.
- *   instance     Instance number to open.
- *   flags        The open flags.
- *
- * Returned Value:
- *   fd on success, otherwise returns negative value and set errno.
- ****************************************************************************/
-
-int orb_open(FAR const char *name, int instance, int flags);
-
-/****************************************************************************
- * Name: orb_close
- *
- * Description:
- *   Close fd.
- *
- * Input Parameters:
- *   fd       A fd returned by orb_open.
- *
- * Returned Value:
- *   0 on success.
- ****************************************************************************/
-
-int orb_close(int fd);
-
-/****************************************************************************
  * Name: orb_advertise_multi_queue
  *
  * Description:
@@ -235,18 +203,14 @@ int orb_advertise_multi_queue(FAR const struct orb_metadata *meta,
 static inline int orb_advertise(FAR const struct orb_metadata *meta,
                                 FAR const void *data)
 {
-  int instance = 0;
-
-  return orb_advertise_multi_queue(meta, data, &instance, 1);
+  return orb_advertise_multi_queue(meta, data, NULL, 1);
 }
 
 static inline int orb_advertise_queue(FAR const struct orb_metadata *meta,
                                       FAR const void *data,
                                       unsigned int queue_size)
 {
-  int instance = 0;
-
-  return orb_advertise_multi_queue(meta, data, &instance, queue_size);
+  return orb_advertise_multi_queue(meta, data, NULL, queue_size);
 }
 
 static inline int orb_advertise_multi(FAR const struct orb_metadata *meta,
@@ -257,49 +221,19 @@ static inline int orb_advertise_multi(FAR const struct orb_metadata *meta,
 }
 
 /****************************************************************************
- * Name: orb_advertise_multi_queue_persist
- *
- * Description:
- *   orb_advertise_multi_queue_persist is similar to orb_advertise_mult and
- *   it can ensures that every subscriber has access to current and
- *   future data.
- *
- * Input Parameters:
- *   meta         The uORB metadata (usually from the ORB_ID() macro)
- *   data         A pointer to the initial data to be published.
- *   instance     Pointer to an integer which yield the instance ID,
- *                (has default 0 if pointer is NULL).
- *
- * Returned Value:
- *   -1 on error, otherwise returns an file descriptor
- *   that can be used to publish to the topic.
- *   If the topic in question is not known (due to an
- *   ORB_DEFINE with no corresponding ORB_DECLARE)
- *   this function will return -1 and set errno to ENOENT.
- ****************************************************************************/
-
-int orb_advertise_multi_queue_persist(FAR const struct orb_metadata *meta,
-                                      FAR const void *data,
-                                      FAR int *instance,
-                                      unsigned int queue_size);
-
-/****************************************************************************
  * Name: orb_unadvertise
  *
  * Description:
  *   Unadvertise a topic.
  *
  * Input Parameters:
- *   fd       A fd returned by orb_advertise or orb_advertise_multi.
+ *   handle   A handle returned by orb_advertise or orb_advertise_multi.
  *
  * Returned Value:
  *   0 on success.
  ****************************************************************************/
 
-static inline int orb_unadvertise(int fd)
-{
-  return orb_close(fd);
-}
+int orb_unadvertise(int handle);
 
 /****************************************************************************
  * Name: orb_publish_multi
@@ -312,7 +246,7 @@ static inline int orb_unadvertise(int fd)
  *   updates using orb_check.
  *
  * Input Parameters:
- *   fd       The fd returned from orb_advertise.
+ *   handle   The handle returned from orb_advertise.
  *   data     A pointer to the data to be published.
  *   len      The length of the data to be published.
  *
@@ -320,38 +254,38 @@ static inline int orb_unadvertise(int fd)
  *   0 on success, -1 otherwise with errno set accordingly.
  ****************************************************************************/
 
-ssize_t orb_publish_multi(int fd, FAR const void *data, size_t len);
+ssize_t orb_publish_multi(int handle, FAR const void *data, size_t len);
 
 static inline int orb_publish(FAR const struct orb_metadata *meta,
-                              int fd, FAR const void *data)
+                              int handle, FAR const void *data)
 {
   int ret;
 
-  ret = orb_publish_multi(fd, data, meta->o_size);
+  ret = orb_publish_multi(handle, data, meta->o_size);
   return ret == meta->o_size ? 0 : -1;
 }
 
 static inline int orb_publish_auto(FAR const struct orb_metadata *meta,
-                                   FAR int *fd, FAR const void *data,
+                                   FAR int *handle, FAR const void *data,
                                    FAR int *instance)
 {
-  if (fd && *fd)
+  if (handle && *handle)
     {
-      return orb_publish(meta, *fd, data);
+      return orb_publish(meta, *handle, data);
     }
   else
     {
       int tmp;
 
-      tmp = orb_advertise_multi_queue_persist(meta, data, instance, 1);
+      tmp = orb_advertise_multi(meta, data, instance);
       if (tmp < 0)
         {
           return tmp;
         }
 
-      if (fd)
+      if (handle)
         {
-          *fd = tmp;
+          *handle = tmp;
           return tmp;
         }
       else
@@ -385,7 +319,7 @@ static inline int orb_publish_auto(FAR const struct orb_metadata *meta,
  *              the orb_subscribe() call.
  *
  * Returned Value:
- *   -1 on error, otherwise returns a fd
+ *   -1 on error, otherwise returns a handle
  *   that can be used to read and update the topic.
  *   If the topic in question is not known (due to an
  *   ORB_DEFINE_OPTIONAL with no corresponding ORB_DECLARE)
@@ -407,16 +341,13 @@ static inline int orb_subscribe(FAR const struct orb_metadata *meta)
  *   Unsubscribe from a topic.
  *
  * Input Parameters:
- *   fd       A fd returned from orb_subscribe.
+ *   handle   A handle returned from orb_subscribe.
  *
  * Returned Value:
  *   0 on success.
  ****************************************************************************/
 
-static inline int orb_unsubscribe(int fd)
-{
-  return orb_close(fd);
-}
+int orb_unsubscribe(int handle);
 
 /****************************************************************************
  * Name: orb_copy_multi
@@ -430,7 +361,7 @@ static inline int orb_unsubscribe(int fd)
  *   must be used to update the subscription.
  *
  * Input Parameters:
- *   fd       A fd returned from orb_subscribe.
+ *   handle   A handle returned from orb_subscribe.
  *   buffer   Pointer to the buffer receiving the data, or NULL if the
  *            caller wants to clear the updated flag without.
  *   len      The length to the buffer receiving the data.
@@ -441,14 +372,14 @@ static inline int orb_unsubscribe(int fd)
  *   -1 otherwise with errno set accordingly.
  ****************************************************************************/
 
-ssize_t orb_copy_multi(int fd, FAR void *buffer, size_t len);
+ssize_t orb_copy_multi(int handle, FAR void *buffer, size_t len);
 
 static inline int orb_copy(FAR const struct orb_metadata *meta,
-                           int fd, FAR void *buffer)
+                           int handle, FAR void *buffer)
 {
   int ret;
 
-  ret = orb_copy_multi(fd, buffer, meta->o_size);
+  ret = orb_copy_multi(handle, buffer, meta->o_size);
   return ret == meta->o_size ? 0 : -1;
 }
 
@@ -466,7 +397,7 @@ static inline int orb_copy(FAR const struct orb_metadata *meta,
  *     max_frequency to 0. min_batch_interval to 0, enable to false.
  *
  * Input Parameters:
- *   fd       The fd returned from orb_advertise / orb_subscribe.
+ *   handle   The handle returned from orb_advertise / orb_subscribe.
  *   state    Pointer to an state of struct orb_state type. This is an
  *            output parameter and will be set to the current state of topic.
  *
@@ -474,7 +405,7 @@ static inline int orb_copy(FAR const struct orb_metadata *meta,
  *   -1 on error.
  ****************************************************************************/
 
-int orb_get_state(int fd, FAR struct orb_state *state);
+int orb_get_state(int handle, FAR struct orb_state *state);
 
 /****************************************************************************
  * Name: orb_check
@@ -486,20 +417,20 @@ int orb_get_state(int fd, FAR struct orb_state *state);
  *   not using poll(), or to avoid the overhead of calling poll() when the
  *   topic is likely to have updated.
  *
- *   Updates are tracked on a per-fd basis; this call will continue to
- *   return true until orb_copy is called using the same fd.
+ *   Updates are tracked on a per-handle basis; this call will continue to
+ *   return true until orb_copy is called using the same handle.
  *
  * Input Parameters:
- *   fd       A fd returned from orb_subscribe.
+ *   handle   A handle returned from orb_subscribe.
  *   update   Set to true if the topic has been updated since the
- *            last time it was copied using this fd.
+ *            last time it was copied using this handle.
  *
  * Returned Value:
  *   0 if the check was successful,
  *   -1 otherwise with errno set accordingly.
  ****************************************************************************/
 
-int orb_check(int fd, FAR bool *updated);
+int orb_check(int handle, FAR bool *updated);
 
 /****************************************************************************
  * Name: orb_ioctl
@@ -508,7 +439,7 @@ int orb_check(int fd, FAR bool *updated);
  *   Ioctl control for the subscriber, the same as ioctl().
  *
  * Input Parameters:
- *   fd       A fd returned from orb_advertise / orb_subscribe.
+ *   handle   A handle returned from orb_advertise / orb_subscribe.
  *   cmd      Ioctl command.
  *   arg      Ioctl argument.
  *
@@ -516,7 +447,7 @@ int orb_check(int fd, FAR bool *updated);
  *   0 on success.
  ****************************************************************************/
 
-int orb_ioctl(int fd, int cmd, unsigned long arg);
+int orb_ioctl(int handle, int cmd, unsigned long arg);
 
 /****************************************************************************
  * Name: orb_set_batch_interval
@@ -531,14 +462,14 @@ int orb_ioctl(int fd, int cmd, unsigned long arg);
  *   hardware fifo, otherwise it's meaningless.
  *
  * Input Parameters:
- *   fd             A fd returned from orb_subscribe.
+ *   handle         A handle returned from orb_subscribe.
  *   batch_interval An batch interval in us.
  *
  * Returned Value:
  *   0 on success, -1 otherwise with ERRNO set accordingly.
  ****************************************************************************/
 
-int orb_set_batch_interval(int fd, unsigned batch_interval);
+int orb_set_batch_interval(int handle, unsigned batch_interval);
 
 /****************************************************************************
  * Name: orb_get_batch_interval
@@ -552,14 +483,14 @@ int orb_set_batch_interval(int fd, unsigned batch_interval);
  *   @see orb_set_batch_interval()
  *
  * Input Parameters:
- *   fd              A fd returned from orb_subscribe.
+ *   handle          A handle returned from orb_subscribe.
  *   batch_interval  The returned batch interval in us.
  *
  * Returned Value:
  *   0 on success, -1 otherwise with ERRNO set accordingly.
  ****************************************************************************/
 
-int orb_get_batch_interval(int fd, FAR unsigned *batch_interval);
+int orb_get_batch_interval(int handle, FAR unsigned *batch_interval);
 
 /****************************************************************************
  * Name:
@@ -568,14 +499,14 @@ int orb_get_batch_interval(int fd, FAR unsigned *batch_interval);
  *   Set the minimum interval between which updates seen for a subscription.
  *
  * Input Parameters:
- *   fd         A fd returned from orb_subscribe.
+ *   handle     A handle returned from orb_subscribe.
  *   interval   An interval period in us.
  *
  * Returned Value:
  *   0 on success, -1 otherwise with ERRNO set accordingly.
  ****************************************************************************/
 
-int orb_set_interval(int fd, unsigned interval);
+int orb_set_interval(int handle, unsigned interval);
 
 /****************************************************************************
  * Name:
@@ -584,14 +515,14 @@ int orb_set_interval(int fd, unsigned interval);
  *   Get the minimum interval between which updates seen for a subscription.
  *
  * Input Parameters:
- *   fd         A fd returned from orb_subscribe.
+ *   handle     A handle returned from orb_subscribe.
  *   interval   The returned interval period in us.
  *
  * Returned Value:
  *   0 on success, -1 otherwise with ERRNO set accordingly.
  ****************************************************************************/
 
-int orb_get_interval(int fd, FAR unsigned *interval);
+int orb_get_interval(int handle, FAR unsigned *interval);
 
 /****************************************************************************
  * Name:
@@ -601,16 +532,16 @@ int orb_get_interval(int fd, FAR unsigned *interval);
  *   Set the maximum frequency for a subscription.
  *
  * Input Parameters:
- *   fd         A fd returned from orb_subscribe.
+ *   handle     A handle returned from orb_subscribe.
  *   frequency  A frequency in hz.
  *
  * Returned Value:
  *   0 on success, -1 otherwise with ERRNO set accordingly.
  ****************************************************************************/
 
-static inline int orb_set_frequency(int fd, unsigned frequency)
+static inline int orb_set_frequency(int handle, unsigned frequency)
 {
-  return orb_set_interval(fd, frequency ? 1000000 / frequency : 0);
+  return orb_set_interval(handle, frequency ? 1000000 / frequency : 0);
 }
 
 /****************************************************************************
@@ -621,19 +552,19 @@ static inline int orb_set_frequency(int fd, unsigned frequency)
  *   Get the maximum frequency for a subscription.
  *
  * Input Parameters:
- *   fd         A fd returned from orb_subscribe.
+ *   handle     A handle returned from orb_subscribe.
  *   frequency  The returned frequency in hz.
  *
  * Returned Value:
  *   0 on success, -1 otherwise with ERRNO set accordingly.
  ****************************************************************************/
 
-static inline int orb_get_frequency(int fd, FAR unsigned *frequency)
+static inline int orb_get_frequency(int handle, FAR unsigned *frequency)
 {
   unsigned interval;
   int ret;
 
-  ret = orb_get_interval(fd, &interval);
+  ret = orb_get_interval(handle, &interval);
   if (ret < 0)
     {
       return ret;
@@ -706,21 +637,6 @@ int orb_exists(FAR const struct orb_metadata *meta, int instance);
  ****************************************************************************/
 
 int orb_group_count(FAR const struct orb_metadata *meta);
-
-/****************************************************************************
- * Name: orb_get_meta
- *
- * Description:
- *   Get the metadata of topic object by name string.
- *
- * Input Parameters:
- *   name       The name of topic, ex: sensor_accel, sensor_accel0.
- *
- * Returned Value:
- *   The metadata on success. NULL on failure.
- ****************************************************************************/
-
-FAR const struct orb_metadata *orb_get_meta(FAR const char *name);
 
 #ifdef __cplusplus
 }

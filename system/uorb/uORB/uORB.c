@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <poll.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -36,7 +37,7 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: orb_advsub_open
+ * Name: orb_open
  *
  * Description:
  *   Open device node as advertiser / subscriber, regist node and save meta
@@ -44,7 +45,7 @@
  *
  * Input Parameters:
  *   meta         The uORB metadata (usually from the ORB_ID() macro)
- *   flag         The open flag.
+ *   advertiser   Whether advertiser or subscriber.
  *   instance     Instance number to open.
  *   queue_size   Maximum number of buffered elements.
  *
@@ -52,26 +53,26 @@
  *   fd on success, otherwise returns negative value and set errno.
  ****************************************************************************/
 
-static int orb_advsub_open(FAR const struct orb_metadata *meta, int flags,
-                           int instance, unsigned int queue_size)
+static int orb_open(FAR const struct orb_metadata *meta, bool advertiser,
+                    int instance, unsigned int queue_size)
 {
-  char path[ORB_PATH_MAX];
+  char path[PATH_MAX];
+  bool first_open = false;
   int fd;
   int ret;
 
-  snprintf(path, ORB_PATH_MAX, ORB_SENSOR_PATH"%s%d", meta->o_name, instance);
+  snprintf(path, PATH_MAX, ORB_SENSOR_PATH"%s%d", meta->o_name, instance);
 
   /* Check existance before open */
 
-  flags |= O_CLOEXEC;
-  fd = open(path, flags);
-  if (fd < 0)
+  ret = access(path, F_OK);
+  if (ret < 0)
     {
       struct sensor_reginfo_s reginfo;
+
       reginfo.path    = path;
       reginfo.esize   = meta->o_size;
       reginfo.nbuffer = queue_size;
-      reginfo.persist = !!(flags & SENSOR_PERSIST);
 
       fd = open(ORB_USENSOR_PATH, O_WRONLY);
       if (fd < 0)
@@ -88,16 +89,18 @@ static int orb_advsub_open(FAR const struct orb_metadata *meta, int flags,
           return ret;
         }
 
-      fd = open(path, flags);
-      if (fd < 0)
-        {
-          return fd;
-        }
+      first_open = true;
+    }
 
-      if (ret != -EEXIST)
-        {
-          ioctl(fd, SNIOC_SET_USERPRIV, (unsigned long)(uintptr_t)meta);
-        }
+  fd = open(path, O_CLOEXEC | (advertiser ? O_WRONLY : O_RDONLY));
+  if (fd < 0)
+    {
+      return fd;
+    }
+
+  if (first_open)
+    {
+      ioctl(fd, SNIOC_SET_USERPRIV, (unsigned long)(uintptr_t)meta);
     }
 
   /* Only first advertiser can successfully set buffer number */
@@ -110,10 +113,13 @@ static int orb_advsub_open(FAR const struct orb_metadata *meta, int flags,
   return fd;
 }
 
-static int
-orb_advertise_multi_queue_flags(FAR const struct orb_metadata *meta,
-                                FAR const void *data, FAR int *instance,
-                                unsigned int queue_size, int flags)
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+int orb_advertise_multi_queue(FAR const struct orb_metadata *meta,
+                              FAR const void *data, FAR int *instance,
+                              unsigned int queue_size)
 {
   int inst;
   int fd;
@@ -122,7 +128,7 @@ orb_advertise_multi_queue_flags(FAR const struct orb_metadata *meta,
 
   inst = instance ? *instance : orb_group_count(meta);
 
-  fd = orb_advsub_open(meta, flags, inst, queue_size);
+  fd = orb_open(meta, true, inst, queue_size);
   if (fd < 0)
     {
       uorberr("%s advertise failed (%i)", meta->o_name, fd);
@@ -148,38 +154,9 @@ orb_advertise_multi_queue_flags(FAR const struct orb_metadata *meta,
   return fd;
 }
 
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-int orb_open(FAR const char *name, int instance, int flags)
-{
-  char path[ORB_PATH_MAX];
-
-  snprintf(path, ORB_PATH_MAX, ORB_SENSOR_PATH"%s%d", name, instance);
-  return open(path, O_CLOEXEC | flags);
-}
-
-int orb_close(int fd)
+int orb_unadvertise(int fd)
 {
   return close(fd);
-}
-
-int orb_advertise_multi_queue(FAR const struct orb_metadata *meta,
-                              FAR const void *data, FAR int *instance,
-                              unsigned int queue_size)
-{
-  return orb_advertise_multi_queue_flags(meta, data, instance,
-                                         queue_size, O_WRONLY);
-}
-
-int orb_advertise_multi_queue_persist(FAR const struct orb_metadata *meta,
-                                      FAR const void *data,
-                                      FAR int *instance,
-                                      unsigned int queue_size)
-{
-  return orb_advertise_multi_queue_flags(meta, data, instance, queue_size,
-                                         O_WRONLY | SENSOR_PERSIST);
 }
 
 ssize_t orb_publish_multi(int fd, const void *data, size_t len)
@@ -190,7 +167,12 @@ ssize_t orb_publish_multi(int fd, const void *data, size_t len)
 int orb_subscribe_multi(FAR const struct orb_metadata *meta,
                         unsigned instance)
 {
-  return orb_advsub_open(meta, O_RDONLY, instance, 0);
+  return orb_open(meta, false, instance, 0);
+}
+
+int orb_unsubscribe(int fd)
+{
+  return close(fd);
 }
 
 ssize_t orb_copy_multi(int fd, FAR void *buffer, size_t len)
@@ -218,20 +200,32 @@ int orb_get_state(int fd, FAR struct orb_state *state)
                               1000000 / tmp.min_interval : 0;
   state->min_batch_interval = tmp.min_latency;
   state->queue_size         = tmp.nbuffer;
-  state->nsubscribers       = tmp.nsubscribers;
-  state->generation         = tmp.generation;
+  state->enable             = tmp.nsubscribers > 0;
 
   return ret;
 }
 
 int orb_check(int fd, FAR bool *updated)
 {
-  return ioctl(fd, SNIOC_UPDATED, (unsigned long)(uintptr_t)updated);
+  struct pollfd fds[1];
+  int ret;
+
+  fds[0].fd     = fd;
+  fds[0].events = POLLIN;
+
+  ret = poll(fds, 1, 0);
+  if (ret < 0)
+    {
+      return -1;
+    }
+
+  *updated = (fds[0].revents & POLLIN) > 0;
+  return 0;
 }
 
-int orb_ioctl(int fd, int cmd, unsigned long arg)
+int orb_ioctl(int handle, int cmd, unsigned long arg)
 {
-  return ioctl(fd, cmd, arg);
+  return ioctl(handle, cmd, arg);
 }
 
 int orb_set_interval(int fd, unsigned interval)
@@ -286,12 +280,11 @@ orb_abstime orb_absolute_time(void)
 int orb_exists(FAR const struct orb_metadata *meta, int instance)
 {
   struct sensor_state_s state;
-  char path[ORB_PATH_MAX];
+  char path[PATH_MAX];
   int ret;
   int fd;
 
-  snprintf(path, ORB_PATH_MAX, ORB_SENSOR_PATH"%s%d", meta->o_name,
-           instance);
+  snprintf(path, PATH_MAX, ORB_SENSOR_PATH"%s%d", meta->o_name, instance);
   fd = open(path, 0);
   if (fd < 0)
     {

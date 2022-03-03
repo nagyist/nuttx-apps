@@ -20,22 +20,6 @@
 
 include $(APPDIR)/Make.defs
 
-CSRCS    += uORB/uORB.c
-CSRCS    += $(wildcard sensor/*.c)
-
-ifneq ($(CONFIG_UORB_LISTENER),)
-MAINSRC  += listener.c
-PROGNAME += uorb_listener
-endif
-
-ifneq ($(CONFIG_UORB_TESTS),)
-CSRCS    += test/utility.c
-MAINSRC  += test/unit_test.c
-PROGNAME += uorb_unit_test
-endif
-
-PRIORITY  = $(CONFIG_UORB_PRIORITY)
-STACKSIZE = $(CONFIG_UORB_STACKSIZE)
-MODULE    = $(CONFIG_UORB)
+CSRCS += uORB/uORB.c
 
 include $(APPDIR)/Application.mk
