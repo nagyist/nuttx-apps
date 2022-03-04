@@ -312,7 +312,7 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #ifdef NSH_HAVE_DIROPTS
 # ifndef CONFIG_NSH_DISABLE_MKDIR
-  { "mkdir",    cmd_mkdir,    2, 2, "<path>" },
+  { "mkdir",    cmd_mkdir,    2, 3, "[-p] <path>" },
 # endif
 #endif
 
@@ -466,7 +466,8 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
-  { "rptun",    cmd_rptun,    3, 3, "start|stop <dev-path>" },
+  { "rptun",    cmd_rptun,    2, 4,
+    "start|stop|reset|panic|dump [dev-path] [value]" },
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_SET
