@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_system.c
+ * apps/graphics/lvgl/lv_fs_interface.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,56 +18,49 @@
  *
  ****************************************************************************/
 
+#ifndef __APPS_GRAPHICS_LVGL_LV_FS_INTERFACE_H
+#define __APPS_GRAPHICS_LVGL_LV_FS_INTERFACE_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
-#include "nsh.h"
-#include "nsh_console.h"
+#include <lvgl/lvgl.h>
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#if LV_USE_FILESYSTEM
+
+/****************************************************************************
+ * Type Definitions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: nsh_system
- *
- * Description:
- *   This is the NSH-specific implementation of the standard system()
- *   command.
- *
- *   NOTE: This assumes that other NSH instances have previously ran and so
- *   common NSH logic is already initialized.
- *
- * Input Parameters:
- *   Standard task start-up arguments.  Expects argc == 2 with argv[1] being
- *   the command to execute
- *
- * Returned Values:
- *   EXIT_SUCCESS or EXIT_FAILURE
- *
+ * Public Data
  ****************************************************************************/
 
-int nsh_system(int argc, FAR char *argv[])
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
 {
-  FAR struct console_stdio_s *pstate = nsh_newconsole(false);
-  int ret;
+#else
+#define EXTERN extern
+#endif
 
-  DEBUGASSERT(pstate != NULL);
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-  /* Execute the session */
+void lv_fs_interface_init(void);
 
-  ret = nsh_session(pstate, false, argc, argv);
-
-  /* Exit upon return */
-
-  nsh_exit(&pstate->cn_vtbl, ret);
-  return ret;
+#undef EXTERN
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* LV_USE_FILESYSTEM */
+
+#endif /* __APPS_GRAPHICS_LVGL_LV_FS_INTERFACE_H */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_system.c
+ * apps/graphics/lvgl/lv_tick_interface.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -23,51 +23,51 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
+#include "lv_tick_interface.h"
 
-#include "nsh.h"
-#include "nsh_console.h"
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Type Declarations
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-/****************************************************************************
- * Name: nsh_system
- *
- * Description:
- *   This is the NSH-specific implementation of the standard system()
- *   command.
- *
- *   NOTE: This assumes that other NSH instances have previously ran and so
- *   common NSH logic is already initialized.
- *
- * Input Parameters:
- *   Standard task start-up arguments.  Expects argc == 2 with argv[1] being
- *   the command to execute
- *
- * Returned Values:
- *   EXIT_SUCCESS or EXIT_FAILURE
- *
- ****************************************************************************/
-
-int nsh_system(int argc, FAR char *argv[])
+uint32_t lv_tick_interface(void)
 {
-  FAR struct console_stdio_s *pstate = nsh_newconsole(false);
-  int ret;
+  static bool first_time = true;
+  static struct timeval t0;
 
-  DEBUGASSERT(pstate != NULL);
+  if (first_time)
+    {
+      gettimeofday(&t0, NULL);
+      first_time = false;
+      return 0;
+    }
+  else
+    {
+      struct timeval t;
+      struct timeval delta;
 
-  /* Execute the session */
-
-  ret = nsh_session(pstate, false, argc, argv);
-
-  /* Exit upon return */
-
-  nsh_exit(&pstate->cn_vtbl, ret);
-  return ret;
+      gettimeofday(&t, NULL);
+      timersub(&t, &t0, &delta);
+      return delta.tv_sec * 1000 + delta.tv_usec / 1000;
+    }
 }

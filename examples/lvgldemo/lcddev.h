@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_system.c
+ * apps/examples/lvgldemo/lcddev.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,56 +18,29 @@
  *
  ****************************************************************************/
 
+#ifndef __APPS_EXAMPLES_LVGLDEMO_LCDDEV_H
+#define __APPS_EXAMPLES_LVGLDEMO_LCDDEV_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
+#include <stdint.h>
+#include <lvgl/lvgl.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
-#include "nsh.h"
-#include "nsh_console.h"
-
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Name: nsh_system
- *
- * Description:
- *   This is the NSH-specific implementation of the standard system()
- *   command.
- *
- *   NOTE: This assumes that other NSH instances have previously ran and so
- *   common NSH logic is already initialized.
- *
- * Input Parameters:
- *   Standard task start-up arguments.  Expects argc == 2 with argv[1] being
- *   the command to execute
- *
- * Returned Values:
- *   EXIT_SUCCESS or EXIT_FAILURE
- *
- ****************************************************************************/
-
-int nsh_system(int argc, FAR char *argv[])
+#ifdef __cplusplus
+extern "C"
 {
-  FAR struct console_stdio_s *pstate = nsh_newconsole(false);
-  int ret;
+#endif
 
-  DEBUGASSERT(pstate != NULL);
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-  /* Execute the session */
+int lcddev_init(lv_disp_drv_t *lv_drvr);
 
-  ret = nsh_session(pstate, false, argc, argv);
-
-  /* Exit upon return */
-
-  nsh_exit(&pstate->cn_vtbl, ret);
-  return ret;
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* __APPS_EXAMPLES_LVGLDEMO_LCDDEV_H */

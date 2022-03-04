@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/usrsock_rpmsg/usrsock_rpmsg.h
+ * apps/examples/lvgldemo/lv_ex_conf.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,34 +18,55 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_NETUTILS_USRSOCK_RPMSG_H
-#define __APPS_NETUTILS_USRSOCK_RPMSG_H
+#ifndef __APPS_EXAMPLES_LVGLDEMO_LV_EX_CONF_H
+#define __APPS_EXAMPLES_LVGLDEMO_LV_EX_CONF_H
 
 /****************************************************************************
- * Included Files
+ * Pre-processor Definitions
  ****************************************************************************/
 
-#include <nuttx/net/usrsock.h>
+/* Enable printf-ing data in demoes and examples */
 
-/****************************************************************************
- * Pre-processor definitions
- ****************************************************************************/
+#define LV_EX_PRINTF       1
 
-#define USRSOCK_RPMSG_EPT_NAME      "rpmsg-usrsock"
+/* Add PC keyboard support to some examples
+ * (`lv_drivers` repository is required)
+ */
 
-#define USRSOCK_RPMSG_DNS_EVENT      127
+#define LV_EX_KEYBOARD     0
 
-/****************************************************************************
- * Public Types
- ****************************************************************************/
+/* Add 'encoder' (mouse wheel) support to some examples
+ * (`lv_drivers` repository is required)
+ */
 
-/* DNS event message */
+#define LV_EX_MOUSEWHEEL   0
 
-begin_packed_struct struct usrsock_rpmsg_dns_event_s
-{
-  struct usrsock_message_common_s head;
+/* Show some widget */
 
-  uint16_t addrlen;
-} end_packed_struct;
+#define LV_USE_DEMO_WIDGETS        1
+#if LV_USE_DEMO_WIDGETS
+#ifdef CONFIG_EXAMPLES_LVGLDEMO_WIDGETS_SLIDESHOW
+#define LV_DEMO_WIDGETS_SLIDESHOW        CONFIG_EXAMPLES_LVGLDEMO_WIDGETS_SLIDESHOW
+#else
+#define LV_DEMO_WIDGETS_SLIDESHOW        0
+#endif
+#endif
 
-#endif /* __APPS_NETUTILS_USRSOCK_RPMSG_H */
+/* Printer demo, optimized for 800x480 */
+
+#define LV_USE_DEMO_PRINTER     1
+
+/* Demonstrate the usage of encoder and keyboard */
+
+#define LV_USE_DEMO_KEYPAD_AND_ENCODER     1
+
+/* Benchmark your system */
+
+#define LV_USE_DEMO_BENCHMARK   1
+
+/* Stress test for LVGL */
+
+#define LV_USE_DEMO_STRESS      1
+
+#endif /* __APPS_EXAMPLES_LVGLDEMO_LV_EX_CONF_H */
+

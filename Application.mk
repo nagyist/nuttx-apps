@@ -112,7 +112,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: .built
+all:: $(OBJS)
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -161,9 +161,8 @@ $(RUSTOBJS): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILERUST, $<, $@), $(call COMPILERUST, $<, $@))
 
-.built: $(OBJS)
-	$(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^)
-	$(Q) touch $@
+archive:
+	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $(OBJS))
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -244,7 +243,6 @@ endif
 depend:: .depend
 
 clean::
-	$(call DELFILE, .built)
 	$(call CLEAN)
 
 distclean:: clean

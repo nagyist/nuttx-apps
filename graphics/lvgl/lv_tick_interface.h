@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/nshlib/nsh_system.c
+ * apps/graphics/lvgl/lv_tick_interface.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,56 +18,45 @@
  *
  ****************************************************************************/
 
+#ifndef __APPS_GRAPHICS_LV_TICK_INTERFACE_H
+#define __APPS_GRAPHICS_LV_TICK_INTERFACE_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-
-#include "nsh.h"
-#include "nsh_console.h"
+#include <sys/time.h>
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: nsh_system
- *
- * Description:
- *   This is the NSH-specific implementation of the standard system()
- *   command.
- *
- *   NOTE: This assumes that other NSH instances have previously ran and so
- *   common NSH logic is already initialized.
- *
- * Input Parameters:
- *   Standard task start-up arguments.  Expects argc == 2 with argv[1] being
- *   the command to execute
- *
- * Returned Values:
- *   EXIT_SUCCESS or EXIT_FAILURE
- *
+ * Type Definitions
  ****************************************************************************/
 
-int nsh_system(int argc, FAR char *argv[])
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
 {
-  FAR struct console_stdio_s *pstate = nsh_newconsole(false);
-  int ret;
+#else
+#define EXTERN extern
+#endif
 
-  DEBUGASSERT(pstate != NULL);
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-  /* Execute the session */
+uint32_t lv_tick_interface(void);
 
-  ret = nsh_session(pstate, false, argc, argv);
-
-  /* Exit upon return */
-
-  nsh_exit(&pstate->cn_vtbl, ret);
-  return ret;
+#undef EXTERN
+#ifdef __cplusplus
 }
+#endif
+
+#endif // __APPS_GRAPHICS_LV_TICK_INTERFACE_H
