@@ -25,12 +25,12 @@
 #include <nuttx/config.h>
 
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <pthread.h>
 #include <string.h>
 
 #include <sys/eventfd.h>
-#include <sys/ioctl.h>
 
 #include <nuttx/net/dns.h>
 #include <nuttx/net/net.h>
@@ -212,11 +212,14 @@ static int usrsock_rpmsg_socket_handler(struct rpmsg_endpoint *ept,
       pthread_mutex_lock(&priv->mutex);
       if (priv->socks[i].s_conn == NULL)
         {
-          ret = psock_socket(req->domain, req->type | SOCK_NONBLOCK,
-                             req->protocol, &priv->socks[i]);
+          ret = psock_socket(req->domain, req->type, req->protocol,
+                             &priv->socks[i]);
           pthread_mutex_unlock(&priv->mutex);
           if (ret >= 0)
             {
+              psock_fcntl(&priv->socks[i], F_SETFL,
+                psock_fcntl(&priv->socks[i], F_GETFL) | O_NONBLOCK);
+
               priv->epts[i] = ept;
               ret = i; /* Return index as the usockid */
             }
@@ -661,9 +664,9 @@ static int usrsock_rpmsg_accept_handler(struct rpmsg_endpoint *ept,
               pthread_mutex_unlock(&priv->mutex);
               if (ret >= 0)
                 {
-                  int nonblock = 1;
+                  psock_fcntl(&priv->socks[i], F_SETFL,
+                    psock_fcntl(&priv->socks[i], F_GETFL) | O_NONBLOCK);
 
-                  psock_ioctl(&priv->socks[i], FIONBIO, &nonblock);
                   priv->epts[i] = ept;
 
                   /* Append index as usockid to the payload */
@@ -694,6 +697,7 @@ static int usrsock_rpmsg_accept_handler(struct rpmsg_endpoint *ept,
       pthread_mutex_lock(&priv->mutex);
       priv->pfds[i].ptr = &priv->socks[i];
       priv->pfds[i].events = POLLIN;
+      priv->pfds[req->usockid].events |= POLLIN;
       usrsock_rpmsg_notify_poll(priv);
       pthread_mutex_unlock(&priv->mutex);
       usrsock_rpmsg_send_event(ept, i, USRSOCK_EVENT_SENDTO_READY);
@@ -716,9 +720,26 @@ static int usrsock_rpmsg_ioctl_handler(struct rpmsg_endpoint *ept,
   if (req->usockid >= 0 &&
       req->usockid < CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS)
     {
+#ifdef CONFIG_NETDEV_WIRELESS_IOCTL
+      FAR struct iwreq *wlreq = (FAR struct iwreq *)(req + 1);
+      if (WL_IS80211POINTERCMD(req->cmd))
+        {
+          metal_cache_invalidate(wlreq->u.data.pointer,
+                                 wlreq->u.data.length);
+        }
+#endif
+
       memcpy(ack + 1, req + 1, req->arglen);
       ret = psock_ioctl(&priv->socks[req->usockid],
               req->cmd, (unsigned long)(ack + 1));
+
+#ifdef CONFIG_NETDEV_WIRELESS_IOCTL
+      if (WL_IS80211POINTERCMD(req->cmd))
+        {
+          metal_cache_flush(wlreq->u.data.pointer,
+                            wlreq->u.data.length);
+        }
+#endif
     }
 
   return usrsock_rpmsg_send_data_ack(ept,

@@ -55,7 +55,6 @@ genromfs -f ${romfsimg} -d ${fsdir} -V "NuttXBootVol" || { echo "genromfs failed
 
 # And, finally, create the header file
 
-echo '#include <nuttx/compiler.h>' >${headerfile}
-xxd -i ${romfsimg} | sed 's/^unsigned char/const unsigned char aligned_data(4)/g' >>${headerfile} || \
+xxd -i ${romfsimg} | sed 's/unsigned/const unsigned/' >${headerfile} || \
   { echo "ERROR: xxd of $< failed" ; rm -f ${romfsimg}; exit 1 ; }
 rm -f ${romfsimg}

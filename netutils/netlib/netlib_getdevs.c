@@ -230,8 +230,8 @@ ssize_t netlib_get_devices(FAR struct netlib_device_s *devlist,
 
                             devlist[ncopied].ifindex = iface->ifi_index;
 #endif
-                            strlcpy(devlist[ncopied].ifname,
-                                    (FAR char *)RTA_DATA(attr), IFNAMSIZ);
+                            strncpy(devlist[ncopied].ifname,
+                                   (FAR char *)RTA_DATA(attr), IFNAMSIZ);
                             ncopied++;
                           }
 

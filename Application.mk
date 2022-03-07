@@ -1,20 +1,37 @@
 ############################################################################
 # apps/Application.mk
 #
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.  The
-# ASF licenses this file to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance with the
-# License.  You may obtain a copy of the License at
+#   Copyright (C) 2015 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2015 Omni Hoverboards Inc. All rights reserved.
+#   Authors: Gregory Nutt <gnutt@nuttx.org>
+#            Paul Alexander Patience <paul-a.patience@polymtl.ca>
 #
-#   http:#www.apache.org/licenses/LICENSE-2.0
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name NuttX nor the names of its contributors may be
+#    used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
 
@@ -45,18 +62,10 @@ endif
 # Add the static application library to the linked libraries. Don't do this
 # with CONFIG_BUILD_KERNEL as there is no static app library
 ifneq ($(CONFIG_BUILD_KERNEL),y)
-  LDLIBS += $(call CONVERT_PATH,$(BIN))
-endif
-
-# When building a module, link with the compiler runtime.
-# This should be linked after libapps. Consider that mbedtls in libapps
-# uses __udivdi3.
-ifeq ($(BUILD_MODULE),y)
-  # Revisit: This only works for gcc and clang.
-  # Do other compilers have similar?
-  COMPILER_RT_LIB = $(shell $(CC) $(ARCHCPUFLAGS) --print-libgcc-file-name)
-  ifneq ($(COMPILER_RT_LIB),)
-    LDLIBS += $(COMPILER_RT_LIB)
+  ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+    LDLIBS += "${shell cygpath -w $(BIN)}"
+  else
+    LDLIBS += $(BIN)
   endif
 endif
 
@@ -72,20 +81,17 @@ RAOBJS = $(RASRCS:=$(SUFFIX)$(OBJEXT))
 CAOBJS = $(CASRCS:=$(SUFFIX)$(OBJEXT))
 COBJS = $(CSRCS:=$(SUFFIX)$(OBJEXT))
 CXXOBJS = $(CXXSRCS:=$(SUFFIX)$(OBJEXT))
-RUSTOBJS = $(RUSTSRCS:=$(SUFFIX)$(OBJEXT))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
-MAINRUSTSRCS = $(filter %$(RUSTEXT),$(MAINSRC))
 MAINCXXOBJ = $(MAINCXXSRCS:=$(SUFFIX)$(OBJEXT))
 MAINCOBJ = $(MAINCSRCS:=$(SUFFIX)$(OBJEXT))
-MAINRUSTOBJ = $(MAINRUSTSRCS:=$(SUFFIX)$(OBJEXT))
 
 SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS) $(MAINSRC)
-OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS) $(RUSTOBJS)
+OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS)
 
 ifneq ($(BUILD_MODULE),y)
-  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
+  OBJS += $(MAINCOBJ) $(MAINCXXOBJ)
 endif
 
 DEPPATH += --dep-path .
@@ -95,7 +101,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: $(OBJS)
+all:: .built
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -112,11 +118,6 @@ endef
 define ELFCOMPILEXX
 	@echo "CXX: $1"
 	$(Q) $(CXX) -c $(CXXELFFLAGS) $($(strip $1)_CXXELFFLAGS) $1 -o $2
-endef
-
-define ELFCOMPILERUST
-	@echo "RUSTC: $1"
-	$(Q) $(RUSTC) --emit obj $(RUSTELFFLAGS) $($(strip $1)_RUSTELFFLAGS) $1 -o $2
 endef
 
 define ELFLD
@@ -140,12 +141,13 @@ $(CXXOBJS): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CXXELFFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
-$(RUSTOBJS): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
-	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
-		$(call ELFCOMPILERUST, $<, $@), $(call COMPILERUST, $<, $@))
-
-archive:
-	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $(OBJS))
+.built: $(OBJS)
+ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+	$(call ARLOCK, "${shell cygpath -w $(BIN)}", $^)
+else
+	$(call ARLOCK, $(BIN), $^)
+endif
+	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -157,13 +159,17 @@ $(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
 
-PROGLIST := $(wordlist 1,$(words $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)),$(PROGNAME))
+PROGLIST := $(wordlist 1,$(words $(MAINCOBJ) $(MAINCXXOBJ)),$(PROGNAME))
 PROGLIST := $(addprefix $(BINDIR)$(DELIM),$(PROGLIST))
-PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
+PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ)
 
-$(PROGLIST): $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
+$(PROGLIST): $(MAINCOBJ) $(MAINCXXOBJ)
 	$(Q) mkdir -p $(BINDIR)
-	$(call ELFLD,$(firstword $(PROGOBJ)),$(call CONVERT_PATH,$(firstword $(PROGLIST))))
+ifeq ($(CONFIG_CYGWIN_WINTOOL),y)
+	$(call ELFLD,$(firstword $(PROGOBJ)),"${shell cygpath -w $(firstword $(PROGLIST))}")
+else
+	$(call ELFLD,$(firstword $(PROGOBJ)),$(firstword $(PROGLIST)))
+endif
 	$(Q) chmod +x $(firstword $(PROGLIST))
 ifneq ($(CONFIG_DEBUG_SYMBOLS),y)
 	$(Q) $(STRIP) $(firstword $(PROGLIST))
@@ -190,10 +196,6 @@ $(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
 	$(eval MAINNAME=$(filter-out $(firstword $(MAINNAME)),$(MAINNAME)))
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
-
-$(MAINRUSTOBJ): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
-	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
-		$(call ELFCOMPILERUST, $<, $@), $(call COMPILERUST, $<, $@))
 
 install::
 
@@ -226,6 +228,7 @@ endif
 depend:: .depend
 
 clean::
+	$(call DELFILE, .built)
 	$(call CLEAN)
 
 distclean:: clean
