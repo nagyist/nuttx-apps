@@ -15,10 +15,8 @@
 *.swp
 *.sym
 *~
-.built
 .depend
 .kconfig
-/*.lock
 /bin
 /boot_romfsimg.h
 /external
@@ -27,5 +25,6 @@
 /symtab_apps.c
 cscope.out
 Make.dep
+.context
 # nuttx/$(TOPDIR)/Makefile.[unix|win]::$(DIRLINKS_EXTERNAL_DIRS)
 .dirlinks

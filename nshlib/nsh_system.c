@@ -33,27 +33,6 @@
 #include "nsh_console.h"
 
 /****************************************************************************
- * Static Functions
- ****************************************************************************/
-
-static int nsh_system_(int argc, FAR char *argv[], int isctty)
-{
-  FAR struct console_stdio_s *pstate = nsh_newconsole(isctty);
-  int ret;
-
-  DEBUGASSERT(pstate != NULL);
-
-  /* Execute the session */
-
-  ret = nsh_session(pstate, false, argc, argv);
-
-  /* Exit upon return */
-
-  nsh_exit(&pstate->cn_vtbl, ret);
-  return ret;
-}
-
-/****************************************************************************
  * Public Functions
  ****************************************************************************/
 
@@ -78,29 +57,17 @@ static int nsh_system_(int argc, FAR char *argv[], int isctty)
 
 int nsh_system(int argc, FAR char *argv[])
 {
-  return nsh_system_(argc, argv, false);
-}
+  FAR struct console_stdio_s *pstate = nsh_newconsole(false);
+  int ret;
 
-/****************************************************************************
- * Name: nsh_system_ctty
- *
- * Description:
- *   This is the NSH-specific implementation of the standard system()
- *   command.
- *
- *   NOTE: 
- *   This difference with nsh_system: newconsole set isctty true
- *
- * Input Parameters:
- *   Standard task start-up arguments.  Expects argc == 2 with argv[1] being
- *   the command to execute
- *
- * Returned Values:
- *   EXIT_SUCCESS or EXIT_FAILURE
- *
- ****************************************************************************/
+  DEBUGASSERT(pstate != NULL);
 
-int nsh_system_ctty(int argc, FAR char *argv[])
-{
-  return nsh_system_(argc, argv, true);
+  /* Execute the session */
+
+  ret = nsh_session(pstate, false, argc, argv);
+
+  /* Exit upon return */
+
+  nsh_exit(&pstate->cn_vtbl, ret);
+  return ret;
 }

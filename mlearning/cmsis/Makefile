@@ -24,11 +24,12 @@ cmsis.zip:
 	$(Q) curl -L https://github.com/ARM-software/CMSIS_5/archive/refs/tags/$(CONFIG_CMSIS_VER).zip -o cmsis.zip
 	$(Q) unzip -o cmsis.zip
 	$(Q) mv CMSIS_5-$(CONFIG_CMSIS_VER) CMSIS_5
+	$(Q) patch -p0 < cmsis-nn-support_nnabla.patch
 
-#context:: cmsis.zip
+context:: cmsis.zip
 
 distclean::
-#	$(call DELDIR, CMSIS_5)
-#	$(call DELFILE, cmsis.zip)
+	$(call DELDIR, CMSIS_5)
+	$(call DELFILE, cmsis.zip)
 
 include $(APPDIR)/Application.mk
