@@ -263,7 +263,6 @@ static int wapi_event_stream_extract(FAR struct wapi_event_stream_s *stream,
   switch (iwe_stream->cmd)
     {
       case SIOCGIWESSID:
-      case SIOCGIWENCODE:
       case IWEVGENIE:
         iwe->cmd = iwe_stream->cmd;
         iwe->len = offsetof(struct iw_event, u) + sizeof(struct iw_point);
@@ -330,7 +329,6 @@ static int wapi_scan_event(FAR struct iw_event *event,
         /* Reset it. */
 
         bzero(temp, sizeof(struct wapi_scan_info_s));
-        temp->encode = 0xffff;
 
         /* Save cell identifier. */
 
@@ -438,13 +436,6 @@ static int wapi_scan_event(FAR struct iw_event *event,
               }
           }
 
-        break;
-      }
-
-    case SIOCGIWENCODE:
-      {
-        info->has_encode = 1;
-        info->encode = event->u.data.flags;
         break;
       }
     }

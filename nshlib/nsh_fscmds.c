@@ -85,6 +85,30 @@
  ****************************************************************************/
 
 /****************************************************************************
+ * Name: nsh_getdirpath
+ ****************************************************************************/
+
+#if !defined(CONFIG_NSH_DISABLE_LS) || !defined(CONFIG_NSH_DISABLE_CP)
+static char *nsh_getdirpath(FAR struct nsh_vtbl_s *vtbl,
+                            FAR const char *path, FAR const char *file)
+{
+  /* Handle the case where all that is left is '/' */
+
+  if (strcmp(path, "/") == 0)
+    {
+      snprintf(vtbl->iobuffer, IOBUFFERSIZE, "/%s", file);
+    }
+  else
+    {
+      snprintf(vtbl->iobuffer, IOBUFFERSIZE, "%s/%s", path, file);
+    }
+
+  vtbl->iobuffer[PATH_MAX] = '\0';
+  return strdup(vtbl->iobuffer);
+}
+#endif
+
+/****************************************************************************
  * Name: ls_specialdir
  ****************************************************************************/
 
@@ -337,9 +361,8 @@ static int ls_recursive(FAR struct nsh_vtbl_s *vtbl, const char *dirpath,
 
           ret = nsh_foreach_direntry(vtbl, "ls", newpath, ls_recursive,
                                      pvarg);
+          free(newpath);
         }
-
-      free(newpath);
     }
 
   return ret;
@@ -1192,56 +1215,16 @@ int cmd_ls(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #ifndef CONFIG_NSH_DISABLE_MKDIR
 int cmd_mkdir(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  FAR char *fullpath = NULL;
-  bool parent = false;
+  FAR char *fullpath = nsh_getfullpath(vtbl, argv[1]);
   int ret = ERROR;
-  int option;
-
-  while ((option = getopt(argc, argv, "p")) != ERROR)
-    {
-      switch (option)
-        {
-          case 'p':
-            parent = true;
-            break;
-        }
-    }
-
-  if (optind < argc)
-    {
-      fullpath = nsh_getfullpath(vtbl, argv[optind]);
-    }
 
   if (fullpath != NULL)
     {
-      char *slash = parent ? fullpath : "";
-
-      for (; ; )
+      ret = mkdir(fullpath, 0777);
+      if (ret < 0)
         {
-          slash = strstr(slash, "/");
-          if (slash)
-            {
-              *slash = '\0';
-            }
-
-          ret = mkdir(fullpath, 0777);
-
-          if (ret < 0 && (errno != EEXIST || !parent))
-            {
-              nsh_error(vtbl, g_fmtcmdfailed,
-                        fullpath, "mkdir", NSH_ERRNO);
-              break;
-            }
-
-          if (slash)
-            {
-              *slash++ = '/';
-            }
-          else
-            {
-              break;
-            }
-         }
+          nsh_error(vtbl, g_fmtcmdfailed, argv[0], "mkdir", NSH_ERRNO);
+        }
 
       nsh_freefullpath(fullpath);
     }
