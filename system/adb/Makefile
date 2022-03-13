@@ -20,19 +20,21 @@
 
 include $(APPDIR)/Make.defs
 
-ADBD_URL ?= "https://github.com/spiriou/microADB/archive"
-ADBD_VERSION ?= a1a12e2452eed9d8fdd008c05b4d93c992bfc0a7
-
 ADB_DIR := $(APPDIR)/system/adb
+CONFIG_ADBD_URL ?= "https://github.com/spiriou/microADB.git"
+CONFIG_ADBD_VERSION ?= b7025c67b866925d1e64c016a844a6a3392557a4
+
 ADB_UNPACKNAME := microADB
 ADB_UNPACKDIR := $(ADB_DIR)/$(ADB_UNPACKNAME)
 
 $(ADB_UNPACKDIR):
 	@echo "Downloading: $(ADB_UNPACKNAME)"
-	$(Q) curl -O -L $(ADBD_URL)/$(ADBD_VERSION).zip
-	$(Q) unzip -o $(ADBD_VERSION).zip
-	$(call DELFILE, $(ADBD_VERSION).zip)
-	$(call MOVEFILE, $(ADB_UNPACKNAME)-$(ADBD_VERSION), $(ADB_UNPACKDIR))
+	$(call DELDIR, "$@")
+	$(Q) mkdir "$@"
+	$(Q) cd "$@" && git init && \
+	git remote add origin "$(CONFIG_ADBD_URL)" && \
+	git fetch origin $(CONFIG_ADBD_VERSION) --depth=1 && \
+	git reset --hard FETCH_HEAD
 
 # adb server app
 
@@ -74,15 +76,16 @@ CSRCS += logcat_service.c
 endif
 
 ifeq ($(CONFIG_ADBD_SHELL_SERVICE),y)
-CSRCS += $(ADB_UNPACKNAME)/hal/shell_service_uv.c
+CSRCS += shell_service.c
+CSRCS += shell_pipe.c
 endif
 
-context:: $(ADB_UNPACKDIR)
+context::# $(ADB_UNPACKDIR)
 
 clean::
 	$(call DELFILE, $(OBJS))
 
 distclean::
-	$(call DELDIR, $(ADB_UNPACKDIR))
+#	$(call DELDIR, $(ADB_UNPACKDIR))
 
 include $(APPDIR)/Application.mk
