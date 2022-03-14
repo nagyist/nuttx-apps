@@ -1,20 +1,37 @@
 ############################################################################
 # apps/Application.mk
 #
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.  The
-# ASF licenses this file to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance with the
-# License.  You may obtain a copy of the License at
+#   Copyright (C) 2015 Gregory Nutt. All rights reserved.
+#   Copyright (C) 2015 Omni Hoverboards Inc. All rights reserved.
+#   Authors: Gregory Nutt <gnutt@nuttx.org>
+#            Paul Alexander Patience <paul-a.patience@polymtl.ca>
 #
-#   http:#www.apache.org/licenses/LICENSE-2.0
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name NuttX nor the names of its contributors may be
+#    used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
 
@@ -73,22 +90,19 @@ CAOBJS = $(CASRCS:=$(SUFFIX)$(OBJEXT))
 COBJS = $(CSRCS:=$(SUFFIX)$(OBJEXT))
 CXXOBJS = $(CXXSRCS:=$(SUFFIX)$(OBJEXT))
 RUSTOBJS = $(RUSTSRCS:=$(SUFFIX)$(OBJEXT))
-ZIGOBJS = $(ZIGSRCS:=$(SUFFIX)$(OBJEXT))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
 MAINRUSTSRCS = $(filter %$(RUSTEXT),$(MAINSRC))
-MAINZIGSRCS = $(filter %$(ZIGEXT), $(MAINSRC))
 MAINCXXOBJ = $(MAINCXXSRCS:=$(SUFFIX)$(OBJEXT))
 MAINCOBJ = $(MAINCSRCS:=$(SUFFIX)$(OBJEXT))
 MAINRUSTOBJ = $(MAINRUSTSRCS:=$(SUFFIX)$(OBJEXT))
-MAINZIGOBJS = $(MAINZIGSRCS:=$(SUFFIX$(OBJEXT))
 
 SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS) $(MAINSRC)
-OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS) $(RUSTOBJS) $(ZIGOBJS)
+OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS) $(RUSTOBJS)
 
 ifneq ($(BUILD_MODULE),y)
-  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJS)
+  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
 endif
 
 DEPPATH += --dep-path .
@@ -98,7 +112,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: $(OBJS)
+all:: .built
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -120,11 +134,6 @@ endef
 define ELFCOMPILERUST
 	@echo "RUSTC: $1"
 	$(Q) $(RUSTC) --emit obj $(RUSTELFFLAGS) $($(strip $1)_RUSTELFFLAGS) $1 -o $2
-endef
-
-define ELFCOMPILEZIG
-       @echo "ZIG: $1"
-       $(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) $1 --name $2
 endef
 
 define ELFLD
@@ -152,12 +161,9 @@ $(RUSTOBJS): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILERUST, $<, $@), $(call COMPILERUST, $<, $@))
 
-$(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
-	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
-		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
-
-archive:
-	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $(OBJS))
+.built: $(OBJS)
+	$(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^)
+	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -207,10 +213,6 @@ $(MAINRUSTOBJ): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILERUST, $<, $@), $(call COMPILERUST, $<, $@))
 
-$(MAINZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
-	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
-		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
-
 install::
 
 endif # BUILD_MODULE
@@ -242,6 +244,7 @@ endif
 depend:: .depend
 
 clean::
+	$(call DELFILE, .built)
 	$(call CLEAN)
 
 distclean:: clean
