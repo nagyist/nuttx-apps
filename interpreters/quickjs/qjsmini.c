@@ -482,7 +482,7 @@ int main(int argc, char *argv[])
       malloc_usable_size,
   };
 
-  int argi;
+  int optind;
   char *expr = NULL;
   int dump_memory = 0;
   int trace_memory = 0;
@@ -490,15 +490,15 @@ int main(int argc, char *argv[])
   size_t memory_limit = 0;
   size_t stack_size = 0;
 
-  argi = 1;
-  while (argi < argc && *argv[argi] == '-')
+  optind = 1;
+  while (optind < argc && *argv[optind] == '-')
     {
-      char *arg = argv[argi] + 1;
+      char *arg = argv[optind] + 1;
       const char *longopt = "";
 
       if (!*arg)
         break;
-      argi++;
+      optind++;
       if (*arg == '-')
         {
           longopt = arg + 1;
@@ -529,9 +529,9 @@ int main(int argc, char *argv[])
                   break;
                 }
 
-              if (argi < argc)
+              if (optind < argc)
                 {
-                  expr = argv[argi++];
+                  expr = argv[optind++];
                   break;
                 }
 
@@ -559,25 +559,25 @@ int main(int argc, char *argv[])
 
           if (!strcmp(longopt, "memory-limit"))
             {
-              if (argi >= argc)
+              if (optind >= argc)
                 {
                   fprintf(stderr, "expecting memory limit");
                   exit(1);
                 }
 
-              memory_limit = (size_t)strtod(argv[argi++], NULL);
+              memory_limit = (size_t)strtod(argv[optind++], NULL);
               continue;
             }
 
           if (!strcmp(longopt, "stack-size"))
             {
-              if (argi >= argc)
+              if (optind >= argc)
                 {
                   fprintf(stderr, "expecting stack size");
                   exit(1);
                 }
 
-              stack_size = (size_t)strtod(argv[argi++], NULL);
+              stack_size = (size_t)strtod(argv[optind++], NULL);
               continue;
             }
 
@@ -642,10 +642,10 @@ int main(int argc, char *argv[])
               goto fail;
             }
         }
-      else if (argi < argc)
+      else if (optind < argc)
         {
           const char *filename;
-          filename = argv[argi];
+          filename = argv[optind];
           if (js_eval_file(ctx, filename, 1))
             {
               goto fail;
