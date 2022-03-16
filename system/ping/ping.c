@@ -23,16 +23,12 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/clock.h>
 
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
-#include <math.h>
-#include <limits.h>
-#include <fixedmath.h>
 
 #include "netutils/icmp_ping.h"
 
@@ -52,10 +48,6 @@
 struct ping_priv_s
 {
   int code;                      /* Notice code ICMP_I/E/W_XXX */
-  long tmin;                     /* Minimum round trip time */
-  long tmax;                     /* Maximum round trip time */
-  long long tsum;                /* Sum of all times, for doing average */
-  long long tsum2;               /* Sum2 is the sum of the squares of sum ,for doing mean deviation */
 };
 
 /****************************************************************************
@@ -126,7 +118,7 @@ static void ping_result(FAR const struct ping_result_s *result)
         break;
 
       case ICMP_E_SOCKET:
-        fprintf(stderr, "ERROR: socket() failed: %ld\n", result->extra);
+        fprintf(stderr, "ERROR: socket() failed: %d\n", result->extra);
         break;
 
       case ICMP_I_BEGIN:
@@ -139,21 +131,21 @@ static void ping_result(FAR const struct ping_result_s *result)
         break;
 
       case ICMP_E_SENDTO:
-        fprintf(stderr, "ERROR: sendto failed at seqno %u: %ld\n",
+        fprintf(stderr, "ERROR: sendto failed at seqno %u: %d\n",
                 result->seqno, result->extra);
         break;
 
       case ICMP_E_SENDSMALL:
-        fprintf(stderr, "ERROR: sendto returned %ld, expected %u\n",
+        fprintf(stderr, "ERROR: sendto returned %d, expected %u\n",
                 result->extra, result->outsize);
         break;
 
       case ICMP_E_POLL:
-        fprintf(stderr, "ERROR: poll failed: %ld\n", result->extra);
+        fprintf(stderr, "ERROR: poll failed: %d\n", result->extra);
         break;
 
       case ICMP_W_TIMEOUT:
-        printf("No response from %u.%u.%u.%u: icmp_seq=%u time=%ld ms\n",
+        printf("No response from %u.%u.%u.%u: icmp_seq=%u time=%d ms\n",
                (unsigned int)(result->dest.s_addr) & 0xff,
                (unsigned int)(result->dest.s_addr >> 8) & 0xff,
                (unsigned int)(result->dest.s_addr >> 16) & 0xff,
@@ -162,23 +154,23 @@ static void ping_result(FAR const struct ping_result_s *result)
         break;
 
       case ICMP_E_RECVFROM:
-        fprintf(stderr, "ERROR: recvfrom failed: %ld\n", result->extra);
+        fprintf(stderr, "ERROR: recvfrom failed: %d\n", result->extra);
         break;
 
       case ICMP_E_RECVSMALL:
-        fprintf(stderr, "ERROR: short ICMP packet: %ld\n", result->extra);
+        fprintf(stderr, "ERROR: short ICMP packet: %d\n", result->extra);
         break;
 
       case ICMP_W_IDDIFF:
         fprintf(stderr,
-                "WARNING: Ignoring ICMP reply with ID %ld.  "
+                "WARNING: Ignoring ICMP reply with ID %d.  "
                 "Expected %u\n",
                 result->extra, result->id);
         break;
 
       case ICMP_W_SEQNOBIG:
         fprintf(stderr,
-                "WARNING: Ignoring ICMP reply to sequence %ld.  "
+                "WARNING: Ignoring ICMP reply to sequence %d.  "
                 "Expected <= %u\n",
                 result->extra, result->seqno);
         break;
@@ -188,32 +180,19 @@ static void ping_result(FAR const struct ping_result_s *result)
         break;
 
       case ICMP_I_ROUNDTRIP:
-        priv->tsum += result->extra;
-        priv->tsum2 += (long long)result->extra * result->extra;
-        if (result->extra < priv->tmin)
-          {
-            priv->tmin = result->extra;
-          }
-
-        if (result->extra > priv->tmax)
-          {
-            priv->tmax = result->extra;
-          }
-
-        printf("%u bytes from %u.%u.%u.%u: icmp_seq=%u time=%ld.%ld ms\n",
+        printf("%u bytes from %u.%u.%u.%u: icmp_seq=%u time=%d ms\n",
                result->info->datalen,
                (unsigned int)(result->dest.s_addr) & 0xff,
                (unsigned int)(result->dest.s_addr >> 8) & 0xff,
                (unsigned int)(result->dest.s_addr >> 16) & 0xff,
                (unsigned int)(result->dest.s_addr >> 24) & 0xff,
-               result->seqno, result->extra / USEC_PER_MSEC,
-               result->extra % USEC_PER_MSEC / MSEC_PER_DSEC);
+               result->seqno, result->extra);
         break;
 
       case ICMP_W_RECVBIG:
         fprintf(stderr,
                 "WARNING: Ignoring ICMP reply with different payload "
-                "size: %ld vs %u\n",
+                "size: %d vs %u\n",
                 result->extra, result->outsize);
         break;
 
@@ -222,7 +201,7 @@ static void ping_result(FAR const struct ping_result_s *result)
         break;
 
       case ICMP_W_TYPE:
-        fprintf(stderr, "WARNING: ICMP packet with unknown type: %ld\n",
+        fprintf(stderr, "WARNING: ICMP packet with unknown type: %d\n",
                 result->extra);
         break;
 
@@ -238,24 +217,8 @@ static void ping_result(FAR const struct ping_result_s *result)
                    result->nrequests;
 
             printf("%u packets transmitted, %u received, %u%% packet loss, "
-                   "time %ld ms\n",
-                   result->nrequests, result->nreplies, tmp,
-                   result->extra / USEC_PER_MSEC);
-            if (result->nreplies > 0)
-              {
-                long avg = priv->tsum / result->nreplies;
-                long long tempnum = priv->tsum2 / result->nreplies -
-                                    (long long)avg * avg;
-                long tmdev = ub16toi(ub32sqrtub16(uitoub32(tempnum)));
-                printf("rtt min/avg/max/mdev = %ld.%03ld/%ld.%03ld/"
-                       "%ld.%03ld/%ld.%03ld ms\n",
-                       priv->tmin / USEC_PER_MSEC,
-                       priv->tmin % USEC_PER_MSEC,
-                       avg / USEC_PER_MSEC, avg % USEC_PER_MSEC,
-                       priv->tmax / USEC_PER_MSEC,
-                       priv->tmax % USEC_PER_MSEC,
-                       tmdev / USEC_PER_MSEC, tmdev % USEC_PER_MSEC);
-              }
+                   "time %d ms\n",
+                   result->nrequests, result->nreplies, tmp, result->extra);
           }
         break;
     }
@@ -280,10 +243,6 @@ int main(int argc, FAR char *argv[])
   info.callback  = ping_result;
   info.priv      = &priv;
   priv.code      = ICMP_I_OK;
-  priv.tmin      = INT_MAX;
-  priv.tmax      = 0;
-  priv.tsum      = 0;
-  priv.tsum2     = 0;
 
   /* Parse command line options */
 

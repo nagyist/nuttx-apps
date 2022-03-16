@@ -32,8 +32,6 @@
 #include <poll.h>
 #include <string.h>
 #include <errno.h>
-#include <signal.h>
-#include <stdbool.h>
 
 #ifdef CONFIG_LIBC_NETDB
 #  include <netdb.h>
@@ -60,21 +58,11 @@
  * separate instance of g_pingid in every process space.
  */
 
-static uint16_t g_pingid;
-static volatile bool exiting;
+static uint16_t g_pingid = 0;
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-
-/****************************************************************************
- * Name: sigexit
- ****************************************************************************/
-
-static void sigexit(int signo)
-{
-  exiting = true;
-}
 
 /****************************************************************************
  * Name: ping_newid
@@ -148,7 +136,7 @@ static int ping_gethostip(FAR const char *hostname, FAR struct in_addr *dest)
  ****************************************************************************/
 
 static void icmp_callback(FAR struct ping_result_s *result,
-                          int code, long extra)
+                          int code, int extra)
 {
   result->code = code;
   result->extra = extra;
@@ -173,7 +161,7 @@ void icmp_ping(FAR const struct ping_info_s *info)
   struct pollfd recvfd;
   FAR uint8_t *iobuffer;
   FAR uint8_t *ptr;
-  long elapsed;
+  int32_t elapsed;
   clock_t kickoff;
   clock_t start;
   socklen_t addrlen;
@@ -184,9 +172,6 @@ void icmp_ping(FAR const struct ping_info_s *info)
   int ret;
   int ch;
   int i;
-
-  exiting = false;
-  signal(SIGINT, sigexit);
 
   /* Initialize result structure */
 
@@ -233,11 +218,6 @@ void icmp_ping(FAR const struct ping_info_s *info)
 
   while (result.nrequests < info->count)
     {
-      if (exiting)
-        {
-          break;
-        }
-
       /* Copy the ICMP header into the I/O buffer */
 
       memcpy(iobuffer, &outhdr, sizeof(struct icmp_hdr_s));
@@ -282,7 +262,7 @@ void icmp_ping(FAR const struct ping_info_s *info)
           recvfd.events   = POLLIN;
           recvfd.revents  = 0;
 
-          ret = poll(&recvfd, 1, info->timeout - elapsed / USEC_PER_MSEC);
+          ret = poll(&recvfd, 1, info->timeout - elapsed);
           if (ret < 0)
             {
               icmp_callback(&result, ICMP_E_POLL, errno);
@@ -310,20 +290,17 @@ void icmp_ping(FAR const struct ping_info_s *info)
               goto done;
             }
 
-          elapsed = TICK2USEC(clock() - start);
+          elapsed = (unsigned int)TICK2MSEC(clock() - start);
           inhdr   = (FAR struct icmp_hdr_s *)iobuffer;
 
           if (inhdr->type == ICMP_ECHO_REPLY)
             {
-#ifndef CONFIG_SIM_NETUSRSOCK
               if (ntohs(inhdr->id) != result.id)
                 {
                   icmp_callback(&result, ICMP_W_IDDIFF, ntohs(inhdr->id));
                   retry = true;
                 }
-              else
-#endif
-              if (ntohs(inhdr->seqno) > result.seqno)
+              else if (ntohs(inhdr->seqno) > result.seqno)
                 {
                   icmp_callback(&result, ICMP_W_SEQNOBIG,
                                 ntohs(inhdr->seqno));
@@ -332,13 +309,13 @@ void icmp_ping(FAR const struct ping_info_s *info)
               else
                 {
                   bool verified = true;
-                  long pktdelay = elapsed;
+                  int32_t pktdelay = elapsed;
 
                   if (ntohs(inhdr->seqno) < result.seqno)
                     {
                       icmp_callback(&result, ICMP_W_SEQNOSMALL,
                                     ntohs(inhdr->seqno));
-                      pktdelay += info->delay * USEC_PER_MSEC;
+                      pktdelay += info->delay;
                       retry     = true;
                     }
 
@@ -385,12 +362,11 @@ void icmp_ping(FAR const struct ping_info_s *info)
               icmp_callback(&result, ICMP_W_TYPE, inhdr->type);
             }
         }
-      while (retry && info->delay > elapsed / USEC_PER_MSEC &&
-             info->timeout > elapsed / USEC_PER_MSEC);
+      while (retry && info->delay > elapsed && info->timeout > elapsed);
 
       /* Wait if necessary to preserved the requested ping rate */
 
-      elapsed = TICK2MSEC(clock() - start);
+      elapsed = (unsigned int)TICK2MSEC(clock() - start);
       if (elapsed < info->delay)
         {
           struct timespec rqt;
@@ -412,7 +388,7 @@ void icmp_ping(FAR const struct ping_info_s *info)
     }
 
 done:
-  icmp_callback(&result, ICMP_I_FINISH, TICK2USEC(clock() - kickoff));
+  icmp_callback(&result, ICMP_I_FINISH, TICK2MSEC(clock() - kickoff));
   close(sockfd);
   free(iobuffer);
 }
