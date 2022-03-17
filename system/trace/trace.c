@@ -735,30 +735,27 @@ static int trace_cmd_print(int index, int argc, FAR char **argv,
 
   /* Parse the setting parameters */
 
-  while (argv[index])
+  if (argv[index][0] == '-' || argv[index][0] == '+')
     {
-      if (argv[index][0] == '-' || argv[index][0] == '+')
+      enable = (argv[index][0] == '+');
+      if (enable ==
+          ((mode.flag & NOTE_FILTER_MODE_FLAG_DUMP) != 0))
         {
-          enable = (argv[index][0] == '+');
-          if (enable ==
-              ((mode.flag & NOTE_FILTER_MODE_FLAG_DUMP) != 0))
-            {
-              /* Already set */
+          /* Already set */
 
-              return false;
-            }
-
-          if (enable)
-            {
-              mode.flag |= NOTE_FILTER_MODE_FLAG_DUMP;
-            }
-          else
-            {
-              mode.flag &= ~NOTE_FILTER_MODE_FLAG_DUMP;
-            }
-
-          ioctl(notectlfd, NOTECTL_SETMODE, (unsigned long)&mode);
+          return false;
         }
+
+      if (enable)
+        {
+          mode.flag |= NOTE_FILTER_MODE_FLAG_DUMP;
+        }
+      else
+        {
+          mode.flag &= ~NOTE_FILTER_MODE_FLAG_DUMP;
+        }
+
+      ioctl(notectlfd, NOTECTL_SETMODE, (unsigned long)&mode);
 
       index++;
     }

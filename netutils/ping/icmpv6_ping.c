@@ -314,15 +314,12 @@ void icmp6_ping(FAR const struct ping6_info_s *info)
 
           if (inhdr->type == ICMPv6_ECHO_REPLY)
             {
-#ifndef CONFIG_SIM_NETUSRSOCK
               if (ntohs(inhdr->id) != result.id)
                 {
                   icmp6_callback(&result, ICMPv6_W_IDDIFF, ntohs(inhdr->id));
                   retry = true;
                 }
-              else
-#endif
-              if (ntohs(inhdr->seqno) > result.seqno)
+              else if (ntohs(inhdr->seqno) > result.seqno)
                 {
                   icmp6_callback(&result, ICMPv6_W_SEQNOBIG,
                                  ntohs(inhdr->seqno));
