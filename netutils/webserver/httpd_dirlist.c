@@ -193,8 +193,11 @@ ssize_t httpd_dirlist(int outfd, FAR struct httpd_fs_file *file)
           break;
         }
 
-      ret = asprintf(&path, "%s/%s", file->path, dent->d_name);
-      ASSERT(ret > 0 && path);
+      path = malloc(CONFIG_NAME_MAX);
+      ASSERT(path);
+
+      snprintf(path, CONFIG_NAME_MAX, "%s/%s",
+               file->path, dent->d_name);
 
       /* call stat() to obtain modified time and size */
 
