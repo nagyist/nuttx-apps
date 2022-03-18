@@ -60,7 +60,8 @@ int main(int argc, FAR char *argv[])
   int len;
 
   char buf[128];
-  char path[PATH_MAX];
+  char path[256];
+  char dir_path[256];
 
   char *basepath = NULL;
 
@@ -108,6 +109,7 @@ int main(int argc, FAR char *argv[])
 
   printf("\n");
 
+  strcpy(dir_path, path);
   strcat(path, FILE_NAME);
 
   printf("open(%s)\n", path);
@@ -172,20 +174,15 @@ int main(int argc, FAR char *argv[])
   if (ret == 0)
     {
       printf("removed %s\n", path);
-      basepath = strrchr(path, '/');
-      if (basepath != NULL)
+      ret = remove(dir_path);
+      if (ret == 0)
         {
-          *basepath = '\0';
-          ret = remove(path);
-          if (ret == 0)
-            {
-              printf("removed %s\n", path);
-            }
-          else
-            {
-              printf("remove failed: %d\n", errno);
-              exit(ret);
-            }
+          printf("removed %s\n", dir_path);
+        }
+      else
+        {
+          printf("remove failed: %d\n", errno);
+          exit(ret);
         }
     }
   else
