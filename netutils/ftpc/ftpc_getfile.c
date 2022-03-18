@@ -25,7 +25,6 @@
 #include "ftpc_config.h"
 
 #include <sys/stat.h>
-#include <inttypes.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -96,7 +95,7 @@ static int ftpc_recvinit(struct ftpc_session_s *session,
        * transfer should start.  This must come after PORT or PASV commands.
        */
 
-      ret = ftpc_cmd(session, "REST %" PRIdOFF, offset);
+      ret = ftpc_cmd(session, "REST %ld", offset);
       if (ret < 0)
         {
           nwarn("WARNING: REST command failed: %d\n", errno);

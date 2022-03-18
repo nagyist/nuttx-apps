@@ -176,9 +176,7 @@ static int timer_gpio_daemon(int argc, char *argv[])
 
   printf("Configure the timer notification.\n");
 
-  notify.pid      = getpid();
-  notify.periodic = true;
-
+  notify.pid   = getpid();
   notify.event.sigev_notify = SIGEV_SIGNAL;
   notify.event.sigev_signo  = CONFIG_EXAMPLES_TIMER_GPIO_SIGNO;
   notify.event.sigev_value.sival_ptr = NULL;

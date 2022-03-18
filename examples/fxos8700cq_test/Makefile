@@ -1,5 +1,5 @@
 #############################################################################
-# apps/examples/fxos8700cq_test/Makefile
+# examples/fxos8700cq/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
