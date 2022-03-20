@@ -234,7 +234,6 @@ static void cfgdatacmd_set(int argc, char *argv[])
 {
   int                   ret;
   int                   fd;
-  int                   x;
   struct config_data_s  cfg;
   uint8_t               data[32];
 
@@ -245,6 +244,7 @@ static void cfgdatacmd_set(int argc, char *argv[])
   strncpy(cfg.name, argv[2], CONFIG_MTD_CONFIG_NAME_LEN);
 
 #else
+  int                   x;
 
   /* Parse the id and instance */
 
@@ -427,10 +427,9 @@ static void cfgdatacmd_unset(int argc, char *argv[])
 
 static void cfgdatacmd_print(int argc, char *argv[])
 {
+  struct config_data_s  cfg;
   int                   ret;
   int                   fd;
-  int                   x;
-  struct config_data_s  cfg;
   bool                  isstring;
 
 #ifdef CONFIG_MTD_CONFIG_NAMED
@@ -440,6 +439,7 @@ static void cfgdatacmd_print(int argc, char *argv[])
   strncpy(cfg.name, argv[2], CONFIG_MTD_CONFIG_NAME_LEN);
 
 #else
+  int                   x;
 
   /* Parse the id and instance */
 
@@ -536,9 +536,8 @@ static void cfgdatacmd_print(int argc, char *argv[])
 
 static void cfgdatacmd_show_all_config_items(void)
 {
-  int                   ret;
   int                   fd;
-  int                   x;
+  int                   ret, x;
   struct config_data_s  cfg;
   char                  fmtstr[24];
   bool                  isstring;
