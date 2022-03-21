@@ -31,7 +31,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include <inttypes.h>
 
 /****************************************************************************
  * Private data
@@ -88,9 +87,7 @@ static void cfgdatacmd_help(void)
 static int cfgdatacmd_idtok(int startpos, char *token)
 {
   while (token[startpos] != ',' && token[startpos] != '\0')
-    {
-      startpos++;
-    }
+    startpos++;
 
   if (token[startpos] != ',')
     {
@@ -115,7 +112,7 @@ static int cfgdatacmd_idtok(int startpos, char *token)
  ****************************************************************************/
 
 static void cfgdatacmd_parse_byte_array(struct config_data_s *cfg,
-                                        int argc, char *argv[])
+        int argc, char *argv[])
 {
   int   x;
   int   c;
@@ -165,7 +162,7 @@ static void cfgdatacmd_parse_byte_array(struct config_data_s *cfg,
     {
       /* Perform dynamic memory allocation */
 
-      cfg->configdata = (FAR uint8_t *)malloc(count);
+      cfg->configdata = (FAR uint8_t *) malloc(count);
       cfg->len = count;
     }
 
@@ -186,13 +183,13 @@ static void cfgdatacmd_parse_byte_array(struct config_data_s *cfg,
           /* Hex byte */
 
           sscanf(&argv[x][c + 2], "%x", &val);
-          cfg->configdata[count] = (uint8_t)val;
+          cfg->configdata[count] = (uint8_t) val;
         }
       else
         {
           /* Decimal value */
 
-          cfg->configdata[count] = (uint8_t)atoi(&argv[x][c]);
+          cfg->configdata[count] = (uint8_t) atoi(&argv[x][c]);
         }
 
       /* Increment the count */
@@ -237,7 +234,6 @@ static void cfgdatacmd_set(int argc, char *argv[])
 {
   int                   ret;
   int                   fd;
-  int                   x;
   struct config_data_s  cfg;
   uint8_t               data[32];
 
@@ -248,6 +244,7 @@ static void cfgdatacmd_set(int argc, char *argv[])
   strncpy(cfg.name, argv[2], CONFIG_MTD_CONFIG_NAME_LEN);
 
 #else
+  int                   x;
 
   /* Parse the id and instance */
 
@@ -298,7 +295,7 @@ static void cfgdatacmd_set(int argc, char *argv[])
 
           if (isnumber)
             {
-              sscanf(&argv[3][2], "%" SCNx32, (int32_t *)&cfg.configdata);
+              sscanf(&argv[3][2], "%x", (int32_t *) &cfg.configdata);
               cfg.len = 4;
             }
         }
@@ -318,7 +315,7 @@ static void cfgdatacmd_set(int argc, char *argv[])
           if (isnumber)
             {
               int32_t temp = atoi(argv[3]);
-              *((int32_t *)cfg.configdata) = temp;
+              *((int32_t *) cfg.configdata) = temp;
               cfg.len = 4;
             }
         }
@@ -327,14 +324,14 @@ static void cfgdatacmd_set(int argc, char *argv[])
         {
           /* Point to the string and calculate the length */
 
-          cfg.configdata = (FAR uint8_t *)argv[3];
+          cfg.configdata = (FAR uint8_t *) argv[3];
           cfg.len = strlen(argv[3]) + 1;
         }
     }
 
   /* Now open the /dev/config file and set the config item */
 
-  if ((fd = open(g_config_dev, O_WRONLY)) < 2)
+  if ((fd = open(g_config_dev, O_RDONLY)) < 2)
     {
       /* Display error */
 
@@ -342,7 +339,7 @@ static void cfgdatacmd_set(int argc, char *argv[])
       return;
     }
 
-  ret = ioctl(fd, CFGDIOC_SETCONFIG, (unsigned long)(uintptr_t)&cfg);
+  ret = ioctl(fd, CFGDIOC_SETCONFIG, (unsigned long) &cfg);
 
   /* Close the file and report error if any */
 
@@ -354,7 +351,7 @@ static void cfgdatacmd_set(int argc, char *argv[])
 
   /* Free the cfg.configdata if needed */
 
-  if (cfg.configdata != (FAR uint8_t *)argv[3] &&
+  if (cfg.configdata != (FAR uint8_t *) argv[3] &&
       cfg.configdata != data)
     {
       free(cfg.configdata);
@@ -401,7 +398,7 @@ static void cfgdatacmd_unset(int argc, char *argv[])
 
   /* Try to open the /dev/config file */
 
-  if ((fd = open(g_config_dev, O_WRONLY)) < 2)
+  if ((fd = open(g_config_dev, O_RDONLY)) < 2)
     {
       /* Display error */
 
@@ -411,7 +408,7 @@ static void cfgdatacmd_unset(int argc, char *argv[])
 
   /* Delete the config item */
 
-  ret = ioctl(fd, CFGDIOC_DELCONFIG, (unsigned long)(uintptr_t)&cfg);
+  ret = ioctl(fd, CFGDIOC_DELCONFIG, (unsigned long) &cfg);
   close(fd);
 
   if (ret != OK)
@@ -430,10 +427,9 @@ static void cfgdatacmd_unset(int argc, char *argv[])
 
 static void cfgdatacmd_print(int argc, char *argv[])
 {
+  struct config_data_s  cfg;
   int                   ret;
   int                   fd;
-  int                   x;
-  struct config_data_s  cfg;
   bool                  isstring;
 
 #ifdef CONFIG_MTD_CONFIG_NAMED
@@ -443,6 +439,7 @@ static void cfgdatacmd_print(int argc, char *argv[])
   strncpy(cfg.name, argv[2], CONFIG_MTD_CONFIG_NAME_LEN);
 
 #else
+  int                   x;
 
   /* Parse the id and instance */
 
@@ -471,7 +468,7 @@ static void cfgdatacmd_print(int argc, char *argv[])
       return;
     }
 
-  cfg.configdata = (FAR uint8_t *)malloc(256);
+  cfg.configdata = (FAR uint8_t *) malloc(256);
   cfg.len = 256;
   if (cfg.configdata == NULL)
     {
@@ -481,7 +478,7 @@ static void cfgdatacmd_print(int argc, char *argv[])
 
   /* Get the config item */
 
-  ret = ioctl(fd, CFGDIOC_GETCONFIG, (unsigned long)(uintptr_t)&cfg);
+  ret = ioctl(fd, CFGDIOC_GETCONFIG, (unsigned long) &cfg);
   close(fd);
 
   if (ret != OK)
@@ -539,9 +536,8 @@ static void cfgdatacmd_print(int argc, char *argv[])
 
 static void cfgdatacmd_show_all_config_items(void)
 {
-  int                   ret;
   int                   fd;
-  int                   x;
+  int                   ret, x;
   struct config_data_s  cfg;
   char                  fmtstr[24];
   bool                  isstring;
@@ -570,7 +566,7 @@ static void cfgdatacmd_show_all_config_items(void)
 
   /* Get the first config item */
 
-  cfg.configdata = (FAR uint8_t *)malloc(256);
+  cfg.configdata = (FAR uint8_t *) malloc(256);
   cfg.len = 256;
   if (cfg.configdata == NULL)
     {
@@ -578,7 +574,7 @@ static void cfgdatacmd_show_all_config_items(void)
       return;
     }
 
-  ret = ioctl(fd, CFGDIOC_FIRSTCONFIG, (unsigned long)(uintptr_t)&cfg);
+  ret = ioctl(fd, CFGDIOC_FIRSTCONFIG, (unsigned long) &cfg);
 
   while (ret != -1)
     {
@@ -639,39 +635,11 @@ static void cfgdatacmd_show_all_config_items(void)
       /* Get the next config item */
 
       cfg.len = 256;
-      ret = ioctl(fd, CFGDIOC_NEXTCONFIG, (unsigned long)(uintptr_t)&cfg);
+      ret = ioctl(fd, CFGDIOC_NEXTCONFIG, (unsigned long) &cfg);
     }
 
   close(fd);
   free(cfg.configdata);
-}
-
-/****************************************************************************
- * Erase all config items
- ****************************************************************************/
-
-static void cfgdatacmd_format(void)
-{
-  int fd;
-  int ret;
-
-  /* Try to open the /dev/config file */
-
-  if ((fd = open(g_config_dev, O_WRONLY)) < 2)
-    {
-      /* Display error */
-
-      printf("error: unable to open %s\n", g_config_dev);
-      return;
-    }
-
-  ret = ioctl(fd, MTDIOC_BULKERASE, 0);
-  close(fd);
-
-  if (ret != OK)
-    {
-      printf("Error %d config format\n", errno);
-    }
 }
 
 /****************************************************************************
@@ -749,16 +717,6 @@ int main(int argc, FAR char *argv[])
       /* Call the routine to set a config item */
 
       cfgdatacmd_unset(argc, argv);
-      return 0;
-    }
-
-  /* Test for "format" cmd */
-
-  if (strcmp(argv[1], "format") == 0)
-    {
-      /* Call the routine to erase all config items */
-
-      cfgdatacmd_format();
       return 0;
     }
 
