@@ -142,22 +142,10 @@ static int trace_cmd_start(int index, int argc, FAR char **argv,
 static int trace_cmd_dump(int index, int argc, FAR char **argv,
                           int notectlfd)
 {
-  trace_dump_t type = TRACE_TYPE_LTTNG_KERNEL;
   FAR FILE *out = stdout;
+  int ret;
   bool changed = false;
   bool cont = false;
-  int ret;
-
-  /* Usage: trace dump [-a] "Custom Format : Android SysTrace" */
-
-  if (index < argc)
-    {
-      if (strcmp(argv[index], "-a") == 0)
-        {
-          index++;
-          type = TRACE_TYPE_ANDROID;
-        }
-    }
 
   /* Usage: trace dump [-c][<filename>] */
 
@@ -201,7 +189,7 @@ static int trace_cmd_dump(int index, int argc, FAR char **argv,
 
   /* Dump the trace data */
 
-  ret = trace_dump(type, out);
+  ret = trace_dump(out);
 
   if (changed)
     {
@@ -497,29 +485,32 @@ static int trace_cmd_switch(int index, int argc, FAR char **argv,
 
   /* Parse the setting parameters */
 
-  if (argv[index][0] == '-' || argv[index][0] == '+')
+  if (index < argc)
     {
-      enable = (argv[index][0] == '+');
-      if (enable ==
-          ((mode.flag & NOTE_FILTER_MODE_FLAG_SWITCH) != 0))
+      if (argv[index][0] == '-' || argv[index][0] == '+')
         {
-          /* Already set */
+          enable = (argv[index][0] == '+');
+          if (enable ==
+              ((mode.flag & NOTE_FILTER_MODE_FLAG_SWITCH) != 0))
+            {
+              /* Already set */
 
-          return false;
+              return false;
+            }
+
+          if (enable)
+            {
+              mode.flag |= NOTE_FILTER_MODE_FLAG_SWITCH;
+            }
+          else
+            {
+              mode.flag &= ~NOTE_FILTER_MODE_FLAG_SWITCH;
+            }
+
+          ioctl(notectlfd, NOTECTL_SETMODE, (unsigned long)&mode);
+
+          index++;
         }
-
-      if (enable)
-        {
-          mode.flag |= NOTE_FILTER_MODE_FLAG_SWITCH;
-        }
-      else
-        {
-          mode.flag &= ~NOTE_FILTER_MODE_FLAG_SWITCH;
-        }
-
-      ioctl(notectlfd, NOTECTL_SETMODE, (unsigned long)&mode);
-
-      index++;
     }
 
   return index;
@@ -747,7 +738,7 @@ static int trace_cmd_print(int index, int argc, FAR char **argv,
 
   /* Parse the setting parameters */
 
-  while (argv[index])
+  if (index < argc)
     {
       if (argv[index][0] == '-' || argv[index][0] == '+')
         {
@@ -770,9 +761,9 @@ static int trace_cmd_print(int index, int argc, FAR char **argv,
             }
 
           ioctl(notectlfd, NOTECTL_SETMODE, (unsigned long)&mode);
-        }
 
-      index++;
+          index++;
+        }
     }
 
   return index;
@@ -797,9 +788,8 @@ static void show_usage(void)
                                 " Get the trace while running <command>\n"
 #endif
 #ifdef CONFIG_DRIVER_NOTERAM
-          "  dump [-a][-c][<filename>]           :"
+          "  dump [-c][<filename>]           :"
                                 " Output the trace result\n"
-                                " [-a] <Android SysTrace>\n"
 #endif
           "  mode [{+|-}{o|w|s|a|i|d}...]        :"
                                 " Set task trace options\n"

@@ -24,7 +24,6 @@
 
 #include <nuttx/config.h>
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -70,13 +69,11 @@
 
 struct trace_dump_cpu_context_s
 {
-  int intr_nest;            /* Interrupt nest level */
-  bool pendingswitch;       /* sched_switch pending flag */
-  int current_state;        /* Task state of the current line */
-  pid_t current_pid;        /* Task PID of the current line */
-  pid_t next_pid;           /* Task PID of the next line */
-  uint8_t current_priority; /* Task Priority of the current line */
-  uint8_t next_priority;    /* Task Priority of the next line */
+  int intr_nest;          /* Interrupt nest level */
+  bool pendingswitch;     /* sched_switch pending flag */
+  int current_state;      /* Task state of the current line */
+  pid_t current_pid;      /* Task PID of the current line */
+  pid_t next_pid;         /* Task PID of the next line */
 };
 
 struct trace_dump_task_context_s
@@ -101,36 +98,6 @@ struct trace_dump_context_s
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-
-/****************************************************************************
- * Name: trace_dump_unflatten
- ****************************************************************************/
-
-static void trace_dump_unflatten(FAR void *dst,
-                                 FAR uint8_t *src, size_t len)
-{
-  switch (len)
-    {
-#ifdef CONFIG_HAVE_LONG_LONG
-      case 8:
-        *(uint64_t *)dst = ((uint64_t)src[7] << 56)
-                         + ((uint64_t)src[6] << 48)
-                         + ((uint64_t)src[5] << 40)
-                         + ((uint64_t)src[4] << 32);
-#endif
-      case 4:
-        *(uint32_t *)dst = ((uint64_t)src[3] << 24)
-                         + ((uint64_t)src[2] << 16);
-      case 2:
-        *(uint16_t *)dst = ((uint64_t)src[1] << 8);
-      case 1:
-        *(uint8_t *)dst = src[0];
-        break;
-      default:
-        DEBUGASSERT(FALSE);
-        break;
-    }
-}
 
 /****************************************************************************
  * Name: note_ioctl
@@ -172,8 +139,6 @@ static void trace_dump_init_context(FAR struct trace_dump_context_s *ctx,
       ctx->cpu[cpu].current_state = TSTATE_TASK_RUNNING;
       ctx->cpu[cpu].current_pid = -1;
       ctx->cpu[cpu].next_pid = -1;
-      ctx->cpu[cpu].current_priority = -1;
-      ctx->cpu[cpu].next_priority = -1;
     }
 
   ctx->task = NULL;
@@ -305,15 +270,19 @@ static void trace_dump_header(FAR FILE *out,
 {
   pid_t pid;
 #ifdef CONFIG_SCHED_INSTRUMENTATION_HIRES
-  uint32_t nsec;
-  uint32_t sec;
-
-  trace_dump_unflatten(&nsec, note->nc_systime_nsec, sizeof(nsec));
-  trace_dump_unflatten(&sec, note->nc_systime_sec, sizeof(sec));
+  uint32_t nsec = note->nc_systime_nsec[0] +
+                  (note->nc_systime_nsec[1] << 8) +
+                  (note->nc_systime_nsec[2] << 16) +
+                  (note->nc_systime_nsec[3] << 24);
+  uint32_t sec = note->nc_systime_sec[0] +
+                 (note->nc_systime_sec[1] << 8) +
+                 (note->nc_systime_sec[2] << 16) +
+                 (note->nc_systime_sec[3] << 24);
 #else
-  uint32_t systime;
-
-  trace_dump_unflatten(&systime, note->nc_systime, sizeof(systime));
+  uint32_t systime = note->nc_systime[0] +
+                     (note->nc_systime[1] << 8) +
+                     (note->nc_systime[2] << 16) +
+                     (note->nc_systime[3] << 24);
 #endif
 #ifdef CONFIG_SMP
   int cpu = note->nc_cpu;
@@ -321,7 +290,7 @@ static void trace_dump_header(FAR FILE *out,
   int cpu = 0;
 #endif
 
-  trace_dump_unflatten(&pid, note->nc_pid, sizeof(pid));
+  pid = ctx->cpu[cpu].current_pid;
 
   fprintf(out, "%8s-%-3u [%d] %3" PRIu32 ".%09" PRIu32 ": ",
           get_task_name(pid, ctx), get_pid(pid), cpu,
@@ -346,8 +315,6 @@ static void trace_dump_sched_switch(FAR FILE *out,
                                     FAR struct trace_dump_context_s *ctx)
 {
   FAR struct trace_dump_cpu_context_s *cctx;
-  uint8_t current_priority;
-  uint8_t next_priority;
   pid_t current_pid;
   pid_t next_pid;
 #ifdef CONFIG_SMP
@@ -360,19 +327,14 @@ static void trace_dump_sched_switch(FAR FILE *out,
   current_pid = cctx->current_pid;
   next_pid = cctx->next_pid;
 
-  current_priority = cctx->current_priority;
-  next_priority = cctx->next_priority;
-
   fprintf(out, "sched_switch: "
-               "prev_comm=%s prev_pid=%u prev_prio=%u prev_state=%c ==> "
-               "next_comm=%s next_pid=%u next_prio=%u\n",
+               "prev_comm=%s prev_pid=%u prev_state=%c ==> "
+               "next_comm=%s next_pid=%u\n",
           get_task_name(current_pid, ctx), get_pid(current_pid),
-          current_priority, get_task_state(cctx->current_state),
-          get_task_name(next_pid, ctx), get_pid(next_pid),
-          next_priority);
+          get_task_state(cctx->current_state),
+          get_task_name(next_pid, ctx), get_pid(next_pid));
 
   cctx->current_pid = cctx->next_pid;
-  cctx->current_priority = cctx->next_priority;
   cctx->pendingswitch = false;
 }
 #endif
@@ -381,7 +343,8 @@ static void trace_dump_sched_switch(FAR FILE *out,
  * Name: trace_dump_one
  ****************************************************************************/
 
-static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
+static int trace_dump_one(FAR FILE *out,
+                          FAR uint8_t *p,
                           FAR struct trace_dump_context_s *ctx)
 {
   FAR struct note_common_s *note = (FAR struct note_common_s *)p;
@@ -394,7 +357,7 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
 #endif
 
   cctx = &ctx->cpu[cpu];
-  trace_dump_unflatten(&pid, note->nc_pid, sizeof(pid));
+  pid = note->nc_pid[0] + (note->nc_pid[1] << 8);
 
   if (cctx->current_pid < 0)
     {
@@ -454,7 +417,6 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
            */
 
           cctx->next_pid = pid;
-          cctx->next_priority = note->nc_priority;
 
           if (cctx->intr_nest == 0)
             {
@@ -519,20 +481,23 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
             }
 
           trace_dump_header(out, note, ctx);
-          if (type == TRACE_TYPE_ANDROID)
-            {
-              fprintf(out, "tracing_mark_write: B|%d|sys_%s(",
-                      pid, g_funcnames[nsc->nsc_nr - CONFIG_SYS_RESERVED]);
-            }
-          else
-            {
-              fprintf(out, "sys_%s(",
-                      g_funcnames[nsc->nsc_nr - CONFIG_SYS_RESERVED]);
-            }
+          fprintf(out, "sys_%s(",
+                  g_funcnames[nsc->nsc_nr - CONFIG_SYS_RESERVED]);
 
           for (i = j = 0; i < nsc->nsc_argc; i++)
             {
-              trace_dump_unflatten(&arg, nsc->nsc_args, sizeof(arg));
+              arg = (uintptr_t)nsc->nsc_args[j++];
+              arg |= (uintptr_t)nsc->nsc_args[j++] << 8;
+#if UINTPTR_MAX > UINT16_MAX
+              arg |= (uintptr_t)nsc->nsc_args[j++] << 16;
+              arg |= (uintptr_t)nsc->nsc_args[j++] << 24;
+#if UINTPTR_MAX > UINT32_MAX
+              arg |= (uintptr_t)nsc->nsc_args[j++] << 32;
+              arg |= (uintptr_t)nsc->nsc_args[j++] << 40;
+              arg |= (uintptr_t)nsc->nsc_args[j++] << 48;
+              arg |= (uintptr_t)nsc->nsc_args[j++] << 56;
+#endif
+#endif
               if (i == 0)
                 {
                   fprintf(out, "arg%d: 0x%" PRIxPTR, i, arg);
@@ -584,21 +549,24 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
             }
 
           trace_dump_header(out, note, ctx);
-          trace_dump_unflatten(&result, nsc->nsc_result, sizeof(result));
 
-          if (type == TRACE_TYPE_ANDROID)
-            {
-              fprintf(out, "tracing_mark_write: E|%d|"
-                      "sys_%s -> 0x%" PRIxPTR "\n", pid,
-                      g_funcnames[nsc->nsc_nr - CONFIG_SYS_RESERVED],
-                      result);
-            }
-          else
-            {
-              fprintf(out, "sys_%s -> 0x%" PRIxPTR "\n",
-                      g_funcnames[nsc->nsc_nr - CONFIG_SYS_RESERVED],
-                      result);
-            }
+          result =    (uintptr_t)nsc->nsc_result[0]
+                   + ((uintptr_t)nsc->nsc_result[1] << 8)
+#if UINTPTR_MAX > UINT16_MAX
+                   + ((uintptr_t)nsc->nsc_result[2] << 16)
+                   + ((uintptr_t)nsc->nsc_result[3] << 24)
+#if UINTPTR_MAX > UINT32_MAX
+                   + ((uintptr_t)nsc->nsc_result[4] << 32)
+                   + ((uintptr_t)nsc->nsc_result[5] << 40)
+                   + ((uintptr_t)nsc->nsc_result[6] << 48)
+                   + ((uintptr_t)nsc->nsc_result[7] << 56)
+#endif
+#endif
+          ;
+
+          fprintf(out, "sys_%s -> 0x%" PRIxPTR "\n",
+                  g_funcnames[nsc->nsc_nr - CONFIG_SYS_RESERVED],
+                  result);
         }
         break;
 #endif
@@ -610,8 +578,8 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
 
           nih = (FAR struct note_irqhandler_s *)p;
           trace_dump_header(out, note, ctx);
-          fprintf(out, "irq_handler_entry: irq=%u name=%d\n",
-                  nih->nih_irq, nih->nih_irq);
+          fprintf(out, "irq_handler_entry: irq=%u\n",
+                  nih->nih_irq);
           cctx->intr_nest++;
         }
         break;
@@ -622,7 +590,7 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
 
           nih = (FAR struct note_irqhandler_s *)p;
           trace_dump_header(out, note, ctx);
-          fprintf(out, "irq_handler_exit: irq=%u ret=handled\n",
+          fprintf(out, "irq_handler_exit: irq=%u\n",
                   nih->nih_irq);
           cctx->intr_nest--;
 
@@ -645,23 +613,11 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
       case NOTE_DUMP_STRING:
         {
           FAR struct note_string_s *nst;
-          uintptr_t ip;
 
           nst = (FAR struct note_string_s *)p;
           trace_dump_header(out, note, ctx);
-          trace_dump_unflatten(&ip, nst->nst_ip, sizeof(ip));
-
-          if (type == TRACE_TYPE_ANDROID &&
-              strlen(nst->nst_data) > 2 &&
-              (memcmp(nst->nst_data, "B|", 2) == 0 ||
-               memcmp(nst->nst_data, "E|", 2) == 0))
-            {
-              fprintf(out, "tracing_mark_write: %s\n", nst->nst_data);
-            }
-          else
-            {
-              fprintf(out, "0x%" PRIdPTR ": %s\n", ip, nst->nst_data);
-            }
+          fprintf(out, "dump_string: %s\n",
+                  nst->nst_data);
         }
         break;
 
@@ -669,17 +625,15 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
         {
           FAR struct note_binary_s *nbi;
           uint8_t count;
-          uintptr_t ip;
           int i;
 
           nbi = (FAR struct note_binary_s *)p;
           trace_dump_header(out, note, ctx);
           count = note->nc_length - sizeof(struct note_binary_s) + 1;
-
-          trace_dump_unflatten(&ip, nbi->nbi_ip, sizeof(ip));
-
-          fprintf(out, "0x%" PRIdPTR ": event=%u count=%u",
-                  ip, nbi->nbi_event, count);
+          fprintf(out, "dump_binary: module=%c%c%c%c event=%u count=%u",
+                  nbi->nbi_module[0], nbi->nbi_module[1],
+                  nbi->nbi_module[2], nbi->nbi_module[3],
+                  nbi->nbi_event, count);
           for (i = 0; i < count; i++)
             {
               fprintf(out, " 0x%x", nbi->nbi_data[i]);
@@ -693,8 +647,6 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
       default:
         break;
     }
-
-  fflush(out);
 
   /* Return the length of the processed note */
 
@@ -713,7 +665,7 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
  *
  ****************************************************************************/
 
-int trace_dump(trace_dump_t type, FAR FILE *out)
+int trace_dump(FAR FILE *out)
 {
   struct trace_dump_context_s ctx;
   uint8_t tracedata[UCHAR_MAX];
@@ -747,7 +699,7 @@ int trace_dump(trace_dump_t type, FAR FILE *out)
       p = tracedata;
       do
         {
-          size = trace_dump_one(type, out, p, &ctx);
+          size = trace_dump_one(out, p, &ctx);
           p += size;
           ret -= size;
         }
