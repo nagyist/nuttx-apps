@@ -39,7 +39,6 @@
 #include <stdint.h>
 #include <malloc.h>
 #include <sys/time.h>
-#include <nuttx/clock.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -63,11 +62,11 @@
 
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
-#define dhcpv6_for_each_option(_o, start, end, otype, olen, odata)\
-    for ((_o) = (FAR uint8_t *)(start); (_o) + 4 <= (FAR uint8_t *)(end) &&\
-        ((otype) = (_o)[0] << 8 | (_o)[1]) && ((odata) = (FAR void *)&(_o)[4]) &&\
-        ((olen) = (_o)[2] << 8 | (_o)[3]) + (odata) <= (FAR uint8_t *)(end); \
-        (_o) += 4 + ((_o)[2] << 8 | (_o)[3]))
+#define dhcpv6_for_each_option(start, end, otype, olen, odata)\
+    for (FAR uint8_t *_o = (FAR uint8_t *)(start); _o + 4 <= (FAR uint8_t *)(end) &&\
+        ((otype) = _o[0] << 8 | _o[1]) && ((odata) = (FAR void *)&_o[4]) &&\
+        ((olen) = _o[2] << 8 | _o[3]) + (odata) <= (FAR uint8_t *)(end); \
+        _o += 4 + (_o[2] << 8 | _o[3]))
 
 /****************************************************************************
  * Private Types
@@ -265,18 +264,38 @@ static int dhcp6c_handle_rebind_reply(FAR void *handle,
 
 static const struct dhcp6c_retx_s g_dhcp6c_retx[DHCPV6_MSG_MAX] =
 {
-  {false, 1, 120, "<POLL>", dhcp6c_handle_reconfigure, NULL},
-  {true, 1, 120, "SOLICIT", dhcp6c_handle_advert, dhcp6c_commit_advert},
-  {0},
-  {true, 1, 30, "REQUEST", dhcp6c_handle_reply, NULL},
-  {0},
-  {false, 10, 600, "RENEW", dhcp6c_handle_reply, NULL},
-  {false, 10, 600, "REBIND", dhcp6c_handle_rebind_reply, NULL},
-  {0},
-  {false, 1, 600, "RELEASE", NULL, NULL},
-  {false, 1, 3, "DECLINE", NULL, NULL},
-  {0},
-  {true, 1, 120, "INFOREQ", dhcp6c_handle_reply, NULL},
+  [DHCPV6_MSG_UNKNOWN] =
+  {
+    false, 1, 120, "<POLL>", dhcp6c_handle_reconfigure, NULL
+  },
+  [DHCPV6_MSG_SOLICIT] =
+  {
+    true, 1, 120, "SOLICIT", dhcp6c_handle_advert, dhcp6c_commit_advert
+  },
+  [DHCPV6_MSG_REQUEST] =
+  {
+    true, 1, 30, "REQUEST", dhcp6c_handle_reply, NULL
+  },
+  [DHCPV6_MSG_RENEW] =
+  {
+    false, 10, 600, "RENEW", dhcp6c_handle_reply, NULL
+  },
+  [DHCPV6_MSG_REBIND] =
+  {
+    false, 10, 600, "REBIND", dhcp6c_handle_rebind_reply, NULL
+  },
+  [DHCPV6_MSG_RELEASE] =
+  {
+    false, 1, 600, "RELEASE", NULL, NULL
+  },
+  [DHCPV6_MSG_DECLINE] =
+  {
+    false, 1, 3, "DECLINE", NULL, NULL
+  },
+  [DHCPV6_MSG_INFO_REQ] =
+  {
+    true, 1, 120, "INFOREQ", dhcp6c_handle_reply, NULL
+  },
 };
 
 /****************************************************************************
@@ -289,7 +308,7 @@ static uint64_t dhcp6c_get_milli_time(void)
 
   clock_gettime(CLOCK_MONOTONIC, &t);
 
-  return t.tv_sec * MSEC_PER_SEC + t.tv_nsec / USEC_PER_SEC;
+  return t.tv_sec * 1000 + t.tv_nsec / 1000000;
 }
 
 static FAR uint8_t *dhcp6c_resize_state(FAR void *handle,
@@ -305,7 +324,7 @@ static FAR uint8_t *dhcp6c_resize_state(FAR void *handle,
     }
 
   n = realloc(pdhcp6c->state_data[state], pdhcp6c->state_len[state] + len);
-  if (n != NULL || pdhcp6c->state_len[state] + len == 0)
+  if (n || pdhcp6c->state_len[state] + len == 0)
     {
       pdhcp6c->state_data[state] = n;
       n += pdhcp6c->state_len[state];
@@ -327,7 +346,7 @@ static void dhcp6c_add_state(FAR void *handle, enum dhcpv6_state_e state,
 {
   FAR uint8_t *n = dhcp6c_resize_state(handle, state, len);
 
-  if (n != NULL)
+  if (n)
     {
       memcpy(n, data, len);
     }
@@ -358,8 +377,7 @@ static bool dhcp6c_commit_state(FAR void *handle, enum dhcpv6_state_e state,
   size_t new_len = pdhcp6c->state_len[state] - old_len;
   FAR uint8_t *old_data = pdhcp6c->state_data[state];
   FAR uint8_t *new_data = old_data + old_len;
-  bool upd = (new_len != old_len) ||
-             (memcmp(old_data, new_data, new_len) != 0);
+  bool upd = new_len != old_len || memcmp(old_data, new_data, new_len);
 
   memmove(old_data, new_data, new_len);
   dhcp6c_resize_state(handle, state, -old_len);
@@ -385,31 +403,30 @@ static void dhcp6c_get_result(FAR void *handle,
   FAR uint8_t *s_data;
   uint16_t olen;
   uint16_t otype;
-  FAR uint8_t *ite;
   FAR uint8_t *odata;
   FAR struct dhcpv6_ia_addr_s *addr;
   FAR struct dhcpv6_ia_prefix_s *pd;
   FAR struct in6_addr *dns;
   char addr_str[INET6_ADDRSTRLEN];
 
-  if (handle == NULL || presult == NULL)
+  if (!handle || !presult)
     {
       return;
     }
 
   s_data = dhcp6c_get_state(handle, STATE_IA_NA, &s_len);
-  dhcpv6_for_each_option(ite, s_data, s_data + s_len, otype, olen, odata)
+  dhcpv6_for_each_option(s_data, s_data + s_len, otype, olen, odata)
     {
-      addr = (FAR void *)(odata - 4);
+      addr = (FAR void *)&odata[-4];
       memcpy(&presult->addr, &addr->addr, sizeof(presult->addr));
       inet_ntop(AF_INET6, &presult->addr, addr_str, sizeof(addr_str));
       ninfo("IA_NA %s for iface %i\n", addr_str, pdhcp6c->ifindex);
     }
 
   s_data = dhcp6c_get_state(handle, STATE_IA_PD, &s_len);
-  dhcpv6_for_each_option(ite, s_data, s_data + s_len, otype, olen, odata)
+  dhcpv6_for_each_option(s_data, s_data + s_len, otype, olen, odata)
     {
-      pd = (FAR void *)(odata - 4);
+      pd = (FAR void *)&odata[-4];
       memcpy(&presult->pd, &pd->addr, sizeof(presult->pd));
       presult->pl = pd->prefix;
       netlib_prefix2ipv6netmask(presult->pl, &presult->netmask);
@@ -441,7 +458,7 @@ static void dhcp6c_switch_process(FAR void *handle, FAR const char *name)
 
   dhcp6c_clear_state(handle, STATE_CUSTOM_OPTS);
 
-  if (pdhcp6c->callback != NULL)
+  if (pdhcp6c->callback)
     {
       memset(&result, 0, sizeof(result));
       dhcp6c_get_result(pdhcp6c, &result);
@@ -453,7 +470,6 @@ static void dhcp6c_remove_addrs(FAR void *handle)
 {
   FAR struct dhcp6c_state_s *pdhcp6c = (FAR struct dhcp6c_state_s *)handle;
   size_t ia_na_len;
-  FAR uint8_t *ite;
   FAR uint8_t *odata;
   FAR uint8_t *ia_na = dhcp6c_get_state(handle, STATE_IA_NA, &ia_na_len);
   uint16_t otype;
@@ -461,9 +477,9 @@ static void dhcp6c_remove_addrs(FAR void *handle)
   FAR struct dhcpv6_ia_addr_s *addr;
   char addr_str[INET6_ADDRSTRLEN];
 
-  dhcpv6_for_each_option(ite, ia_na, ia_na + ia_na_len, otype, olen, odata)
+  dhcpv6_for_each_option(ia_na, ia_na + ia_na_len, otype, olen, odata)
     {
-      addr = (FAR void *)(odata - 4);
+      addr = (FAR void *)&odata[-4];
       inet_ntop(AF_INET6, &addr->addr, addr_str, sizeof(addr_str));
       ninfo("removing address %s/128 for iface %i\n",
             addr_str, pdhcp6c->ifindex);
@@ -675,7 +691,6 @@ static bool dhcp6c_response_is_valid(FAR void *handle, FAR const void *buf,
 {
   FAR struct dhcp6c_state_s *pdhcp6c = (FAR struct dhcp6c_state_s *)handle;
   FAR const struct dhcpv6_header_s *rep = buf;
-  FAR uint8_t *ite;
   FAR uint8_t *end;
   FAR uint8_t *odata;
   uint16_t otype;
@@ -687,8 +702,8 @@ static bool dhcp6c_response_is_valid(FAR void *handle, FAR const void *buf,
   FAR void *client_id;
   FAR void *server_id;
 
-  if (len < sizeof(*rep) ||
-      memcmp(rep->tr_id, transaction, sizeof(rep->tr_id)) != 0)
+  if (len < (ssize_t)sizeof(*rep) ||
+      memcmp(rep->tr_id, transaction, sizeof(rep->tr_id)))
     {
       return false;
     }
@@ -718,17 +733,17 @@ static bool dhcp6c_response_is_valid(FAR void *handle, FAR const void *buf,
   client_id = dhcp6c_get_state(handle, STATE_CLIENT_ID, &client_id_len);
   server_id = dhcp6c_get_state(handle, STATE_SERVER_ID, &server_id_len);
 
-  dhcpv6_for_each_option(ite, &rep[1], end, otype, olen, odata)
+  dhcpv6_for_each_option(&rep[1], end, otype, olen, odata)
     {
       if (otype == DHCPV6_OPT_CLIENTID)
         {
-          clientid_ok = (olen + 4u == client_id_len) &&
-                        (memcmp((odata - 4), client_id, client_id_len) == 0);
+          clientid_ok = (olen + 4U == client_id_len) &&
+                        !memcmp(&odata[-4], client_id, client_id_len);
         }
       else if (otype == DHCPV6_OPT_SERVERID)
         {
-          serverid_ok = (olen + 4u == server_id_len) &&
-                        (memcmp((odata - 4), server_id, server_id_len) == 0);
+          serverid_ok = (olen + 4U == server_id_len) &&
+                        !memcmp(&odata[-4], server_id, server_id_len);
         }
     }
 
@@ -738,9 +753,8 @@ static bool dhcp6c_response_is_valid(FAR void *handle, FAR const void *buf,
 static int dhcp6c_command(FAR void *handle, enum dhcpv6_msg_e type)
 {
   FAR struct dhcp6c_state_s *pdhcp6c = (FAR struct dhcp6c_state_s *)handle;
-  const int buf_length = 1536;
-  FAR uint8_t *buf = (FAR uint8_t *)malloc(buf_length);
-  uint32_t timeout = CONFIG_NETUTILS_DHCP6C_REQUEST_TIMEOUT < 3 ? 3 :
+  uint8_t buf[1536];
+  uint32_t timeout = CONFIG_NETUTILS_DHCP6C_REQUEST_TIMEOUT < 3? 3 :
                      CONFIG_NETUTILS_DHCP6C_REQUEST_TIMEOUT;
   FAR const struct dhcp6c_retx_s *retx = &g_dhcp6c_retx[type];
   uint64_t start;
@@ -750,11 +764,6 @@ static int dhcp6c_command(FAR void *handle, enum dhcpv6_msg_e type)
   uint8_t trid[3];
   ssize_t len = -1;
   int64_t rto = 0;
-
-  if (buf == NULL)
-    {
-      return -1;
-    }
 
   if (retx->delay)
     {
@@ -783,8 +792,7 @@ static int dhcp6c_command(FAR void *handle, enum dhcpv6_msg_e type)
 
   if (timeout == 0)
     {
-      len = -1;
-      goto end;
+      return -1;
     }
 
   ninfo("Sending %s (timeout %u s)\n", retx->name, timeout);
@@ -797,14 +805,14 @@ static int dhcp6c_command(FAR void *handle, enum dhcpv6_msg_e type)
 
   do
     {
-      rto = (rto == 0) ? (retx->init_timeo * MSEC_PER_SEC +
-              dhcp6c_rand_delay(handle, retx->init_timeo * MSEC_PER_SEC)) :
+      rto = (rto == 0) ? (retx->init_timeo * 1000 +
+              dhcp6c_rand_delay(handle, retx->init_timeo * 1000)) :
               (2 * rto + dhcp6c_rand_delay(handle, rto));
 
-      if (rto >= retx->max_timeo * MSEC_PER_SEC)
+      if (rto >= retx->max_timeo * 1000)
         {
-          rto = retx->max_timeo * MSEC_PER_SEC +
-                dhcp6c_rand_delay(handle, retx->max_timeo * MSEC_PER_SEC);
+          rto = retx->max_timeo * 1000 +
+                dhcp6c_rand_delay(handle, retx->max_timeo * 1000);
         }
 
       /* Calculate end for this round and elapsed time */
@@ -814,9 +822,9 @@ static int dhcp6c_command(FAR void *handle, enum dhcpv6_msg_e type)
 
       /* Don't wait too long */
 
-      if (round_end - start > timeout * MSEC_PER_SEC)
+      if (round_end - start > timeout * 1000)
         {
-          round_end = timeout * MSEC_PER_SEC + start;
+          round_end = timeout * 1000 + start;
         }
 
       /* Built and send package */
@@ -836,15 +844,14 @@ static int dhcp6c_command(FAR void *handle, enum dhcpv6_msg_e type)
           uint64_t t = round_end - round_start;
           struct timeval retime =
           {
-            t / MSEC_PER_SEC, (t % MSEC_PER_SEC) * MSEC_PER_SEC
+            t / 1000, (t % 1000) * 1000
           };
 
           /* check for dhcp6c_close */
 
           if (pdhcp6c->cancel)
             {
-              len = -1;
-              goto end;
+              return -1;
             }
 
           setsockopt(pdhcp6c->sockfd, SOL_SOCKET, SO_RCVTIMEO,
@@ -852,7 +859,7 @@ static int dhcp6c_command(FAR void *handle, enum dhcpv6_msg_e type)
 
           /* Receive cycle */
 
-          len = recv(pdhcp6c->sockfd, buf, buf_length, 0);
+          len = recv(pdhcp6c->sockfd, buf, sizeof(buf), 0);
           if (type != DHCPV6_MSG_UNKNOWN)
             {
               ninfo("%s[type:%d] recv len[%d]\n", __func__, type, len);
@@ -872,23 +879,21 @@ static int dhcp6c_command(FAR void *handle, enum dhcpv6_msg_e type)
               elapsed = round_start - start;
               ninfo("Got a valid reply after %ums\n", (unsigned)elapsed);
 
-              if (retx->handler_reply != NULL)
+              if (retx->handler_reply)
                 {
                   len = retx->handler_reply(handle, type, opt,
-                                            opt_end, elapsed / MSEC_PER_SEC);
+                                            opt_end, elapsed / 1000);
                 }
             }
         }
 
-      if (retx->handler_finish != NULL)
+      if (retx->handler_finish)
         {
-          len = retx->handler_finish(handle, elapsed / MSEC_PER_SEC);
+          len = retx->handler_finish(handle, elapsed / 1000);
         }
     }
-  while (len < 0 && elapsed / MSEC_PER_SEC < timeout);
+  while (len < 0 && elapsed / 1000 < timeout);
 
-end:
-  free(buf);
   return len;
 }
 
@@ -912,12 +917,11 @@ static int dhcp6c_handle_advert(FAR void *handle, enum dhcpv6_msg_e orig,
   FAR struct dhcp6c_state_s *pdhcp6c = (FAR struct dhcp6c_state_s *)handle;
   uint16_t olen;
   uint16_t otype;
-  FAR uint8_t *ite0;
   FAR uint8_t *odata;
   struct dhcpv6_server_cand_s cand;
 
   memset(&cand, 0, sizeof(cand));
-  dhcpv6_for_each_option(ite0, opt, end, otype, olen, odata)
+  dhcpv6_for_each_option(opt, end, otype, olen, odata)
     {
       if (otype == DHCPV6_OPT_SERVERID && olen <= 130)
         {
@@ -955,10 +959,9 @@ static int dhcp6c_handle_advert(FAR void *handle, enum dhcpv6_msg_e orig,
         {
           FAR struct dhcpv6_ia_hdr_s *h = (FAR void *)odata;
           FAR uint8_t *oend = odata + olen;
-          FAR uint8_t *ite1;
           FAR uint8_t *d;
 
-          dhcpv6_for_each_option(ite1, &h[1], oend, otype, olen, d)
+          dhcpv6_for_each_option(&h[1], oend, otype, olen, d)
             {
               if (otype == DHCPV6_OPT_IA_PREFIX)
                 {
@@ -999,7 +1002,7 @@ static int dhcp6c_commit_advert(FAR void *handle, uint32_t elapsed)
           retry = true;
         }
 
-      if (c == NULL || c->preference < cand[i].preference)
+      if (!c || c->preference < cand[i].preference)
         {
           c = &cand[i];
         }
@@ -1013,7 +1016,7 @@ static int dhcp6c_commit_advert(FAR void *handle, uint32_t elapsed)
       return dhcp6c_command(handle, DHCPV6_MSG_SOLICIT);
     }
 
-  if (c != NULL)
+  if (c)
     {
       uint16_t hdr[2] =
       {
@@ -1027,7 +1030,7 @@ static int dhcp6c_commit_advert(FAR void *handle, uint32_t elapsed)
 
   dhcp6c_clear_state(handle, STATE_SERVER_CAND);
 
-  if (c == NULL)
+  if (!c)
     {
       return -1;
     }
@@ -1049,25 +1052,23 @@ static time_t dhcp6c_parse_ia(FAR void *handle, FAR void *opt, FAR void *end)
   uint16_t olen;
   uint16_t stype;
   uint16_t slen;
-  FAR uint8_t *ite0;
   FAR uint8_t *odata;
   FAR uint8_t *sdata;
 
   /* Update address IA */
 
-  dhcpv6_for_each_option(ite0, opt, end, otype, olen, odata)
+  dhcpv6_for_each_option(opt, end, otype, olen, odata)
     {
       if (otype == DHCPV6_OPT_IA_PREFIX)
         {
-          FAR struct dhcpv6_ia_prefix_s *prefix = (FAR void *)(odata - 4);
+          FAR struct dhcpv6_ia_prefix_s *prefix = (FAR void *)&odata[-4];
           FAR struct dhcpv6_ia_prefix_s *local = NULL;
           uint32_t valid;
           uint32_t pref;
           size_t pd_len;
           FAR uint8_t *pd;
-          FAR uint8_t *ite1;
 
-          if (olen + 4u < sizeof(*prefix))
+          if (olen + 4U < sizeof(*prefix))
             {
               continue;
             }
@@ -1084,17 +1085,17 @@ static time_t dhcp6c_parse_ia(FAR void *handle, FAR void *opt, FAR void *end)
           /* Search matching IA */
 
           pd = dhcp6c_get_state(handle, STATE_IA_PD, &pd_len);
-          dhcpv6_for_each_option(ite1, pd, pd + pd_len,
+          dhcpv6_for_each_option(pd, pd + pd_len,
                                  stype, slen, sdata)
             {
-              if (memcmp(sdata + 8, odata + 8,
-                         sizeof(local->addr) + 1) == 0)
+              if (!memcmp(sdata + 8, odata + 8,
+                          sizeof(local->addr) + 1))
                 {
-                  local = (FAR void *)(sdata - 4);
+                  local = (FAR void *)&sdata[-4];
                 }
             }
 
-          if (local != NULL)
+          if (local)
             {
               local->preferred = prefix->preferred;
               local->valid = prefix->valid;
@@ -1111,15 +1112,14 @@ static time_t dhcp6c_parse_ia(FAR void *handle, FAR void *opt, FAR void *end)
         }
       else if (otype == DHCPV6_OPT_IA_ADDR)
         {
-          FAR struct dhcpv6_ia_addr_s *addr = (FAR void *)(odata - 4);
+          FAR struct dhcpv6_ia_addr_s *addr = (FAR void *)&odata[-4];
           FAR struct dhcpv6_ia_addr_s *local = NULL;
           uint32_t pref;
           uint32_t valid;
           size_t na_len;
           FAR uint8_t *na;
-          FAR uint8_t *ite1;
 
-          if (olen + 4u < sizeof(*addr))
+          if (olen + 4U < sizeof(*addr))
             {
               continue;
             }
@@ -1136,16 +1136,16 @@ static time_t dhcp6c_parse_ia(FAR void *handle, FAR void *opt, FAR void *end)
           /* Search matching IA */
 
           na = dhcp6c_get_state(handle, STATE_IA_NA, &na_len);
-          dhcpv6_for_each_option(ite1, na, na + na_len,
+          dhcpv6_for_each_option(na, na + na_len,
                                  stype, slen, sdata)
             {
-              if (memcmp(sdata, odata, sizeof(local->addr)) == 0)
+              if (!memcmp(sdata, odata, sizeof(local->addr)))
                 {
-                  local = (FAR void *)(sdata - 4);
+                  local = (FAR void *)&sdata[-4];
                 }
             }
 
-          if (local != NULL)
+          if (local)
             {
               local->preferred = addr->preferred;
               local->valid = addr->valid;
@@ -1172,7 +1172,6 @@ static int dhcp6c_handle_reply(FAR void *handle, enum dhcpv6_msg_e orig,
   FAR struct dhcp6c_state_s *pdhcp6c = (FAR struct dhcp6c_state_s *)handle;
   uint16_t otype;
   uint16_t olen;
-  FAR uint8_t *ite0;
   FAR uint8_t *odata;
   bool have_update = false;
   size_t ia_na_len;
@@ -1199,9 +1198,9 @@ static int dhcp6c_handle_reply(FAR void *handle, enum dhcpv6_msg_e orig,
 
   /* Decrease valid and preferred lifetime of prefixes */
 
-  dhcpv6_for_each_option(ite0, ia_pd, ia_pd + ia_pd_len, otype, olen, odata)
+  dhcpv6_for_each_option(ia_pd, ia_pd + ia_pd_len, otype, olen, odata)
     {
-      FAR struct dhcpv6_ia_prefix_s *p = (FAR void *)(odata - 4);
+      FAR struct dhcpv6_ia_prefix_s *p = (FAR void *)&odata[-4];
       uint32_t valid = ntohl(p->valid);
       uint32_t pref = ntohl(p->preferred);
 
@@ -1218,9 +1217,9 @@ static int dhcp6c_handle_reply(FAR void *handle, enum dhcpv6_msg_e orig,
 
   /* Decrease valid and preferred lifetime of addresses */
 
-  dhcpv6_for_each_option(ite0, ia_na, ia_na + ia_na_len, otype, olen, odata)
+  dhcpv6_for_each_option(ia_na, ia_na + ia_na_len, otype, olen, odata)
     {
-      FAR struct dhcpv6_ia_addr_s *p = (FAR void *)(odata - 4);
+      FAR struct dhcpv6_ia_addr_s *p = (FAR void *)&odata[-4];
       uint32_t valid = ntohl(p->valid);
       uint32_t pref = ntohl(p->preferred);
 
@@ -1237,17 +1236,16 @@ static int dhcp6c_handle_reply(FAR void *handle, enum dhcpv6_msg_e orig,
 
   /* Parse and find all matching IAs */
 
-  dhcpv6_for_each_option(ite0, opt, end, otype, olen, odata)
+  dhcpv6_for_each_option(opt, end, otype, olen, odata)
     {
       if ((otype == DHCPV6_OPT_IA_PD || otype == DHCPV6_OPT_IA_NA)
            && olen > sizeof(struct dhcpv6_ia_hdr_s))
         {
-          FAR struct dhcpv6_ia_hdr_s *ia_hdr = (FAR void *)(odata - 4);
+          FAR struct dhcpv6_ia_hdr_s *ia_hdr = (FAR void *)(&odata[-4]);
           time_t l_t1 = ntohl(ia_hdr->t1);
           time_t l_t2 = ntohl(ia_hdr->t2);
           uint16_t stype;
           uint16_t slen;
-          FAR uint8_t *ite1;
           FAR uint8_t *sdata;
           time_t n;
 
@@ -1260,7 +1258,7 @@ static int dhcp6c_handle_reply(FAR void *handle, enum dhcpv6_msg_e orig,
 
           /* Test status and bail if error */
 
-          dhcpv6_for_each_option(ite1, &ia_hdr[1], odata + olen,
+          dhcpv6_for_each_option(&ia_hdr[1], odata + olen,
                                  stype, slen, sdata)
             {
               if (stype == DHCPV6_OPT_STATUS && slen >= 2 &&
@@ -1323,12 +1321,10 @@ static int dhcp6c_handle_reply(FAR void *handle, enum dhcpv6_msg_e orig,
           uint16_t stype;
           uint16_t slen;
           FAR uint8_t *sdata;
-          FAR uint8_t *ite1;
 
           /* Test status and bail if error */
 
-          dhcpv6_for_each_option(ite1, odata, odata + olen,
-                                 stype, slen, sdata)
+          dhcpv6_for_each_option(odata, odata + olen, stype, slen, sdata)
             {
               if (slen == 16 &&
                   (stype == NTP_MC_ADDR || stype == NTP_SRV_ADDR))
@@ -1362,11 +1358,11 @@ static int dhcp6c_handle_reply(FAR void *handle, enum dhcpv6_msg_e orig,
         }
       else if (otype != DHCPV6_OPT_CLIENTID && otype != DHCPV6_OPT_SERVERID)
         {
-          dhcp6c_add_state(handle, STATE_CUSTOM_OPTS, (odata - 4), olen + 4);
+          dhcp6c_add_state(handle, STATE_CUSTOM_OPTS, &odata[-4], olen + 4);
         }
     }
 
-  if (opt != NULL)
+  if (opt)
     {
       size_t new_ia_pd_len;
       size_t new_ia_na_len;
@@ -1389,9 +1385,9 @@ static int dhcp6c_handle_reply(FAR void *handle, enum dhcpv6_msg_e orig,
 
   ia_pd = dhcp6c_get_state(handle, STATE_IA_PD, &ia_pd_len);
   ia_end = ia_pd + ia_pd_len;
-  dhcpv6_for_each_option(ite0, ia_pd, ia_end, otype, olen, odata)
+  dhcpv6_for_each_option(ia_pd, ia_end, otype, olen, odata)
     {
-      FAR struct dhcpv6_ia_prefix_s *p = (FAR void *)(odata - 4);
+      FAR struct dhcpv6_ia_prefix_s *p = (FAR void *)&odata[-4];
       while (!p->valid)
         {
           ia_end = ia_pd + dhcp6c_remove_state(handle, STATE_IA_PD,
@@ -1404,9 +1400,9 @@ static int dhcp6c_handle_reply(FAR void *handle, enum dhcpv6_msg_e orig,
 
   ia_na = dhcp6c_get_state(handle, STATE_IA_NA, &ia_na_len);
   ia_end = ia_na + ia_na_len;
-  dhcpv6_for_each_option(ite0, ia_na, ia_end, otype, olen, odata)
+  dhcpv6_for_each_option(ia_na, ia_end, otype, olen, odata)
     {
-      FAR struct dhcpv6_ia_addr_s *p = (FAR void *)(odata - 4);
+      FAR struct dhcpv6_ia_addr_s *p = (FAR void *)&odata[-4];
       while (!p->valid)
         {
           ia_end = ia_na + dhcp6c_remove_state(handle, STATE_IA_NA,
@@ -1428,12 +1424,11 @@ static int dhcp6c_handle_reconfigure(FAR void *handle,
   uint16_t otype;
   uint16_t olen;
   FAR uint8_t *odata;
-  FAR uint8_t *ite;
   uint8_t msg = DHCPV6_MSG_RENEW;
 
   /* TODO: should verify the reconfigure message */
 
-  dhcpv6_for_each_option(ite, opt, end, otype, olen, odata)
+  dhcpv6_for_each_option(opt, end, otype, olen, odata)
     {
       if (otype == DHCPV6_OPT_RECONF_MESSAGE && olen == 1 &&
           (odata[0] == DHCPV6_MSG_RENEW ||
@@ -1700,15 +1695,13 @@ static FAR void *dhcp6c_precise_open(FAR const char *ifname,
 
   struct sockaddr_in6 client_addr =
   {
-    AF_INET6,
-    htons(DHCPV6_CLIENT_PORT),
-    0,
-    {0},
-    0
+    .sin6_family = AF_INET6,
+    .sin6_port = htons(DHCPV6_CLIENT_PORT),
+    .sin6_flowinfo = 0
   };
 
   pdhcp6c = malloc(sizeof(struct dhcp6c_state_s));
-  if (pdhcp6c == NULL)
+  if (!pdhcp6c)
     {
       return NULL;
     }
@@ -1765,14 +1758,14 @@ static FAR void *dhcp6c_precise_open(FAR const char *ifname,
       ifc.ifc_req = ifs;
       ifc.ifc_len = sizeof(ifs);
 
-      if (memcmp(&duid[8], zero, ETHER_ADDR_LEN) == 0 &&
+      if (!memcmp(&duid[8], zero, ETHER_ADDR_LEN) &&
           ioctl(pdhcp6c->sockfd, SIOCGIFCONF, &ifc) >= 0)
         {
           /* If our interface doesn't have an address... */
 
           ifend = ifs + (ifc.ifc_len / sizeof(struct ifreq));
           for (ifp = ifc.ifc_req; ifp < ifend &&
-               memcmp(&duid[8], zero, 6) == 0; ifp++)
+               !memcmp(&duid[8], zero, 6); ifp++)
             {
               memcpy(ifr.ifr_name, ifp->ifr_name,
                      sizeof(ifr.ifr_name));
@@ -1796,7 +1789,7 @@ static FAR void *dhcp6c_precise_open(FAR const char *ifname,
   setsockopt(pdhcp6c->sockfd, SOL_SOCKET, UDP_BINDTODEVICE, ifname,
              strlen(ifname));
   if (bind(pdhcp6c->sockfd, (struct sockaddr *)&client_addr,
-           sizeof(client_addr)) != 0)
+           sizeof(client_addr)))
     {
       close(pdhcp6c->urandom_fd);
       close(pdhcp6c->sockfd);
@@ -1823,7 +1816,7 @@ static FAR void *dhcp6c_precise_open(FAR const char *ifname,
 
   pdhcp6c->ia_mode = ia_mode;
   pdhcp6c->accept_reconfig = false;
-  if (opt != NULL && cnt > 0)
+  if (opt && cnt > 0)
     {
       uint16_t opttype;
       for (int i = 0; i < cnt; i++)
@@ -1849,7 +1842,7 @@ int dhcp6c_request(FAR void *handle, FAR struct dhcp6c_state *presult)
 {
   int ret;
 
-  if (handle == NULL)
+  if (!handle)
     {
       return ERROR;
     }
@@ -1871,7 +1864,7 @@ int dhcp6c_request_async(FAR void *handle, dhcp6c_callback_t callback)
   FAR struct dhcp6c_state_s *pdhcp6c = (FAR struct dhcp6c_state_s *)handle;
   int ret;
 
-  if (handle == NULL)
+  if (!handle)
     {
       return ERROR;
     }
@@ -1899,7 +1892,7 @@ void dhcp6c_cancel(FAR void *handle)
   sighandler_t old;
   int ret;
 
-  if (pdhcp6c != NULL)
+  if (pdhcp6c)
     {
       pdhcp6c->cancel = true;
       if (pdhcp6c->thread)
@@ -1932,22 +1925,22 @@ void dhcp6c_close(FAR void *handle)
 {
   FAR struct dhcp6c_state_s *pdhcp6c = (FAR struct dhcp6c_state_s *)handle;
 
-  if (pdhcp6c != NULL)
+  if (pdhcp6c)
     {
       dhcp6c_cancel(pdhcp6c);
-      if (pdhcp6c->urandom_fd > 0)
+      if (pdhcp6c->urandom_fd)
         {
           close(pdhcp6c->urandom_fd);
         }
 
-      if (pdhcp6c->sockfd > 0)
+      if (pdhcp6c->sockfd)
         {
           close(pdhcp6c->sockfd);
         }
 
       for (int i = 0; i < STATE_MAX; i++)
         {
-          if (pdhcp6c->state_data[i] != NULL)
+          if (pdhcp6c->state_data[i])
             {
               free(pdhcp6c->state_data[i]);
             }
