@@ -28,6 +28,7 @@
 #include <sys/boardctl.h>
 #include <sys/ioctl.h>
 #include <sys/utsname.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -319,41 +320,18 @@ int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 }
 #endif
 
-#if defined(CONFIG_BOARDCTL_RESET_CAUSE) && !defined(CONFIG_NSH_DISABLE_RESET_CAUSE)
-int cmd_reset_cause(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
-{
-  int ret;
-  struct boardioc_reset_cause_s cause;
-
-  memset(&cause, 0, sizeof(cause));
-  ret = boardctl(BOARDIOC_RESET_CAUSE, &cause);
-  if (ret < 0)
-    {
-      nsh_error(vtbl, g_fmtcmdfailed, argv[0], "boardctl", NSH_ERRNO);
-      return ERROR;
-    }
-
-  nsh_output(vtbl, "cause:0x%x, flag:0x" PRIx32 "\n",
-             cause.cause, cause.flag);
-  return OK;
-}
-#endif
-
 /****************************************************************************
  * Name: cmd_rptun
  ****************************************************************************/
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
-int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
+static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl, char *path,
+                          int argc, char **argv)
 {
-  int fd;
+  struct rptun_ping_s ping;
+  unsigned long val = 0;
   int cmd;
-
-  if (argc < 3)
-    {
-      nsh_output(vtbl, g_fmtargrequired, argv[0]);
-      return ERROR;
-    }
+  int fd;
 
   if (strcmp(argv[1], "start") == 0)
     {
@@ -363,23 +341,94 @@ int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
     {
       cmd = RPTUNIOC_STOP;
     }
+  else if (strcmp(argv[1], "reset") == 0)
+    {
+      if (argc > 3)
+        {
+          val = atoi(argv[3]);
+        }
+
+      cmd = RPTUNIOC_RESET;
+    }
+  else if (strcmp(argv[1], "panic") == 0)
+    {
+      cmd = RPTUNIOC_PANIC;
+    }
+  else if (strcmp(argv[1], "dump") == 0)
+    {
+      cmd = RPTUNIOC_DUMP;
+    }
+  else if (strcmp(argv[1], "ping") == 0)
+    {
+      if (argc != 6)
+        {
+          nsh_output(vtbl, g_fmtarginvalid, path);
+          return ERROR;
+        }
+
+      ping.times = atoi(argv[3]);
+      ping.len   = atoi(argv[4]);
+      ping.ack   = atoi(argv[5]);
+
+      cmd = RPTUNIOC_PING;
+      val = (unsigned long)&ping;
+    }
   else
     {
       nsh_output(vtbl, g_fmtarginvalid, argv[1]);
       return ERROR;
     }
 
-  fd = open(argv[2], 0);
+  fd = open(path, 0);
   if (fd < 0)
     {
-      nsh_output(vtbl, g_fmtarginvalid, argv[2]);
+      nsh_output(vtbl, g_fmtarginvalid, path);
       return ERROR;
     }
 
-  ioctl(fd, cmd, 0);
+  cmd = ioctl(fd, cmd, val);
 
   close(fd);
-  return 0;
+
+  return cmd;
+}
+
+static int cmd_rptun_recursive(FAR struct nsh_vtbl_s *vtbl,
+                               const char *dirpath,
+                               struct dirent *entryp, void *pvarg)
+{
+  char *path;
+  int ret;
+
+  if (DIRENT_ISDIRECTORY(entryp->d_type))
+    {
+      return 0;
+    }
+
+  path = nsh_getdirpath(vtbl, dirpath, entryp->d_name);
+
+  ret = cmd_rptun_once(vtbl, path, 2, pvarg);
+
+  free(path);
+
+  return ret;
+}
+
+int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
+{
+  if (argc < 2)
+    {
+      nsh_output(vtbl, g_fmtargrequired, argv[0]);
+      return ERROR;
+    }
+
+  if (argc == 2)
+    {
+      return nsh_foreach_direntry(vtbl, "rptun", "/dev/rptun",
+                                  cmd_rptun_recursive, argv);
+    }
+
+  return cmd_rptun_once(vtbl, argv[2], argc, argv);
 }
 #endif
 

@@ -40,7 +40,7 @@ WAMR_URL      = $(WAMR_URL_BASE)/$(WAMR_TARBALL)
 
 VPATH += $(WAMR_UNPACK)/product-mini/platforms/nuttx
 
-ifeq ($(CONFIG_INTERPRETERS_IWASM_TASK),y)
+ifeq ($(CONFIG_INTERPRETERS_IWASM_TASK), y)
 MAINSRC = main.c
 
 PROGNAME  = iwasm
@@ -59,10 +59,10 @@ $(WAMR_UNPACK): $(WAMR_TARBALL)
 	$(Q) mv wasm-micro-runtime-$(WAMR_VERSION_STUB)$(WAMR_VERSION) $(WAMR_UNPACK)
 	$(Q) touch $(WAMR_UNPACK)
 
-context:: $(WAMR_UNPACK)
+context:: # $(WAMR_UNPACK)
 
 distclean::
-	$(call DELDIR, $(WAMR_UNPACK))
-	$(call DELFILE, $(WAMR_TARBALL))
+	# $(call DELDIR, $(WAMR_UNPACK))
+	# $(call DELFILE, $(WAMR_TARBALL))
 
 include $(APPDIR)/Application.mk

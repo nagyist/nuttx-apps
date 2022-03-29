@@ -177,7 +177,6 @@ static void do_reallocs(FAR void **mem, FAR const int *oldsize,
 {
   int i;
   int j;
-  void *ptr;
 
   for (i = 0; i < n; i++)
     {
@@ -185,19 +184,10 @@ static void do_reallocs(FAR void **mem, FAR const int *oldsize,
       printf("(%d)Re-allocating at %p from %d to %d bytes\n",
              i, mem[j], oldsize[j], newsize[j]);
 
-      /* Return null if realloc failed, so using a local variable to store
-       * the return value to avoid the missing of old memory pointer.
-       */
+      mem[j] = realloc(mem[j], newsize[j]);
+      printf("(%d)Memory re-allocated at %p\n", i, mem[j]);
 
-      ptr = realloc(mem[j], newsize[j]);
-      if (ptr != NULL)
-        {
-          mem[j] = ptr;
-        }
-
-      printf("(%d)Memory re-allocated at %p\n", i, ptr);
-
-      if (ptr == NULL)
+      if (mem[j] == NULL)
         {
           int allocsize = MM_ALIGN_UP(newsize[j] + SIZEOF_MM_ALLOCNODE);
 

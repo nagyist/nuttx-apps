@@ -490,8 +490,7 @@
  */
 
 #if defined(CONFIG_NSH_DISABLE_LS) && defined(CONFIG_NSH_DISABLE_CP) && \
-    defined(CONFIG_NSH_DISABLE_PS) && !defined(CONFIG_NSH_PLATFORM_MOTD) && \
-    defined(CONFIG_DISABLE_ENVIRON)
+    defined(CONFIG_NSH_DISABLE_PS) && !defined(CONFIG_NSH_PLATFORM_MOTD)
 #  undef NSH_HAVE_IOBUFFER
 #endif
 
@@ -1155,10 +1154,6 @@ int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 
 #if defined(CONFIG_BOARDCTL_RESET) && !defined(CONFIG_NSH_DISABLE_REBOOT)
   int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-#endif
-
-#if defined(CONFIG_BOARDCTL_RESET_CAUSE) && !defined(CONFIG_NSH_DISABLE_RESET_CAUSE)
-  int cmd_reset_cause(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
 #endif
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
