@@ -120,7 +120,7 @@ struct ftpd_session_s
 {
   FAR struct ftpd_server_s  *server;
   FAR struct ftpd_account_s *head;
-  bool                       loggedin;
+  FAR struct ftpd_account_s *curr;
   uint8_t                    flags;   /* See TPD_SESSIONFLAG_* definitions */
   int                        rxtimeout;
   int                        txtimeout;

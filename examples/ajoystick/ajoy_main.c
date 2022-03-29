@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/ajoystick/ajoy_main.c
+ * examplex/ajoystick/ajoy_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -37,7 +37,6 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-
 /* Configuration ************************************************************/
 
 #ifndef CONFIG_AJOYSTICK
@@ -57,10 +56,10 @@
 /* Helpers ******************************************************************/
 
 #ifndef MIN
-#  define MIN(a,b) ((a) < (b) ? (a) : (b))
+#  define MIN(a,b) (a < b ? a : b)
 #endif
 #ifndef MAX
-#  define MAX(a,b) ((a) > (b) ? (a) : (b))
+#  define MAX(a,b) (a > b ? a : b)
 #endif
 
 /****************************************************************************
@@ -76,7 +75,6 @@ static int ajoy_calibrate(int fd);
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-
 /* The set of supported joystick buttons */
 
 static ajoy_buttonset_t g_ajoysupported;
@@ -238,9 +236,8 @@ static int ajoy_read(int fd, FAR struct ajoy_sample_s *sample)
       return -EIO;
     }
 
-  /* Show the joystick position and set buttons accompanying the signal.
-   * Show the set of joystick buttons that we just read
-   */
+  /* Show the joystick position and set buttons accompanying the signal */
+  /* Show the set of joystick buttons that we just read */
 
   printf("Read position and button set\n");
   show_joystick(sample);
@@ -422,9 +419,9 @@ int main(int argc, char *argv[])
   /* Then loop, receiving signals indicating joystick events. */
 
   timeout.tv_sec  = 0;
-  timeout.tv_nsec = 600 * 1000 * 1000;
+  timeout.tv_nsec = 600*1000*1000;
 
-  for (; ; )
+  for (;;)
     {
       struct ajoy_sample_s sample;
 

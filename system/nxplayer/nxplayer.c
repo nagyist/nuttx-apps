@@ -148,7 +148,7 @@ static int _open_with_http(const char *fullurl)
   char resp_msg[] = "\r\n\r\n";
   struct timeval tv;
   uint16_t port = 80;
-  char buf[PATH_MAX];
+  char buf[64];
   int  s;
   int  n;
   char c;
@@ -395,7 +395,7 @@ static int nxplayer_opendevice(FAR struct nxplayer_s *pplayer, int format,
                                * to find the subformat
                                */
 
-                              for (x = 0; x < sizeof(caps.ac_controls); x++)
+                              for (x = 0; x < sizeof(caps.ac_controls.b); x++)
                                 {
                                   if (caps.ac_controls.b[x] == subfmt)
                                     {
