@@ -326,8 +326,8 @@ static void *nxlooper_loopthread(pthread_addr_t pvarg)
   struct audio_buf_desc_s buf_desc;
   struct ap_buffer_info_s recordbuf_info;
   struct ap_buffer_info_s playbuf_info;
-  FAR struct ap_buffer_s  **playbufs;
-  FAR struct ap_buffer_s  **recordbufs;
+  FAR struct ap_buffer_s  **playbufs = NULL;
+  FAR struct ap_buffer_s  **recordbufs = NULL;
   unsigned int            prio;
   ssize_t                 size;
   bool                    running = true;
@@ -509,10 +509,10 @@ static void *nxlooper_loopthread(pthread_addr_t pvarg)
             if (dq_count(&playdq) != 0 && dq_count(&recorddq) != 0)
               {
                 FAR struct ap_buffer_s *apbrec;
-                uint32_t copy;
+                int copy;
 
-                apbrec = (FAR struct ap_buffer_s *)dq_peek(&recorddq);
-                apb = (FAR struct ap_buffer_s *)dq_peek(&playdq);
+                apbrec = (struct ap_buffer_s *)dq_peek(&recorddq);
+                apb = (struct ap_buffer_s *)dq_peek(&playdq);
 
                 copy = MIN(apbrec->nbytes - apbrec->curbyte,
                            apb->nmaxbytes - apb->curbyte);
@@ -524,15 +524,14 @@ static void *nxlooper_loopthread(pthread_addr_t pvarg)
 
                 if (apbrec->curbyte == apbrec->nbytes)
                   {
-                    apbrec =
-                        (FAR struct ap_buffer_s *)dq_remfirst(&recorddq);
+                    apbrec = (struct ap_buffer_s *)dq_remfirst(&recorddq);
                     apbrec->curbyte = 0;
                     ret = nxlooper_enqueuerecordbuffer(plooper, apbrec);
                   }
 
                 if (ret == OK && apb->curbyte == apb->nmaxbytes)
                   {
-                    apb = (FAR struct ap_buffer_s *)dq_remfirst(&playdq);
+                    apb = (struct ap_buffer_s *)dq_remfirst(&playdq);
                     apb->nbytes = apb->nmaxbytes;
                     apb->curbyte = 0;
                     ret = nxlooper_enqueueplaybuffer(plooper, apb);
@@ -543,7 +542,7 @@ static void *nxlooper_loopthread(pthread_addr_t pvarg)
               {
 #ifdef CONFIG_O_MULTI_SESSION
                 ret = ioctl(plooper->playdev_fd, AUDIOIOC_START,
-                            (unsigned long)plooper->pplayses);
+                               (unsigned long)plooper->pplayses);
 #else
                 ret = ioctl(plooper->playdev_fd, AUDIOIOC_START, 0);
 #endif
