@@ -282,12 +282,12 @@ static int usrsock_rpmsg_close_handler(struct rpmsg_endpoint *ept,
   if (req->usockid >= 0 &&
       req->usockid < CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS)
     {
-      pthread_mutex_lock(&priv->mutex);
       priv->pfds[req->usockid].ptr = NULL;
       priv->epts[req->usockid] = NULL;
 
       /* Signal and wait the poll thread to wakeup */
 
+      pthread_mutex_lock(&priv->mutex);
       usrsock_rpmsg_notify_poll(priv);
       pthread_cond_wait(&priv->cond, &priv->mutex);
       pthread_mutex_unlock(&priv->mutex);
@@ -801,18 +801,6 @@ static int usrsock_rpmsg_dns_handler(struct rpmsg_endpoint *ept, void *data,
   return 0;
 }
 
-static int usrsock_rpmsg_dns_handler(struct rpmsg_endpoint *ept, void *data,
-                                     size_t len, uint32_t src, void *priv_)
-{
-#ifdef CONFIG_NETDB_DNSCLIENT
-  struct usrsock_rpmsg_dns_request_s *dns = data;
-
-  dns_add_nameserver((struct sockaddr *)(dns + 1), dns->addrlen);
-#endif
-
-  return 0;
-}
-
 #ifdef CONFIG_NETDB_DNSCLIENT
 static int usrsock_rpmsg_send_dns_event(void *arg,
                                         struct sockaddr *addr,
@@ -980,8 +968,9 @@ static bool usrsock_rpmsg_process_poll(struct usrsock_rpmsg_s *priv,
               eventfd_t value;
 
               file_read(priv->eventfp, &value, sizeof(value));
-              prepare = true;
             }
+
+          prepare = true;
         }
       else
         {
@@ -1028,7 +1017,6 @@ static bool usrsock_rpmsg_process_poll(struct usrsock_rpmsg_s *priv,
 
                   pfds[i].ptr = NULL;
                   priv->pfds[j].ptr = NULL;
-                  prepare = true;
                 }
 
               if (events != 0)
