@@ -154,11 +154,6 @@ static const struct cmdmap_s g_cmdmap[] =
   { "dirname",  cmd_dirname,  2, 2, "<path>" },
 #endif
 
-#ifndef CONFIG_NSH_DISABLE_TIMEDATECTL
-  { "timedatectl", cmd_timedatectl, 1, 3, "[set-timezone TZ]"
-  },
-#endif
-
 #ifndef CONFIG_NSH_DISABLE_DATE
   { "date",     cmd_date,     1, 4, "[-s \"MMM DD HH:MM:SS YYYY\"] [-u]" },
 #endif
@@ -444,6 +439,10 @@ static const struct cmdmap_s g_cmdmap[] =
   { "reboot",   cmd_reboot,   1, 2, NULL },
 #endif
 
+#if defined(CONFIG_BOARDCTL_RESET_CAUSE) && !defined(CONFIG_NSH_DISABLE_RESET_CAUSE)
+  { "resetcause",   cmd_reset_cause,   1, 1, NULL },
+#endif
+
 #ifdef NSH_HAVE_DIROPTS
 # ifndef CONFIG_NSH_DISABLE_RM
   { "rm",       cmd_rm,       2, 3, "[-r] <file-path>" },
@@ -472,7 +471,8 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
   { "rptun",    cmd_rptun,    3, 6,
-    "<start|stop|reset|panic|dump|ping> <path|all> [value|times length ack]" },
+    "<start|stop|reset|panic|dump|ping> <path|all> "
+    "[value|times length ack]" },
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_SET
