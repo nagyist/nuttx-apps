@@ -801,6 +801,18 @@ static int usrsock_rpmsg_dns_handler(struct rpmsg_endpoint *ept, void *data,
   return 0;
 }
 
+static int usrsock_rpmsg_dns_handler(struct rpmsg_endpoint *ept, void *data,
+                                     size_t len, uint32_t src, void *priv_)
+{
+#ifdef CONFIG_NETDB_DNSCLIENT
+  struct usrsock_rpmsg_dns_request_s *dns = data;
+
+  dns_add_nameserver((struct sockaddr *)(dns + 1), dns->addrlen);
+#endif
+
+  return 0;
+}
+
 #ifdef CONFIG_NETDB_DNSCLIENT
 static int usrsock_rpmsg_send_dns_event(void *arg,
                                         struct sockaddr *addr,
