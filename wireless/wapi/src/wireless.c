@@ -752,7 +752,7 @@ int wapi_set_essid(int sock, FAR const char *ifname, FAR const char *essid,
 
   wrq.u.essid.pointer = buf;
   wrq.u.essid.length =
-    snprintf(buf, WAPI_ESSID_MAX_SIZE + 1, "%s", essid) + 1;
+    snprintf(buf, ((WAPI_ESSID_MAX_SIZE + 1) * sizeof(char)), "%s", essid);
   wrq.u.essid.flags = flag;
 
   strlcpy(wrq.ifr_name, ifname, IFNAMSIZ);
@@ -1240,7 +1240,6 @@ int wapi_scan_stat(int sock, FAR const char *ifname)
   char buf;
 
   wrq.u.data.pointer = &buf;
-  wrq.u.data.length  = sizeof(buf);
 
   strlcpy(wrq.ifr_name, ifname, IFNAMSIZ);
   ret = ioctl(sock, SIOCGIWSCAN, (unsigned long)((uintptr_t)&wrq));
@@ -1259,13 +1258,13 @@ int wapi_scan_stat(int sock, FAR const char *ifname)
           return 1;
         }
 
-      int errcode = errno;
-      WAPI_IOCTL_STRERROR(SIOCGIWSCAN, errcode);
-      ret = -errcode;
+      printf("err[%d]: %s\n", errno, strerror(errno));
     }
   else
     {
-      ret = 0;
+      int errcode = errno;
+      WAPI_IOCTL_STRERROR(SIOCGIWSCAN, errcode);
+      ret = -errcode;
     }
 
   return ret;
@@ -1295,7 +1294,7 @@ int wapi_scan_coll(int sock, FAR const char *ifname,
 
   WAPI_VALIDATE_PTR(aps);
 
-  buflen = CONFIG_WIRELESS_WAPI_SCAN_MAX_DATA;
+  buflen = IW_SCAN_MAX_DATA;
   buf = malloc(buflen * sizeof(char));
   if (!buf)
     {
