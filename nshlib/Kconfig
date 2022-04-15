@@ -707,8 +707,9 @@ config NSH_ROMFSETC
 	default n
 	depends on FS_ROMFS
 	---help---
-		Mount a ROMFS filesystem at /etc and provide a startup script
-		at /etc/init.d/rcS.  The default startup script will mount
+		Mount a ROMFS filesystem at /etc and provide a system init
+		script at /etc/init.d/rc.sysinit and a startup script
+		at /etc/init.d/rcS.  The default system init script will mount
 		a FAT FS RAMDISK at /tmp but the logic is easily extensible.
 
 if NSH_ROMFSETC
@@ -718,8 +719,9 @@ config NSH_CROMFSETC
 	default n
 	depends on FS_CROMFS
 	---help---
-		Mount a CROMFS filesystem at /etc and provide a compressed startup
-		script at /etc/init.d/rcS.
+		Mount a CROMFS filesystem at /etc and provide a compressed system
+		init script at /etc/init.d/rc.sysinit and a startup script
+		at /etc/init.d/rcS.
 
 config NSH_ROMFSRC
 	bool "Support ROMFS login script"
