@@ -51,15 +51,6 @@ struct usrsock_rpmsg_s
   struct pollfd         pfds[CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS + 1];
 };
 
-struct usrsock_rpmsg_work_s
-{
-  struct work_s                  work;
-  struct rpmsg_endpoint          *ept;
-  struct usrsock_rpmsg_s         *priv;
-  struct usrsock_request_ioctl_s *req;
-  size_t                         len;
-};
-
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
@@ -293,12 +284,12 @@ static int usrsock_rpmsg_close_handler(struct rpmsg_endpoint *ept,
   if (req->usockid >= 0 &&
       req->usockid < CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS)
     {
-      pthread_mutex_lock(&priv->mutex);
       priv->pfds[req->usockid].ptr = NULL;
       priv->epts[req->usockid] = NULL;
 
       /* Signal and wait the poll thread to wakeup */
 
+      pthread_mutex_lock(&priv->mutex);
       usrsock_rpmsg_notify_poll(priv);
       pthread_cond_wait(&priv->cond, &priv->mutex);
       pthread_mutex_unlock(&priv->mutex);
@@ -752,28 +743,29 @@ static int usrsock_rpmsg_accept_handler(struct rpmsg_endpoint *ept,
   return retr;
 }
 
-static void usrsock_rpmsg_worker(void *arg)
+static int usrsock_rpmsg_ioctl_handler(struct rpmsg_endpoint *ept,
+                                       void *data, size_t len_,
+                                       uint32_t src, void *priv_)
 {
-  struct usrsock_rpmsg_work_s *work = arg;
-  struct rpmsg_endpoint *ept = work->ept;
-  struct usrsock_request_ioctl_s *req = work->req;
-  struct usrsock_message_datareq_ack_s *ack = arg;
-  struct usrsock_rpmsg_s *priv = work->priv;
-  size_t len = work->len;
+  struct usrsock_request_ioctl_s *req = data;
+  struct usrsock_message_datareq_ack_s *ack;
+  struct usrsock_rpmsg_s *priv = priv_;
 #ifdef CONFIG_NETDEV_WIRELESS_IOCTL
   struct iwreq *wlreq;
   struct iwreq *wlack;
 #endif
   int ret = -EBADF;
+  uint32_t len;
 
+  ack = rpmsg_get_tx_payload_buffer(ept, &len, true);
   if (req->usockid >= 0 &&
       req->usockid < CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS)
     {
-      memcpy(ack + 1, req + 1, len - sizeof(*req));
+      memcpy(ack + 1, req + 1, len_ - sizeof(*req));
 #ifdef CONFIG_NETDEV_WIRELESS_IOCTL
       wlreq = (struct iwreq *)(req + 1);
       wlack = (struct iwreq *)(ack + 1);
-      if (WL_IS80211POINTERCMD(req->cmd) && wlreq->u.data.pointer)
+      if (WL_IS80211POINTERCMD(req->cmd))
         {
           wlack->u.data.pointer = wlack + 1;
         }
@@ -783,7 +775,7 @@ static void usrsock_rpmsg_worker(void *arg)
               req->cmd, (unsigned long)(ack + 1));
 
 #ifdef CONFIG_NETDEV_WIRELESS_IOCTL
-      if (WL_IS80211POINTERCMD(req->cmd) && wlreq->u.data.pointer)
+      if (WL_IS80211POINTERCMD(req->cmd))
         {
           if (ret >= 0)
             {
@@ -795,32 +787,8 @@ static void usrsock_rpmsg_worker(void *arg)
 #endif
     }
 
-  rpmsg_release_rx_buffer(ept, req);
-  usrsock_rpmsg_send_data_ack(ept,
-    ack, 0, req->head.xid, ret, req->arglen, req->arglen);
-}
-
-static int usrsock_rpmsg_ioctl_handler(struct rpmsg_endpoint *ept,
-                                       void *data, size_t len_,
-                                       uint32_t src, void *priv)
-{
-  struct usrsock_rpmsg_work_s *work;
-  uint32_t len;
-
-  work = rpmsg_get_tx_payload_buffer(ept, &len, true);
-
-  memset(work, 0, sizeof(*work));
-  work->ept  = ept;
-  work->priv = priv;
-  work->req  = data;
-  work->len  = len_;
-
-  rpmsg_hold_rx_buffer(ept, data);
-
-  work_queue(HPWORK, &work->work,
-             usrsock_rpmsg_worker, work, 0);
-
-  return 0;
+  return usrsock_rpmsg_send_data_ack(ept,
+           ack, 0, req->head.xid, ret, req->arglen, req->arglen);
 }
 
 static int usrsock_rpmsg_dns_handler(struct rpmsg_endpoint *ept, void *data,
@@ -1003,8 +971,9 @@ static bool usrsock_rpmsg_process_poll(struct usrsock_rpmsg_s *priv,
               eventfd_t value;
 
               file_read(priv->eventfp, &value, sizeof(value));
-              prepare = true;
             }
+
+          prepare = true;
         }
       else
         {
@@ -1051,7 +1020,6 @@ static bool usrsock_rpmsg_process_poll(struct usrsock_rpmsg_s *priv,
 
                   pfds[i].ptr = NULL;
                   priv->pfds[j].ptr = NULL;
-                  prepare = true;
                 }
 
               if (events != 0)

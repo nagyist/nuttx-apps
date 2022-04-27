@@ -129,7 +129,11 @@ static FAR void *cu_listener(FAR void *parameter)
 
 static void sigint(int sig)
 {
-  g_cu.force_exit = true;
+  pthread_cancel(g_cu.listener);
+  tcflush(g_cu.outfd, TCIOFLUSH);
+  close(g_cu.outfd);
+  close(g_cu.infd);
+  exit(0);
 }
 
 #ifdef CONFIG_SERIAL_TERMIOS
@@ -455,7 +459,7 @@ int main(int argc, FAR char *argv[])
 
   /* Send messages and get responses -- forever */
 
-  while (!g_cu.force_exit)
+  for (; ; )
     {
       int ch = getc(stdin);
 
