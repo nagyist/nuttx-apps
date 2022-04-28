@@ -278,8 +278,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #ifndef CONFIG_DISABLE_MOUNTPOINT
 # if defined(CONFIG_DEV_LOOP) && !defined(CONFIG_NSH_DISABLE_LOSETUP)
   { "losetup",   cmd_losetup, 3, 6,
-    "[-d <dev-path>] | [[-o <offset>] [-r] [-s <sect-size>] "
-    "<dev-path> <file-path>]" },
+    "[-d <dev-path>] | [[-o <offset>] [-r] <dev-path> <file-path>]" },
 # endif
 #endif
 
@@ -477,8 +476,7 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
   { "rptun",    cmd_rptun,    3, 6,
-    "<start|stop|reset|panic|dump|ping> <path|all> "
-    "[value|times length ack]" },
+    "<start|stop|reset|panic|dump|ping> <path|all> [value|times length ack]" },
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_SET
