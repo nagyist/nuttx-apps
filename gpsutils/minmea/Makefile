@@ -40,16 +40,12 @@ $(MINMEA_UNPACKDIR):
 CSRCS	= minmea/minmea.c
 CFLAGS += -std=c99
 
-ifneq ($(CONFIG_GPSUTILS_MINMEA_BREAM_LIB),)
-  CSRCS += vendor/bream.c
-endif
-
-context::# $(MINMEA_UNPACKDIR)
+context:: $(MINMEA_UNPACKDIR)
 
 clean::
 	$(call DELFILE, $(OBJS))
 
 distclean::
-#	$(call DELDIR, $(MINMEA_UNPACKDIR))
+	$(call DELDIR, $(MINMEA_UNPACKDIR))
 
 include $(APPDIR)/Application.mk

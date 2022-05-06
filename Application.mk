@@ -101,7 +101,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: .built
+all:: $(OBJS)
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -159,9 +159,8 @@ $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
 
-.built: $(OBJS)
-	$(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^)
-	$(Q) touch $@
+archive:
+	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $(OBJS))
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -226,7 +225,7 @@ ifneq ($(PROGNAME),)
 REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
 APPLIST := $(PROGNAME)
 
-$(REGLIST): $(DEPCONFIG) $(firstword $(MAKEFILE_LIST))
+$(REGLIST): $(DEPCONFIG) Makefile
 	$(call REGISTER,$(firstword $(APPLIST)),$(firstword $(PRIORITY)),$(firstword $(STACKSIZE)),$(if $(BUILD_MODULE),,$(firstword $(APPLIST))_main))
 	$(eval APPLIST=$(filter-out $(firstword $(APPLIST)),$(APPLIST)))
 	$(if $(filter-out $(firstword $(PRIORITY)),$(PRIORITY)),$(eval PRIORITY=$(filter-out $(firstword $(PRIORITY)),$(PRIORITY))))
@@ -237,7 +236,7 @@ else
 register::
 endif
 
-.depend: $(firstword $(MAKEFILE_LIST)) $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
+.depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$^) >Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$^) >>Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$^) >>Make.dep
@@ -246,7 +245,6 @@ endif
 depend:: .depend
 
 clean::
-	$(call DELFILE, .built)
 	$(call CLEAN)
 
 distclean:: clean
