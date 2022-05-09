@@ -180,8 +180,7 @@ int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   if (argc <= 2)
     {
-      int next_state;
-      int last_state;
+      int current_state;
       int normal_count;
       int idle_count;
       int standby_count;
@@ -194,11 +193,7 @@ int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
       ctrl.action = BOARDIOC_PM_QUERYSTATE;
       boardctl(BOARDIOC_PM_CONTROL, (uintptr_t)&ctrl);
-      last_state = ctrl.state;
-
-      ctrl.action = BOARDIOC_PM_CHECKSTATE;
-      boardctl(BOARDIOC_PM_CONTROL, (uintptr_t)&ctrl);
-      next_state = ctrl.state;
+      current_state = ctrl.state;
 
       ctrl.action = BOARDIOC_PM_STAYCOUNT;
       ctrl.state = PM_NORMAL;
@@ -217,9 +212,8 @@ int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       boardctl(BOARDIOC_PM_CONTROL, (uintptr_t)&ctrl);
       sleep_count = ctrl.count;
 
-      nsh_output(vtbl, "Last state %d, Next state %d, PM stay [%d, %d, %d, %d]\n",
-                 last_state, next_state, normal_count, idle_count,
-                 standby_count, sleep_count);
+      nsh_output(vtbl, "Current state %d, PM stay [%d, %d, %d, %d]\n",
+        current_state, normal_count, idle_count, standby_count, sleep_count);
     }
   else if (argc <= 4)
     {
@@ -392,8 +386,7 @@ static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl,
     }
   else if (strcmp(argv[1], "ping") == 0)
     {
-      if (argv[3] == 0 || argv[4] == 0 ||
-          argv[5] == 0 || argv[6] == 0)
+      if (argv[3] == 0 || argv[4] == 0 || argv[5] == 0)
         {
           return ERROR;
         }
@@ -401,7 +394,6 @@ static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl,
       ping.times = atoi(argv[3]);
       ping.len   = atoi(argv[4]);
       ping.ack   = atoi(argv[5]);
-      ping.sleep = atoi(argv[6]);
 
       cmd = RPTUNIOC_PING;
       val = (unsigned long)&ping;
