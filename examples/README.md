@@ -317,7 +317,8 @@ options:
    LDELFFLAGS = -r -e main
    ```
 
-   If you use GCC to link, you make also need to include `-nostdlib`.
+   If you use GCC to link, you make also need to include `-nostdlib` or
+   `-nostartfiles` and `-nodefaultlibs`.
 
 3. This example also requires `genromfs`. `genromfs` can be build as part of the
    nuttx toolchain. Or can built from the `genromfs` sources that can be found
@@ -642,16 +643,6 @@ maintaining duplicate logic in the NuttX repository.
 This is a simple test of the board LED driver at
 `nuttx/drivers/leds/userled_*.c`.
 
-## `luamod_hello` Hello World Lua module
-
-A Lua C module showing how to add built-in modules to the Lua interpreter.
-Usage:
-
-```lua
-> hello.say_hello()
-"Hello World!"
-```
-
 ## `lis2csh_reader` `LIS3DSH` Accelerometer
 
 A simple reader example for the `LIS3DSH` acceleration sensor as found on
@@ -732,7 +723,8 @@ configuration options:
    LDMODULEFLAGS = -r -e module_initialize
    ```
 
-   If you use GCC to link, you make also need to include `-nostdlib`.
+   If you use GCC to link, you make also need to include `-nostdlib` or
+   `-nostartfiles` and `-nodefaultlibs`.
 
 3. This example also requires `genromfs`. `genromfs` can be build as part of the
    nuttx toolchain. Or can built from the `genromfs` sources that can be found
@@ -1273,7 +1265,8 @@ Test-specific configuration options:
    LDELFFLAGS = -r -e main
    ```
 
-   If you use GCC to link, you make also need to include `-nostdlib`.
+   If you use GCC to link, you make also need to include `-nostdlib` or
+   `-nostartfiles` and `-nodefaultlibs`.
 
 3. This example also requires `genromfs`. `genromfs` can be build as part of the
    nuttx toolchain. Or can built from the `genromfs` sources that can be found
@@ -1544,7 +1537,8 @@ system. At run time, the shared library is installed and exercised. Requires
    LDMODULEFLAGS = -r -e module_initialize
    ```
 
-   If you use GCC to link, you make also need to include `-nostdlib`.
+   If you use GCC to link, you make also need to include `-nostdlib` or
+   `-nostartfiles` and `-nodefaultlibs`.
 
 3. This example also requires `genromfs`. `genromfs` can be build as part of the
    nuttx toolchain. Or can built from the `genromfs` sources that can be found

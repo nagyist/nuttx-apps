@@ -19,6 +19,7 @@
 ############################################################################
 
 include $(APPDIR)/Make.defs
+-include ./ext/Makefile
 
 LIBUV_PATCHS ?= $(sort $(wildcard 000*.patch))
 
@@ -69,12 +70,12 @@ CSRCS += posix-hrtime.c
 CSRCS += posix-poll.c
 CSRCS += uv-data-getter-setters.c
 CSRCS += version.c
-ifneq ($(CONFIG_LIBUV_UTILS_TEST),)
+ifeq ($(CONFIG_LIBUV_UTILS_TEST),)
 CSRCS += idna.c
+CSRCS += strscpy.c
 endif
 CSRCS += no-fsevents.c
 CSRCS += uv-common.c
-CSRCS += strscpy.c
 CSRCS += random-devurandom.c
 CSRCS += random.c
 CSRCS += nuttx.c
@@ -112,8 +113,10 @@ ifneq ($(CONFIG_NET_UDP),)
 CSRCS += udp.c
 endif
 
+ifeq ($(findstring y,$(CONFIG_LIBUV_UTILS_TEST)$(CONFIG_LIBUV_UTILS_BENCHMARK)), y)
 PRIORITY  = $(CONFIG_LIBUV_UTILS_PRIORITY)
 STACKSIZE = $(CONFIG_LIBUV_UTILS_STACKSIZE)
+endif
 
 ifneq ($(CONFIG_LIBUV_UTILS_TEST),)
 
@@ -318,10 +321,10 @@ CSRCS += echo-server.c
 
 endif
 
-context:: $(LIBUV_UNPACK)/.patch
+context::# $(LIBUV_UNPACK)/.patch
 
 distclean::
-	$(call DELDIR, $(LIBUV_UNPACK))
-	$(call DELFILE, $(LIBUV_TARBALL))
+#	$(call DELDIR, $(LIBUV_UNPACK))
+#	$(call DELFILE, $(LIBUV_TARBALL))
 
 include $(APPDIR)/Application.mk
