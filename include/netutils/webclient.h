@@ -103,6 +103,22 @@
 
 #define	WEBCLIENT_FLAG_NON_BLOCKING	1U
 
+/* WEBCLIENT_FLAG_TUNNEL: Establish a tunnel
+ *
+ * If WEBCLIENT_FLAG_TUNNEL is set, ctx->url is ignored and
+ * tunnel_target_host and tunnel_target_port members are used instead.
+ *
+ * Once a tunnel is established, webclient_perform returns success,
+ * keeping the tunneled connection open.
+ *
+ * After the successful (0-returning) call of webclient_perform,
+ * the user can use webclient_get_tunnel only once.
+ * webclient_get_tunnel effectively detaches the returned
+ * webclient_conn_s from the context. It's users' responsibility
+ * to dispose the connection.
+ */
+#define	WEBCLIENT_FLAG_TUNNEL	2U
+
 /* The following WEBCLIENT_FLAG_xxx constants are for
  * webclient_poll_info::flags.
  */
@@ -133,6 +149,9 @@
  *   buflen - A pointer to the length of the buffer.  If the callee wishes
  *       to change the size of the buffer, it may write to buflen.
  *   arg    - User argument passed to callback.
+ *
+ * Note: changing buffer address and/or size is only allowed for HTTP 1.0.
+ * It's not allowed for HTTP 1.1.
  */
 
 typedef void (*wget_callback_t)(FAR char **buffer, int offset,
@@ -307,6 +326,7 @@ struct webclient_context
 {
   /* request parameters
    *
+   *   protocol_version - HTTP protocol version. HTTP 1.0 by default.
    *   method           - HTTP method like "GET", "POST".
    *                      The default value is "GET".
    *   url              - A pointer to a string containing the full URL.
@@ -329,6 +349,12 @@ struct webclient_context
    *                      10 seconds by default.
    */
 
+  enum webclient_protocol_version_e
+    {
+      WEBCLIENT_PROTOCOL_VERSION_HTTP_1_0, /* HTTP 1.0 */
+      WEBCLIENT_PROTOCOL_VERSION_HTTP_1_1, /* HTTP 1.1 */
+    } protocol_version;
+
   FAR const char *method;
   FAR const char *url;
   FAR const char *proxy;
@@ -339,6 +365,11 @@ struct webclient_context
   unsigned int nheaders;
   size_t bodylen;
   unsigned int timeout_sec;
+
+  /* Parameters for WEBCLIENT_FLAG_TUNNEL */
+
+  FAR const char *tunnel_target_host;
+  uint16_t tunnel_target_port;
 
   /* other parameters
    *
@@ -398,6 +429,7 @@ struct webclient_context
     WEBCLIENT_CONTEXT_STATE_IN_PROGRESS,
     WEBCLIENT_CONTEXT_STATE_ABORTED,
     WEBCLIENT_CONTEXT_STATE_DONE,
+    WEBCLIENT_CONTEXT_STATE_TUNNEL_ESTABLISHED,
   } state;
 #endif
 };
@@ -408,6 +440,20 @@ struct webclient_poll_info
 
   int fd;
   unsigned int flags; /* OR'ed WEBCLIENT_POLL_INFO_xxx flags */
+};
+
+struct webclient_conn_s
+{
+  bool tls;
+
+  /* for !tls */
+
+  int sockfd;
+  unsigned int flags;
+
+  /* for tls */
+
+  struct webclient_tls_connection *tls_conn;
 };
 
 /****************************************************************************
@@ -468,6 +514,8 @@ void webclient_set_static_body(FAR struct webclient_context *ctx,
                                size_t bodylen);
 int webclient_get_poll_info(FAR struct webclient_context *ctx,
                             FAR struct webclient_poll_info *info);
+int webclient_get_tunnel(FAR struct webclient_context *ctx,
+                         FAR struct webclient_conn_s **connp);
 
 #undef EXTERN
 #ifdef __cplusplus
