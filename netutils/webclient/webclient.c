@@ -1379,7 +1379,7 @@ int webclient_perform(FAR struct webclient_context *ctx)
                               goto errout_with_errno;
                             }
                         }
-                      else
+                      else if (ctx->callback)
                         {
                           ctx->callback(&ws->buffer, ws->offset, ws->datend,
                                         &ws->buflen, ctx->sink_callback_arg);
