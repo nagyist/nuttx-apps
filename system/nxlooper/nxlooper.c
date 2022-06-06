@@ -330,8 +330,7 @@ static void *nxlooper_loopthread(pthread_addr_t pvarg)
   FAR struct ap_buffer_s  **recordbufs = NULL;
   unsigned int            prio;
   ssize_t                 size;
-  int                     running = 2;
-  bool                    streaming = true;
+  bool                    running = true;
   int                     x;
   int                     ret;
 
@@ -496,11 +495,6 @@ static void *nxlooper_loopthread(pthread_addr_t pvarg)
           /* An audio buffer is being dequeued by the driver */
 
           case AUDIO_MSG_DEQUEUE:
-            if (!streaming)
-              {
-                break;
-              }
-
             apb = msg.u.ptr;
             apb->curbyte = 0;
             if (apb->flags & AUDIO_APB_PLAY)
@@ -515,10 +509,10 @@ static void *nxlooper_loopthread(pthread_addr_t pvarg)
             if (dq_count(&playdq) != 0 && dq_count(&recorddq) != 0)
               {
                 FAR struct ap_buffer_s *apbrec;
-                int copy;
+                uint32_t copy;
 
-                apbrec = (struct ap_buffer_s *)dq_peek(&recorddq);
-                apb = (struct ap_buffer_s *)dq_peek(&playdq);
+                apbrec = (FAR struct ap_buffer_s *)dq_peek(&recorddq);
+                apb = (FAR struct ap_buffer_s *)dq_peek(&playdq);
 
                 copy = MIN(apbrec->nbytes - apbrec->curbyte,
                            apb->nmaxbytes - apb->curbyte);
@@ -530,14 +524,15 @@ static void *nxlooper_loopthread(pthread_addr_t pvarg)
 
                 if (apbrec->curbyte == apbrec->nbytes)
                   {
-                    apbrec = (struct ap_buffer_s *)dq_remfirst(&recorddq);
+                    apbrec =
+                        (FAR struct ap_buffer_s *)dq_remfirst(&recorddq);
                     apbrec->curbyte = 0;
                     ret = nxlooper_enqueuerecordbuffer(plooper, apbrec);
                   }
 
                 if (ret == OK && apb->curbyte == apb->nmaxbytes)
                   {
-                    apb = (struct ap_buffer_s *)dq_remfirst(&playdq);
+                    apb = (FAR struct ap_buffer_s *)dq_remfirst(&playdq);
                     apb->nbytes = apb->nmaxbytes;
                     apb->curbyte = 0;
                     ret = nxlooper_enqueueplaybuffer(plooper, apb);
@@ -548,7 +543,7 @@ static void *nxlooper_loopthread(pthread_addr_t pvarg)
               {
 #ifdef CONFIG_O_MULTI_SESSION
                 ret = ioctl(plooper->playdev_fd, AUDIOIOC_START,
-                               (unsigned long)plooper->pplayses);
+                            (unsigned long)plooper->pplayses);
 #else
                 ret = ioctl(plooper->playdev_fd, AUDIOIOC_START, 0);
 #endif
@@ -581,12 +576,8 @@ static void *nxlooper_loopthread(pthread_addr_t pvarg)
             ioctl(plooper->playdev_fd, AUDIOIOC_STOP, 0);
             ioctl(plooper->recorddev_fd, AUDIOIOC_STOP, 0);
 #endif
-            streaming = false;
 
-            break;
-
-          case AUDIO_MSG_COMPLETE:
-            running--;
+            running = false;
             break;
 
           /* Unknown / unsupported message ID */
