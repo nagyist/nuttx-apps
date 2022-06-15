@@ -33,8 +33,6 @@ ifeq ($(CONFIG_EXAMPLES_SOTEST_BUILTINFS),y)
 CSRCS = romfs.c
 endif
 CSRCS += sot_symtab.c
-lib$(DELIM)sot_symtab.c_CFLAGS = -fno-builtin
-lib$(DELIM)sot_symtab.c_CELFFLAGS = -fno-builtin
 MAINSRC = sotest_main.c
 
 DEPPATH += --dep-path lib
