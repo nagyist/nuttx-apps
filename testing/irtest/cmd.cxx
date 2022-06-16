@@ -189,13 +189,11 @@ CMD1(open_device, const char *, file_name)
     }
 
   int index = 0;
-  for (; index < CONFIG_TESTING_IRTEST_MAX_NIRDEV; index++)
+  for (; index < CONFIG_TESTING_IRTEST_MAX_NIRDEV &&
+       g_irdevs[index] == -1; index++)
     {
-      if (g_irdevs[index] == -1)
-        {
-          g_irdevs[index] = irdev;
-          break;
-        }
+      g_irdevs[index] = irdev;
+      break;
     }
 
   if (index == CONFIG_TESTING_IRTEST_MAX_NIRDEV)
