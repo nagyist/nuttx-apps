@@ -20,32 +20,9 @@
 
 include $(APPDIR)/Make.defs
 
-MINMEA_URL ?= "https://github.com/kosma/minmea/archive"
-MINMEA_VERSION ?= db46128e73cee26d6a6eb0482dcba544ee1ea9f5
+# NSH Library
 
-MINMEA_DIR := $(APPDIR)/gpsutils/minmea/minmea
-MINMEA_UNPACKNAME := minmea
-MINMEA_UNPACKDIR := $(MINMEA_DIR)/$(MINMEA_UNPACKNAME)
-
-
-$(MINMEA_UNPACKDIR):
-	@echo "Downloading: $(MINMEA_UNPACKNAME)"
-	$(Q) curl -O -L $(MINMEA_URL)/$(MINMEA_VERSION).zip
-	$(Q) unzip -o -j $(MINMEA_VERSION).zip
-	$(call DELFILE, $(MINMEA_VERSION).zip)
-	$(call MOVEFILE, $(MINMEA_UNPACKNAME)-$(MINMEA_VERSION), $(MINMEA_UNPACKDIR))
-
-# Files
-
-CSRCS	= minmea/minmea.c
+CSRCS   = minmea.c
 CFLAGS += -std=c99
-
-context::# $(MINMEA_UNPACKDIR)
-
-clean::
-	$(call DELFILE, $(OBJS))
-
-distclean::
-#	$(call DELDIR, $(MINMEA_UNPACKDIR))
 
 include $(APPDIR)/Application.mk
