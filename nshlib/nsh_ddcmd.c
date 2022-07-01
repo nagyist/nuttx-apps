@@ -353,15 +353,14 @@ int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
   elapsed  = (((uint64_t)ts1.tv_sec * NSEC_PER_SEC) + ts1.tv_nsec);
   elapsed -= (((uint64_t)ts0.tv_sec * NSEC_PER_SEC) + ts0.tv_nsec);
-  elapsed /= NSEC_PER_USEC; /* usec */
+  elapsed /= NSEC_PER_MSEC; /* msec */
 
   total = ((uint64_t)dd.sector * (uint64_t)dd.sectsize);
 
-  nsh_output(vtbl, "%llu bytes copied, %u usec, ",
+  nsh_output(vtbl, "%llu bytes copied, %u msec, ",
              total, (unsigned int)elapsed);
   nsh_output(vtbl, "%u KB/s\n" ,
-             (unsigned int)(((double)total / 1024)
-             / ((double)elapsed / USEC_PER_SEC)));
+             (unsigned int)((double)total / (double)elapsed));
 #endif
 
 errout_with_outf:
