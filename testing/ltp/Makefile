@@ -15,51 +15,42 @@
 
 include $(APPDIR)/Make.defs
 
-TESTDIR      = $(CURDIR)/ltp/testcases/open_posix_testsuite
+LTP_UNPACK   = ltp
+LTP_URL      = https://github.com/linux-test-project/ltp.git
 
+TESTDIR      = $(LTP_UNPACK)/testcases/open_posix_testsuite
+
+ifneq ($(wildcard $(TESTDIR)),)
 ifeq ($(CONFIG_FS_AIO),)
 BLACKWORDS  += "aio.h"
 BLACKWORDS  += "SIGPOLL"
 endif
-BLACKWORDS  += "SA_RESTART"
-BLACKWORDS  += "pthread_atfork"
-BLACKWORDS  += "pthread_condattr_setpshared"
-BLACKWORDS  += "pthread_condattr_getpshared"
-BLACKWORDS  += "pthread_mutex_getprioceiling"
-BLACKWORDS  += "pthread_mutexattr_setprioceiling"
-BLACKWORDS  += "pthread_mutexattr_getprioceiling"
-BLACKWORDS  += "pthread_getattr_np"
-BLACKWORDS  += "pthread_getcpuclockid"
-BLACKWORDS  += "pthread_rwlockattr_init"
-BLACKWORDS  += "pthread_rwlockattr_destroy"
-BLACKWORDS  += "pthread_mutex_getprioceiling"
-BLACKWORDS  += "clock_getcpuclockid"
-BLACKWORDS  += "shm_unlink"
-BLACKWORDS  += "shm_open"
-BLACKWORDS  += "mlock"
-BLACKWORDS  += "munlock"
-BLACKWORDS  += "mlockall"
-BLACKWORDS  += "msync"
-BLACKWORDS  += "getpgrp"
-BLACKWORDS  += "lfind"
-BLACKWORDS += "killpg"
-BLACKWORDS  += "setpwent"
-ifeq ($(CONFIG_PTHREAD_SPINLOCKS),)
-BLACKWORDS += "pthread_spin_init"
-BLACKWORDS += "pthread_spin_destroy"
-BLACKWORDS += "pthread_spin_trylock"
-endif
-
 BLACKWORDS  += "affinity.h"
+BLACKWORDS  += "endpwent"
 BLACKWORDS  += "langinfo.h"
 BLACKWORDS  += "ucontext.h"
 BLACKWORDS  += "noatime.h"
+BLACKWORDS  += "clock_getcpuclockid"
 BLACKWORDS  += "CLOCK_PROCESS_CPUTIME_ID"
 BLACKWORDS  += "CLOCK_THREAD_CPUTIME_ID"
 BLACKWORDS  += "fork()"
+BLACKWORDS  += "getpwent"
+BLACKWORDS  += "killpg"
+BLACKWORDS  += "pthread_atfork"
 BLACKWORDS  += "pthread_attr_setscope"
+BLACKWORDS  += "pthread_condattr_setpshared"
+BLACKWORDS  += "pthread_condattr_getpshared"
+BLACKWORDS  += "pthread_getattr_np"
+BLACKWORDS  += "pthread_getcpuclockid"
+BLACKWORDS  += "pthread_mutex_getprioceiling"
+BLACKWORDS  += "pthread_mutexattr_getprioceiling"
+BLACKWORDS  += "pthread_mutexattr_setprioceiling"
+BLACKWORDS  += "pthread_rwlockattr_destroy"
+BLACKWORDS  += "pthread_rwlockattr_getpshared"
+BLACKWORDS  += "pthread_rwlockattr_init"
 BLACKWORDS  += "RLIMIT_MEMLOCK"
 BLACKWORDS  += "PTHREAD_SCOPE_PROCESS"
+BLACKWORDS  += "setpwent"
 BLACKWORDS  += "SIGABRT"
 BLACKWORDS  += "SIGBUS"
 BLACKWORDS  += "SIGFPE"
@@ -80,7 +71,6 @@ BLACKWORDS  += "SIGSTKSZ"
 BLACKWORDS  += "stack_t"
 BLACKWORDS  += "siginterrupt"
 BLACKWORDS  += "threads_scenarii.c"
-BLACKWORDS  += "PTHREAD_PRIO_PROTECT"
 
 BLACKWORDS  += "ILL_[A-Z]"
 BLACKWORDS  += "FPE_[A-Z]"
@@ -106,45 +96,45 @@ BLACKSRCS += 25-1-buildonly.c
 BLACKSRCS += 27-1-buildonly.c
 BLACKSRCS += 35-1-buildonly.c
 BLACKSRCS += 35-2-buildonly.c
-BLACKSRCS += 27-2.c
-ifeq ($(CONFIG_PTHREAD_SPINLOCKS),)
-BLACKSRCS += 3-12-buildonly.c
-endif
 
 MAINWORDS    += "main("
 
-LTP_COUNT    := $(shell expr `find $(TESTDIR) -name *.c | wc -l` / 2)
-LTP_ORIGS_1  := $(shell find $(TESTDIR) -name *.c | head -n $(LTP_COUNT))
-LTP_ORIGS_2  := $(shell find $(TESTDIR) -name *.c | tail -n $(LTP_COUNT))
+$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell find $(TESTDIR) -name *.c |xargs grep -lr $(word))))
+$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(shell find $(TESTDIR) -name *.c))))
 
-$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(LTP_ORIGS_1))))
-$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGS_1))))
+LTP_ORIGINS  := $(filter-out $(BLACKLIST), $(shell find $(TESTDIR) -name *.c))
 
-$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(LTP_ORIGS_2))))
-$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGS_2))))
+$(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS+=$(shell grep -lr $(word) $(LTP_ORIGINS))))
 
-LTP_ORIGS_1  := $(filter-out $(BLACKLIST), $(LTP_ORIGS_1))
-LTP_ORIGS_2  := $(filter-out $(BLACKLIST), $(LTP_ORIGS_2))
+LTP_CSRCS    := $(filter-out $(LTP_MAINCSRCS), $(LTP_ORIGINS))
 
-$(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS_1+=$(shell grep -lr $(word) $(LTP_ORIGS_1))))
-$(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS_2+=$(shell grep -lr $(word) $(LTP_ORIGS_2))))
-
-LTP_CSRCS_1  := $(filter-out $(LTP_MAINCSRCS_1), $(LTP_ORIGS_1))
-LTP_CSRCS_2  := $(filter-out $(LTP_MAINCSRCS_2), $(LTP_ORIGS_2))
-
-
-PROGNAME     := $(basename $(shell echo $(LTP_MAINCSRCS_1) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))
-PROGNAME     += $(basename $(shell echo $(LTP_MAINCSRCS_2) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))
-MAINSRC       = $(LTP_MAINCSRCS_1) $(LTP_MAINCSRCS_2)
+PROGNAME     := $(basename $(shell echo $(LTP_MAINCSRCS) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))
+MAINSRC       = $(LTP_MAINCSRCS)
 PRIORITY      = SCHED_PRIORITY_DEFAULT
 STACKSIZE     = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE        = $(CONFIG_TESTING_LTP)
 
-CSRCS        := $(LTP_CSRCS_1) $(LTP_CSRCS_2)
-CFLAGS       += -I$(CURDIR)
+CSRCS        := $(LTP_CSRCS)
+CFLAGS       += -I$(LTP_UNPACK)
 CFLAGS       += -I$(TESTDIR)/include
+endif
 
-depend::
-	$(Q) touch $(MAINSRC)
+# Relax warning checks to avoid expected compile errors:
+CFLAGS += -Wno-strict-prototypes -Wno-return-type -Wno-format -Wno-uninitialized
+CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-value
+
+# Should be removed if possible in the future
+CFLAGS += -Wno-incompatible-pointer-types -Wno-overflow -Wno-int-to-pointer-cast
+
+$(LTP_UNPACK):
+	$(Q) echo "git clone $(LTP_URL)"
+	$(Q) git clone $(LTP_URL)
+	$(Q) git -C $(LTP_UNPACK) am < 0001-Fix-static-struct-warning.patch
+	$(Q) git -C $(LTP_UNPACK) am < 0002-Use-ifdef-instead-of-if-for-__linux__.patch
+
+context:: $(LTP_UNPACK)
+
+distclean::
+	$(Q) rm -rf $(LTP_UNPACK)
 
 include $(APPDIR)/Application.mk
