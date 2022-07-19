@@ -30,7 +30,6 @@
 #endif
 
 #include <stdbool.h>
-#include <stdlib.h>
 #include <spawn.h>
 #include <errno.h>
 #include <string.h>
@@ -127,7 +126,7 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
    * failure.
    */
 
-  ret = posix_spawnp(&pid, cmd, &file_actions, &attr, argv, environ);
+  ret = posix_spawnp(&pid, cmd, &file_actions, &attr, argv, NULL);
   if (ret == OK)
     {
       /* The application was successfully started with pre-emption disabled.
