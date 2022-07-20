@@ -25,7 +25,6 @@
 #include <nuttx/config.h>
 
 #include <sys/types.h>
-#include <inttypes.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -246,7 +245,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
       if ((lsflags & LSFLAGS_SIZE) != 0)
         {
-          nsh_output(vtbl, "%8" PRIdOFF, buf.st_size);
+          nsh_output(vtbl, "%8d", buf.st_size);
         }
     }
 
@@ -455,7 +454,7 @@ int cmd_cat(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
  * Name: cmd_dmesg
  ****************************************************************************/
 
-#if defined(CONFIG_RAMLOG_SYSLOG) && !defined(CONFIG_NSH_DISABLE_DMESG)
+#if defined(CONFIG_SYSLOG_DEVPATH) && !defined(CONFIG_NSH_DISABLE_DMESG)
 int cmd_dmesg(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   return nsh_catfile(vtbl, argv[0], CONFIG_SYSLOG_DEVPATH);
@@ -671,7 +670,6 @@ int cmd_losetup(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   bool teardown = false;
   bool readonly = false;
   off_t offset = 0;
-  int sectsize = 512;
   bool badarg = false;
   int ret = ERROR;
   int option;
@@ -680,13 +678,13 @@ int cmd_losetup(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
   /* Get the losetup options:  Two forms are supported:
    *
    *   losetup -d <loop-device>
-   *   losetup [-o <offset>] [-r] [-s <sectsize> ] <loop-device> <filename>
+   *   losetup [-o <offset>] [-r] <loop-device> <filename>
    *
    * NOTE that the -o and -r options are accepted with the -d option, but
    * will be ignored.
    */
 
-  while ((option = getopt(argc, argv, "d:o:rs:")) != ERROR)
+  while ((option = getopt(argc, argv, "d:o:r")) != ERROR)
     {
       switch (option)
         {
@@ -701,10 +699,6 @@ int cmd_losetup(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
         case 'r':
           readonly = true;
-          break;
-
-        case 's':
-          sectsize = atoi(optarg);
           break;
 
         case '?':
@@ -783,7 +777,7 @@ int cmd_losetup(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 
       setup.devname  = loopdev;   /* The loop block device to be created */
       setup.filename = filepath;  /* The file or character device to use */
-      setup.sectsize = sectsize;  /* The sector size to use with the block device */
+      setup.sectsize = 512;       /* The sector size to use with the block device */
       setup.offset   = offset;    /* An offset that may be applied to the device */
       setup.readonly = readonly;  /* True: Read access will be supported only */
 
@@ -1874,7 +1868,7 @@ int cmd_cmp(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
       if (nbytesread1 != nbytesread2 ||
           memcmp(buf1, buf2, nbytesread1) != 0)
         {
-          nsh_error(vtbl, "files differ: byte %" PRIuOFF "\n", total_read);
+          nsh_error(vtbl, "files differ: byte %u\n", total_read);
           goto errout_with_fd2;
         }
 

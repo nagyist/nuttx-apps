@@ -75,11 +75,15 @@ int nsh_catfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
                   strlen(CONFIG_NSH_PROC_MOUNTPOINT)) == 0)
         {
           nsh_error(vtbl,
-                    "nsh: %s: Could not open %s (is procfs mounted?)\n",
-                    cmd, filepath);
+                    "nsh: %s: Could not open %s (is procfs mounted?): %d\n",
+                    cmd, filepath, NSH_ERRNO);
         }
+      else
 #endif
-      nsh_error(vtbl, g_fmtcmdfailed, cmd, "open", NSH_ERRNO);
+        {
+          nsh_error(vtbl, g_fmtcmdfailed, cmd, "open", NSH_ERRNO);
+        }
+
       return ERROR;
     }
 
@@ -318,11 +322,15 @@ int nsh_writefile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
                   strlen(CONFIG_NSH_PROC_MOUNTPOINT)) == 0)
         {
           nsh_error(vtbl,
-                    "nsh: %s: Could not open %s (is procfs mounted?)\n",
-                    cmd, filepath);
+                    "nsh: %s: Could not open %s (is procfs mounted?): %d\n",
+                    cmd, filepath, NSH_ERRNO);
         }
+      else
 #endif
-      nsh_error(vtbl, g_fmtcmdfailed, cmd, "open", NSH_ERRNO);
+        {
+          nsh_error(vtbl, g_fmtcmdfailed, cmd, "open", NSH_ERRNO);
+        }
+
       return ERROR;
     }
 
@@ -376,11 +384,15 @@ int nsh_foreach_direntry(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
                   strlen(CONFIG_NSH_PROC_MOUNTPOINT)) == 0)
         {
           nsh_error(vtbl,
-                    "nsh: %s: Could not open %s (is procfs mounted?)\n",
-                    cmd, dirpath);
+                    "nsh: %s: Could not open %s (is procfs mounted?): %d\n",
+                    cmd, dirpath, NSH_ERRNO);
         }
+      else
 #endif
-      nsh_error(vtbl, g_fmtcmdfailed, cmd, "opendir", NSH_ERRNO);
+        {
+          nsh_error(vtbl, g_fmtnosuch, cmd, "directory", dirpath);
+        }
+
       return ERROR;
     }
 
