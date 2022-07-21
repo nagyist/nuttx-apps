@@ -86,9 +86,8 @@ static void ppp_reject_protocol(FAR struct ppp_context_s *ctx,
   FAR uint8_t *sptr;
   FAR LCPPKT *pkt;
 
-  /* First copy rejected packet back, start from end and work forward, +++
-   * Pay attention to buffer management when updated.  Assumes fixed PPP
-   * blocks.
+  /* First copy rejected packet back, start from end and work forward, +++ Pay
+   * attention to buffer management when updated. Assumes fixed PPP blocks.
    */
 
   DEBUG1(("Rejecting Protocol\n"));
@@ -265,11 +264,11 @@ void ppp_poll(FAR struct ppp_context_s *ctx)
 #else
       if (ctx->lcp_state & LCP_RX_AUTH)
         {
-          /* lcp is asking for authentication but we do not support this.
-           * This should be communicated upstream but we do not have an
-           * interface for that right now, so just ignore it; nothing can be
-           * done.  This also should not have been hit because upcall does
-           * not know about the pap message type.
+          /* lcp is asking for authentication but we do not support this. This
+           * should be communicated upstream but we do not have an interface
+           * for that right now, so just ignore it; nothing can be done.  This
+           * also should not have been hit because upcall does not know about
+           * the pap message type.
            */
 
           DEBUG1(("Asking for PAP, but we do not know PAP\n"));
@@ -353,10 +352,10 @@ void ppp_upcall(FAR struct ppp_context_s *ctx, uint16_t protocol,
  ****************************************************************************/
 
 uint16_t scan_packet(FAR struct ppp_context_s *ctx, uint16_t protocol,
-                     FAR const uint8_t * list, FAR uint8_t * buffer,
+                     FAR const FAR uint8_t * list, FAR uint8_t * buffer,
                      FAR uint8_t * options, uint16_t len)
 {
-  FAR const uint8_t *tlist;
+  FAR const FAR uint8_t *tlist;
   FAR uint8_t *bptr;
   FAR uint8_t *tptr;
   uint8_t bad = 0;
@@ -370,8 +369,8 @@ uint16_t scan_packet(FAR struct ppp_context_s *ctx, uint16_t protocol,
 
   while (bptr < options + len)
     {
-      /* Get code and see if it matches somewhere in the list, if not we
-       * don't support it.
+      /* Get code and see if it matches somewhere in the list, if not we don't
+       * support it.
        */
 
       i = *bptr++;
