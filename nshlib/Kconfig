@@ -1,4 +1,5 @@
 #
+#
 # For a description of the syntax of this configuration file,
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
@@ -401,7 +402,7 @@ config NSH_DISABLE_NSFMOUNT
 config NSH_DISABLE_NSLOOKUP
 	bool "Disable nslookup"
 	default DEFAULT_SMALL
-	depends on LIBC_NETDB
+	depends on LIBC_NETDB && NETDB_DNSCLIENT
 
 config NSH_DISABLE_PASSWD
 	bool "Disable passwd"
@@ -430,6 +431,12 @@ config NSH_DISABLE_PSHEAPUSAGE
 	bool "Disable ps heap usage"
 	depends on DEBUG_MM && !NSH_DISABLE_PS
 	default DEFAULT_SMALL
+
+config NSH_DISABLE_PSHEAPUSAGE
+	bool "Disable ps heap usage"
+	depends on DEBUG_MM && !NSH_DISABLE_PS
+	default y if DEFAULT_SMALL
+	default n if !DEFAULT_SMALL
 
 config NSH_DISABLE_PSSTACKUSAGE
 	bool "Disable ps stack usage"
@@ -700,9 +707,8 @@ config NSH_ROMFSETC
 	default n
 	depends on FS_ROMFS
 	---help---
-		Mount a ROMFS filesystem at /etc and provide a system init
-		script at /etc/init.d/rc.sysinit and a startup script
-		at /etc/init.d/rcS.  The default system init script will mount
+		Mount a ROMFS filesystem at /etc and provide a startup script
+		at /etc/init.d/rcS.  The default startup script will mount
 		a FAT FS RAMDISK at /tmp but the logic is easily extensible.
 
 if NSH_ROMFSETC
@@ -712,9 +718,8 @@ config NSH_CROMFSETC
 	default n
 	depends on FS_CROMFS
 	---help---
-		Mount a CROMFS filesystem at /etc and provide a compressed system
-		init script at /etc/init.d/rc.sysinit and a startup script
-		at /etc/init.d/rcS.
+		Mount a CROMFS filesystem at /etc and provide a compressed startup
+		script at /etc/init.d/rcS.
 
 config NSH_ROMFSRC
 	bool "Support ROMFS login script"
@@ -854,7 +859,7 @@ config NSH_FATMOUNTPT
 		will mount a FAT FS under /tmp. This is the location where the FAT
 		FS will be mounted.  Default is "/tmp".
 
-config NSH_SCRIPT_REDIRECT_PATH
+config NSH_SCRIRT_REDIRECT_PATH
 	string "rcS redirect output"
 	default ""
 	---help---
