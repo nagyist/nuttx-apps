@@ -222,7 +222,6 @@ int main(int argc, char *argv[])
   ret = rpmsg_register_callback(&priv,
                                 usrsock_rpmsg_device_created,
                                 usrsock_rpmsg_device_destroy,
-                                NULL,
                                 NULL);
   if (ret < 0)
     {
@@ -267,7 +266,6 @@ int main(int argc, char *argv[])
 
           /* Wait the packet ready */
 
-          memset(&pfd, 0, sizeof(struct pollfd));
           pfd.ptr = &priv.file;
           pfd.events = POLLIN | POLLFILE;
           ret = poll(&pfd, 1, -1);
@@ -320,7 +318,6 @@ unregister_callback:
   rpmsg_unregister_callback(&priv,
                             usrsock_rpmsg_device_created,
                             usrsock_rpmsg_device_destroy,
-                            NULL,
                             NULL);
 destroy_sem:
   sem_destroy(&priv.sem);

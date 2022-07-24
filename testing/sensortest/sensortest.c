@@ -64,7 +64,6 @@ static void print_valb(FAR const char *buffer, FAR const char *name);
 static void print_vali2(FAR const char *buffer, FAR const char *name);
 static void print_ppgd(FAR const char *buffer, FAR const char *name);
 static void print_ppgq(FAR const char *buffer, FAR const char *name);
-static void print_cap(FAR const char *buffer, FAR const char *name);
 static void print_gps(FAR const char *buffer, FAR const char *name);
 static void print_gps_satellite(FAR const char *buffer,
                                 FAR const char *name);
@@ -77,38 +76,37 @@ static bool g_should_exit = false;
 
 static const struct sensor_info g_sensor_info[] =
 {
-  {print_vec3,  sizeof(struct sensor_event_accel), "accel"},
-  {print_vec3,  sizeof(struct sensor_event_mag),   "mag"},
-  {print_vec3,  sizeof(struct sensor_event_gyro),  "gyro"},
-  {print_valf2, sizeof(struct sensor_event_baro),  "baro"},
-  {print_valf2, sizeof(struct sensor_event_light), "light"},
-  {print_valf,  sizeof(struct sensor_event_prox),  "prox"},
-  {print_valf,  sizeof(struct sensor_event_humi),  "humi"},
-  {print_valf,  sizeof(struct sensor_event_temp),  "temp"},
-  {print_valf3, sizeof(struct sensor_event_rgb),   "rgb"},
-  {print_valb,  sizeof(struct sensor_event_hall),  "hall"},
-  {print_valf,  sizeof(struct sensor_event_ir),    "ir"},
-  {print_gps,   sizeof(struct sensor_event_gps),   "gps"},
-  {print_valf,  sizeof(struct sensor_event_uv),    "uv"},
-  {print_valf,  sizeof(struct sensor_event_noise), "noise"},
-  {print_valf,  sizeof(struct sensor_event_pm25),  "pm25"},
-  {print_valf,  sizeof(struct sensor_event_pm1p0), "pm1p0"},
-  {print_valf,  sizeof(struct sensor_event_pm10),  "pm10"},
-  {print_valf,  sizeof(struct sensor_event_co2),   "co2"},
-  {print_valf,  sizeof(struct sensor_event_hcho),  "hcho"},
-  {print_valf,  sizeof(struct sensor_event_tvoc),  "tvoc"},
-  {print_valf,  sizeof(struct sensor_event_ph),    "ph"},
-  {print_valf,  sizeof(struct sensor_event_dust),  "dust"},
-  {print_valf,  sizeof(struct sensor_event_hrate), "hrate"},
-  {print_valf,  sizeof(struct sensor_event_hbeat), "hbeat"},
-  {print_valf,  sizeof(struct sensor_event_ecg),   "ecg"},
-  {print_ppgd,  sizeof(struct sensor_event_ppgd),  "ppgd"},
-  {print_ppgq,  sizeof(struct sensor_event_ppgq),  "ppgq"},
-  {print_valf2, sizeof(struct sensor_event_impd),  "impd"},
-  {print_vali2, sizeof(struct sensor_event_ots),   "ots"},
-  {print_cap,   sizeof(struct sensor_event_cap),   "cap"},
-  {print_gps_satellite,  sizeof(struct sensor_event_gps_satellite),
-                                                   "gps_satellite"}
+  {print_vec3,  sizeof(struct sensor_accel), "accel"},
+  {print_vec3,  sizeof(struct sensor_mag),   "mag"},
+  {print_vec3,  sizeof(struct sensor_gyro),  "gyro"},
+  {print_valf2, sizeof(struct sensor_baro),  "baro"},
+  {print_valf,  sizeof(struct sensor_light), "light"},
+  {print_valf,  sizeof(struct sensor_prox),  "prox"},
+  {print_valf,  sizeof(struct sensor_humi),  "humi"},
+  {print_valf,  sizeof(struct sensor_temp),  "temp"},
+  {print_valf3, sizeof(struct sensor_rgb),   "rgb"},
+  {print_valb,  sizeof(struct sensor_hall),  "hall"},
+  {print_valf,  sizeof(struct sensor_ir),    "ir"},
+  {print_gps,   sizeof(struct sensor_gps),   "gps"},
+  {print_valf,  sizeof(struct sensor_uv),    "uv"},
+  {print_valf,  sizeof(struct sensor_noise), "noise"},
+  {print_valf,  sizeof(struct sensor_pm25),  "pm25"},
+  {print_valf,  sizeof(struct sensor_pm1p0), "pm1p0"},
+  {print_valf,  sizeof(struct sensor_pm10),  "pm10"},
+  {print_valf,  sizeof(struct sensor_co2),   "co2"},
+  {print_valf,  sizeof(struct sensor_hcho),  "hcho"},
+  {print_valf,  sizeof(struct sensor_tvoc),  "tvoc"},
+  {print_valf,  sizeof(struct sensor_ph),    "ph"},
+  {print_valf,  sizeof(struct sensor_dust),  "dust"},
+  {print_valf,  sizeof(struct sensor_hrate), "hrate"},
+  {print_valf,  sizeof(struct sensor_hbeat), "hbeat"},
+  {print_valf,  sizeof(struct sensor_ecg),   "ecg"},
+  {print_ppgd,  sizeof(struct sensor_ppgd),  "ppgd"},
+  {print_ppgq,  sizeof(struct sensor_ppgq),  "ppgq"},
+  {print_valf2, sizeof(struct sensor_impd),  "impd"},
+  {print_vali2, sizeof(struct sensor_ots),   "ots"},
+  {print_gps_satellite,  sizeof(struct sensor_gps_satellite),
+                                              "gps_satellite"}
 };
 
 /****************************************************************************
@@ -178,16 +176,6 @@ static void print_ppgq(const char *buffer, const char *name)
          name, event->timestamp, event->ppg[0], event->ppg[1], event->ppg[2],
          event->ppg[3], event->current, event->gain[0], event->gain[1],
          event->gain[2], event->gain[3]);
-}
-
-static void print_cap(FAR const char *buffer, FAR const char *name)
-{
-  struct sensor_event_cap *event = (struct sensor_event_cap *)buffer;
-  printf("%s: timestamp:%" PRIu64 " status:%" PRIu32 " "
-         "rawdata0:%" PRIu32 " rawdata1:%" PRIu32 " rawdata2:%" PRIu32 " "
-         "rawdata3:%" PRIu32 "\n",
-         name, event->timestamp, event->status, event->rawdata[0],
-         event->rawdata[1], event->rawdata[2], event->rawdata[3]);
 }
 
 static void print_gps(const char *buffer, const char *name)
@@ -361,18 +349,6 @@ int main(int argc, FAR char *argv[])
         }
     }
 
-  ret = ioctl(fd, SNIOC_ACTIVATE, 1);
-  if (ret < 0)
-    {
-      ret = -errno;
-      if (ret != -ENOTSUP)
-        {
-          printf("Failed to enable sensor:%s, ret:%s\n",
-                 devname, strerror(errno));
-          goto ctl_err;
-        }
-    }
-
   printf("SensorTest: Test %s with interval(%uus), latency(%uus)\n",
          devname, interval, latency);
 
@@ -393,15 +369,6 @@ int main(int argc, FAR char *argv[])
 
   printf("SensorTest: Received message: %s, number:%d/%d\n",
          name, received, count);
-
-  ret = ioctl(fd, SNIOC_ACTIVATE, 0);
-  if (ret < 0)
-    {
-      ret = -errno;
-      printf("Failed to disable sensor:%s, ret:%s\n",
-             devname, strerror(errno));
-      goto ctl_err;
-    }
 
 ctl_err:
   close(fd);
