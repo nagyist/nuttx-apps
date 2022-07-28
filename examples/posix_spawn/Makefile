@@ -24,8 +24,6 @@ include $(APPDIR)/Make.defs
 
 CSRCS = romfs.c
 CSRCS += symtab.c
-filesystem$(DELIM)symtab.c_CFLAGS = -fno-builtin
-filesystem$(DELIM)symtab.c_CELFFLAGS = -fno-builtin
 MAINSRC = spawn_main.c
 
 PROGNAME = posix_spawn
