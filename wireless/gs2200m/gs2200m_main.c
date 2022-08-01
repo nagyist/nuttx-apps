@@ -59,7 +59,7 @@
 #endif
 
 #ifndef MIN
-#  define MIN(a,b)  (((a) < (b)) ? (a) : (b))
+#  define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
 #define SOCKET_BASE  10000
@@ -902,6 +902,7 @@ static int recvfrom_request(int fd, FAR struct gs2200m_s *priv,
 {
   FAR struct usrsock_request_recvfrom_s *req = hdrbuf;
   struct usrsock_message_datareq_ack_s resp;
+  struct usrsock_message_req_ack_s resp1;
   struct gs2200m_recv_msg rmsg;
   FAR struct usock_s *usock;
   int ret = 0;
@@ -985,6 +986,14 @@ prepare:
           usock_send_event(fd, priv, usock,
                            USRSOCK_EVENT_REMOTE_CLOSED
                            );
+
+          /* Send ack only */
+
+          memset(&resp1, 0, sizeof(resp1));
+          resp1.result = ret;
+          ret = _send_ack_common(fd, req->head.xid, &resp1);
+
+          goto err_out;
         }
     }
 
