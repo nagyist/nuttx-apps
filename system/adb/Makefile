@@ -82,12 +82,12 @@ CSRCS += $(ADB_UNPACKNAME)/tcp_service.c
 CSRCS += $(ADB_UNPACKNAME)/hal/hal_uv_socket.c
 endif
 
-context:: $(ADB_UNPACKDIR)
+context::# $(ADB_UNPACKDIR)
 
 clean::
 	$(call DELFILE, $(OBJS))
 
 distclean::
-	$(call DELDIR, $(ADB_UNPACKDIR))
+#	$(call DELDIR, $(ADB_UNPACKDIR))
 
 include $(APPDIR)/Application.mk

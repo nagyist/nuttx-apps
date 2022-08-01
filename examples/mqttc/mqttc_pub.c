@@ -42,11 +42,11 @@
 struct mqttc_cfg_s
 {
   struct mqtt_client client;
-  FAR const char *host;
-  FAR const char *port;
-  FAR const char *topic;
-  FAR const char *msg;
-  FAR const char *id;
+  const FAR char *host;
+  const FAR char *port;
+  const FAR char *topic;
+  const FAR char *msg;
+  const FAR char *id;
   uint8_t sendbuf[CONFIG_EXAMPLES_MQTTC_TXSIZE];
   uint8_t recvbuf[CONFIG_EXAMPLES_MQTTC_RXSIZE];
   uint32_t tmo;
@@ -59,9 +59,9 @@ struct mqttc_cfg_s
  ****************************************************************************/
 
 static FAR void *client_refresher(FAR void *data);
-static void parsearg(int argc, FAR char *argv[], FAR struct mqttc_cfg_s *cfg,
-                     FAR int *n);
-static int initserver(FAR const struct mqttc_cfg_s *cfg);
+static void parsearg(int argc, char *argv[], struct mqttc_cfg_s *cfg,
+                     int *n);
+static int initserver(const FAR struct mqttc_cfg_s *cfg);
 
 /****************************************************************************
  * Private Functions
@@ -95,8 +95,7 @@ static FAR void *client_refresher(FAR void *data)
  *
  ****************************************************************************/
 
-static void parsearg(int argc, FAR char *argv[],
-                     FAR struct mqttc_cfg_s *cfg, FAR int *n)
+static void parsearg(int argc, char *argv[], struct mqttc_cfg_s *cfg, int *n)
 {
   int opt;
 
@@ -139,11 +138,11 @@ static void parsearg(int argc, FAR char *argv[],
  *
  ****************************************************************************/
 
-static int initserver(FAR const struct mqttc_cfg_s *cfg)
+static int initserver(const FAR struct mqttc_cfg_s *cfg)
 {
   struct addrinfo hints;
-  FAR struct addrinfo *servinfo;
-  FAR struct addrinfo *itr;
+  struct addrinfo *servinfo;
+  struct addrinfo *itr;
   int fd;
   int ret;
 
@@ -209,7 +208,7 @@ static int initserver(FAR const struct mqttc_cfg_s *cfg)
  * Public Functions
  ****************************************************************************/
 
-int main(int argc, FAR char *argv[])
+int main(int argc, char *argv[])
 {
   int sockfd;
   enum MQTTErrors mqtterr;

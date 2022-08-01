@@ -17,9 +17,10 @@
 *.swp
 *.sym
 *~
-.context
+.built
 .depend
 .kconfig
+/*.lock
 /bin
 /boot_romfsimg.h
 /external
@@ -31,5 +32,3 @@ Make.dep
 .context
 # nuttx/$(TOPDIR)/Makefile.[unix|win]::$(DIRLINKS_EXTERNAL_DIRS)
 .dirlinks
-.vscode
-.DS_Store
