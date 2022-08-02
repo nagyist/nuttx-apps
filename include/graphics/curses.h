@@ -89,7 +89,8 @@
 #define MOUSE_X_POS             (Mouse_status.x)
 #define MOUSE_Y_POS             (Mouse_status.y)
 
-/* Bits associated with the .changes field:
+/*
+ * Bits associated with the .changes field:
  *   3         2         1         0
  * 210987654321098765432109876543210
  *                                 1 <- button 1 has changed
@@ -138,9 +139,8 @@
 #define BUTTON3_MOVED           0x00004000L /* PDCurses */
 
 /* For the ncurses-compatible functions only, BUTTON4_PRESSED and
- * BUTTON5_PRESSED are returned for mouse scroll wheel up and down;
- * otherwise PDCurses doesn't support buttons 4 and 5
- */
+   BUTTON5_PRESSED are returned for mouse scroll wheel up and down;
+   otherwise PDCurses doesn't support buttons 4 and 5 */
 
 #define BUTTON4_RELEASED        0x00008000L
 #define BUTTON4_PRESSED         0x00010000L
@@ -200,9 +200,9 @@
  *
  * long form:
  *
- * -------------------------------------------------------------------------
- * |31|30|29|28|27|26|25|24|23|22|21|20|19|18|17|16|15|14|13|..| 3| 2| 1| 0|
- * -------------------------------------------------------------------------
+ * ----------------------------------------------------------------------------
+ * |31|30|29|28|27|26|25|24|23|22|21|20|19|18|17|16|15|14|13|12|..| 3| 2| 1| 0|
+ * ----------------------------------------------------------------------------
  *       color number      |     modifiers         |      character eg 'a'
  *
  * The available non-color attributes are bold, underline, invisible,
@@ -345,7 +345,8 @@
 #define ACS_LANTERN   ACS_PICK('i', '*')
 #define ACS_BLOCK     ACS_PICK('0', '#')
 
-/* That goes double for these -- undocumented SysV symbols. Don't use them. */
+/* That goes double for these -- undocumented SysV symbols. Don't use
+   them. */
 
 #define ACS_S3        ACS_PICK('p', '-')
 #define ACS_S7        ACS_PICK('r', '-')
@@ -798,12 +799,9 @@ typedef unsigned long mmask_t;
 typedef struct
 {
   short id;             /* unused, always 0 */
-  int x;                /* x, y same as MOUSE_STATUS; z unused */
-  int y;
-  int z;
+  int x, y, z;          /* x, y same as MOUSE_STATUS; z unused */
   mmask_t bstate;       /* equivalent to changes + button[], but
-                         * in the same format as used for mousemask()
-                         */
+                         * in the same format as used for mousemask() */
 } MEVENT;
 
 /* PDCurses Structure Definitions */
@@ -832,8 +830,7 @@ typedef struct _win     /* definition of a window */
   int   _tmarg;         /* top of scrolling region */
   int   _bmarg;         /* bottom of scrolling region */
   int   _delayms;       /* milliseconds of delay for getch() */
-  int   _parx;          /* coords relative to parent (0,0) */
-  int   _pary;
+  int   _parx, _pary;   /* coords relative to parent (0,0) */
   struct _win *_parent; /* subwin's pointer to parent win */
 } WINDOW;
 
@@ -861,7 +858,6 @@ typedef struct
   int   orig_cursor;    /* original cursor size */
   int   lines;          /* new value for LINES */
   int   cols;           /* new value for COLS */
-
   unsigned long _trap_mbe;       /* trap these mouse button events */
   unsigned long _map_mbe_to_key; /* map mouse buttons to slk */
   int   mouse_wait;              /* time to wait (in ms) for a
@@ -946,9 +942,9 @@ struct pdc_context_s
   short         COLOR_PAIRS;
   short         TABSIZE;
   short         first_col;
-  short         c_pindex;            /* putter index */
-  short         c_gindex;            /* getter index */
-  short         c_ungind;            /* ungetch() push index */
+  short         c_pindex;        /* putter index */
+  short         c_gindex;        /* getter index */
+  short         c_ungind;        /* ungetch() push index */
   short         c_ungch[NUNGETCH];   /* array of ungotten chars */
   short         c_buffer[_INBUFSIZ]; /* character buffer */
   RIPPEDOFFLINE linesripped[5];
@@ -1030,8 +1026,8 @@ void                       PDC_ctx_free(void);
 #define graphic_screen     ctx->graphic_screen
 #endif
 
-void *pdc_alloc_panel_ctx(void);
-void *pdc_alloc_term_ctx(void);
+void* pdc_alloc_panel_ctx(void);
+void* pdc_alloc_term_ctx(void);
 
 #else
 
@@ -1076,8 +1072,7 @@ int     baudrate(void);
 int     beep(void);
 int     bkgd(chtype);
 void    bkgdset(chtype);
-int     border(chtype, chtype, chtype, chtype,
-               chtype, chtype, chtype, chtype);
+int     border(chtype, chtype, chtype, chtype, chtype, chtype, chtype, chtype);
 int     box(WINDOW *, chtype, chtype);
 bool    can_change_color(void);
 int     cbreak(void);
@@ -1165,8 +1160,8 @@ int     mvinsch(int, int, chtype);
 int     mvinsnstr(int, int, const char *, int);
 int     mvinsstr(int, int, const char *);
 int     mvinstr(int, int, char *);
-int     mvprintw(int, int, const char *, ...) printflike(3, 4);
-int     mvscanw(int, int, const char *, ...) scanflike(3, 4);
+int     mvprintw(int, int, const char *, ...);
+int     mvscanw(int, int, const char *, ...);
 int     mvvline(int, int, chtype, int);
 int     mvwaddchnstr(WINDOW *, int, int, const chtype *, int);
 int     mvwaddchstr(WINDOW *, int, int, const chtype *);
@@ -1188,8 +1183,8 @@ int     mvwinsnstr(WINDOW *, int, int, const char *, int);
 int     mvwinsstr(WINDOW *, int, int, const char *);
 int     mvwinstr(WINDOW *, int, int, char *);
 int     mvwin(WINDOW *, int, int);
-int     mvwprintw(WINDOW *, int, int, const char *, ...) printflike(4, 5);
-int     mvwscanw(WINDOW *, int, int, const char *, ...) scanflike(4, 5);
+int     mvwprintw(WINDOW *, int, int, const char *, ...);
+int     mvwscanw(WINDOW *, int, int, const char *, ...);
 int     mvwvline(WINDOW *, int, int, chtype, int);
 int     napms(int);
 WINDOW *newpad(int, int);
@@ -1209,7 +1204,7 @@ int     pair_content(short, short *, short *);
 int     pechochar(WINDOW *, chtype);
 int     pnoutrefresh(WINDOW *, int, int, int, int, int, int);
 int     prefresh(WINDOW *, int, int, int, int, int, int);
-int     printw(const char *, ...) printflike(1, 2);
+int     printw(const char *, ...);
 int     putwin(WINDOW *, FILE *);
 void    qiflush(void);
 int     raw(void);
@@ -1220,7 +1215,7 @@ int     reset_shell_mode(void);
 int     resetty(void);
 int     ripoffline(int, int (*)(WINDOW *, int));
 int     savetty(void);
-int     scanw(const char *, ...) scanflike(1, 2);
+int     scanw(const char *, ...);
 int     scr_dump(const char *);
 int     scr_init(const char *);
 int     scr_restore(const char *);
@@ -1265,10 +1260,10 @@ int     vid_attr(attr_t, short, void *);
 int     vidputs(chtype, int (*)(int));
 int     vid_puts(attr_t, short, void *, int (*)(int));
 int     vline(chtype, int);
-int     vw_printw(WINDOW *, const char *, va_list) printflike(2, 0);
-int     vwprintw(WINDOW *, const char *, va_list) printflike(2, 0);
-int     vw_scanw(WINDOW *, const char *, va_list) scanflike(2, 0);
-int     vwscanw(WINDOW *, const char *, va_list) scanflike(2, 0);
+int     vw_printw(WINDOW *, const char *, va_list);
+int     vwprintw(WINDOW *, const char *, va_list);
+int     vw_scanw(WINDOW *, const char *, va_list);
+int     vwscanw(WINDOW *, const char *, va_list);
 int     waddchnstr(WINDOW *, const chtype *, int);
 int     waddchstr(WINDOW *, const chtype *);
 int     waddch(WINDOW *, const chtype);
@@ -1311,10 +1306,10 @@ int     winsstr(WINDOW *, const char *);
 int     winstr(WINDOW *, char *);
 int     wmove(WINDOW *, int, int);
 int     wnoutrefresh(WINDOW *);
-int     wprintw(WINDOW *, const char *, ...) printflike(2, 3);
+int     wprintw(WINDOW *, const char *, ...);
 int     wredrawln(WINDOW *, int, int);
 int     wrefresh(WINDOW *);
-int     wscanw(WINDOW *, const char *, ...) scanflike(2, 3);
+int     wscanw(WINDOW *, const char *, ...);
 int     wscrl(WINDOW *, int);
 int     wsetscrreg(WINDOW *, int, int);
 int     wstandend(WINDOW *);
@@ -1391,9 +1386,8 @@ int     mvwin_wchnstr(WINDOW *, int, int, cchar_t *, int);
 int     mvwin_wchstr(WINDOW *, int, int, cchar_t *);
 int     mvwinwstr(WINDOW *, int, int, wchar_t *);
 int     mvwvline_set(WINDOW *, int, int, const cchar_t *, int);
-int     pecho_wchar(WINDOW *, const cchar_t *);
-int     setcchar(cchar_t *, const wchar_t *, const attr_t,
-                 short, const void *);
+int     pecho_wchar(WINDOW *, const cchar_t*);
+int     setcchar(cchar_t*, const wchar_t*, const attr_t, short, const void*);
 int     slk_wset(int, const wchar_t *, int);
 int     unget_wch(const wchar_t);
 int     vline_set(const cchar_t *, int);
@@ -1497,7 +1491,7 @@ char    wordchar(void);
 wchar_t *slk_wlabel(int);
 #endif
 
-void    PDC_debug(const char *, ...) printflike(1, 2);
+void    PDC_debug(const char *, ...);
 int     PDC_ungetch(int);
 int     PDC_set_blink(bool);
 int     PDC_set_line_color(short);
