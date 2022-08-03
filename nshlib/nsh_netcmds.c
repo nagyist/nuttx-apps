@@ -121,7 +121,7 @@
 /* Get the larger value */
 
 #ifndef MAX
-#  define MAX(a,b) (a > b ? a : b)
+#  define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
 /****************************************************************************
@@ -377,8 +377,9 @@ static int nsh_foreach_netdev(nsh_netdev_callback_t callback,
   if (dir == NULL)
     {
       nsh_error(vtbl,
-                "nsh: %s: Could not open %s/net (is procfs mounted?): %d\n",
-                cmd, CONFIG_NSH_PROC_MOUNTPOINT, NSH_ERRNO);
+                "nsh: %s: Could not open %s/net (is procfs mounted?)\n",
+                cmd, CONFIG_NSH_PROC_MOUNTPOINT);
+      nsh_error(vtbl, g_fmtcmdfailed, cmd, "opendir", NSH_ERRNO);
       return ERROR;
     }
 
@@ -970,6 +971,9 @@ int cmd_ifconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #endif
 #ifdef CONFIG_NET_IPv4
   UNUSED(gip);
+#endif
+#ifdef CONFIG_NET_IPv6
+  UNUSED(gip6);
 #endif
 
   return OK;
