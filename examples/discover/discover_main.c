@@ -136,8 +136,6 @@ int main(int argc, FAR char *argv[])
   if (handle)
     {
       struct dhcpc_state ds;
-      char inetaddr[INET_ADDRSTRLEN];
-
       dhcpc_request(handle, &ds);
       netlib_set_ipv4addr("eth0", &ds.ipaddr);
 
@@ -157,7 +155,7 @@ int main(int argc, FAR char *argv[])
         }
 
       dhcpc_close(handle);
-      printf("IP: %s\n", inet_ntoa_r(ds.ipaddr, inetaddr, sizeof(inetaddr)));
+      printf("IP: %s\n", inet_ntoa(ds.ipaddr));
     }
 
 #endif /* CONFIG_EXAMPLES_DISCOVER_DHCPC */

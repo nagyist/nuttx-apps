@@ -232,12 +232,8 @@ static inline void mkfatfs_initmbr(FAR struct fat_format_s *fmt,
 
       /* Boot code may be placed in the remainder of the sector */
 
-      memcpy(&var->fv_sect[MBR16_BOOTCODE], var->fv_bootcodeblob,
+      memcpy(&var->fv_sect[MBR16_BOOTCODE], var->fv_bootcode,
              var->fv_bootcodesize);
-
-      /* Patch in the correct offset to the boot code */
-
-      var->fv_sect[MBR16_BOOTCODE + 3] = var->fv_bootcodepatch;
     }
   else
     {
@@ -287,12 +283,8 @@ static inline void mkfatfs_initmbr(FAR struct fat_format_s *fmt,
 
       /* Boot code may be placed in the remainder of the sector */
 
-      memcpy(&var->fv_sect[MBR32_BOOTCODE], var->fv_bootcodeblob,
+      memcpy(&var->fv_sect[MBR32_BOOTCODE], var->fv_bootcode,
              var->fv_bootcodesize);
-
-      /* Patch in the correct offset to the boot code */
-
-      var->fv_sect[MBR32_BOOTCODE + 3] = var->fv_bootcodepatch;
     }
 
   /* The magic bytes at the end of the MBR are common to FAT12/16/32 */

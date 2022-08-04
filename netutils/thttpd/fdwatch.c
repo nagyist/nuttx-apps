@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/thttpd/fdwatch.c
+ * apps/netutils/thttpd/timers.c
  * FD watcher routines for poll()
  *
  *   Copyright (C) 2009 Gregory Nutt. All rights reserved.
@@ -296,7 +296,7 @@ int fdwatch(struct fdwatch_s *fw, long timeout_msecs)
             {
               /* Yes... save it in a shorter list */
 
-              fwinfo("pollndx: %d fd: %d revents: %08" PRIx32 "\n",
+              fwinfo("pollndx: %d fd: %d revents: %04x\n",
                     i, fw->pollfds[i].fd, fw->pollfds[i].revents);
 
               fw->ready[fw->nactive++] = fw->pollfds[i].fd;

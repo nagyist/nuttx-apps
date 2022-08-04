@@ -176,8 +176,7 @@ extern const char g_spixfrerror[];
 ssize_t spitool_exchange(FAR struct spitool_s *spitool,
                          FAR const void *outbuffer, size_t noutbytes,
                          FAR void *inbuffer, size_t ninbytes);
-int spitool_printf(FAR struct spitool_s *spitool, const char *fmt, ...)
-    printflike(2, 3);
+int spitool_printf(FAR struct spitool_s *spitool, const char *fmt, ...);
 void spitool_flush(FAR struct spitool_s *spitool);
 
 /* Command handlers */
