@@ -83,25 +83,26 @@ static unsigned int wapi_str2ndx(FAR const char *name,
                                  FAR const char **list);
 static void wapi_showusage(FAR const char *progname, int exitcode);
 
-static int wapi_show_cmd         (int sock, int argc, FAR char **argv);
-static int wapi_ip_cmd           (int sock, int argc, FAR char **argv);
-static int wapi_mask_cmd         (int sock, int argc, FAR char **argv);
-static int wapi_freq_cmd         (int sock, int argc, FAR char **argv);
-static int wapi_essid_cmd        (int sock, int argc, FAR char **argv);
-static int wapi_psk_cmd          (int sock, int argc, FAR char **argv);
-static int wapi_disconnect_cmd   (int sock, int argc, FAR char **argv);
-static int wapi_mode_cmd         (int sock, int argc, FAR char **argv);
-static int wapi_ap_cmd           (int sock, int argc, FAR char **argv);
-static int wapi_bitrate_cmd      (int sock, int argc, FAR char **argv);
-static int wapi_txpower_cmd      (int sock, int argc, FAR char **argv);
-static int wapi_scan_results_cmd (int sock, int argc, FAR char **argv);
-static int wapi_scan_cmd         (int sock, int argc, FAR char **argv);
-static int wapi_country_cmd      (int sock, int argc, FAR char **argv);
-static int wapi_sense_cmd        (int sock, int argc, FAR char **argv);
+static int wapi_show_cmd          (int sock, int argc, FAR char **argv);
+static int wapi_ip_cmd            (int sock, int argc, FAR char **argv);
+static int wapi_mask_cmd          (int sock, int argc, FAR char **argv);
+static int wapi_freq_cmd          (int sock, int argc, FAR char **argv);
+static int wapi_essid_cmd         (int sock, int argc, FAR char **argv);
+static int wapi_psk_cmd           (int sock, int argc, FAR char **argv);
+static int wapi_disconnect_cmd    (int sock, int argc, FAR char **argv);
+static int wapi_mode_cmd          (int sock, int argc, FAR char **argv);
+static int wapi_ap_cmd            (int sock, int argc, FAR char **argv);
+static int wapi_bitrate_cmd       (int sock, int argc, FAR char **argv);
+static int wapi_txpower_cmd       (int sock, int argc, FAR char **argv);
+static int wapi_scan_results_cmd  (int sock, int argc, FAR char **argv);
+static int wapi_scan_cmd          (int sock, int argc, FAR char **argv);
+static int wapi_country_cmd       (int sock, int argc, FAR char **argv);
+static int wapi_sense_cmd         (int sock, int argc, FAR char **argv);
 #ifdef CONFIG_WIRELESS_WAPI_INITCONF
-static int wapi_reconnect_cmd    (int sock, int argc, FAR char **argv);
-static int wapi_save_config_cmd  (int sock, int argc, FAR char **argv);
+static int wapi_reconnect_cmd     (int sock, int argc, FAR char **argv);
+static int wapi_save_config_cmd   (int sock, int argc, FAR char **argv);
 #endif
+static int wapi_pta_prio_cmd      (int sock, int argc, FAR char **argv);
 
 /****************************************************************************
  * Private Data
@@ -129,6 +130,7 @@ static const struct wapi_command_s g_wapi_commands[] =
   {"reconnect",    1, 1, wapi_reconnect_cmd},
   {"save_config",  1, 1, wapi_save_config_cmd},
 #endif
+  {"pta_prio",     2, 2, wapi_pta_prio_cmd},
 };
 
 /****************************************************************************
@@ -255,6 +257,7 @@ static int wapi_show_cmd(int sock, int argc, FAR char **argv)
   char essid[WAPI_ESSID_MAX_SIZE + 1];
   enum wapi_essid_flag_e essid_flag;
   FAR const char *ifname = argv[0];
+  enum wapi_pta_prio_e pta_prio;
   enum wapi_freq_flag_e freq_flag;
   enum wapi_mode_e mode;
   struct ether_addr ap;
@@ -403,16 +406,24 @@ static int wapi_show_cmd(int sock, int argc, FAR char **argv)
   /* Get sensitivity */
 
   ret = wapi_get_sensitivity(sock, ifname, &sense);
-  if (ret == 0)
+  if (ret >= 0)
     {
       printf("    Sense: %d\n", sense);
+    }
+
+  /* Get pta prio */
+
+  ret = wapi_get_pta_prio(sock, ifname, &pta_prio);
+  if (ret >= 0)
+    {
+      printf(" PTA prio: %d\n", pta_prio);
     }
 
   /* Get Country Code */
 
   memset(country, 0, sizeof(country));
   ret = wapi_get_country(sock, ifname, country);
-  if (ret == 0)
+  if (ret >= 0)
     {
       printf("  Country: %s\n", country);
     }
@@ -834,7 +845,7 @@ static int wapi_country_cmd(int sock, int argc, FAR char **argv)
   if (argc == 1)
     {
       ret = wapi_get_country(sock, argv[0], country);
-      if (ret == 0)
+      if (ret >= 0)
         {
           printf("%s\n", country);
         }
@@ -862,7 +873,7 @@ static int wapi_sense_cmd(int sock, int argc, FAR char **argv)
   int ret;
 
   ret = wapi_get_sensitivity(sock, argv[0], &sense);
-  if (ret == 0)
+  if (ret >= 0)
     {
       printf("%d\n", sense);
     }
@@ -970,7 +981,7 @@ static int wapi_save_config_cmd(int sock, int argc, FAR char **argv)
                                     &conf.alg,
                                     psk,
                                     &psk_len);
-  if (ret == 0)
+  if (ret >= 0)
     {
       conf.passphrase = psk;
       conf.phraselen = psk_len;
@@ -1008,6 +1019,30 @@ static int wapi_save_config_cmd(int sock, int argc, FAR char **argv)
   return wapi_save_config(argv[0], NULL, &conf);
 }
 #endif
+
+/****************************************************************************
+ * Name: wapi_pta_prio_cmd
+ *
+ * Description:
+ *   Manually configure the pta priority.
+ *
+ * Returned Value:
+ *   None
+ *
+ ****************************************************************************/
+
+static int wapi_pta_prio_cmd(int sock, int argc, FAR char **argv)
+{
+  enum wapi_pta_prio_e pta_prio;
+
+  /* Convert input strings to values */
+
+  pta_prio = (enum wapi_mode_e)wapi_str2ndx(argv[1], g_wapi_pta_prio_flags);
+
+  /* Set operating mode */
+
+  return wapi_set_pta_prio(sock, argv[0], pta_prio);
+}
 
 /****************************************************************************
  * Name: wapi_showusage
@@ -1051,6 +1086,8 @@ static void wapi_showusage(FAR const char *progname, int exitcode)
   fprintf(stderr, "\t%s reconnect    <ifname>\n", progname);
   fprintf(stderr, "\t%s save_config  <ifname>\n", progname);
 #endif
+  fprintf(stderr, "\t%s pta_prio     <ifname>  <index/flag>\n", progname);
+
   fprintf(stderr, "\t%s help\n", progname);
 
   fprintf(stderr, "\nFrequency Flags:\n");
@@ -1087,6 +1124,12 @@ static void wapi_showusage(FAR const char *progname, int exitcode)
   for (i = 0; g_wapi_txpower_flags[i]; i++)
     {
       fprintf(stderr, "\t[%d] %s\n", i, g_wapi_txpower_flags[i]);
+    }
+
+  fprintf(stderr, "\npta prio Flags:\n");
+  for (i = 0; g_wapi_pta_prio_flags[i]; i++)
+    {
+      fprintf(stderr, "\t[%d] %s\n", i, g_wapi_pta_prio_flags[i]);
     }
 
   exit(exitcode);
