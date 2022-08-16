@@ -94,7 +94,7 @@ static const char g_unknown[] = "unknown";
 #if (defined(CONFIG_BOARDCTL_POWEROFF) || defined(CONFIG_BOARDCTL_RESET)) && \
     !defined(CONFIG_NSH_DISABLE_SHUTDOWN)
 
-int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_shutdown(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
 #if defined(CONFIG_BOARDCTL_POWEROFF) && defined(CONFIG_BOARDCTL_RESET)
   /* If both shutdown and reset are supported, then a single option may
@@ -181,7 +181,7 @@ static int cmd_pmconfig_recursive(FAR struct nsh_vtbl_s *vtbl,
                                   FAR struct dirent *entryp,
                                   FAR void *pvarg)
 {
-  FAR char *path;
+  char *path;
   int ret = ERROR;
 
   if (DIRENT_ISDIRECTORY(entryp->d_type))
@@ -200,7 +200,7 @@ static int cmd_pmconfig_recursive(FAR struct nsh_vtbl_s *vtbl,
   return ret;
 }
 
-int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   struct boardioc_pm_ctrl_s ctrl =
   {
@@ -291,7 +291,7 @@ int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  ****************************************************************************/
 
 #if defined(CONFIG_BOARDCTL_POWEROFF) && !defined(CONFIG_NSH_DISABLE_POWEROFF)
-int cmd_poweroff(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_poweroff(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   /* Invoke the BOARDIOC_POWEROFF board control to shutdown the board.  If
    * the board_power_off function returns, then it was not possible to power-
@@ -321,7 +321,7 @@ int cmd_poweroff(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  ****************************************************************************/
 
 #if defined(CONFIG_BOARDCTL_RESET) && !defined(CONFIG_NSH_DISABLE_REBOOT)
-int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   /* Invoke the BOARDIOC_RESET board control to reset the board.  If
    * the board_reset() function returns, then it was not possible to
@@ -347,10 +347,8 @@ int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #endif
 
 #if defined(CONFIG_BOARDCTL_RESET_CAUSE) && !defined(CONFIG_NSH_DISABLE_RESET_CAUSE)
-int cmd_reset_cause(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_reset_cause(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-
   int ret;
   struct boardioc_reset_cause_s cause;
 
@@ -374,7 +372,7 @@ int cmd_reset_cause(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
 static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl,
-                          FAR const char *path, FAR char **argv)
+                          FAR const char *path, char **argv)
 {
   struct rptun_ping_s ping;
   unsigned long val = 0;
@@ -439,11 +437,10 @@ static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl,
 }
 
 static int cmd_rptun_recursive(FAR struct nsh_vtbl_s *vtbl,
-                               FAR const char *dirpath,
-                               FAR struct dirent *entryp,
-                               FAR void *pvarg)
+                               const char *dirpath,
+                               struct dirent *entryp, void *pvarg)
 {
-  FAR char *path;
+  char *path;
   int ret = ERROR;
 
   if (DIRENT_ISDIRECTORY(entryp->d_type))
@@ -461,7 +458,7 @@ static int cmd_rptun_recursive(FAR struct nsh_vtbl_s *vtbl,
   return ret;
 }
 
-int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   if (argc < 3)
     {
@@ -484,7 +481,7 @@ int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_UNAME
-int cmd_uname(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_uname(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   FAR const char *str;
   struct utsname info;

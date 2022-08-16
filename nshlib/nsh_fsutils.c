@@ -262,7 +262,7 @@ int nsh_readfile(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
         {
           /* Successful read.  Make sure that the buffer is null terminated */
 
-          DEBUGASSERT(nread <= (ssize_t)remaining);
+          DEBUGASSERT(nread <= remaining);
           ntotal += nread;
           buffer[ntotal] = '\0';
 
@@ -513,6 +513,7 @@ FAR char *nsh_getdirpath(FAR struct nsh_vtbl_s *vtbl,
       snprintf(vtbl->iobuffer, IOBUFFERSIZE, "%s/%s", dirpath, path);
     }
 
+  vtbl->iobuffer[PATH_MAX] = '\0';
   return strdup(vtbl->iobuffer);
 }
 #endif
