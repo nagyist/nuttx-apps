@@ -19,6 +19,7 @@
 ############################################################################
 
 include $(APPDIR)/Make.defs
+-include ./ext/Makefile
 
 LIBUV_PATCHS ?= $(sort $(wildcard 000*.patch))
 
@@ -320,10 +321,10 @@ CSRCS += echo-server.c
 
 endif
 
-context:: $(LIBUV_UNPACK)/.patch
+context::# $(LIBUV_UNPACK)/.patch
 
 distclean::
-	$(call DELDIR, $(LIBUV_UNPACK))
-	$(call DELFILE, $(LIBUV_TARBALL))
+#	$(call DELDIR, $(LIBUV_UNPACK))
+#	$(call DELFILE, $(LIBUV_TARBALL))
 
 include $(APPDIR)/Application.mk
