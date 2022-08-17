@@ -55,10 +55,10 @@ $(IOZONE_UNPACKNAME): $(IOZONE_ZIP)
 	$(Q) cat iozone.patch | patch -s -N -d $(IOZONE_UNPACKNAME) -p1
 	$(Q) touch $(IOZONE_UNPACKNAME)
 
-context:: $(IOZONE_UNPACKNAME)
+context::# $(IOZONE_UNPACKNAME)
 
 distclean::
-	$(call DELDIR, $(IOZONE_UNPACKNAME))
-	$(call DELFILE, $(IOZONE_ZIP))
+#	$(call DELDIR, $(IOZONE_UNPACKNAME))
+#	$(call DELFILE, $(IOZONE_ZIP))
 
 include $(APPDIR)/Application.mk

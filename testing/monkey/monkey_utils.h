@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_TESTING_MONKEY_MONKEY_UTILS_H
-#define __APPS_TESTING_MONKEY_MONKEY_UTILS_H
+#ifndef __MONKEY_UTILS_H__
+#define __MONKEY_UTILS_H__
 
 /****************************************************************************
  * Included Files
@@ -91,4 +91,4 @@ enum monkey_dev_type_e monkey_dev_name2type(FAR const char *name);
 }
 #endif
 
-#endif /* __APPS_TESTING_MONKEY_MONKEY_UTILS_H */
+#endif /* __MONKEY_UTILS_H__ */
