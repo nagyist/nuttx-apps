@@ -226,8 +226,6 @@ static void nsh_parse_statusline(FAR char *line,
 static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
                        FAR struct dirent *entryp, FAR void *pvarg)
 {
-  UNUSED(pvarg);
-
   struct nsh_taskstatus_s status;
   FAR char *filepath;
   FAR char *line;
@@ -548,8 +546,6 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 #ifndef CONFIG_NSH_DISABLE_EXEC
 int cmd_exec(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
-  UNUSED(argc);
-
   FAR char *endptr;
   uintptr_t addr;
 
@@ -560,7 +556,7 @@ int cmd_exec(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       return ERROR;
     }
 
-  nsh_output(vtbl, "Calling %p\n", (void*)addr);
+  nsh_output(vtbl, "Calling %p\n", (exec_t)addr);
   return ((exec_t)addr)();
 }
 #endif
@@ -572,9 +568,6 @@ int cmd_exec(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #ifndef CONFIG_NSH_DISABLE_PS
 int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-  UNUSED(argv);
-
   nsh_output(vtbl, "%5s ", "PID");
   nsh_output(vtbl, "%5s ", "GROUP");
 
@@ -718,8 +711,6 @@ invalid_arg:
 #ifndef CONFIG_NSH_DISABLE_SLEEP
 int cmd_sleep(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-
   char *endptr;
   long secs;
 
@@ -742,8 +733,6 @@ int cmd_sleep(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #ifndef CONFIG_NSH_DISABLE_USLEEP
 int cmd_usleep(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-
   char *endptr;
   long usecs;
 
