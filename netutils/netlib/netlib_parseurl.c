@@ -59,7 +59,7 @@ int netlib_parseurl(FAR const char *str, FAR struct url_s *url)
 {
   FAR const char *src = str;
   FAR char *dest;
-  size_t bytesleft;
+  int bytesleft;
   int ret = OK;
   size_t pathlen;
 
