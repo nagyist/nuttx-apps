@@ -40,12 +40,15 @@ $(MINMEA_UNPACKDIR):
 CSRCS	= minmea/minmea.c
 CFLAGS += -std=c99
 
+ifneq ($(CONFIG_GPSUTILS_MINMEA_BREAM_LIB),)
+  CSRCS += vendor/bream.c
+endif
 
 clean::
 	$(call DELFILE, $(OBJS))
 
 # Download and unpack tarball if no git repo found
-ifeq ($(wildcard $(MINMEA_UNPACKDIR)/.git),)
+ifeq ($(wildcard $(MINMEA_UNPACKNAME)/.git),)
 context:: $(MINMEA_UNPACKDIR)
 
 distclean::

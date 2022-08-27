@@ -57,6 +57,10 @@ CFLAGS += -DCONFIG_BIGNUM
 CSRCS  += qjscalc.c
 endif
 
+ifeq ($(CONFIG_INTERPRETERS_QUICKJS_DEBUG),y)
+CSRCS  += quickjs-debugger.c
+endif
+
 VPATH += $(QUICKJS_UNPACK)
 
 PROGNAME  = qjs

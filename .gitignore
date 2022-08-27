@@ -17,9 +17,11 @@
 *.swp
 *.sym
 *~
+.built
 .context
 .depend
 .kconfig
+/*.lock
 /bin
 /boot_romfsimg.h
 /external

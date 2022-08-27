@@ -44,8 +44,6 @@
 #ifndef CONFIG_NSH_DISABLE_USERADD
 int cmd_useradd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-
   int ret;
 
   ret = passwd_adduser(argv[1], argv[2]);
@@ -67,8 +65,6 @@ int cmd_useradd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #ifndef CONFIG_NSH_DISABLE_USERDEL
 int cmd_userdel(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-
   int ret;
 
   ret = passwd_deluser(argv[1]);
@@ -90,8 +86,6 @@ int cmd_userdel(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 #ifndef CONFIG_NSH_DISABLE_PASSWD
 int cmd_passwd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-
   int ret;
 
   ret = passwd_update(argv[1], argv[2]);

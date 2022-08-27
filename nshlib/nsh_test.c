@@ -76,8 +76,6 @@
 
 static inline int binaryexpression(FAR struct nsh_vtbl_s *vtbl, char **argv)
 {
-  UNUSED(vtbl);
-
   char *endptr;
   long integer1;
   long integer2;
