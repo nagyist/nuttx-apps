@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
       while (1)
         {
           struct pollfd pfd;
-          FAR void *buf;
+          void  *buf;
           uint32_t len;
 
           /* Wait the packet ready */

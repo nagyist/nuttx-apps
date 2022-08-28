@@ -5,8 +5,7 @@
  *   Copyright (c) 2011, B.ZaaR, All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
+ * modification, are permitted provided that the following conditions are met:
  *
  *   Redistributions of source code must retain the above copyright notice,
  *   this list of conditions and the following disclaimer.
@@ -19,7 +18,7 @@
  *   products derived from this software without specific prior written
  *   permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS & CONTRIBUTORS "AS IS"
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
  * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
@@ -52,8 +51,7 @@
 
 static int runinsert(FAR struct command_s *cmd)
 {
-  long dest;
-  long rpt;
+  long dest, rpt;
 
   /* Default to a 0 (zero) value for 1 count */
 
@@ -110,7 +108,6 @@ static int setinsert(FAR struct command_s *cmd, int optc, char *opt)
   switch (optc)
     {
     case 0:
-
       /* Set destination */
 
       cmd->opts.dest = v;
@@ -118,7 +115,6 @@ static int setinsert(FAR struct command_s *cmd, int optc, char *opt)
       break;
 
     case 1:
-
       /* Set count (len) */
 
       cmd->opts.len = v;
@@ -126,7 +122,6 @@ static int setinsert(FAR struct command_s *cmd, int optc, char *opt)
       break;
 
     default:
-
       /* Set values */
 
       if (optc > 1 && cmd->opts.cnt < OPT_BUF_SZ)
@@ -139,21 +134,20 @@ static int setinsert(FAR struct command_s *cmd, int optc, char *opt)
               break;
 
             case WORD_32:
-              *((int32_t *)hx + cmd->opts.cnt) = v;
+              *((int32_t *) hx + cmd->opts.cnt) = v;
               break;
 
             case WORD_16:
-              *((int16_t *)hx + cmd->opts.cnt) = v;
+              *((int16_t *) hx + cmd->opts.cnt) = v;
               break;
 
             case WORD_8:
-              *((int8_t *)hx + cmd->opts.cnt) = v;
+              *((int8_t *) hx + cmd->opts.cnt) = v;
               break;
 
             default:
               break;
             }
-
           cmd->opts.cnt++;
           optc++;
 

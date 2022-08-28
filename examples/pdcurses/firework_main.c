@@ -161,7 +161,7 @@ int main(int argc, FAR char *argv[])
       init_pair(i, color_table[i], COLOR_BLACK);
     }
 
-  seed = time(NULL);
+  seed = time((time_t *) 0);
   srand(seed);
   flag = 0;
 

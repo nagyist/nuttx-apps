@@ -164,12 +164,6 @@ static int validate_args(FAR struct args_s *args)
 #ifdef CONFIG_EXAMPLES_FOC_HAVE_POS
     args->mmode != FOC_MMODE_POS &&
 #endif
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_ALIGN
-    args->mmode != FOC_MMODE_ALIGN_ONLY &&
-#endif
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_IDENT
-    args->mmode != FOC_MMODE_IDENT_ONLY &&
-#endif
     1)
     {
       PRINTF("Invalid ctrl mode value %d s\n", args->mmode);
@@ -217,7 +211,7 @@ static int foc_mq_send(mqd_t mqd, uint8_t msg, FAR void *data)
 
   /* Data max 4B */
 
-  tmp = *((FAR uint32_t *)data);
+  tmp = *((FAR uint32_t *) data);
 
   buffer[0] = msg;
   buffer[1] = ((tmp & 0x000000ff) >> 0);
@@ -621,8 +615,10 @@ errout:
     }
 
 errout_no_mutex:
+
   foc_threads_deinit();
 
   PRINTF("foc_main exit\n");
+
   return 0;
 }

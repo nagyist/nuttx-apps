@@ -18,7 +18,7 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_MATH_LIBTOMMATH),)
+ifeq ($(CONFIG_MATH_LIBTOMMATH),y)
 CONFIGURED_APPS += $(APPDIR)/math/libtommath
 
 # It allows `<tommath.h>` import.

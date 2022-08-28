@@ -861,6 +861,7 @@ static int sendto_request(int fd, FAR struct gs2200m_s *priv,
     }
 
 prepare:
+
   if (sendbuf)
     {
       free(sendbuf);
@@ -1030,6 +1031,7 @@ prepare:
     }
 
 err_out:
+
   gs2200m_printf("%s: *** end ret=%d\n", __func__, ret);
 
   if (rmsg.buf)
@@ -1566,7 +1568,6 @@ static int ioctl_request(int fd, FAR struct gs2200m_s *priv,
   switch (req->cmd)
     {
       case SIOCGIFADDR:
-      case SIOCGIFFLAGS:
       case SIOCGIFHWADDR:
       case SIOCGIWNWID:
       case SIOCGIWFREQ:
@@ -1801,6 +1802,7 @@ int main(int argc, FAR char *argv[])
   ret = gs2200m_loop(_daemon);
 
 errout:
+
   if (_daemon)
     {
       free(_daemon);

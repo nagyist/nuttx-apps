@@ -227,7 +227,6 @@ static int fpu_task(int argc, char *argv[])
           printf("ERROR FPU#%d: save1 and save2 do not match\n", id);
           fpu_dump(fpu->save1, "Values after math operations (save1)");
           fpu_dump(fpu->save2, "Values after verify re-read (save2)");
-          ASSERT(false);
           return EXIT_FAILURE;
         }
 
@@ -248,7 +247,6 @@ static int fpu_task(int argc, char *argv[])
           printf("ERROR FPU#%d: save1 and save2 do not match\n", id);
           fpu_dump(fpu->save1, "Values before waiting (save1)");
           fpu_dump(fpu->save2, "Values after waiting (save2)");
-          ASSERT(false);
           return EXIT_FAILURE;
         }
     }
@@ -279,7 +277,6 @@ void fpu_test(void)
   if (task1 < 0)
     {
       printf("fpu_test: ERROR Failed to start task FPU#1\n");
-      ASSERT(false);
     }
   else
     {
@@ -295,7 +292,6 @@ void fpu_test(void)
   if (task2 < 0)
     {
       printf("fpu_test: ERROR Failed to start task FPU#1\n");
-      ASSERT(false);
     }
   else
     {
@@ -310,7 +306,6 @@ void fpu_test(void)
 
 #else
   printf("fpu_test: ERROR: The FPU test is not properly configured\n");
-  ASSERT(false);
 #endif
   printf("fpu_test: Returning\n");
 }

@@ -81,7 +81,6 @@ static FAR void *sem_waiter(FAR void *parameter)
     {
        printf("sem_waiter: ERROR pthread_mutex_lock failed, status=%d\n",
                status);
-       ASSERT(false);
     }
 
   printf("sem_waiter: Starting wait for condition\n");
@@ -97,7 +96,6 @@ static FAR void *sem_waiter(FAR void *parameter)
            printf("sem_waiter: "
                   "ERROR pthread_setcancelstate failed, status=%d\n",
                    status);
-           ASSERT(false);
         }
     }
 
@@ -110,7 +108,6 @@ static FAR void *sem_waiter(FAR void *parameter)
     {
       printf("sem_waiter: ERROR pthread_cond_wait failed, status=%d\n",
              status);
-      ASSERT(false);
     }
 
   if (!parameter)
@@ -124,7 +121,6 @@ static FAR void *sem_waiter(FAR void *parameter)
           printf("sem_waiter: "
                  "ERROR pthread_mutex_unlock failed, status=%d\n",
                   status);
-          ASSERT(false);
         }
 
       /* Set the cancelable state */
@@ -135,14 +131,12 @@ static FAR void *sem_waiter(FAR void *parameter)
         {
           printf("sem_waiter: "
                  "ERROR pthread_setcancelstate failed, status=%d\n", status);
-          ASSERT(false);
         }
     }
   else
     {
       printf("sem_waiter: "
              "ERROR pthread_cond_wait returned after being cancelled!\n");
-      ASSERT(false);
     }
 
   /* Why is this here?  Because pthread_setcancelstate() is not a
@@ -171,7 +165,6 @@ static void mqueue_cleaner(FAR void *arg)
   if (mq_close(*mqcancel) < 0)
     {
       printf("mqueue_cleaner: ERROR mq_close failed\n");
-      ASSERT(false);
     }
 }
 #endif
@@ -199,7 +192,6 @@ static FAR void *mqueue_waiter(FAR void *parameter)
   if (mqcancel < 0)
     {
       printf("mqueue_waiter: ERROR mq_open failed\n");
-      ASSERT(false);
       pthread_exit((pthread_addr_t)0xdeadbeef);
     }
 
@@ -214,7 +206,6 @@ static FAR void *mqueue_waiter(FAR void *parameter)
   if (mq_close(mqcancel) < 0)
     {
       printf("mqueue_waiter: ERROR mq_close failed\n");
-      ASSERT(false);
     }
 
   printf("mqueue_waiter: Exit with status 0x12345678\n");
@@ -270,7 +261,6 @@ static FAR void *asynch_waiter(FAR void *parameter)
        printf("asynch_waiter: "
               "ERROR pthread_setcancelstate failed, status=%d\n",
                status);
-       ASSERT(false);
     }
 
   /* Set the asynchronous cancellation type */
@@ -282,7 +272,6 @@ static FAR void *asynch_waiter(FAR void *parameter)
        printf("asynch_waiter: "
               "ERROR pthread_setcanceltype failed, status=%d\n",
                status);
-       ASSERT(false);
     }
 
   /* Then wait a bit.  We should be canceled aynchronously while waiting, but
@@ -305,7 +294,6 @@ static FAR void *asynch_waiter(FAR void *parameter)
       printf("asynch_waiter: "
              "ERROR pthread_setcancelstate failed, status=%d\n",
              status);
-      ASSERT(false);
     }
 
   /* Set the cancelable state */
@@ -330,7 +318,6 @@ static void start_thread(FAR void *(*entry)(FAR void *), pthread_t *waiter,
     {
       printf("start_thread: "
              "ERROR pthread_mutex_init failed, status=%d\n", status);
-      ASSERT(false);
     }
 
   /* Initialize the condition variable */
@@ -341,7 +328,6 @@ static void start_thread(FAR void *(*entry)(FAR void *), pthread_t *waiter,
     {
       printf("start_thread: ERROR pthread_cond_init failed, status=%d\n",
               status);
-      ASSERT(false);
     }
 
   /* Set up attributes */
@@ -349,18 +335,14 @@ static void start_thread(FAR void *(*entry)(FAR void *), pthread_t *waiter,
   status = pthread_attr_init(&attr);
   if (status != 0)
     {
-      printf("start_thread: "
-             "ERROR pthread_attr_init failed, status=%d\n", status);
-      ASSERT(false);
+      printf("start_thread: pthread_attr_init failed, status=%d\n", status);
     }
 
   status = pthread_attr_setstacksize(&attr, STACKSIZE);
   if (status != 0)
     {
-      printf("start_thread: "
-             "ERROR pthread_attr_setstacksize failed, status=%d\n",
+      printf("start_thread: pthread_attr_setstacksize failed, status=%d\n",
               status);
-      ASSERT(false);
     }
 
   /* Start the waiter thread  */
@@ -372,7 +354,6 @@ static void start_thread(FAR void *(*entry)(FAR void *), pthread_t *waiter,
     {
       printf("start_thread: ERROR pthread_create failed, status=%d\n",
               status);
-      ASSERT(false);
     }
 
   /* Make sure that the waiter thread gets a chance to run */
@@ -394,7 +375,6 @@ static void restart_thread(FAR void *(*entry)(FAR void *), pthread_t *waiter,
     {
       printf("restart_thread: "
              "ERROR pthread_cond_destroy failed, status=%d\n", status);
-      ASSERT(false);
     }
 
   /* Destroy the mutex.
@@ -408,7 +388,6 @@ static void restart_thread(FAR void *(*entry)(FAR void *), pthread_t *waiter,
     {
       printf("restart_thread: "
              "ERROR pthread_mutex_destroy failed, status=%d\n", status);
-      ASSERT(false);
     }
 
   /* Then restart the thread */
@@ -451,7 +430,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_cancel failed, status=%d\n",
               status);
-      ASSERT(false);
     }
 
   /* Then join to the thread to pick up the result (if we don't do
@@ -464,7 +442,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_join failed, status=%d\n",
               status);
-      ASSERT(false);
     }
   else
     {
@@ -473,7 +450,6 @@ void cancel_test(void)
         {
           printf("cancel_test: ERROR expected result=%p\n",
                   PTHREAD_CANCELED);
-          ASSERT(false);
         }
       else
         {
@@ -511,7 +487,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_cancel failed, status=%d\n",
               status);
-      ASSERT(false);
     }
 
   /* Then join to the thread to pick up the result (if we don't do
@@ -524,7 +499,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_join failed, status=%d\n",
               status);
-      ASSERT(false);
     }
   else
     {
@@ -533,7 +507,6 @@ void cancel_test(void)
         {
           printf("cancel_test: ERROR expected result=%p\n",
                   PTHREAD_CANCELED);
-          ASSERT(false);
         }
       else
         {
@@ -557,7 +530,6 @@ void cancel_test(void)
   if (status != 0)
     {
       printf("cancel_test: ERROR pthread_detach, status=%d\n", status);
-      ASSERT(false);
     }
 
   /* Then cancel it.  It should be in the pthread_cond_wait now -- wait a
@@ -572,7 +544,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_cancel failed, status=%d\n",
               status);
-      ASSERT(false);
     }
 
 #ifdef CONFIG_CANCELLATION_POINTS
@@ -591,14 +562,12 @@ void cancel_test(void)
   if (status == 0)
     {
       printf("cancel_test: ERROR pthread_join succeeded\n");
-      ASSERT(false);
     }
   else if (status != ESRCH)
     {
       printf("cancel_test:"
              " ERROR pthread_join failed but with wrong status=%d\n",
              status);
-      ASSERT(false);
     }
   else
     {
@@ -636,7 +605,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_cancel failed, status=%d\n",
              status);
-      ASSERT(false);
     }
 
   /* Signal the thread.  It should wake up and restore the cancelable state.
@@ -648,7 +616,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_mutex_lock failed, status=%d\n",
               status);
-      ASSERT(false);
     }
 
   status = pthread_cond_signal(&cond);
@@ -656,7 +623,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_cond_signal failed, status=%d\n",
              status);
-      ASSERT(false);
     }
 
   status = pthread_mutex_unlock(&mutex);
@@ -664,7 +630,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_mutex_unlock failed, status=%d\n",
              status);
-      ASSERT(false);
     }
 
   /* Then join to the thread to pick up the result (if we don't do
@@ -676,7 +641,6 @@ void cancel_test(void)
   if (status != 0)
     {
       printf("cancel_test: ERROR pthread_join failed, status=%d\n", status);
-      ASSERT(false);
     }
   else
     {
@@ -685,7 +649,6 @@ void cancel_test(void)
         {
           printf("cancel_test: ERROR expected result=%p\n",
                   PTHREAD_CANCELED);
-          ASSERT(false);
         }
       else
         {
@@ -710,7 +673,6 @@ void cancel_test(void)
   if (mqcancel == (mqd_t)-1)
     {
       printf("sender_thread: ERROR mq_open failed\n");
-      ASSERT(false);
       pthread_exit((pthread_addr_t)1);
     }
 
@@ -730,7 +692,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_cancel failed, status=%d\n",
              status);
-      ASSERT(false);
     }
 
   /* Then join to the thread to pick up the result (if we don't do
@@ -743,7 +704,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_join failed, status=%d\n",
              status);
-      ASSERT(false);
     }
   else
     {
@@ -752,7 +712,6 @@ void cancel_test(void)
         {
           printf("cancel_test: ERROR expected result=%p\n",
                  PTHREAD_CANCELED);
-          ASSERT(false);
         }
       else
         {
@@ -766,7 +725,6 @@ void cancel_test(void)
   if (mq_close(mqcancel) < 0)
     {
       printf("sender_thread: ERROR mq_close failed\n");
-      ASSERT(false);
     }
 #else
   printf("Skipped\n");
@@ -792,7 +750,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_cancel failed, status=%d\n",
              status);
-      ASSERT(false);
     }
 
   /* Then join to the thread to pick up the result (if we don't do
@@ -805,7 +762,6 @@ void cancel_test(void)
     {
       printf("cancel_test: ERROR pthread_join failed, status=%d\n",
              status);
-      ASSERT(false);
     }
   else
     {
@@ -814,7 +770,6 @@ void cancel_test(void)
         {
           printf("cancel_test: ERROR expected result=%p\n",
                  PTHREAD_CANCELED);
-          ASSERT(false);
         }
       else
         {
