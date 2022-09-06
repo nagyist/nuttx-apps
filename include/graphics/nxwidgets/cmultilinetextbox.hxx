@@ -384,7 +384,7 @@ namespace NXWidgets
     inline virtual ~CMultiLineTextBox(void)
     {
       delete m_text;
-      m_text = NULL;
+      m_text = (CText *)NULL;
     }
 
     /**
@@ -422,7 +422,7 @@ namespace NXWidgets
                       nxgl_coord_t width, nxgl_coord_t height,
                       const CNxString &text, uint32_t flags,
                       nxgl_coord_t maxRows = 0,
-                      CWidgetStyle *style = NULL);
+                      CWidgetStyle *style = (CWidgetStyle *)NULL);
 
     /**
      * Set the horizontal alignment of text within the textbox.

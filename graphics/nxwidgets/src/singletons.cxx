@@ -159,7 +159,7 @@ void NXWidgets::freeSingletons(void)
   if (g_nullString)
     {
       delete g_nullString;
-      g_nullString = NULL;
+      g_nullString = (CNxString *)NULL;
     }
 
   // Delete the default widget style singleton
@@ -172,7 +172,7 @@ void NXWidgets::freeSingletons(void)
         }
 
       delete g_defaultWidgetStyle;
-      g_defaultWidgetStyle = NULL;
+      g_defaultWidgetStyle = (CWidgetStyle *)NULL;
     }
 
   // Free the timer list
@@ -180,7 +180,7 @@ void NXWidgets::freeSingletons(void)
   if (g_nxTimers)
     {
       delete g_nxTimers;
-      g_nxTimers = NULL;
+      g_nxTimers = (TNxArray<CNxTimer*> *)NULL;
     }
 
 }

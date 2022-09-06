@@ -65,9 +65,9 @@
 
 CTextBoxTest::CTextBoxTest()
 {
-  m_bgWindow = NULL;
-  m_nxFont   = NULL;
-  m_text     = NULL;
+  m_bgWindow = (CBgWindow *)NULL;
+  m_nxFont   = (CNxFont *)NULL;
+  m_text     = (CNxString *)NULL;
 }
 
 // CTextBoxTest Descriptor
@@ -123,7 +123,7 @@ void CTextBoxTest::disconnect(void)
   if (m_text)
     {
       delete m_text;
-      m_text = NULL;
+      m_text = (CNxString *)NULL;
     }
 
   // Free the default font
@@ -131,7 +131,7 @@ void CTextBoxTest::disconnect(void)
   if (m_nxFont)
     {
       delete m_nxFont;
-      m_nxFont = NULL;
+      m_nxFont = (CNxFont *)NULL;
     }
 
   // And disconnect from the server
@@ -155,7 +155,7 @@ bool CTextBoxTest::createWindow(void)
 {
   // Initialize the widget control using the default style
 
-  m_widgetControl = new CWidgetControl(NULL);
+  m_widgetControl = new CWidgetControl((CWidgetStyle *)NULL);
 
   // Get an (uninitialized) instance of the background window as a class
   // that derives from INxWindow.
@@ -192,7 +192,7 @@ CTextBox *CTextBoxTest::createTextBox(void)
   if (!m_bgWindow->getSize(&windowSize))
     {
       printf("CTextBoxTest::createGraphics: Failed to get window size\n");
-      return NULL;
+      return (CTextBox *)NULL;
     }
 
   // Create an empty CNxString instance to contain the C string

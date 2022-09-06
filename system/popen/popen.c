@@ -253,10 +253,10 @@ FILE *popen(FAR const char *command, FAR const char *mode)
 #ifdef CONFIG_SYSTEM_POPEN_SHPATH
   argv[0] = CONFIG_SYSTEM_POPEN_SHPATH;
   errcode = posix_spawn(&container->shell, argv[0], &file_actions,
-                        &attr, argv, NULL);
+                        &attr, argv, (FAR char * const *)NULL);
 #else
   container->shell = task_spawn("popen", nsh_system, &file_actions,
-                                &attr, argv + 1, NULL);
+                                &attr, argv + 1, (FAR char * const *)NULL);
   if (container->shell < 0)
     {
       errcode = -container->shell;

@@ -201,7 +201,7 @@ namespace NXWidgets
                  nxgl_coord_t bitmapX, nxgl_coord_t bitmapY,
                  FAR const struct SBitmap *normalGlyph,
                  FAR const struct SBitmap *clickedGlyph,
-                 CWidgetStyle *style = NULL);
+                 CWidgetStyle *style = (CWidgetStyle *)NULL);
 
     /**
      * Destructor.

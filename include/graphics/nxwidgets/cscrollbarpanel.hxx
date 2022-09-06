@@ -160,7 +160,7 @@ namespace NXWidgets
                     nxgl_coord_t x, nxgl_coord_t y,
                     nxgl_coord_t width, nxgl_coord_t height,
                     uint32_t flags,
-                    CWidgetStyle *style = NULL);
+                    CWidgetStyle *style = (CWidgetStyle *)NULL);
 
     /**
      * Scroll the panel by the specified amounts.

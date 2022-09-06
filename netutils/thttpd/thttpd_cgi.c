@@ -7,7 +7,7 @@
  *
  * Derived from the file libhttpd.c in the original THTTPD package:
  *
- *   Copyright Â© 1995,1998,1999,2000,2001 by
+ *   Copyright © 1995,1998,1999,2000,2001 by
  *   Jef Poskanzer <jef@mail.acme.com>. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1060,7 +1060,8 @@ int cgi(httpd_conn *hc)
       argv[1] = NULL;
 
       child = task_create("CGI child", CONFIG_THTTPD_CGI_PRIORITY,
-                          CONFIG_THTTPD_CGI_STACKSIZE, cgi_child, argv);
+                          CONFIG_THTTPD_CGI_STACKSIZE,
+                          (main_t)cgi_child, (FAR char * const *)argv);
       if (child < 0)
         {
           nerr("ERROR: task_create: %d\n", errno);

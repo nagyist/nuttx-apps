@@ -76,7 +76,7 @@ static CThingSayer MyThingSayer;
 CThingSayer::CThingSayer(void)
 {
   cout << "CThingSayer::CThingSayer: I am!" << endl;
-  szWhatToSay = NULL;
+  szWhatToSay = (const char*)NULL;
 }
 
 CThingSayer::~CThingSayer(void)
@@ -87,7 +87,7 @@ CThingSayer::~CThingSayer(void)
       cout << "CThingSayer::~CThingSayer: I will never say '"
 	   << szWhatToSay << "' again" << endl;
     }
-  szWhatToSay = NULL;
+  szWhatToSay = (const char*)NULL;
 }
 
 void CThingSayer::Initialize(const char *czSayThis)

@@ -133,7 +133,7 @@ namespace NXWidgets
 
     CRadioButtonGroup(CWidgetControl *pWidgetControl,
                       nxgl_coord_t x, nxgl_coord_t y,
-                      CWidgetStyle *style = NULL);
+                      CWidgetStyle *style = (CWidgetStyle *)NULL);
 
     /**
      * Destructor.

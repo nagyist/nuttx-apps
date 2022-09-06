@@ -72,11 +72,11 @@ static struct aiocb * const g_aiocb_init[AIO_NCTRLBLKS] =
 
 static FAR void * const g_buffers[AIO_NCTRLBLKS] =
 {
-  (FAR char *)g_wrbuffer1,
-  NULL,
-  (FAR char *)g_wrbuffer2,
-  NULL,
-  g_rdbuffer
+  (FAR void *)g_wrbuffer1,
+  (FAR void *)NULL,
+  (FAR void *)g_wrbuffer2,
+  (FAR void *)NULL,
+  (FAR void *)g_rdbuffer
 };
 
 static const FAR uint8_t g_offsets[AIO_NCTRLBLKS] =
@@ -179,7 +179,6 @@ static int check_done(void)
           else if (aiocbp->aio_result < 0)
             {
               printf("     ERROR: Failed I/O transfer\n");
-              ASSERT(false);
             }
 
           /* Successful completion r */
@@ -247,7 +246,6 @@ static int remove_done(void)
           else if (aiocbp->aio_result < 0)
             {
               printf("     ERROR: Failed I/O transfer\n");
-              ASSERT(false);
               g_aiocb[i] = NULL;
               completed++;
             }
@@ -301,7 +299,6 @@ void aio_test(void)
     {
       printf("aio_test: ERROR: Failed to open %s: %d\n",
              AIO_FILEPATH, errno);
-      ASSERT(false);
       goto errout_with_procmask;
     }
 
@@ -310,7 +307,6 @@ void aio_test(void)
   if (ret < 0)
     {
       printf("aio_test: ERROR: lio_listio failed: %d\n", errno);
-      ASSERT(false);
       goto errout_with_fildes;
     }
 
@@ -338,7 +334,6 @@ void aio_test(void)
     {
       printf("aio_test: ERROR: Failed to open %s: %d\n",
              AIO_FILEPATH, errno);
-      ASSERT(false);
       goto errout_with_procmask;
     }
 
@@ -347,7 +342,6 @@ void aio_test(void)
   if (ret < 0)
     {
       printf("aio_test: ERROR: lio_listio failed: %d\n", errno);
-      ASSERT(false);
       goto errout_with_fildes;
     }
 
@@ -355,7 +349,6 @@ void aio_test(void)
   if (ret < 0)
     {
       printf("aio_test: ERROR: Not done\n");
-      ASSERT(false);
       goto errout_with_fildes;
     }
 
@@ -376,7 +369,6 @@ void aio_test(void)
     {
       printf("aio_test: ERROR: Failed to open %s: %d\n",
               AIO_FILEPATH, errno);
-      ASSERT(false);
       goto errout_with_procmask;
     }
 
@@ -385,7 +377,6 @@ void aio_test(void)
   if (ret < 0)
     {
       printf("aio_test: ERROR: lio_listio failed: %d\n", errno);
-      ASSERT(false);
       goto errout_with_fildes;
     }
 
@@ -398,7 +389,6 @@ void aio_test(void)
       if (ret < 0)
         {
           printf("aio_test: ERROR: aio_suspend failed: %d\n", errno);
-          ASSERT(false);
           goto errout_with_fildes;
         }
 
@@ -406,7 +396,6 @@ void aio_test(void)
       if (completed < 1)
         {
           printf("aio_test: ERROR: Signalled, but no I/O completed\n");
-          ASSERT(false);
           goto errout_with_fildes;
         }
 
@@ -423,7 +412,6 @@ void aio_test(void)
     {
       printf("aio_test: ERROR: Total is %d, should be %d\n",
               total, AIO_NCTRLBLKS);
-      ASSERT(false);
       goto errout_with_fildes;
     }
 
@@ -444,7 +432,6 @@ void aio_test(void)
     {
       printf("aio_test: ERROR: Failed to open %s: %d\n",
               AIO_FILEPATH, errno);
-      ASSERT(false);
       goto errout_with_procmask;
     }
 
@@ -454,7 +441,6 @@ void aio_test(void)
   if (ret < 0)
     {
       printf("aio_test: ERROR: lio_listio failed: %d\n", errno);
-      ASSERT(false);
       goto errout_with_fildes;
     }
 
@@ -478,7 +464,6 @@ void aio_test(void)
                 {
                   printf("aio_test: ERROR: sigwaitinfo failed: %d\n",
                           errcode);
-                  ASSERT(false);
                   goto errout_with_fildes;
                 }
             }
@@ -508,7 +493,6 @@ void aio_test(void)
     {
       printf("aio_test: ERROR: Failed to open %s: %d\n",
               AIO_FILEPATH, errno);
-      ASSERT(false);
       goto errout_with_procmask;
     }
 
@@ -522,7 +506,6 @@ void aio_test(void)
   if (ret < 0)
     {
       printf("aio_test: ERROR: lio_listio failed: %d\n", errno);
-      ASSERT(false);
       goto errout_with_fildes;
     }
 
@@ -546,7 +529,6 @@ void aio_test(void)
                 {
                   printf("aio_test: ERROR: sigwaitinfo failed: %d\n",
                           errcode);
-                  ASSERT(false);
                   goto errout_with_fildes;
                 }
             }
@@ -571,7 +553,6 @@ void aio_test(void)
     {
       printf("aio_test: ERROR: Failed to open %s: %d\n",
               AIO_FILEPATH, errno);
-      ASSERT(false);
       goto errout_with_procmask;
     }
 
@@ -580,7 +561,6 @@ void aio_test(void)
   if (ret < 0)
     {
       printf("aio_test: ERROR: lio_listio failed: %d\n", errno);
-      ASSERT(false);
       goto errout_with_fildes;
     }
 
@@ -588,7 +568,6 @@ void aio_test(void)
   if (ret < 0)
     {
       printf("aio_test: ERROR: aio_cancel failed: %d\n", errno);
-      ASSERT(false);
       goto errout_with_fildes;
     }
 
@@ -618,7 +597,6 @@ void aio_test(void)
     {
       printf("aio_test: ERROR: Failed to open %s: %d\n",
               AIO_FILEPATH, errno);
-      ASSERT(false);
       goto errout_with_procmask;
     }
 
@@ -627,7 +605,6 @@ void aio_test(void)
   if (ret < 0)
     {
       printf("aio_test: ERROR: lio_listio failed: %d\n", errno);
-      ASSERT(false);
       goto errout_with_fildes;
     }
 
@@ -635,7 +612,6 @@ void aio_test(void)
   if (ret < 0)
     {
       printf("aio_test: ERROR: aio_cancel failed: %d\n", errno);
-      ASSERT(false);
       goto errout_with_fildes;
     }
 

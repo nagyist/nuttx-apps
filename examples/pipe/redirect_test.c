@@ -233,7 +233,7 @@ static int redirect_writer(int argc, char *argv[])
 
 int redirection_test(void)
 {
-  char *argv[3];
+  const char *argv[3];
   char buffer1[8];
   char buffer2[8];
   int readerid;
@@ -265,7 +265,7 @@ int redirection_test(void)
          fd[0]);
   readerid = task_create("redirect_reader",
                          50, CONFIG_EXAMPLES_PIPE_STACKSIZE,
-                         redirect_reader, argv);
+                         redirect_reader, (FAR char * const *)argv);
   if (readerid < 0)
     {
       fprintf(stderr, "redirection_test: "
@@ -279,7 +279,7 @@ int redirection_test(void)
          fd[1]);
   writerid = task_create("redirect_writer",
                          50, CONFIG_EXAMPLES_PIPE_STACKSIZE,
-                         redirect_writer, argv);
+                         redirect_writer, (FAR char * const *)argv);
   if (writerid < 0)
     {
       fprintf(stderr, "redirection_test: "
