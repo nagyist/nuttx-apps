@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/interpreters/ficl/src/nuttx.c
+ * apps/interpreters/minibasic/basic.c
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *
@@ -113,4 +113,5 @@ long ficlFileSize(ficlFile *ff)
 
 void ficlSystemCompilePlatform(ficlSystem *system)
 {
+  return;
 }
