@@ -184,13 +184,13 @@ static inline void net_statistics(FAR struct nsh_vtbl_s *vtbl)
 #if !defined(CONFIG_NSH_DISABLE_IFUPDOWN) || !defined(CONFIG_NSH_DISABLE_IFCONFIG)
 static int ifconfig_callback(FAR struct nsh_vtbl_s *vtbl, FAR char *devname)
 {
-  char buffer[IFNAMSIZ + 12];
+  char buffer[NAME_MAX + 12];
 
   DEBUGASSERT(vtbl != NULL && devname != NULL);
 
   /* Construct the full path to the /proc/net entry for this device */
 
-  snprintf(buffer, IFNAMSIZ + 12,
+  snprintf(buffer, NAME_MAX + 12,
            CONFIG_NSH_PROC_MOUNTPOINT "/net/%s", devname);
   nsh_catfile(vtbl, "ifconfig", buffer);
 
@@ -368,6 +368,7 @@ static int nsh_foreach_netdev(nsh_netdev_callback_t callback,
                               FAR char *cmd)
 {
   FAR struct dirent *entry;
+  uint8_t flags;
   FAR DIR *dir;
   int ret = OK;
 
@@ -392,7 +393,7 @@ static int nsh_foreach_netdev(nsh_netdev_callback_t callback,
        */
 
       if (entry->d_type == DTYPE_FILE &&
-          strcmp(entry->d_name, "stat") != 0)
+          netlib_getifstatus(entry->d_name, &flags) >= 0)
         {
           /* Performt he callback.  It returns any non-zero value, then
            * terminate the search.
