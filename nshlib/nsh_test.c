@@ -74,12 +74,9 @@
  * Name: binaryexpression
  ****************************************************************************/
 
-static inline int binaryexpression(FAR struct nsh_vtbl_s *vtbl,
-                                   FAR char **argv)
+static inline int binaryexpression(FAR struct nsh_vtbl_s *vtbl, char **argv)
 {
-  UNUSED(vtbl);
-
-  FAR char *endptr;
+  char *endptr;
   long integer1;
   long integer2;
 
@@ -176,11 +173,10 @@ static inline int binaryexpression(FAR struct nsh_vtbl_s *vtbl,
  * Name: unaryexpression
  ****************************************************************************/
 
-static inline int unaryexpression(FAR struct nsh_vtbl_s *vtbl,
-                                  FAR char **argv)
+static inline int unaryexpression(FAR struct nsh_vtbl_s *vtbl, char **argv)
 {
   struct stat buf;
-  FAR char *fullpath;
+  char *fullpath;
   int   ret;
 
   /* -n STRING */
@@ -306,7 +302,7 @@ static inline int unaryexpression(FAR struct nsh_vtbl_s *vtbl,
  * Name: expression
  ****************************************************************************/
 
-static int expression(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+static int expression(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   int value;
   int i = 0;
@@ -411,7 +407,7 @@ errout_syntax:
  * Name: cmd_test
  ****************************************************************************/
 
-int cmd_test(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_test(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   return expression(vtbl, argc - 1, &argv[1]);
 }
@@ -420,7 +416,7 @@ int cmd_test(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  * Name: cmd_lbracket
  ****************************************************************************/
 
-int cmd_lbracket(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_lbracket(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   /* Verify that the closing right bracket is the last thing on the command
    * line.

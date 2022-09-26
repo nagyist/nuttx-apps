@@ -64,9 +64,7 @@
 
 #include <arpa/inet.h>
 
-#ifdef CONFIG_FTPD_LOGIN_PASSWD
-  #include "fsutils/passwd.h"
-#endif
+#include "fsutils/passwd.h"
 
 #include "netutils/ftpd.h"
 
@@ -2153,8 +2151,6 @@ static int ftpd_listbuffer(FAR struct ftpd_session_s *session,
                            FAR struct stat *st, FAR char *buffer,
                            size_t buflen, unsigned int opton)
 {
-  UNUSED(session);
-
   FAR char *name;
   size_t offset = 0;
 
@@ -4096,8 +4092,6 @@ static void ftpd_freesession(FAR struct ftpd_session_s *session)
 
 static void ftpd_workersetup(FAR struct ftpd_session_s *session)
 {
-  UNUSED(session);
-
 #if defined(CONFIG_NET_HAVE_IPTOS) || defined(CONFIG_NET_HAVE_OOBINLINE)
   int temp;
 #endif
@@ -4262,9 +4256,7 @@ static FAR void *ftpd_worker(FAR void *arg)
  *   used to run the server.
  *
  * Input Parameters:
- *    port - The port that the server will listen to.
- *    family - The type of INET family to use when opening the socket.
- *    AF_INET and AF_INET6 are supported.
+ *    None
  *
  * Returned Value:
  *   On success, a non-NULL handle is returned that can be used to reference
@@ -4272,11 +4264,15 @@ static FAR void *ftpd_worker(FAR void *arg)
  *
  ****************************************************************************/
 
-FTPD_SESSION ftpd_open(int port, sa_family_t family)
+FTPD_SESSION ftpd_open(sa_family_t family)
 {
   FAR struct ftpd_server_s *server;
 
-  server = ftpd_openserver(port, family);
+  server = ftpd_openserver(21, family);
+  if (server == NULL)
+    {
+      server = ftpd_openserver(2211, family);
+    }
 
   return (FTPD_SESSION)server;
 }
