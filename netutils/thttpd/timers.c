@@ -7,7 +7,7 @@
  *
  * Derived from the file of the same name in the original THTTPD package:
  *
- *   Copyright Â© 1995,1998,2000 by Jef Poskanzer <jef@mail.acme.com>.
+ *   Copyright © 1995,1998,2000 by Jef Poskanzer <jef@mail.acme.com>.
  *   All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -92,7 +92,6 @@ static void l_add(Timer *tmr)
   if (tmr2 == NULL)
     {
       /* The list is empty. */
-
       timers[h] = tmr;
       tmr->prev = tmr->next = NULL;
     }
@@ -121,7 +120,6 @@ static void l_add(Timer *tmr)
                    tmr->time.tv_usec <= tmr2->time.tv_usec))
                 {
                   /* Found it. */
-
                   tmr2prev->next = tmr;
                   tmr->prev = tmr2prev;
                   tmr->next = tmr2;
@@ -229,7 +227,6 @@ Timer *tmr_create(struct timeval *now, TimerProc *timer_proc,
       tmr->time.tv_sec  += tmr->time.tv_usec / 1000000L;
       tmr->time.tv_usec %= 1000000L;
     }
-
   tmr->hash = hash(tmr);
 
   /* Add the new timer to the proper active list. */
@@ -242,15 +239,14 @@ long tmr_mstimeout(struct timeval *now)
 {
   int h;
   int gotone;
-  long msecs;
-  long m;
+  long msecs, m;
   register Timer *tmr;
 
   gotone = 0;
   msecs  = 0;
 
-  /* Since the lists are sorted, we only need to look at the first timer
-   * on each one.
+  /* Since the lists are sorted, we only need to look at the  * first timer on
+   * each one.
    */
 
   for (h = 0; h < HASH_SIZE; ++h)
@@ -297,13 +293,12 @@ void tmr_run(struct timeval *now)
         {
           next = tmr->next;
 
-          /* Since the lists are sorted, as soon as we find a timer that
-           * isn't ready yet, we can go on to the next list.
+          /* Since the lists are sorted, as soon as we find a timer  * that isn'tmr
+           * ready yet, we can go on to the next list
            */
 
           if (tmr->time.tv_sec > now->tv_sec ||
-              (tmr->time.tv_sec == now->tv_sec &&
-               tmr->time.tv_usec > now->tv_usec))
+              (tmr->time.tv_sec == now->tv_sec && tmr->time.tv_usec > now->tv_usec))
             {
               break;
             }
@@ -320,7 +315,6 @@ void tmr_run(struct timeval *now)
                   tmr->time.tv_sec += tmr->time.tv_usec / 1000000L;
                   tmr->time.tv_usec %= 1000000L;
                 }
-
               l_resort(tmr);
             }
           else
@@ -367,6 +361,5 @@ void tmr_destroy(void)
           tmr_cancel(timers[h]);
         }
     }
-
   tmr_cleanup();
 }

@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_TESTING_MONKEY_MONKEY_RECORDER_H
-#define __APPS_TESTING_MONKEY_MONKEY_RECORDER_H
+#ifndef __MONKEY_RECORDER_H__
+#define __MONKEY_RECORDER_H__
 
 /****************************************************************************
  * Included Files
@@ -83,8 +83,8 @@ void monkey_recorder_delete(FAR struct monkey_recorder_s *recorder);
  ****************************************************************************/
 
 enum monkey_recorder_res_e monkey_recorder_write(
-                                FAR struct monkey_recorder_s *recorder,
-                                FAR const struct monkey_dev_state_s *state);
+                                  FAR struct monkey_recorder_s *recorder,
+                                  FAR const struct monkey_dev_state_s *state);
 
 /****************************************************************************
  * Name: monkey_recorder_read
@@ -107,4 +107,4 @@ enum monkey_recorder_res_e monkey_recorder_reset(
 }
 #endif
 
-#endif /* __APPS_TESTING_MONKEY_MONKEY_RECORDER_H */
+#endif /* __MONKEY_RECORDER_H__ */

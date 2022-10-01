@@ -57,7 +57,19 @@
 #  define NLOWPRI_THREADS 1
 #endif
 
-#define NHIGHPRI_THREADS 1
+#ifndef CONFIG_SEM_NNESTPRIO
+#  define CONFIG_SEM_NNESTPRIO 0
+#endif
+
+/* Where resources configured for lots of waiters?  If so then run 3 high
+ * priority threads.  Otherwise, just one.
+ */
+
+#if CONFIG_SEM_NNESTPRIO > 3
+#  define NHIGHPRI_THREADS 3
+#else
+#  define NHIGHPRI_THREADS 1
+#endif
 
 #define NUMBER_OF_COMPETING_THREADS     3
 #define COMPETING_THREAD_START_PRIORITY 200
@@ -518,8 +530,6 @@ void priority_inheritance(void)
   g_medpri = my_pri - 1;
 
   sem_init(&g_sem, 0, NLOWPRI_THREADS);
-  sem_setprotocol(&g_sem, SEM_PRIO_INHERIT);
-
   dump_nfreeholders("priority_inheritance:");
 
   /* Start the low priority threads */

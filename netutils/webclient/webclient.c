@@ -1417,6 +1417,7 @@ int webclient_perform(FAR struct webclient_context *ctx)
                   tv.tv_sec  = ctx->timeout_sec;
                   tv.tv_usec = 0;
 
+
                   /* Check return value one by one */
 
                   ret = setsockopt(conn->sockfd, SOL_SOCKET, SO_RCVTIMEO,
