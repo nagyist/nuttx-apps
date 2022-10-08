@@ -33,7 +33,7 @@
 #include <debug.h>
 
 #include <lvgl/lvgl.h>
-#include <lv_porting/lv_porting.h>
+#include <port/lv_port.h>
 #include <lvgl/demos/lv_demos.h>
 
 /****************************************************************************
@@ -61,7 +61,7 @@
  * Private Type Declarations
  ****************************************************************************/
 
-typedef void (*demo_create_func_t)(void);
+typedef CODE void (*demo_create_func_t)(void);
 
 struct func_key_pair_s
 {
@@ -202,9 +202,9 @@ int main(int argc, FAR char *argv[])
 
   lv_init();
 
-  /* LVGL interface initialization */
+  /* LVGL port initialization */
 
-  lv_porting_init();
+  lv_port_init();
 
   /* LVGL demo creation */
 
@@ -214,8 +214,13 @@ int main(int argc, FAR char *argv[])
 
   while (1)
     {
-      lv_timer_handler();
-      usleep(1000);
+      uint32_t idle;
+      idle = lv_timer_handler();
+
+      /* Minimum sleep of 1ms */
+
+      idle = idle ? idle : 1;
+      usleep(idle * 1000);
     }
 
   return EXIT_SUCCESS;
