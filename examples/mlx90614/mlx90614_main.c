@@ -109,8 +109,7 @@ int main(int argc, FAR char *argv[])
 
       if (buffer[0] != '0' && buffer[1] != 'x')
         {
-          fprintf(stderr,
-                  "You need to pass the I2C address in hexa: 0xNN\n");
+          fprintf(stderr, "You need to pass the I2C address in hexa: 0xNN\n");
           goto out;
         }
 
@@ -122,13 +121,10 @@ int main(int argc, FAR char *argv[])
           goto out;
         }
 
-      ret = ioctl(fd, SNIOC_CHANGE_SMBUSADDR,
-                  (unsigned long)((uintptr_t)&newaddr));
+      ret = ioctl(fd, SNIOC_CHANGE_SMBUSADDR,  (unsigned long)((uintptr_t)&newaddr));
       if (ret < 0)
         {
-          fprintf(stderr,
-                  "ERROR: ioctl(SNIOC_CHANGE_SMBUSADDR) failed: %d\n",
-                  errno);
+          fprintf(stderr, "ERROR: ioctl(SNIOC_CHANGE_SMBUSADDR) failed: %d\n", errno);
           goto out;
         }
 
@@ -165,6 +161,7 @@ int main(int argc, FAR char *argv[])
     }
 
 out:
+
   close(fd);
   return 0;
 }

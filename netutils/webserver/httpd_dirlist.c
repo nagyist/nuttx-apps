@@ -241,6 +241,7 @@ ssize_t httpd_dirlist(int outfd, FAR struct httpd_fs_file *file)
   closedir(dir);
 
 errout_with_hdr:
+
   memset(&info, 0, sizeof(info));
   uname(&info);
 
@@ -261,6 +262,7 @@ errout_with_hdr:
   ret = total;
 
 errout:
+
   free(tmp);
   return ret;
 }

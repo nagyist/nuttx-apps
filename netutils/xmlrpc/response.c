@@ -40,7 +40,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  ****************************************************************************/
 
-/*  Lightweight Embedded XML-RPC Server Response Generator
+/*
+ *  Lightweight Embedded XML-RPC Server Response Generator
  *
  *  mtj@cogitollc.com
  *
@@ -60,12 +61,9 @@
  * Private Functions
  ****************************************************************************/
 
-static int xmlrpc_insertlength(struct xmlrpc_s *xmlcall)
+static int xmlrpc_insertlength(struct xmlrpc_s * xmlcall)
 {
-  int xdigit = 1000;
-  int i = 0;
-  int len;
-  int digit;
+  int len, digit, xdigit = 1000, i = 0;
   char *temp;
 
   temp = strstr(xmlcall->response, "<?xml");
@@ -93,7 +91,7 @@ static int xmlrpc_insertlength(struct xmlrpc_s *xmlcall)
  * Public Functions
  ****************************************************************************/
 
-int xmlrpc_getinteger(struct xmlrpc_s *xmlcall, int *arg)
+int xmlrpc_getinteger(struct xmlrpc_s * xmlcall, int *arg)
 {
   if ((xmlcall == NULL) || (arg == NULL))
     {
@@ -110,7 +108,7 @@ int xmlrpc_getinteger(struct xmlrpc_s *xmlcall, int *arg)
   return XMLRPC_UNEXPECTED_INTEGER_ARG;
 }
 
-int xmlrpc_getbool(struct xmlrpc_s *xmlcall, int *arg)
+int xmlrpc_getbool(struct xmlrpc_s * xmlcall, int *arg)
 {
   if ((xmlcall == NULL) || (arg == NULL))
     {
@@ -127,7 +125,7 @@ int xmlrpc_getbool(struct xmlrpc_s *xmlcall, int *arg)
   return XMLRPC_UNEXPECTED_BOOLEAN_ARG;
 }
 
-int xmlrpc_getdouble(struct xmlrpc_s *xmlcall, double *arg)
+int xmlrpc_getdouble(struct xmlrpc_s * xmlcall, double *arg)
 {
   if ((xmlcall == NULL) || (arg == NULL))
     {
@@ -144,7 +142,7 @@ int xmlrpc_getdouble(struct xmlrpc_s *xmlcall, double *arg)
   return XMLRPC_UNEXPECTED_DOUBLE_ARG;
 }
 
-int xmlrpc_getstring(struct xmlrpc_s *xmlcall, char *arg)
+int xmlrpc_getstring(struct xmlrpc_s* xmlcall, char *arg)
 {
   if ((xmlcall == NULL) || (arg == NULL))
     {
@@ -161,16 +159,13 @@ int xmlrpc_getstring(struct xmlrpc_s *xmlcall, char *arg)
   return XMLRPC_UNEXPECTED_STRING_ARG;
 }
 
-int xmlrpc_buildresponse(struct xmlrpc_s *xmlcall, char *args, ...)
+int xmlrpc_buildresponse(struct xmlrpc_s* xmlcall, char *args, ...)
 {
   va_list argp;
-  int ret = 0;
-  int index = 0;
-  int close = 0;
-  int isstruct = 0;
-  int i;
+  int i, ret = 0, index = 0, close = 0;
   double d;
   char *s;
+  int isStruct = 0;
 
   if ((xmlcall == NULL) || (args == NULL))
     {
@@ -198,7 +193,7 @@ int xmlrpc_buildresponse(struct xmlrpc_s *xmlcall, char *args, ...)
 
   while (args[index])
     {
-      if (isstruct)
+      if (isStruct)
         {
           if ((args[index] != '{') && (args[index] != '}'))
             {
@@ -215,13 +210,13 @@ int xmlrpc_buildresponse(struct xmlrpc_s *xmlcall, char *args, ...)
         case '{':
           sprintf(&xmlcall->response[strlen(xmlcall->response)],
                   "  <value><struct>\n");
-          isstruct = 1;
+          isStruct = 1;
           break;
 
         case '}':
           sprintf(&xmlcall->response[strlen(xmlcall->response)],
                   "  </struct></value>\n");
-          isstruct = 0;
+          isStruct = 0;
           break;
 
         case 'i':
@@ -251,6 +246,7 @@ int xmlrpc_buildresponse(struct xmlrpc_s *xmlcall, char *args, ...)
         default:
           return (XMLRPC_BAD_RESPONSE_ARG);
           break;
+
         }
 
       if (close)
@@ -267,8 +263,7 @@ int xmlrpc_buildresponse(struct xmlrpc_s *xmlcall, char *args, ...)
 
   if (xmlcall->error)
     {
-      strcat(&xmlcall->response[strlen(xmlcall->response)],
-             "  </fault>\r\n");
+      strcat(&xmlcall->response[strlen(xmlcall->response)], "  </fault>\r\n");
     }
   else
     {
