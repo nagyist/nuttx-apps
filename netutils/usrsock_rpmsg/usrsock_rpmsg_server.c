@@ -51,6 +51,15 @@ struct usrsock_rpmsg_s
   struct pollfd         pfds[CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS + 1];
 };
 
+struct usrsock_rpmsg_work_s
+{
+  struct work_s                  work;
+  struct rpmsg_endpoint          *ept;
+  struct usrsock_rpmsg_s         *priv;
+  struct usrsock_request_ioctl_s *req;
+  size_t                         len;
+};
+
 /****************************************************************************
  * Private Function Prototypes
  ****************************************************************************/
@@ -178,7 +187,7 @@ static int usrsock_rpmsg_send_ack(struct rpmsg_endpoint *ept,
   ack.head.events = events;
 
   ack.xid    = xid;
-  ack.result = result;
+  ack.result = result == -EINPROGRESS ? 0 : result;
 
   return rpmsg_send(ept, &ack, sizeof(ack));
 }
@@ -234,6 +243,7 @@ static int usrsock_rpmsg_socket_handler(struct rpmsg_endpoint *ept,
 {
   struct usrsock_request_socket_s *req = data;
   struct usrsock_rpmsg_s *priv = priv_;
+  uint16_t events = 0;
   int i;
   int retr;
   int ret = -ENFILE;
@@ -250,6 +260,10 @@ static int usrsock_rpmsg_socket_handler(struct rpmsg_endpoint *ept,
             {
               priv->epts[i] = ept;
               ret = i; /* Return index as the usockid */
+              if (req->type != SOCK_STREAM && req->type != SOCK_SEQPACKET)
+                {
+                  events = USRSOCK_EVENT_SENDTO_READY;
+                }
             }
 
           break;
@@ -258,7 +272,7 @@ static int usrsock_rpmsg_socket_handler(struct rpmsg_endpoint *ept,
       pthread_mutex_unlock(&priv->mutex);
     }
 
-  retr = usrsock_rpmsg_send_ack(ept, 0, req->head.xid, ret);
+  retr = usrsock_rpmsg_send_ack(ept, events, req->head.xid, ret);
   if (retr >= 0 && ret >= 0 &&
       req->type != SOCK_STREAM && req->type != SOCK_SEQPACKET)
     {
@@ -267,7 +281,6 @@ static int usrsock_rpmsg_socket_handler(struct rpmsg_endpoint *ept,
       priv->pfds[ret].events = POLLIN;
       usrsock_rpmsg_notify_poll(priv);
       pthread_mutex_unlock(&priv->mutex);
-      retr = usrsock_rpmsg_send_event(ept, ret, USRSOCK_EVENT_SENDTO_READY);
     }
 
   return retr;
@@ -317,14 +330,15 @@ static int usrsock_rpmsg_connect_handler(struct rpmsg_endpoint *ept,
     {
       ret = psock_connect(&priv->socks[req->usockid],
               (const struct sockaddr *)(req + 1), req->addrlen);
-      if (ret == -EINPROGRESS)
-        {
-          inprogress = true;
-          ret = 0;
-        }
     }
 
   retr = usrsock_rpmsg_send_ack(ept, 0, req->head.xid, ret);
+  if (ret == -EINPROGRESS)
+    {
+      inprogress = true;
+      ret = 0;
+    }
+
   if (retr >= 0 && ret >= 0 && priv->pfds[req->usockid].ptr == NULL)
     {
       pthread_mutex_lock(&priv->mutex);
@@ -446,6 +460,7 @@ static int usrsock_rpmsg_sendto_handler(struct rpmsg_endpoint *ept,
     }
 
 out:
+
   if (ret > 0 &&
       usrsock_rpmsg_available(&priv->socks[req->usockid], FIONSPACE))
     {
@@ -742,25 +757,24 @@ static int usrsock_rpmsg_accept_handler(struct rpmsg_endpoint *ept,
   return retr;
 }
 
-static int usrsock_rpmsg_ioctl_handler(struct rpmsg_endpoint *ept,
-                                       void *data, size_t len_,
-                                       uint32_t src, void *priv_)
+static void usrsock_rpmsg_worker(void *arg)
 {
-  struct usrsock_request_ioctl_s *req = data;
-  struct usrsock_message_datareq_ack_s *ack;
-  struct usrsock_rpmsg_s *priv = priv_;
+  struct usrsock_rpmsg_work_s *work = arg;
+  struct rpmsg_endpoint *ept = work->ept;
+  struct usrsock_request_ioctl_s *req = work->req;
+  struct usrsock_message_datareq_ack_s *ack = arg;
+  struct usrsock_rpmsg_s *priv = work->priv;
+  size_t len = work->len;
 #ifdef CONFIG_NETDEV_WIRELESS_IOCTL
   struct iwreq *wlreq;
   struct iwreq *wlack;
 #endif
   int ret = -EBADF;
-  uint32_t len;
 
-  ack = rpmsg_get_tx_payload_buffer(ept, &len, true);
   if (req->usockid >= 0 &&
       req->usockid < CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS)
     {
-      memcpy(ack + 1, req + 1, len_ - sizeof(*req));
+      memcpy(ack + 1, req + 1, len - sizeof(*req));
 #ifdef CONFIG_NETDEV_WIRELESS_IOCTL
       wlreq = (struct iwreq *)(req + 1);
       wlack = (struct iwreq *)(ack + 1);
@@ -786,8 +800,32 @@ static int usrsock_rpmsg_ioctl_handler(struct rpmsg_endpoint *ept,
 #endif
     }
 
-  return usrsock_rpmsg_send_data_ack(ept,
-           ack, 0, req->head.xid, ret, req->arglen, req->arglen);
+  rpmsg_release_rx_buffer(ept, req);
+  usrsock_rpmsg_send_data_ack(ept,
+    ack, 0, req->head.xid, ret, req->arglen, req->arglen);
+}
+
+static int usrsock_rpmsg_ioctl_handler(struct rpmsg_endpoint *ept,
+                                       void *data, size_t len_,
+                                       uint32_t src, void *priv)
+{
+  struct usrsock_rpmsg_work_s *work;
+  uint32_t len;
+
+  work = rpmsg_get_tx_payload_buffer(ept, &len, true);
+
+  memset(work, 0, sizeof(*work));
+  work->ept  = ept;
+  work->priv = priv;
+  work->req  = data;
+  work->len  = len_;
+
+  rpmsg_hold_rx_buffer(ept, data);
+
+  work_queue(HPWORK, &work->work,
+             usrsock_rpmsg_worker, work, 0);
+
+  return 0;
 }
 
 static int usrsock_rpmsg_dns_handler(struct rpmsg_endpoint *ept, void *data,
@@ -941,7 +979,7 @@ static int usrsock_rpmsg_prepare_poll(struct usrsock_rpmsg_s *priv,
       if (priv->pfds[i].ptr)
         {
           pfds[count] = priv->pfds[i];
-          pfds[count++].events |= POLLSOCK;
+          pfds[count++].events |= POLLERR | POLLHUP | POLLSOCK;
         }
     }
 

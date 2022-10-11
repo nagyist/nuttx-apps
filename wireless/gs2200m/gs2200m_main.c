@@ -378,10 +378,10 @@ read_req(int fd, FAR const struct usrsock_request_common_s *com_hdr,
 }
 
 /****************************************************************************
- * Name: usrsock_handle_request
+ * Name: usrsock_request
  ****************************************************************************/
 
-static int usrsock_handle_request(int fd, FAR struct gs2200m_s *priv)
+static int usrsock_request(int fd, FAR struct gs2200m_s *priv)
 {
   FAR struct usrsock_request_common_s *com_hdr;
   union usrsock_request_u req;
@@ -861,6 +861,7 @@ static int sendto_request(int fd, FAR struct gs2200m_s *priv,
     }
 
 prepare:
+
   if (sendbuf)
     {
       free(sendbuf);
@@ -1030,6 +1031,7 @@ prepare:
     }
 
 err_out:
+
   gs2200m_printf("%s: *** end ret=%d\n", __func__, ret);
 
   if (rmsg.buf)
@@ -1566,7 +1568,6 @@ static int ioctl_request(int fd, FAR struct gs2200m_s *priv,
   switch (req->cmd)
     {
       case SIOCGIFADDR:
-      case SIOCGIFFLAGS:
       case SIOCGIFHWADDR:
       case SIOCGIWNWID:
       case SIOCGIWFREQ:
@@ -1674,7 +1675,7 @@ static int gs2200m_loop(FAR struct gs2200m_s *priv)
 
       if (fds[0].revents & POLLIN)
         {
-          ret = usrsock_handle_request(fd[0], priv);
+          ret = usrsock_request(fd[0], priv);
           ASSERT(0 == ret);
         }
 
@@ -1801,6 +1802,7 @@ int main(int argc, FAR char *argv[])
   ret = gs2200m_loop(_daemon);
 
 errout:
+
   if (_daemon)
     {
       free(_daemon);
