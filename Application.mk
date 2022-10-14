@@ -91,7 +91,7 @@ SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS) $(MAINSRC)
 OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS) $(RUSTOBJS) $(ZIGOBJS)
 
 ifneq ($(BUILD_MODULE),y)
-  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJ)
+  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJS)
 endif
 
 DEPPATH += --dep-path .
@@ -101,7 +101,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: $(OBJS)
+all:: .built
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -126,9 +126,8 @@ define ELFCOMPILERUST
 endef
 
 define ELFCOMPILEZIG
-	@echo "ZIG: $1"
-	# Remove target suffix here since zig compiler add .o automatically
-	$(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) --name $(basename $2) $1 
+       @echo "ZIG: $1"
+       $(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) $1 --name $2
 endef
 
 define ELFLD
@@ -160,8 +159,10 @@ $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
 
-archive:
-	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $(OBJS))
+.built: $(OBJS)
+	$(Q) mkdir -p $(dir $(BIN))
+	$(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^)
+	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -226,7 +227,7 @@ ifneq ($(PROGNAME),)
 REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
 APPLIST := $(PROGNAME)
 
-$(REGLIST): $(DEPCONFIG) Makefile
+$(REGLIST): $(DEPCONFIG) $(firstword $(MAKEFILE_LIST))
 	$(call REGISTER,$(firstword $(APPLIST)),$(firstword $(PRIORITY)),$(firstword $(STACKSIZE)),$(if $(BUILD_MODULE),,$(firstword $(APPLIST))_main))
 	$(eval APPLIST=$(filter-out $(firstword $(APPLIST)),$(APPLIST)))
 	$(if $(filter-out $(firstword $(PRIORITY)),$(PRIORITY)),$(eval PRIORITY=$(filter-out $(firstword $(PRIORITY)),$(PRIORITY))))
@@ -237,7 +238,7 @@ else
 register::
 endif
 
-.depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
+.depend: $(firstword $(MAKEFILE_LIST)) $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$^) >Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$^) >>Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$^) >>Make.dep
@@ -246,6 +247,7 @@ endif
 depend:: .depend
 
 clean::
+	$(call DELFILE, .built)
 	$(call CLEAN)
 
 distclean:: clean

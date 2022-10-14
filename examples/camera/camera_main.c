@@ -719,12 +719,15 @@ exit_this_app:
   free_buffer(buffers_still, STILL_BUFNUM);
 
 exit_without_cleaning_buffer:
+
   video_uninitialize();
 
 exit_without_cleaning_videodriver:
+
 #ifdef CONFIG_EXAMPLES_CAMERA_OUTPUT_LCD
   nximage_finalize();
 #endif
+
   return ret;
 }
 
