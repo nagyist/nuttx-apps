@@ -457,12 +457,10 @@ int main(int argc, FAR char *argv[])
   parse_commandline(argc, argv, &ramspeed);
 
   memcpy_speed_test(ramspeed.dest, ramspeed.src,
-                    ramspeed.size, ramspeed.repeat_num,
-                    ramspeed.irq_disable);
+                    ramspeed.size, ramspeed.repeat_num, ramspeed.irq_disable);
 
   memset_speed_test(ramspeed.dest, ramspeed.value,
-                    ramspeed.size, ramspeed.repeat_num,
-                    ramspeed.irq_disable);
+                    ramspeed.size, ramspeed.repeat_num, ramspeed.irq_disable);
 
   return EXIT_SUCCESS;
 }

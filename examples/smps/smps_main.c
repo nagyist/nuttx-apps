@@ -615,6 +615,7 @@ int main(int argc, char *argv[])
     }
 
 errout:
+
   if (fd > 0)
     {
       printf("Stop smps driver\n");
