@@ -210,7 +210,7 @@ static int nhighpri_running(void)
  * Name: highpri_thread
  ****************************************************************************/
 
-static void *highpri_thread(void *parameter)
+static FAR void *highpri_thread(FAR void *parameter)
 {
   int threadno = (int)((intptr_t)parameter);
   int ret;
@@ -283,7 +283,7 @@ static inline void hog_cpu(void)
  * Name: medpri_thread
  ****************************************************************************/
 
-static void *medpri_thread(void *parameter)
+static FAR void *medpri_thread(FAR void *parameter)
 {
   printf("medpri_thread: Started ... I won't let go of the CPU!\n");
   g_middlestate = RUNNING;
@@ -309,9 +309,9 @@ static void *medpri_thread(void *parameter)
  * Name: lowpri_thread
  ****************************************************************************/
 
-static void *lowpri_thread(void *parameter)
+static FAR void *lowpri_thread(FAR void *parameter)
 {
-  void *retval = (void *) - 1;
+  FAR void *retval = (FAR void *)-1;
   struct sched_param sparam;
   int threadno = (int)((intptr_t)parameter);
   int expected;
@@ -515,7 +515,7 @@ void priority_inheritance(void)
   for (i = 0; i < NHIGHPRI_THREADS; i++) g_highstate[i] = NOTSTARTED;
   for (i = 0; i < NLOWPRI_THREADS; i++)  g_lowstate[i]  = NOTSTARTED;
 
-  status = sched_getparam (getpid(), &sparam);
+  status = sched_getparam(getpid(), &sparam);
   if (status != 0)
     {
       printf("priority_inheritance: ERROR sched_getparam failed\n");
@@ -566,7 +566,7 @@ void priority_inheritance(void)
         }
 
       status = pthread_create(&lowpri[i], &attr, lowpri_thread,
-                              (void *)((uintptr_t)threadno));
+                              (FAR void *)((uintptr_t)threadno));
       if (status != 0)
         {
           printf("priority_inheritance: "
@@ -655,7 +655,7 @@ void priority_inheritance(void)
       FFLUSH();
 
       status = pthread_create(&highpri[i], &attr, highpri_thread,
-                              (void *)((uintptr_t)threadno));
+                              (FAR void *)((uintptr_t)threadno));
       if (status != 0)
         {
           printf("priority_inheritance: "
@@ -711,8 +711,8 @@ void priority_inheritance(void)
       snprintf(args[1], sizeof(args[1]), "%d", i * 10000);
       snprintf(args[2], sizeof(args[2]), "%d", i == 0 ? 100000 : 1000);
 
-      pids[i] = task_create(name, priority, 1024, adversary,
-                            (FAR char * const *)argv);
+      pids[i] = task_create(name, priority, CONFIG_DEFAULT_TASK_STACKSIZE,
+                            adversary, (FAR char * const *)argv);
       priority += PRIORIY_SPREED;
     }
 
