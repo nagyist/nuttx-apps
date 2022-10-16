@@ -256,7 +256,7 @@ static const int g_nxplayer_cmd_count = sizeof(g_nxplayer_cmds) /
 
 static int nxplayer_cmd_play(FAR struct nxplayer_s *pplayer, char *parg)
 {
-  int     ret;
+  int ret;
 
   /* Try to play the file specified */
 
@@ -415,7 +415,7 @@ static int nxplayer_cmd_bass(FAR struct nxplayer_s *pplayer, char *parg)
     {
       /* Get the level and range percentage value from the argument */
 
-      level_percent = (uint8_t)strtoul(parg, NULL, 10);
+      level_percent = (uint8_t) atoi(parg);
       nxplayer_setbass(pplayer, level_percent);
     }
 
@@ -445,7 +445,7 @@ static int nxplayer_cmd_treble(FAR struct nxplayer_s *pplayer, char *parg)
     {
       /* Get the level and range percentage value from the argument */
 
-      level_percent = (uint8_t)strtoul(parg, NULL, 10);
+      level_percent = (uint8_t) atoi(parg);
       nxplayer_settreble(pplayer, level_percent);
     }
 
@@ -476,7 +476,7 @@ static int nxplayer_cmd_balance(FAR struct nxplayer_s *pplayer, char *parg)
     {
       /* Get the percentage value from the argument */
 
-      percent = (uint16_t)(strtof(parg, NULL) * 10.0f);
+      percent = (uint16_t) (atof(parg) * 10.0);
       nxplayer_setbalance(pplayer, percent);
     }
 
