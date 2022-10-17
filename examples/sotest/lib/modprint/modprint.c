@@ -45,7 +45,7 @@ static void modprint(FAR const char *fmt, ...) printflike(1, 2);
 static const struct symtab_s g_modprint_exports[1] =
 {
   {
-    "modprint", (FAR const void *)modprint,
+    (FAR const char *)"modprint", (FAR const void *)modprint,
   }
 };
 

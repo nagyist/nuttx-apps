@@ -31,6 +31,7 @@
 
 #include <arpa/inet.h>
 
+#include "netutils/netinit.h"
 #include "netutils/telnetd.h"
 
 #ifdef CONFIG_TELNET_CHARACTER_MODE
@@ -58,18 +59,15 @@ enum telnetd_state_e
 };
 
 /****************************************************************************
- * Public Functions
+ * Private Functions
  ****************************************************************************/
 
 /****************************************************************************
  * Name: nsh_telnetmain
  ****************************************************************************/
 
-int nsh_telnetmain(int argc, FAR char *argv[])
+static int nsh_telnetmain(int argc, char *argv[])
 {
-  UNUSED(argc);
-  UNUSED(argv);
-
   FAR struct console_stdio_s *pstate = nsh_newconsole(true);
   FAR struct nsh_vtbl_s *vtbl;
   int ret;
@@ -195,6 +193,10 @@ int nsh_telnetmain(int argc, FAR char *argv[])
 }
 
 /****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
  * Name: nsh_telnetstart
  *
  * Description:
@@ -216,7 +218,6 @@ int nsh_telnetmain(int argc, FAR char *argv[])
  *
  ****************************************************************************/
 
-#ifndef CONFIG_NSH_DISABLE_TELNETSTART
 int nsh_telnetstart(sa_family_t family)
 {
   static enum telnetd_state_e state = TELNETD_NOTRUNNING;
@@ -224,6 +225,9 @@ int nsh_telnetstart(sa_family_t family)
 
   if (state == TELNETD_NOTRUNNING)
     {
+#if defined(CONFIG_NSH_ROMFSETC) && !defined(CONFIG_NSH_CONSOLE)
+      FAR struct console_stdio_s *pstate;
+#endif
       struct telnetd_config_s config;
 
       /* There is a tiny race condition here if two tasks were to try to
@@ -231,6 +235,40 @@ int nsh_telnetstart(sa_family_t family)
        */
 
       state = TELNETD_STARTED;
+
+      /* Initialize any USB tracing options that were requested.  If
+       * standard console is also defined, then we will defer this step to
+       * the standard console.
+       */
+
+#if defined(CONFIG_NSH_USBDEV_TRACE) && !defined(CONFIG_NSH_CONSOLE)
+      usbtrace_enable(TRACE_BITSET);
+#endif
+
+      /* Execute the startup script.  If standard console is also defined,
+       * then we will not bother with the initscript here (although it is
+       * safe to call nsh_initscript multiple times).
+       */
+
+#if defined(CONFIG_NSH_ROMFSETC) && !defined(CONFIG_NSH_CONSOLE)
+      pstate = nsh_newconsole();
+      nsh_initscript(&pstate->cn_vtbl);
+      nsh_release(&pstate->cn_vtbl);
+#endif
+
+#if defined(CONFIG_NSH_NETINIT) && !defined(CONFIG_NSH_CONSOLE)
+      /* Bring up the network */
+
+      netinit_bringup();
+#endif
+
+      /* Perform architecture-specific final-initialization(if configured) */
+
+#if defined(CONFIG_NSH_ARCHINIT) && \
+    defined(CONFIG_BOARDCTL_FINALINIT) && \
+    !defined(CONFIG_NSH_CONSOLE)
+      boardctl(BOARDIOC_FINALINIT, 0);
+#endif
 
       /* Configure the telnet daemon */
 
@@ -287,7 +325,6 @@ int nsh_telnetstart(sa_family_t family)
 
   return ret;
 }
-#endif
 
 /****************************************************************************
  * Name: cmd_telnetd
@@ -316,12 +353,8 @@ int nsh_telnetstart(sa_family_t family)
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_TELNETD
-int cmd_telnetd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_telnetd(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(vtbl);
-  UNUSED(argc);
-  UNUSED(argv);
-
   sa_family_t family = AF_UNSPEC;
 
   /* If both IPv6 and IPv4 are enabled, then the address family must

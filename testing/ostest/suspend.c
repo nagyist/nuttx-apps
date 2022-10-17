@@ -63,7 +63,6 @@ void suspend_test(void)
   if (ret < 0)
     {
       printf("suspend_test: ERROR sched_getparam() failed\n");
-      ASSERT(false);
       param.sched_priority = PTHREAD_DEFAULT_PRIORITY;
     }
 
@@ -72,7 +71,6 @@ void suspend_test(void)
   if (victim == ERROR)
     {
       printf("suspend_test: ERROR failed to start victim_main\n");
-      ASSERT(false);
     }
   else
     {
@@ -92,7 +90,6 @@ void suspend_test(void)
   if (ret < 0)
     {
       printf("suspend_test: ERROR kill() failed\n");
-      ASSERT(false);
     }
 
   printf("suspend_test:  Is the victim still jabbering?\n");
@@ -104,7 +101,6 @@ void suspend_test(void)
   if (ret < 0)
     {
       printf("suspend_test: ERROR kill() failed\n");
-      ASSERT(false);
     }
 
   printf("suspend_test:  The victim should continue the rant.\n");
@@ -116,7 +112,6 @@ void suspend_test(void)
   if (ret < 0)
     {
       printf("suspend_test: ERROR kill() failed\n");
-      ASSERT(false);
     }
 
   FFLUSH();
@@ -125,7 +120,6 @@ void suspend_test(void)
   if (ret >= 0)
     {
       printf("suspend_test: ERROR kill() on the dead victim succeeded!\n");
-      ASSERT(false);
     }
 
   printf("suspend_test: done\n");

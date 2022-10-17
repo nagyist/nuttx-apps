@@ -99,82 +99,81 @@ static void internal_error(char *reason)
 {
   char *title = "500 Internal Error";
 
-  printf("<HTML><HEAD><TITLE>%s</TITLE></HEAD>\n"
-    "<BODY><H2>%s</H2>\n"
-    "Something unusual went wrong during a server-side-includes request:\n"
-    "<BLOCKQUOTE>\n"
-    "%s\n"
-    "</BLOCKQUOTE>\n"
-    "</BODY></HTML>\n",
-    title, title, reason);
+  printf("\
+<HTML><HEAD><TITLE>%s</TITLE></HEAD>\n\
+<BODY><H2>%s</H2>\n\
+Something unusual went wrong during a server-side-includes request:\n\
+<BLOCKQUOTE>\n\
+%s\n\
+</BLOCKQUOTE>\n\
+</BODY></HTML>\n", title, title, reason);
 }
 
 static void not_found(char *filename)
 {
   char *title = "404 Not Found";
 
-  printf("<HTML><HEAD><TITLE>%s</TITLE></HEAD>\n"
-         "<BODY><H2>%s</H2>\n"
-         "The requested server-side-includes filename, %s,\n"
-         "does not seem to exist.\n"
-         "</BODY></HTML>\n",
-         title, title, filename);
+  printf("\
+<HTML><HEAD><TITLE>%s</TITLE></HEAD>\n\
+<BODY><H2>%s</H2>\n\
+The requested server-side-includes filename, %s,\n\
+does not seem to exist.\n\
+</BODY></HTML>\n", title, title, filename);
 }
 
 static void not_found2(char *directive, char *tag, char *filename)
 {
   char *title = "Not Found";
 
-  printf("<HR><H2>%s</H2>\n"
-         "The filename requested in a %s %s directive, %s,\n"
-         "does not seem to exist.\n"
-         "<HR>\n",
-         title, directive, tag, filename);
+  printf("\
+<HR><H2>%s</H2>\n\
+The filename requested in a %s %s directive, %s,\n\
+does not seem to exist.\n\
+<HR>\n", title, directive, tag, filename);
 }
 
 static void not_permitted(char *directive, char *tag, char *val)
 {
   char *title = "Not Permitted";
 
-  printf("<HR><H2>%s</H2>\n"
-         "The filename requested in the %s %s=%s directive\n"
-         "may not be fetched.\n"
-         "<HR>\n",
-         title, directive, tag, val);
+  printf("\
+<HR><H2>%s</H2>\n\
+The filename requested in the %s %s=%s directive\n\
+may not be fetched.\n\
+<HR>\n", title, directive, tag, val);
 }
 
 static void unknown_directive(char *filename, char *directive)
 {
   char *title = "Unknown Directive";
 
-  printf("<HR><H2>%s</H2>\n"
-         "The requested server-side-includes filename, %s,\n"
-         "tried to use an unknown directive, %s.\n"
-         "<HR>\n",
-         title, filename, directive);
+  printf("\
+<HR><H2>%s</H2>\n\
+The requested server-side-includes filename, %s,\n\
+tried to use an unknown directive, %s.\n\
+<HR>\n", title, filename, directive);
 }
 
 static void unknown_tag(char *filename, char *directive, char *tag)
 {
   char *title = "Unknown Tag";
 
-  printf("<HR><H2>%s</H2>\n"
-         "The requested server-side-includes filename, %s,\n"
-         "tried to use the directive %s with an unknown tag, %s.\n"
-         "<HR>\n",
-         title, filename, directive, tag);
+  printf("\
+<HR><H2>%s</H2>\n\
+The requested server-side-includes filename, %s,\n\
+tried to use the directive %s with an unknown tag, %s.\n\
+<HR>\n", title, filename, directive, tag);
 }
 
-static void unknown_value(char *filename, char *directive,
-                          char *tag, char *val)
+static void unknown_value(char *filename, char *directive, char *tag, char *val)
 {
   char *title = "Unknown Value";
 
-  printf("<HR><H2>%s</H2>\n"
-         "The requested server-side-includes filename, %s,\n"
-         "tried to use the directive %s %s with an unknown value, %s.\n"
-         "<HR>\n",
-         title, filename, directive, tag, val);
+  printf("\
+<HR><H2>%s</H2>\n\
+The requested server-side-includes filename, %s,\n\
+tried to use the directive %s %s with an unknown value, %s.\n\
+<HR>\n", title, filename, directive, tag, val);
 }
 
 static int get_filename(char *vfilename, char *filename,
@@ -224,7 +223,6 @@ static int get_filename(char *vfilename, char *filename,
           not_permitted(directive, tag, val);
           return -1;
         }
-
       if (fl + 1 + strlen(val) >= fnsize)
         {
           return -1;
@@ -237,7 +235,6 @@ static int get_filename(char *vfilename, char *filename,
           cp = &fn[strlen(fn)];
           *cp = '/';
         }
-
       strcpy(++cp, val);
     }
   else
@@ -245,7 +242,6 @@ static int get_filename(char *vfilename, char *filename,
       unknown_tag(filename, directive, tag);
       return -1;
     }
-
   return 0;
 }
 
@@ -273,13 +269,12 @@ static int check_filename(char *filename)
           cgi_pattern = CGI_PATTERN;
         }
 #endif /* CGI_PATTERN */
-
       inited = 1;
     }
 
   /* ../ is not permitted. */
 
-  if (strstr(filename, "../") != NULL)
+  if (strstr(filename, "../") !=NULL)
     {
       return 0;
     }
@@ -290,8 +285,7 @@ static int check_filename(char *filename)
   fnl = strlen(filename);
   if (strcmp(filename, CONFIG_AUTH_FILE) == 0 ||
       (fnl >= sizeof(CONFIG_AUTH_FILE) &&
-       strcmp(&filename[fnl - sizeof(CONFIG_AUTH_FILE) + 1],
-              CONFIG_AUTH_FILE) == 0 &&
+       strcmp(&filename[fnl - sizeof(CONFIG_AUTH_FILE) + 1], CONFIG_AUTH_FILE) == 0 &&
        filename[fnl - sizeof(CONFIG_AUTH_FILE)] == '/'))
     {
       return 0;
@@ -348,7 +342,6 @@ static int check_filename(char *filename)
     {
       return 0;
     }
-
   return 1;
 }
 
@@ -447,8 +440,7 @@ static void do_include(FILE *instream, char *vfilename, char *filename,
 
   /* Inserts the text of another document into the parsed document. */
 
-  ret = get_filename(vfilename, filename, directive, tag, val, g_iobuffer1,
-                     BUFFER_SIZE);
+  ret = get_filename(vfilename, filename, directive, tag, val, g_iobuffer1, BUFFER_SIZE);
   if (ret < 0)
     {
       return;
@@ -461,7 +453,7 @@ static void do_include(FILE *instream, char *vfilename, char *filename,
     }
 
   instream2 = fopen(g_iobuffer1, "r");
-  if (instream2 == NULL)
+  if (instream2 == (FILE *) 0)
     {
       not_found2(directive, tag, g_iobuffer1);
       return;
@@ -469,7 +461,7 @@ static void do_include(FILE *instream, char *vfilename, char *filename,
 
   if (strcmp(tag, "virtual") == 0)
     {
-      if (strlen(val) < BUFFER_SIZE)
+      if (strlen(val) <BUFFER_SIZE)
         {
           strcpy(g_iobuffer2, val);
         }
@@ -490,7 +482,6 @@ static void do_include(FILE *instream, char *vfilename, char *filename,
               cp = &g_iobuffer2[strlen(g_iobuffer2)];
               *cp = '/';
             }
-
           strcpy(++cp, val);
         }
       else
@@ -509,9 +500,8 @@ static void do_echo(FILE *instream, char *vfilename, char *filename,
   char *cp;
 
   /* Prints the value of one of the include variables.  Any dates are
-   * printed subject to the currently configured g_timeformat.  The only
-   * valid tag is var, whose value is the name of the variable you wish
-   * to echo.
+   * printed subject to the currently configured g_timeformat.  The only valid
+   * tag is var, whose value is the name of the variable you wish to echo.
    */
 
   if (strcmp(tag, "var") != 0)
@@ -595,8 +585,7 @@ static void do_fsize(FILE *instream, char *vfilename, char *filename,
 
   /* Prints the size of the specified file. */
 
-  ret = get_filename(vfilename, filename, directive, tag, val, g_iobuffer1,
-                     BUFFER_SIZE);
+  ret = get_filename(vfilename, filename, directive, tag, val, g_iobuffer1, BUFFER_SIZE);
   if (ret < 0)
     {
       return;
@@ -618,8 +607,7 @@ static void do_flastmod(FILE *instream, char *vfilename, char *filename,
 
   /* Prints the last modification date of the specified file. */
 
-  ret = get_filename(vfilename, filename, directive, tag, val, g_iobuffer1,
-                     BUFFER_SIZE);
+  ret = get_filename(vfilename, filename, directive, tag, val, g_iobuffer1, BUFFER_SIZE);
   if (ret < 0)
     {
       return;
@@ -630,7 +618,6 @@ static void do_flastmod(FILE *instream, char *vfilename, char *filename,
       not_found2(directive, tag, g_iobuffer1);
       return;
     }
-
   show_time(g_sb.st_mtime, 0);
 }
 
@@ -648,7 +635,7 @@ static void parse(FILE *instream, char *vfilename, char *filename, char *str)
 
   ntags = 0;
   cp = directive;
-  for (; ; )
+  for (;;)
     {
       cp = strpbrk(cp, " \t\n\r\"");
       if (cp == (char *)0)
@@ -731,13 +718,11 @@ static void parse(FILE *instream, char *vfilename, char *filename, char *str)
       switch (dirn)
         {
         case DI_CONFIG:
-          do_config(instream, vfilename, filename, directive, g_tags[i],
-                    val);
+          do_config(instream, vfilename, filename, directive, g_tags[i], val);
           break;
 
         case DI_INCLUDE:
-          do_include(instream, vfilename, filename, directive, g_tags[i],
-                     val);
+          do_include(instream, vfilename, filename, directive, g_tags[i], val);
           break;
 
         case DI_ECHO:
@@ -749,8 +734,7 @@ static void parse(FILE *instream, char *vfilename, char *filename, char *str)
           break;
 
         case DI_FLASTMOD:
-          do_flastmod(instream, vfilename, filename, directive, g_tags[i],
-                      val);
+          do_flastmod(instream, vfilename, filename, directive, g_tags[i], val);
           break;
         }
     }
@@ -931,13 +915,12 @@ int main(int argc, char *argv[])
       path_info = "";
     }
 
-  g_url = (char *)malloc(strlen(script_name) + strlen(path_info) + 1);
+  g_url = (char*)malloc(strlen(script_name) + strlen(path_info) + 1);
   if (!g_url)
     {
       internal_error("Out of memory.");
       return 2;
     }
-
   sprintf(g_url, "%s%s", script_name, path_info);
 
   /* Get the name of the file to parse. */

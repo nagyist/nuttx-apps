@@ -17,6 +17,6 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_NETUTILS_TELNETD),)
+ifeq ($(CONFIG_NETUTILS_TELNETD),y)
 CONFIGURED_APPS += $(APPDIR)/netutils/telnetd
 endif

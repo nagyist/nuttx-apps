@@ -62,8 +62,8 @@
  * Private Types
  ****************************************************************************/
 
-/* In the future add compression protocol and name servers (possibly for
- * servers only)
+/* In the future add compression protocol and name servers (possibly for servers
+ * only)
  */
 
 static const uint8_t g_ipcplist[] =
@@ -87,7 +87,7 @@ static const uint8_t g_ipcplist[] =
 #if PPP_DEBUG
 void printip(struct in_addr ip2)
 {
-  FAR unt8_t *ip = (FAR uint8_t *)&ip2.s_addr;
+  char *ip = (FAR uint8_t *) & ip2.s_addr;
   DEBUG1((" %d.%d.%d.%d ", ip[0], ip[1], ip[2], ip[3]));
 }
 #else
@@ -137,7 +137,6 @@ void ipcp_rx(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer,
   switch (*bptr++)
     {
     case CONF_REQ:
-
       /* Parse request and see if we can ACK it */
 
       ++bptr;
@@ -147,7 +146,7 @@ void ipcp_rx(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer,
       /* len-=2; */
 
       DEBUG1(("check lcplist\n"));
-      if (scan_packet(ctx, IPCP, g_ipcplist, buffer, bptr, len - 4))
+      if (scan_packet(ctx, IPCP, g_ipcplist, buffer, bptr, (uint16_t)(len - 4)))
         {
           DEBUG1(("option was bad\n"));
         }
@@ -161,8 +160,8 @@ void ipcp_rx(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer,
 
           /* Reject any protocol not */
 
-          /* Error? if we we need to send a config Reject ++++ this is good
-           * for a subroutine.
+          /* Error? if we we need to send a config Reject ++++ this is good for
+           * a subroutine.
            */
 
            /* All we should get is the peer IP address */
@@ -173,10 +172,10 @@ void ipcp_rx(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer,
 
               ++bptr;
 #ifdef IPCP_GET_PEER_IP
-              ((FAR uint8_t *)&ctx->peer_ip)[0] = *bptr++;
-              ((FAR uint8_t *)&ctx->peer_ip)[1] = *bptr++;
-              ((FAR uint8_t *)&ctx->peer_ip)[2] = *bptr++;
-              ((FAR uint8_t *)&ctx->peer_ip)[3] = *bptr++;
+              ((FAR uint8_t *) & ctx->peer_ip)[0] = *bptr++;
+              ((FAR uint8_t *) & ctx->peer_ip)[1] = *bptr++;
+              ((FAR uint8_t *) & ctx->peer_ip)[2] = *bptr++;
+              ((FAR uint8_t *) & ctx->peer_ip)[3] = *bptr++;
 
               DEBUG1(("Peer IP "));
               printip(ctx->peer_ip);
@@ -203,7 +202,7 @@ void ipcp_rx(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer,
               *bptr++ = CONF_NAK;       /* Write Conf_rej */
               *bptr++;
 
-              /* tptr++; */ /* skip over ID */
+              /* tptr++; *//* skip over ID */
 
               /* Write new length */
 
@@ -220,9 +219,8 @@ void ipcp_rx(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer,
             {
             }
 #endif
-
-          /* If we get here then we are OK, lets send an ACK and tell the
-           * rest of our modules our negotiated config.
+          /* If we get here then we are OK, lets send an ACK and tell the rest
+           * of our modules our negotiated config.
            */
 
           ctx->ipcp_state |= IPCP_RX_UP;
@@ -271,33 +269,32 @@ void ipcp_rx(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer,
           switch (*bptr++)
             {
             case IPCP_IPADDRESS:
-
               /* Dump length */
 
               bptr++;
-              ((FAR uint8_t *)&ctx->local_ip)[0] = *bptr++;
-              ((FAR uint8_t *)&ctx->local_ip)[1] = *bptr++;
-              ((FAR uint8_t *)&ctx->local_ip)[2] = *bptr++;
-              ((FAR uint8_t *)&ctx->local_ip)[3] = *bptr++;
+              ((FAR uint8_t *) & ctx->local_ip)[0] = *bptr++;
+              ((FAR uint8_t *) & ctx->local_ip)[1] = *bptr++;
+              ((FAR uint8_t *) & ctx->local_ip)[2] = *bptr++;
+              ((FAR uint8_t *) & ctx->local_ip)[3] = *bptr++;
               break;
 
 #  ifdef IPCP_GET_PRI_DNS
             case IPCP_PRIMARY_DNS:
               bptr++;
-              ((FAR uint8_t *)&ctx->pri_dns_addr)[0] = *bptr++;
-              ((FAR uint8_t *)&ctx->pri_dns_addr)[1] = *bptr++;
-              ((FAR uint8_t *)&ctx->pri_dns_addr)[2] = *bptr++;
-              ((FAR uint8_t *)&ctx->pri_dns_addr)[3] = *bptr++;
+              ((FAR uint8_t *) & ctx->pri_dns_addr)[0] = *bptr++;
+              ((FAR uint8_t *) & ctx->pri_dns_addr)[1] = *bptr++;
+              ((FAR uint8_t *) & ctx->pri_dns_addr)[2] = *bptr++;
+              ((FAR uint8_t *) & ctx->pri_dns_addr)[3] = *bptr++;
               break;
 #  endif
 
 #  ifdef IPCP_GET_SEC_DNS
             case IPCP_SECONDARY_DNS:
               bptr++;
-              ((FAR uint8_t *)&ctx->sec_dns_addr)[0] = *bptr++;
-              ((FAR uint8_t *)&ctx->sec_dns_addr)[1] = *bptr++;
-              ((FAR uint8_t *)&ctx->sec_dns_addr)[2] = *bptr++;
-              ((FAR uint8_t *)&ctx->sec_dns_addr)[3] = *bptr++;
+              ((FAR uint8_t *) & ctx->sec_dns_addr)[0] = *bptr++;
+              ((FAR uint8_t *) & ctx->sec_dns_addr)[1] = *bptr++;
+              ((FAR uint8_t *) & ctx->sec_dns_addr)[2] = *bptr++;
+              ((FAR uint8_t *) & ctx->sec_dns_addr)[3] = *bptr++;
               break;
 #  endif
 
@@ -341,27 +338,26 @@ void ipcp_rx(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer,
           switch (*bptr++)
             {
             case IPCP_IPADDRESS:
-
               /* Dump length */
 
               bptr++;
 
-              ((FAR uint8_t *)&ctx->local_ip)[0] = (char)*bptr++;
-              ((FAR uint8_t *)&ctx->local_ip)[1] = (char)*bptr++;
-              ((FAR uint8_t *)&ctx->local_ip)[2] = (char)*bptr++;
-              ((FAR uint8_t *)&ctx->local_ip)[3] = (char)*bptr++;
+              ((FAR uint8_t *) & ctx->local_ip)[0] = (char)*bptr++;
+              ((FAR uint8_t *) & ctx->local_ip)[1] = (char)*bptr++;
+              ((FAR uint8_t *) & ctx->local_ip)[2] = (char)*bptr++;
+              ((FAR uint8_t *) & ctx->local_ip)[3] = (char)*bptr++;
 
-              netlib_ifup((FAR char *)ctx->ifname);
-              netlib_set_ipv4addr((FAR char *)ctx->ifname, &ctx->local_ip);
+              netlib_ifup((char *)ctx->ifname);
+              netlib_set_ipv4addr((char *)ctx->ifname, &ctx->local_ip);
               break;
 
 #ifdef IPCP_GET_PRI_DNS
             case IPCP_PRIMARY_DNS:
               bptr++;
-              ((FAR uint8_t *)&ctx->pri_dns_addr)[0] = *bptr++;
-              ((FAR uint8_t *)&ctx->pri_dns_addr)[1] = *bptr++;
-              ((FAR uint8_t *)&ctx->pri_dns_addr)[2] = *bptr++;
-              ((FAR uint8_t *)&ctx->pri_dns_addr)[3] = *bptr++;
+              ((FAR uint8_t *) & ctx->pri_dns_addr)[0] = *bptr++;
+              ((FAR uint8_t *) & ctx->pri_dns_addr)[1] = *bptr++;
+              ((FAR uint8_t *) & ctx->pri_dns_addr)[2] = *bptr++;
+              ((FAR uint8_t *) & ctx->pri_dns_addr)[3] = *bptr++;
               netlib_set_ipv4dnsaddr(&ctx->pri_dns_addr);
               break;
 #endif
@@ -369,10 +365,10 @@ void ipcp_rx(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer,
 #ifdef IPCP_GET_SEC_DNS
             case IPCP_SECONDARY_DNS:
               bptr++;
-              ((FAR uint8_t *)&ctx->sec_dns_addr)[0] = *bptr++;
-              ((FAR uint8_t *)&ctx->sec_dns_addr)[1] = *bptr++;
-              ((FAR uint8_t *)&ctx->sec_dns_addr)[2] = *bptr++;
-              ((FAR uint8_t *)&ctx->sec_dns_addr)[3] = *bptr++;
+              ((FAR uint8_t *) & ctx->sec_dns_addr)[0] = *bptr++;
+              ((FAR uint8_t *) & ctx->sec_dns_addr)[1] = *bptr++;
+              ((FAR uint8_t *) & ctx->sec_dns_addr)[2] = *bptr++;
+              ((FAR uint8_t *) & ctx->sec_dns_addr)[3] = *bptr++;
               netlib_set_ipv4dnsaddr(&ctx->sec_dns_addr);
               break;
 #endif
@@ -460,8 +456,7 @@ void ipcp_task(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer)
    * request
    */
 
-  if (!(ctx->ipcp_state & IPCP_TX_UP) &&
-      !(ctx->ipcp_state & IPCP_TX_TIMEOUT))
+  if (!(ctx->ipcp_state & IPCP_TX_UP) && !(ctx->ipcp_state & IPCP_TX_TIMEOUT))
     {
       /* Check if we have a request pending */
 
@@ -471,7 +466,7 @@ void ipcp_task(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer)
 
           /* No pending request, lets build one */
 
-          pkt = (IPCPPKT *)buffer;
+          pkt = (IPCPPKT *) buffer;
 
           /* Configure-Request only here, write id */
 
@@ -486,10 +481,10 @@ void ipcp_task(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer)
 
           *bptr++ = IPCP_IPADDRESS;
           *bptr++ = 0x6;
-          *bptr++ = (uint8_t)((FAR uint8_t *)&ctx->local_ip)[0];
-          *bptr++ = (uint8_t)((FAR uint8_t *)&ctx->local_ip)[1];
-          *bptr++ = (uint8_t)((FAR uint8_t *)&ctx->local_ip)[2];
-          *bptr++ = (uint8_t)((FAR uint8_t *)&ctx->local_ip)[3];
+          *bptr++ = (uint8_t)((FAR uint8_t *) & ctx->local_ip)[0];
+          *bptr++ = (uint8_t)((FAR uint8_t *) & ctx->local_ip)[1];
+          *bptr++ = (uint8_t)((FAR uint8_t *) & ctx->local_ip)[2];
+          *bptr++ = (uint8_t)((FAR uint8_t *) & ctx->local_ip)[3];
 
 #ifdef IPCP_GET_PRI_DNS
           if ((ctx->ipcp_state & IPCP_PRI_DNS_BIT) == 0)
@@ -498,10 +493,10 @@ void ipcp_task(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer)
 
               *bptr++ = IPCP_PRIMARY_DNS;
               *bptr++ = 0x6;
-              *bptr++ = ((FAR uint8_t *)&ctx->pri_dns_addr)[0];
-              *bptr++ = ((FAR uint8_t *)&ctx->pri_dns_addr)[1];
-              *bptr++ = ((FAR uint8_t *)&ctx->pri_dns_addr)[2];
-              *bptr++ = ((FAR uint8_t *)&ctx->pri_dns_addr)[3];
+              *bptr++ = ((FAR uint8_t *) & ctx->pri_dns_addr)[0];
+              *bptr++ = ((FAR uint8_t *) & ctx->pri_dns_addr)[1];
+              *bptr++ = ((FAR uint8_t *) & ctx->pri_dns_addr)[2];
+              *bptr++ = ((FAR uint8_t *) & ctx->pri_dns_addr)[3];
             }
 #endif
 
@@ -512,10 +507,10 @@ void ipcp_task(FAR struct ppp_context_s *ctx, FAR uint8_t * buffer)
 
               *bptr++ = IPCP_SECONDARY_DNS;
               *bptr++ = 0x6;
-              *bptr++ = ((FAR uint8_t *)&ctx->sec_dns_addr)[0];
-              *bptr++ = ((FAR uint8_t *)&ctx->sec_dns_addr)[1];
-              *bptr++ = ((FAR uint8_t *)&ctx->sec_dns_addr)[2];
-              *bptr++ = ((FAR uint8_t *)&ctx->sec_dns_addr)[3];
+              *bptr++ = ((FAR uint8_t *) & ctx->sec_dns_addr)[0];
+              *bptr++ = ((FAR uint8_t *) & ctx->sec_dns_addr)[1];
+              *bptr++ = ((FAR uint8_t *) & ctx->sec_dns_addr)[2];
+              *bptr++ = ((FAR uint8_t *) & ctx->sec_dns_addr)[3];
             }
 #endif
 

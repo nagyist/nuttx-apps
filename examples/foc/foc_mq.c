@@ -41,11 +41,11 @@
 int foc_mq_handle(mqd_t mq, FAR struct foc_mq_s *h)
 {
   int      ret = OK;
-  uint8_t  buffer[CONTROL_MQ_MSGSIZE];
+  uint8_t  buffer[5];
 
   /* Get data from AUX */
 
-  ret = mq_receive(mq, (char *)buffer, CONTROL_MQ_MSGSIZE, 0);
+  ret = mq_receive(mq, (char *)buffer, 5, 0);
   if (ret < 0)
     {
       if (errno != EAGAIN)
@@ -65,7 +65,7 @@ int foc_mq_handle(mqd_t mq, FAR struct foc_mq_s *h)
 
   /* Verify message length */
 
-  if (ret != CONTROL_MQ_MSGSIZE)
+  if (ret != 5)
     {
       PRINTF("ERROR: invalid message length = %d\n", ret);
       goto errout;

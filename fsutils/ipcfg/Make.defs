@@ -18,6 +18,6 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_FSUTILS_IPCFG),)
+ifeq ($(CONFIG_FSUTILS_IPCFG),y)
 CONFIGURED_APPS += $(APPDIR)/fsutils/ipcfg
 endif

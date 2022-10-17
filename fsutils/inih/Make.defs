@@ -18,6 +18,6 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_FSUTILS_INIH),)
+ifeq ($(CONFIG_FSUTILS_INIH),y)
 CONFIGURED_APPS += $(APPDIR)/fsutils/inih
 endif

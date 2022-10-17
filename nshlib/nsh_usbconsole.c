@@ -248,6 +248,12 @@ int nsh_consolemain(int argc, FAR char *argv[])
 
   DEBUGASSERT(pstate);
 
+  /* Initialize any USB tracing options that were requested */
+
+#ifdef CONFIG_NSH_USBDEV_TRACE
+  usbtrace_enable(TRACE_BITSET);
+#endif
+
   /* Initialize the USB serial driver */
 
 #if defined(CONFIG_PL2303) || defined(CONFIG_CDCACM)
@@ -276,6 +282,24 @@ int nsh_consolemain(int argc, FAR char *argv[])
 
 #ifndef CONFIG_DEV_CONSOLE
   nsh_nullstdio();
+#endif
+
+  /* Execute the one-time start-up script (output may go to /dev/null) */
+
+#ifdef CONFIG_NSH_ROMFSETC
+  nsh_initscript(&pstate->cn_vtbl);
+#endif
+
+#ifdef CONFIG_NSH_NETINIT
+  /* Bring up the network */
+
+  netinit_bringup();
+#endif
+
+#if defined(CONFIG_NSH_ARCHINIT) && defined(CONFIG_BOARDCTL_FINALINIT)
+  /* Perform architecture-specific final-initialization (if configured) */
+
+  boardctl(BOARDIOC_FINALINIT, 0);
 #endif
 
   /* Now loop, executing creating a session for each USB connection */

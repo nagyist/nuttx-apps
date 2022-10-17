@@ -289,10 +289,8 @@ errout_bad_parm:
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_TIME
-int cmd_time(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_time(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-
   struct timespec start;
 #ifndef CONFIG_NSH_DISABLEBG
   bool bgsave;
@@ -370,7 +368,7 @@ int cmd_time(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_DATE
-int cmd_date(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_date(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   FAR char *newtime = NULL;
   FAR const char *errfmt;
@@ -435,7 +433,7 @@ errout:
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_TIMEDATECTL
-int cmd_timedatectl(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_timedatectl(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   char timbuf[MAX_TIME_STRING];
   FAR char *newtz = NULL;

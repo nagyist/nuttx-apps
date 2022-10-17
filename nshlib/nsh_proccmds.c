@@ -53,7 +53,7 @@
   #endif
 #  define FIXED_1      (1 << FSHIFT)     /* 1.0 as fixed-point */
 #  define LOAD_INT(x)  ((x) >> FSHIFT)
-#  define LOAD_FRAC(x) (LOAD_INT(((x) & (FIXED_1 - 1)) * 100))
+#  define LOAD_FRAC(x) LOAD_INT(((x) & (FIXED_1 - 1)) * 100)
 #endif
 
 /****************************************************************************
@@ -237,8 +237,6 @@ static void nsh_parse_statusline(FAR char *line,
 static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
                        FAR struct dirent *entryp, FAR void *pvarg)
 {
-  UNUSED(pvarg);
-
   struct nsh_taskstatus_s status;
   FAR char *filepath;
   FAR char *line;
@@ -559,8 +557,6 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 #ifndef CONFIG_NSH_DISABLE_EXEC
 int cmd_exec(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
-  UNUSED(argc);
-
   FAR char *endptr;
   uintptr_t addr;
 
@@ -571,7 +567,7 @@ int cmd_exec(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       return ERROR;
     }
 
-  nsh_output(vtbl, "Calling %p\n", (void *)addr);
+  nsh_output(vtbl, "Calling %p\n", (exec_t)addr);
   return ((exec_t)addr)();
 }
 #endif
@@ -581,11 +577,8 @@ int cmd_exec(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_PS
-int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-  UNUSED(argv);
-
   nsh_output(vtbl, "%5s ", "PID");
   nsh_output(vtbl, "%5s ", "GROUP");
 
@@ -624,10 +617,10 @@ int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_KILL
-int cmd_kill(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_kill(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  FAR char *ptr;
-  FAR char *endptr;
+  char *ptr;
+  char *endptr;
   long signal;
   long pid;
 
@@ -727,11 +720,9 @@ invalid_arg:
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_SLEEP
-int cmd_sleep(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_sleep(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-
-  FAR char *endptr;
+  char *endptr;
   long secs;
 
   secs = strtol(argv[1], &endptr, 0);
@@ -751,11 +742,9 @@ int cmd_sleep(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_USLEEP
-int cmd_usleep(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_usleep(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-
-  FAR char *endptr;
+  char *endptr;
   long usecs;
 
   usecs = strtol(argv[1], &endptr, 0);
@@ -775,7 +764,7 @@ int cmd_usleep(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_UPTIME
-int cmd_uptime(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_uptime(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   uint32_t updays;
   uint32_t uphours;
@@ -798,7 +787,7 @@ int cmd_uptime(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       current_time_seconds = time(NULL);
       current_time = localtime(&current_time_seconds);
       nsh_output(vtbl, "%02u:%02u:%02u ", current_time->tm_hour,
-                 current_time->tm_min, current_time->tm_sec);
+                  current_time->tm_min, current_time->tm_sec);
     }
   else if (strcmp(argv[1], "-p") == 0)
     {
@@ -860,7 +849,7 @@ int cmd_uptime(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
         }
 
       nsh_output(vtbl, "%" PRIu32 " minute%s", upminutes,
-                 (upminutes > 1) ? "s" : "");
+                   (upminutes > 1) ? "s" : "");
     }
   else
     {
