@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_TESTING_MONKEY_MONKEY_DEV_H
-#define __APPS_TESTING_MONKEY_MONKEY_DEV_H
+#ifndef __MONKEY_DEV_H__
+#define __MONKEY_DEV_H__
 
 /****************************************************************************
  * Included Files
@@ -94,4 +94,4 @@ int monkey_dev_get_available(FAR struct monkey_dev_s *devs[], int dev_num);
 }
 #endif
 
-#endif /* __APPS_TESTING_MONKEY_MONKEY_DEV_H */
+#endif /* __MONKEY_DEV_H__ */

@@ -317,6 +317,7 @@ config NSH_DISABLE_DIRNAME
 config NSH_DISABLE_DMESG
 	bool "Disable dmesg"
 	default DEFAULT_SMALL
+	depends on RAMLOG_SYSLOG
 
 config NSH_DISABLE_ECHO
 	bool "Disable echo"
@@ -1207,12 +1208,6 @@ config NSH_IOBUFFER_SIZE
 	---help---
 		Determines the size of the I/O buffer to use for sending/
 		receiving TELNET commands/responses.  Default: 512
-
-config NSH_DISABLE_TELNETSTART
-	bool "Disable to start telnetd"
-	default false
-	---help---
-		Determines if the nsh starts telnetd automatically
 
 endif # NSH_TELNET
 endmenu # Telnet Configuration
