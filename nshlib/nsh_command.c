@@ -65,20 +65,21 @@ struct cmdmap_s
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_HELP
-static int  cmd_help(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+static int  cmd_help(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 #endif
 
 #ifndef CONFIG_NSH_DISABLESCRIPT
-static int  cmd_true(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
-static int  cmd_false(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+static int  cmd_true(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
+static int  cmd_false(FAR struct nsh_vtbl_s *vtbl, int argc,
+                      FAR char **argv);
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_EXIT
-static int  cmd_exit(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+static int  cmd_exit(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 #endif
 
 static int  cmd_unrecognized(FAR struct nsh_vtbl_s *vtbl, int argc,
-                             char **argv);
+                             FAR char **argv);
 
 /****************************************************************************
  * Private Data
@@ -791,6 +792,8 @@ static inline void help_allcmds(FAR struct nsh_vtbl_s *vtbl)
 #ifndef CONFIG_NSH_DISABLE_HELP
 static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
 {
+  UNUSED(vtbl);
+
 #ifdef CONFIG_NSH_BUILTIN_APPS
   FAR const struct builtin_s *builtin;
   unsigned int builtins_per_line;
@@ -885,7 +888,7 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_HELP
-static int cmd_help(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
+static int cmd_help(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   FAR const char *cmd = NULL;
 #ifndef CONFIG_NSH_HELP_TERSE
@@ -969,8 +972,10 @@ static int cmd_help(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
  ****************************************************************************/
 
 static int cmd_unrecognized(FAR struct nsh_vtbl_s *vtbl, int argc,
-                            char **argv)
+                            FAR char **argv)
 {
+  UNUSED(argc);
+
   nsh_error(vtbl, g_fmtcmdnotfound, argv[0]);
   return ERROR;
 }
@@ -980,8 +985,12 @@ static int cmd_unrecognized(FAR struct nsh_vtbl_s *vtbl, int argc,
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLESCRIPT
-static int cmd_true(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
+static int cmd_true(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
+  UNUSED(vtbl);
+  UNUSED(argc);
+  UNUSED(argv);
+
   return OK;
 }
 
@@ -992,8 +1001,12 @@ static int cmd_true(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLESCRIPT
-static int cmd_false(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
+static int cmd_false(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
+  UNUSED(vtbl);
+  UNUSED(argc);
+  UNUSED(argv);
+
   return ERROR;
 }
 #endif
@@ -1003,8 +1016,11 @@ static int cmd_false(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
  ****************************************************************************/
 
 #ifndef CONFIG_NSH_DISABLE_EXIT
-static int cmd_exit(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
+static int cmd_exit(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
+  UNUSED(argc);
+  UNUSED(argv);
+
   nsh_exit(vtbl, 0);
   return OK;
 }
@@ -1026,7 +1042,7 @@ static int cmd_exit(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
  *
  ****************************************************************************/
 
-int nsh_command(FAR struct nsh_vtbl_s *vtbl, int argc, char *argv[])
+int nsh_command(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char *argv[])
 {
   const struct cmdmap_s *cmdmap;
   const char            *cmd;
@@ -1110,7 +1126,7 @@ int nsh_extmatch_count(FAR char *name, FAR int *matches, int namelen)
   int nr_matches = 0;
   int i;
 
-  for (i = 0; i < NUM_CMDS; i++)
+  for (i = 0; i < (int)NUM_CMDS; i++)
     {
       if (strncmp(name, g_cmdmap[i].cmd, namelen) == 0)
         {
@@ -1148,7 +1164,7 @@ int nsh_extmatch_count(FAR char *name, FAR int *matches, int namelen)
     defined(CONFIG_READLINE_HAVE_EXTMATCH)
 FAR const char *nsh_extmatch_getname(int index)
 {
-  DEBUGASSERT(index > 0 && index <= NUM_CMDS);
+  DEBUGASSERT(index > 0 && index <= (int)NUM_CMDS);
   return  g_cmdmap[index].cmd;
 }
 #endif
