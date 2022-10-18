@@ -529,7 +529,7 @@ int critmon_start_main(int argc, char **argv)
       ret = task_create("Csection Monitor",
                         CONFIG_SYSTEM_CRITMONITOR_DAEMON_PRIORITY,
                         CONFIG_SYSTEM_CRITMONITOR_DAEMON_STACKSIZE,
-                        critmon_daemon, NULL);
+                        (main_t)critmon_daemon, (FAR char * const *)NULL);
       if (ret < 0)
         {
           int errcode = errno;

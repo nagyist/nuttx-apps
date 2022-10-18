@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/graphics/pdcurs34/pdcurses/pdc_pad.c
+ * apps/graphics/pdcurses/pdc_pad.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -120,15 +120,13 @@ WINDOW *newpad(int nlines, int ncols)
   if (!(win = PDC_makenew(nlines, ncols, -1, -1)) ||
       !(win = PDC_makelines(win)))
     {
-      return NULL;
+      return (WINDOW *) NULL;
     }
 
   werase(win);
   win->_flags = _PAD;
 
-  /* save default values in case pechochar() is the first call to
-   * prefresh().
-   */
+  /* save default values in case pechochar() is the first call to prefresh(). */
 
   save_pminrow = 0;
   save_pmincol = 0;
@@ -155,7 +153,7 @@ WINDOW *subpad(WINDOW *orig, int nlines, int ncols, int begy, int begx)
 
   if (!orig || !(orig->_flags & _PAD))
     {
-      return NULL;
+      return (WINDOW *) NULL;
     }
 
   /* Make sure window fits inside the original one */
@@ -164,7 +162,7 @@ WINDOW *subpad(WINDOW *orig, int nlines, int ncols, int begy, int begx)
       (begy + nlines) > (orig->_begy + orig->_maxy) ||
       (begx + ncols) > (orig->_begx + orig->_maxx))
     {
-      return NULL;
+      return (WINDOW *) NULL;
     }
 
   if (!nlines)
@@ -179,7 +177,7 @@ WINDOW *subpad(WINDOW *orig, int nlines, int ncols, int begy, int begx)
 
   if (!(win = PDC_makenew(nlines, ncols, begy, begx)))
     {
-      return NULL;
+      return (WINDOW *) NULL;
     }
 
   /* Initialize window variables */
@@ -238,7 +236,7 @@ int pnoutrefresh(WINDOW *w, int py, int px, int sy1, int sx1, int sy2,
 
   PDC_LOG(("pnoutrefresh() - called\n"));
 
-  if (!w || !(w->_flags & (_PAD | _SUBPAD)) || sy2 >= LINES || sy2 >= COLS)
+  if (!w || !(w->_flags & (_PAD | _SUBPAD)) || (sy2 >= LINES) || (sy2 >= COLS))
     {
       return ERR;
     }

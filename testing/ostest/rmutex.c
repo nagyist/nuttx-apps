@@ -54,7 +54,6 @@ static void thread_inner(int id, int level)
           printf("thread_inner[%d, %d]: "
                  "ERROR pthread_mutex_lock failed: %d\n",
                   id, level, status);
-          ASSERT(false);
         }
 
       printf("thread_inner[%d, %d]: Locked\n", id, level);
@@ -67,7 +66,6 @@ static void thread_inner(int id, int level)
           printf("thread_inner[%d, %d]: "
                  "ERROR pthread_mutex_trylock failed: %d\n",
                   id, level, status);
-          ASSERT(false);
         }
       else
         {
@@ -79,7 +77,6 @@ static void thread_inner(int id, int level)
               printf("thread_inner[%d, %d]: ERROR "
                      "pthread_mutex_unlock after try-lock failed: %d\n",
                       id, level, status);
-              ASSERT(false);
             }
         }
 
@@ -98,7 +95,6 @@ static void thread_inner(int id, int level)
           printf("thread_inner[%d, %d]: "
                  "ERROR pthread_mutex_unlock failed: %d\n",
                  id, level, status);
-          ASSERT(false);
         }
 
       printf("thread_inner[%d, %d]: Unlocked\n", id, level);
@@ -142,7 +138,6 @@ void recursive_mutex_test(void)
     {
       printf("recursive_mutex_test: "
              "ERROR pthread_mutexattr_settype failed, status=%d\n", status);
-      ASSERT(false);
     }
 
   status = pthread_mutexattr_gettype(&mattr, &type);
@@ -150,14 +145,12 @@ void recursive_mutex_test(void)
     {
       printf("recursive_mutex_test: "
              "ERROR pthread_mutexattr_gettype failed, status=%d\n", status);
-      ASSERT(false);
     }
 
   if (type != PTHREAD_MUTEX_RECURSIVE)
     {
       printf("recursive_mutex_test: "
              "ERROR pthread_mutexattr_gettype return type=%d\n", type);
-      ASSERT(false);
     }
 
   /* Initialize the mutex */
@@ -168,7 +161,6 @@ void recursive_mutex_test(void)
     {
       printf("recursive_mutex_test: "
              "ERROR pthread_mutex_init failed, status=%d\n", status);
-      ASSERT(false);
     }
 
   /* Start the threads -- all at the same, default priority */
@@ -188,7 +180,6 @@ void recursive_mutex_test(void)
         {
           printf("recursive_mutex_test: ERROR thread#%d creation: %d\n",
                  i + 1, status);
-          ASSERT(false);
         }
     }
 

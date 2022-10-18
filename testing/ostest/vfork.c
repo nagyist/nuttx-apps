@@ -61,8 +61,7 @@ int vfork_test(void)
     }
   else if (pid < 0)
     {
-      printf("vfork_test: ERROR vfork() failed: %d\n", errno);
-      ASSERT(false);
+      printf("vfork_test: vfork() failed: %d\n", errno);
       return -1;
     }
   else
@@ -75,7 +74,6 @@ int vfork_test(void)
       else
         {
           printf("vfork_test: ERROR Child %d did not run\n", pid);
-          ASSERT(false);
           return -1;
         }
     }

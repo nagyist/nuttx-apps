@@ -68,9 +68,9 @@ CCheckBoxTest::CCheckBoxTest()
 {
   // Initialize state data
 
-  m_widgetControl = NULL;
-  m_bgWindow      = NULL;
-  m_checkBox      = NULL;
+  m_widgetControl = (CWidgetControl *)NULL;
+  m_bgWindow      = (CBgWindow *)NULL;
+  m_checkBox      = (CCheckBox *)NULL;
 }
 
 // CCheckBoxTest Descriptor
@@ -109,7 +109,7 @@ void CCheckBoxTest::disconnect(void)
   if (m_checkBox)
     {
       delete m_checkBox;
-      m_checkBox = NULL;
+      m_checkBox = (CCheckBox *)NULL;
     }
 
   // Close the window
@@ -117,7 +117,7 @@ void CCheckBoxTest::disconnect(void)
   if (m_bgWindow)
     {
       delete m_bgWindow;
-      m_bgWindow = NULL;
+      m_bgWindow = (CBgWindow *)NULL;
     }
 
   // Free the widget control instance
@@ -125,7 +125,7 @@ void CCheckBoxTest::disconnect(void)
   if (m_widgetControl)
     {
       delete m_widgetControl;
-      m_widgetControl = NULL;
+      m_widgetControl = (CWidgetControl *)NULL;
     }
 
   // And disconnect from the server
@@ -149,7 +149,7 @@ bool CCheckBoxTest::createWindow(void)
 {
   // Initialize the widget control using the default style
 
-  m_widgetControl = new CWidgetControl(NULL);
+  m_widgetControl = new CWidgetControl((CWidgetStyle *)NULL);
 
   // Get an (uninitialized) instance of the background window as a class
   // that derives from INxWindow.
@@ -193,7 +193,7 @@ bool CCheckBoxTest::createWindow(void)
   // Create the checkbox
 
   m_checkBox = new CCheckBox(m_widgetControl, checkboxX, checkboxY,
-                             width, height, NULL);
+                             width, height, (CWidgetStyle *)NULL);
   if (!m_checkBox)
     {
       printf("CCheckBoxTest::createWindow: Failed to create CCheckBox\n");

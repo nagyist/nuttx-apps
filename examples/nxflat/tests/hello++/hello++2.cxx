@@ -44,7 +44,7 @@ public:
   CThingSayer(void)
     {
       printf("CThingSayer::CThingSayer: I am!\n");
-      szWhatToSay = NULL;
+      szWhatToSay = (const char*)NULL;
     }
 
   ~CThingSayer(void)
@@ -55,7 +55,7 @@ public:
 	  printf("CThingSayer::~CThingSayer: I will never say '%s' again\n",
 		 szWhatToSay);
 	}
-      szWhatToSay = NULL;
+      szWhatToSay = (const char*)NULL;
     }
 
   void Initialize(const char *czSayThis)

@@ -66,8 +66,8 @@ CSliderHorizontalTest::CSliderHorizontalTest()
 {
   // Initialize state data
 
-  m_widgetControl = NULL;
-  m_bgWindow      = NULL;
+  m_widgetControl = (CWidgetControl *)NULL;
+  m_bgWindow      = (CBgWindow *)NULL;
 }
 
 // CSliderHorizontalTest Descriptor
@@ -106,7 +106,7 @@ void CSliderHorizontalTest::disconnect(void)
   if (m_bgWindow)
     {
       delete m_bgWindow;
-      m_bgWindow = NULL;
+      m_bgWindow = (CBgWindow *)NULL;
     }
 
   // Free the widget control instance
@@ -114,7 +114,7 @@ void CSliderHorizontalTest::disconnect(void)
   if (m_widgetControl)
     {
       delete m_widgetControl;
-      m_widgetControl = NULL;
+      m_widgetControl = (CWidgetControl *)NULL;
     }
 
   // And disconnect from the server
@@ -138,7 +138,7 @@ bool CSliderHorizontalTest::createWindow(void)
 {
   // Initialize the widget control using the default style
 
-  m_widgetControl = new CWidgetControl(NULL);
+  m_widgetControl = new CWidgetControl((CWidgetStyle *)NULL);
 
   // Get an (uninitialized) instance of the background window as a class
   // that derives from INxWindow.

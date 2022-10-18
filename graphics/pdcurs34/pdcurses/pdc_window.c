@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/graphics/pdcurs34/pdcurses/pdc_window.c
+ * apps/graphics/pdcurses/pdc_window.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -154,7 +154,7 @@
 #include "curspriv.h"
 
 /****************************************************************************
- * Public Functions
+ * Public functions
  ****************************************************************************/
 
 WINDOW *PDC_makenew(int nlines, int ncols, int begy, int begx)
@@ -169,7 +169,7 @@ WINDOW *PDC_makenew(int nlines, int ncols, int begy, int begx)
 
   /* Allocate the window structure itself */
 
-  if ((win = calloc(1, sizeof(WINDOW))) == NULL)
+  if ((win = calloc(1, sizeof(WINDOW))) == (WINDOW *) NULL)
     {
       return win;
     }
@@ -179,7 +179,7 @@ WINDOW *PDC_makenew(int nlines, int ncols, int begy, int begx)
   if ((win->_y = malloc(nlines * sizeof(chtype *))) == NULL)
     {
       free(win);
-      return NULL;
+      return (WINDOW *)NULL;
     }
 
   /* allocate the minchng and maxchng arrays */
@@ -188,7 +188,7 @@ WINDOW *PDC_makenew(int nlines, int ncols, int begy, int begx)
     {
       free(win->_y);
       free(win);
-      return NULL;
+      return (WINDOW *)NULL;
     }
 
   if ((win->_lastch = malloc(nlines * sizeof(int))) == NULL)
@@ -196,7 +196,7 @@ WINDOW *PDC_makenew(int nlines, int ncols, int begy, int begx)
       free(win->_firstch);
       free(win->_y);
       free(win);
-      return NULL;
+      return (WINDOW *)NULL;
     }
 
   /* Initialize window variables */
@@ -228,7 +228,7 @@ WINDOW *PDC_makelines(WINDOW *win)
 
   if (!win)
     {
-      return NULL;
+      return (WINDOW *)NULL;
     }
 
   nlines = win->_maxy;
@@ -250,7 +250,7 @@ WINDOW *PDC_makelines(WINDOW *win)
           free(win->_y);
           free(win);
 
-          return NULL;
+          return (WINDOW *)NULL;
         }
     }
 
@@ -296,7 +296,7 @@ WINDOW *newwin(int nlines, int ncols, int begy, int begx)
       !(win = PDC_makenew(nlines, ncols, begy, begx)) ||
       !(win = PDC_makelines(win)))
     {
-      return NULL;
+      return (WINDOW *)NULL;
     }
 
   werase(win);
@@ -369,7 +369,7 @@ WINDOW *subwin(WINDOW *orig, int nlines, int ncols, int begy, int begx)
       (begy + nlines) > (orig->_begy + orig->_maxy) ||
       (begx + ncols) > (orig->_begx + orig->_maxx))
     {
-      return NULL;
+      return (WINDOW *)NULL;
     }
 
   if (!nlines)
@@ -384,7 +384,7 @@ WINDOW *subwin(WINDOW *orig, int nlines, int ncols, int begy, int begx)
 
   if (!(win = PDC_makenew(nlines, ncols, begy, begx)))
     {
-      return NULL;
+      return (WINDOW *)NULL;
     }
 
   /* Initialize window variables */
@@ -417,8 +417,7 @@ WINDOW *derwin(WINDOW *orig, int nlines, int ncols, int begy, int begx)
 
 int mvderwin(WINDOW *win, int pary, int parx)
 {
-  int i;
-  int j;
+  int i, j;
   WINDOW *mypar;
 
   if (!win || !(win->_parent))
@@ -459,7 +458,7 @@ WINDOW *dupwin(WINDOW *win)
 
   if (!win)
     {
-      return NULL;
+      return (WINDOW *) NULL;
     }
 
   nlines = win->_maxy;
@@ -470,7 +469,7 @@ WINDOW *dupwin(WINDOW *win)
   if (!(new = PDC_makenew(nlines, ncols, begy, begx)) ||
       !(new = PDC_makelines(new)))
     {
-      return NULL;
+      return (WINDOW *) NULL;
     }
 
   /* copy the contents of win into new */
@@ -527,23 +526,21 @@ WINDOW *resize_window(WINDOW *win, int nlines, int ncols)
 
   if (!win)
     {
-      return NULL;
+      return (WINDOW *)NULL;
     }
 
   if (win->_flags & _SUBPAD)
     {
-      if (!(new = subpad(win->_parent, nlines, ncols,
-                         win->_begy, win->_begx)))
+      if (!(new = subpad(win->_parent, nlines, ncols, win->_begy, win->_begx)))
         {
-          return NULL;
+          return (WINDOW *)NULL;
         }
     }
   else if (win->_flags & _SUBWIN)
     {
-      if (!(new = subwin(win->_parent, nlines, ncols,
-                         win->_begy, win->_begx)))
+      if (!(new = subwin(win->_parent, nlines, ncols, win->_begy, win->_begx)))
         {
-          return NULL;
+          return (WINDOW *)NULL;
         }
     }
   else
@@ -561,7 +558,7 @@ WINDOW *resize_window(WINDOW *win, int nlines, int ncols)
 
       if (!(new = PDC_makenew(nlines, ncols, new_begy, new_begx)))
         {
-          return NULL;
+          return (WINDOW *)NULL;
         }
     }
 
@@ -572,7 +569,7 @@ WINDOW *resize_window(WINDOW *win, int nlines, int ncols)
     {
       if (!(new = PDC_makelines(new)))
         {
-          return NULL;
+          return (WINDOW *) NULL;
         }
 
       werase(new);
