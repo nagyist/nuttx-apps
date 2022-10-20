@@ -7,7 +7,7 @@
  *
  * Derived from the file libhttpd.c in the original THTTPD package:
  *
- *   Copyright Â© 1995,1998,1999,2000,2001 by
+ *   Copyright © 1995,1998,1999,2000,2001 by
  *   Jef Poskanzer <jef@mail.acme.com>. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1097,7 +1097,7 @@ errout_with_sem:
 }
 
 #if CONFIG_THTTPD_CGI_TIMELIMIT > 0
-static void cgi_kill(ClientData client_data, struct timeval *nowp)
+static void cgi_kill(ClientData client_data, struct timeval *nowP)
 {
   pid_t pid = (pid_t)client_data.i;
 

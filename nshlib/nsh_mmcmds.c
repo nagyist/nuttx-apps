@@ -37,10 +37,8 @@
  * Name: cmd_free
  ****************************************************************************/
 
-int cmd_free(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_free(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
-  UNUSED(argc);
-
   return nsh_catfile(vtbl, argv[0], CONFIG_NSH_PROC_MOUNTPOINT "/meminfo");
 }
 
@@ -52,7 +50,7 @@ int cmd_free(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  * Name: cmd_memdump
  ****************************************************************************/
 
-int cmd_memdump(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+int cmd_memdump(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv)
 {
   FAR const char *arg = "used";
 
