@@ -181,8 +181,10 @@ A: Here are three:
       You can copy any pieces that you like from the old apps/directory to your
       custom apps directory as necessary.
 
-      This is documented in `NuttX/boards/README.txt` and `NuttX Porting Guide`
-      online at <https://cwiki.apache.org/confluence/display/NUTTX/Porting+Guide>.
+      This is documented in `NuttX/boards/README.txt` and
+      `nuttx/Documentation/NuttXPortingGuide.html` (Online at
+      https://bitbucket.org/nuttx/nuttx/src/master/Documentation/NuttXPortingGuide.html#apndxconfigs
+      under _Build options_). And in the `apps/README.txt` file.
 
    3) If you like the random collection of stuff in the `apps/` directory but
       just want to expand the existing components with your own, external
@@ -255,4 +257,3 @@ Regulations, Section 740.13) for both object code and source code.
 
 The following provides more details on the included cryptographic software:
 https://tls.mbed.org/supported-ssl-ciphersuites.
-https://github.com/intel/tinycrypt

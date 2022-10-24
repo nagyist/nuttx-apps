@@ -40,8 +40,7 @@
  * Private Data
  ****************************************************************************/
 
-static FAR const char *g_save_dir;
-static int g_framecount;
+static const char *save_dir;
 
 /****************************************************************************
  * Public Functions
@@ -54,7 +53,7 @@ static int g_framecount;
  *   Choose strage to write a file.
  ****************************************************************************/
 
-FAR const char *futil_initialize(void)
+const char *futil_initialize(void)
 {
   int ret;
   struct stat stat_buf;
@@ -66,14 +65,14 @@ FAR const char *futil_initialize(void)
   ret = stat("/mnt/sd0", &stat_buf);
   if (ret < 0)
     {
-      g_save_dir = "/mnt/spif";
+      save_dir = "/mnt/spif";
     }
   else
     {
-      g_save_dir = "/mnt/sd0";
+      save_dir = "/mnt/sd0";
     }
 
-  return g_save_dir;
+  return save_dir;
 }
 
 /****************************************************************************
@@ -83,25 +82,29 @@ FAR const char *futil_initialize(void)
  *   Write a image file to selected storage.
  ****************************************************************************/
 
-int futil_writeimage(FAR uint8_t *data, size_t len, FAR const char *fsuffix)
+int futil_writeimage(uint8_t *data, size_t len, const char *fsuffix)
 {
-  char fname[IMAGE_FILENAME_LEN];
-  FAR FILE *fp;
+  static char s_fname[IMAGE_FILENAME_LEN];
+  static int s_framecount = 0;
 
-  g_framecount++;
-  if (g_framecount >= 1000)
+  FILE *fp;
+
+  s_framecount++;
+  if (s_framecount >= 1000)
     {
-      g_framecount = 1;
+      s_framecount = 1;
     }
 
-  snprintf(fname,
+  memset(s_fname, 0, sizeof(s_fname));
+
+  snprintf(s_fname,
            IMAGE_FILENAME_LEN,
            "%s/VIDEO%03d.%s",
-           g_save_dir, g_framecount, fsuffix);
+           save_dir, s_framecount, fsuffix);
 
-  printf("FILENAME:%s\n", fname);
+  printf("FILENAME:%s\n", s_fname);
 
-  fp = fopen(fname, "wb");
+  fp = fopen(s_fname, "wb");
   if (NULL == fp)
     {
       printf("fopen error : %d\n", errno);
@@ -116,3 +119,4 @@ int futil_writeimage(FAR uint8_t *data, size_t len, FAR const char *fsuffix)
   fclose(fp);
   return 0;
 }
+
