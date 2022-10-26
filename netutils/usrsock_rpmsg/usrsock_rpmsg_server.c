@@ -40,16 +40,6 @@
 #endif
 #include "usrsock_rpmsg.h"
 
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#define EXTRA_IOV_LEN 10
-
-/****************************************************************************
- * Private Types
- ****************************************************************************/
-
 struct usrsock_rpmsg_s
 {
   struct file           *eventfp;
@@ -59,15 +49,6 @@ struct usrsock_rpmsg_s
   struct socket         socks[CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS];
   struct rpmsg_endpoint *epts[CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS];
   struct pollfd         pfds[CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS + 1];
-};
-
-struct usrsock_rpmsg_work_s
-{
-  struct work_s                  work;
-  struct rpmsg_endpoint          *ept;
-  struct usrsock_rpmsg_s         *priv;
-  struct usrsock_request_ioctl_s *req;
-  size_t                         len;
 };
 
 /****************************************************************************
@@ -84,8 +65,7 @@ static int usrsock_rpmsg_send_data_ack(struct rpmsg_endpoint *ept,
                                   uint16_t events,
                                   uint64_t xid, int32_t result,
                                   uint16_t valuelen,
-                                  uint16_t valuelen_nontrunc,
-                                  int32_t datalen);
+                                  uint16_t valuelen_nontrunc);
 static int usrsock_rpmsg_send_event(struct rpmsg_endpoint *ept,
                                     int16_t usockid, uint16_t events);
 
@@ -208,8 +188,7 @@ static int usrsock_rpmsg_send_data_ack(struct rpmsg_endpoint *ept,
                                   uint16_t events,
                                   uint64_t xid, int32_t result,
                                   uint16_t valuelen,
-                                  uint16_t valuelen_nontrunc,
-                                  int32_t datalen)
+                                  uint16_t valuelen_nontrunc)
 {
   ack->reqack.head.msgid  = USRSOCK_MESSAGE_RESPONSE_DATA_ACK;
   ack->reqack.head.flags  = 0;
@@ -223,7 +202,6 @@ static int usrsock_rpmsg_send_data_ack(struct rpmsg_endpoint *ept,
       result             = 0;
       valuelen           = 0;
       valuelen_nontrunc  = 0;
-      datalen            = 0;
     }
   else if (valuelen > valuelen_nontrunc)
     {
@@ -233,7 +211,7 @@ static int usrsock_rpmsg_send_data_ack(struct rpmsg_endpoint *ept,
   ack->valuelen          = valuelen;
   ack->valuelen_nontrunc = valuelen_nontrunc;
 
-  return rpmsg_send_nocopy(ept, ack, sizeof(*ack) + valuelen + datalen);
+  return rpmsg_send_nocopy(ept, ack, sizeof(*ack) + valuelen + result);
 }
 
 static int usrsock_rpmsg_send_event(struct rpmsg_endpoint *ept,
@@ -518,107 +496,39 @@ static int usrsock_rpmsg_recvfrom_handler(struct rpmsg_endpoint *ept,
   size_t buflen = req->max_buflen;
   ssize_t ret = -EBADF;
   uint16_t events = 0;
-  uint32_t len = buflen;
+  uint32_t len;
   int retr;
-  size_t totlen = 0;
-  struct iovec iov[EXTRA_IOV_LEN];
-  uint8_t i = 0;
 
   ack = rpmsg_get_tx_payload_buffer(ept, &len, true);
-  if (sizeof(*ack) + inaddrlen + buflen < len)
+  if (sizeof(*ack) + inaddrlen + buflen > len)
     {
-      len = sizeof(*ack) + inaddrlen + buflen;
+      buflen = len - sizeof(*ack) - inaddrlen;
     }
 
-  memset(iov, 0, sizeof(iov));
   if (req->usockid >= 0 &&
       req->usockid < CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS)
     {
       ret = psock_recvfrom(&priv->socks[req->usockid],
-              (void *)(ack + 1) + inaddrlen, len - sizeof(*ack) - inaddrlen,
-              req->flags,
+              (void *)(ack + 1) + inaddrlen, buflen, req->flags,
               outaddrlen ? (struct sockaddr *)(ack + 1) : NULL,
               outaddrlen ? &outaddrlen : NULL);
       if (ret > 0)
         {
-          totlen = ret;
           if (outaddrlen < inaddrlen)
             {
               memcpy((void *)(ack + 1) + outaddrlen,
                      (void *)(ack + 1) + inaddrlen, ret);
             }
 
-          while (totlen < buflen && i < EXTRA_IOV_LEN)
+          if (usrsock_rpmsg_available(&priv->socks[req->usockid], FIONREAD))
             {
-              if (!usrsock_rpmsg_available(&priv->socks[req->usockid],
-                                           FIONREAD))
-                {
-                  break;
-                }
-
-              iov[i].iov_base = rpmsg_get_tx_payload_buffer(ept,
-                                                            &len,
-                                                            false);
-              if (!iov[i].iov_base)
-                {
-                  events |= USRSOCK_EVENT_RECVFROM_AVAIL;
-                  break;
-                }
-
-              if (buflen - totlen < len)
-                {
-                  len = buflen - totlen;
-                }
-
-              /* Should never wait */
-
-              iov[i].iov_len = psock_recvfrom(
-                      &priv->socks[req->usockid],
-                      iov[i].iov_base, len,
-                      req->flags | MSG_DONTWAIT,
-                      NULL, NULL);
-              if ((ssize_t)iov[i].iov_len > 0)
-                {
-                  totlen += iov[i].iov_len;
-                  if (iov[i].iov_len < len)
-                    {
-                      break;
-                    }
-                }
-              else
-                {
-                  iov[i].iov_len = 0;
-                  events |= USRSOCK_EVENT_RECVFROM_AVAIL;
-                  break;
-                }
-
-              i++;
+              events |= USRSOCK_EVENT_RECVFROM_AVAIL;
             }
         }
     }
 
   retr = usrsock_rpmsg_send_data_ack(ept,
-                                      ack, events, req->head.xid,
-                                      totlen, inaddrlen, outaddrlen,
-                                      ret);
-  for (i = 0; i < EXTRA_IOV_LEN; i++)
-    {
-      if (!iov[i].iov_base)
-        {
-          break;
-        }
-
-      if (!iov[i].iov_len || retr <= 0)
-        {
-          /* FIXME: free rpmsg buffer */
-
-          break;
-        }
-
-      ret = rpmsg_send_nocopy(ept,
-                              iov[i].iov_base, iov[i].iov_len);
-    }
-
+            ack, events, req->head.xid, ret, inaddrlen, outaddrlen);
   if (retr >= 0 && events == 0)
     {
       pthread_mutex_lock(&priv->mutex);
@@ -668,7 +578,7 @@ static int usrsock_rpmsg_getsockopt_handler(struct rpmsg_endpoint *ept,
     }
 
   return usrsock_rpmsg_send_data_ack(ept,
-          ack, 0, req->head.xid, ret, optlen, optlen, ret);
+          ack, 0, req->head.xid, ret, optlen, optlen);
 }
 
 static int usrsock_rpmsg_getsockname_handler(struct rpmsg_endpoint *ept,
@@ -692,7 +602,7 @@ static int usrsock_rpmsg_getsockname_handler(struct rpmsg_endpoint *ept,
     }
 
   return usrsock_rpmsg_send_data_ack(ept,
-          ack, 0, req->head.xid, ret, inaddrlen, outaddrlen, ret);
+          ack, 0, req->head.xid, ret, inaddrlen, outaddrlen);
 }
 
 static int usrsock_rpmsg_getpeername_handler(struct rpmsg_endpoint *ept,
@@ -716,7 +626,7 @@ static int usrsock_rpmsg_getpeername_handler(struct rpmsg_endpoint *ept,
     }
 
   return usrsock_rpmsg_send_data_ack(ept,
-          ack, 0, req->head.xid, ret, inaddrlen, outaddrlen, ret);
+          ack, 0, req->head.xid, ret, inaddrlen, outaddrlen);
 }
 
 static int usrsock_rpmsg_bind_handler(struct rpmsg_endpoint *ept,
@@ -822,7 +732,7 @@ static int usrsock_rpmsg_accept_handler(struct rpmsg_endpoint *ept,
     }
 
   retr = usrsock_rpmsg_send_data_ack(ept,
-    ack, 0, req->head.xid, ret, inaddrlen, outaddrlen, ret);
+    ack, 0, req->head.xid, ret, inaddrlen, outaddrlen);
   if (retr >= 0 && ret >= 0)
     {
       pthread_mutex_lock(&priv->mutex);
@@ -837,24 +747,25 @@ static int usrsock_rpmsg_accept_handler(struct rpmsg_endpoint *ept,
   return retr;
 }
 
-static void usrsock_rpmsg_worker(void *arg)
+static int usrsock_rpmsg_ioctl_handler(struct rpmsg_endpoint *ept,
+                                       void *data, size_t len_,
+                                       uint32_t src, void *priv_)
 {
-  struct usrsock_rpmsg_work_s *work = arg;
-  struct rpmsg_endpoint *ept = work->ept;
-  struct usrsock_request_ioctl_s *req = work->req;
-  struct usrsock_message_datareq_ack_s *ack = arg;
-  struct usrsock_rpmsg_s *priv = work->priv;
-  size_t len = work->len;
+  struct usrsock_request_ioctl_s *req = data;
+  struct usrsock_message_datareq_ack_s *ack;
+  struct usrsock_rpmsg_s *priv = priv_;
 #ifdef CONFIG_NETDEV_WIRELESS_IOCTL
   struct iwreq *wlreq;
   struct iwreq *wlack;
 #endif
   int ret = -EBADF;
+  uint32_t len;
 
+  ack = rpmsg_get_tx_payload_buffer(ept, &len, true);
   if (req->usockid >= 0 &&
       req->usockid < CONFIG_NETUTILS_USRSOCK_NSOCK_DESCRIPTORS)
     {
-      memcpy(ack + 1, req + 1, len - sizeof(*req));
+      memcpy(ack + 1, req + 1, len_ - sizeof(*req));
 #ifdef CONFIG_NETDEV_WIRELESS_IOCTL
       wlreq = (struct iwreq *)(req + 1);
       wlack = (struct iwreq *)(ack + 1);
@@ -880,32 +791,8 @@ static void usrsock_rpmsg_worker(void *arg)
 #endif
     }
 
-  rpmsg_release_rx_buffer(ept, req);
-  usrsock_rpmsg_send_data_ack(ept,
-    ack, 0, req->head.xid, ret, req->arglen, req->arglen, ret);
-}
-
-static int usrsock_rpmsg_ioctl_handler(struct rpmsg_endpoint *ept,
-                                       void *data, size_t len_,
-                                       uint32_t src, void *priv)
-{
-  struct usrsock_rpmsg_work_s *work;
-  uint32_t len;
-
-  work = rpmsg_get_tx_payload_buffer(ept, &len, true);
-
-  memset(work, 0, sizeof(*work));
-  work->ept  = ept;
-  work->priv = priv;
-  work->req  = data;
-  work->len  = len_;
-
-  rpmsg_hold_rx_buffer(ept, data);
-
-  work_queue(HPWORK, &work->work,
-             usrsock_rpmsg_worker, work, 0);
-
-  return 0;
+  return usrsock_rpmsg_send_data_ack(ept,
+           ack, 0, req->head.xid, ret, req->arglen, req->arglen);
 }
 
 static int usrsock_rpmsg_dns_handler(struct rpmsg_endpoint *ept, void *data,
