@@ -512,6 +512,7 @@ static int usrsock_rpmsg_recvfrom_handler(struct rpmsg_endpoint *ept,
               (void *)(ack + 1) + inaddrlen, buflen, req->flags,
               outaddrlen ? (struct sockaddr *)(ack + 1) : NULL,
               outaddrlen ? &outaddrlen : NULL);
+      totlen = ret;
       if (ret > 0)
         {
           if (outaddrlen < inaddrlen)
