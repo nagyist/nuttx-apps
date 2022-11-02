@@ -334,14 +334,14 @@ int main(int argc, FAR char *argv[])
            * alarm expiring in year 1900.
            */
 
-          timeleft = timegm((struct tm *)&rd.time) - now;
+          timeleft = mktime((struct tm *)&rd.time) - now;
         }
       else
         {
           struct tm now_tm;
 
           /* Periodic extend "partial" alarms by "unfolding" months,
-           * until we get alarm that is in future. Note that timegm()
+           * until we get alarm that is in future. Note that mktime()
            * normalizes fields that are out of their valid values,
            * so we don't have to handle carry to tm_year by ourselves.
            */
@@ -352,7 +352,7 @@ int main(int argc, FAR char *argv[])
 
           do
           {
-            timeleft = timegm((struct tm *)&rd.time) - now;
+            timeleft = mktime((struct tm *)&rd.time) - now;
             if (timeleft < 0)
               {
                 rd.time.tm_mon++;

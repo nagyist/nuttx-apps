@@ -91,8 +91,8 @@ int system(FAR const char *cmd)
       goto errout_with_attrs;
     }
 
-  errcode = posix_spawnattr_setstacksize(&attr,
-                                         CONFIG_SYSTEM_SYSTEM_STACKSIZE);
+  errcode = task_spawnattr_setstacksize(&attr,
+                                        CONFIG_SYSTEM_SYSTEM_STACKSIZE);
   if (errcode != 0)
     {
       goto errout_with_attrs;
