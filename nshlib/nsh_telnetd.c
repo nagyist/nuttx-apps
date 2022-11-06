@@ -58,15 +58,18 @@ enum telnetd_state_e
 };
 
 /****************************************************************************
- * Public Functions
+ * Private Functions
  ****************************************************************************/
 
 /****************************************************************************
  * Name: nsh_telnetmain
  ****************************************************************************/
 
-int nsh_telnetmain(int argc, FAR char *argv[])
+static int nsh_telnetmain(int argc, char *argv[])
 {
+  UNUSED(argc);
+  UNUSED(argv);
+
   FAR struct console_stdio_s *pstate = nsh_newconsole(true);
   int ret;
 
@@ -81,6 +84,10 @@ int nsh_telnetmain(int argc, FAR char *argv[])
   nsh_exit(&pstate->cn_vtbl, ret);
   return ret;
 }
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
 
 /****************************************************************************
  * Name: nsh_telnetstart
@@ -104,7 +111,6 @@ int nsh_telnetmain(int argc, FAR char *argv[])
  *
  ****************************************************************************/
 
-#ifndef CONFIG_NSH_DISABLE_TELNETSTART
 int nsh_telnetstart(sa_family_t family)
 {
   static enum telnetd_state_e state = TELNETD_NOTRUNNING;
@@ -175,7 +181,6 @@ int nsh_telnetstart(sa_family_t family)
 
   return ret;
 }
-#endif
 
 /****************************************************************************
  * Name: cmd_telnetd
