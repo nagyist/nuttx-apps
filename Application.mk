@@ -32,6 +32,12 @@ ifneq ($(MAINSRC),)
   endif
 endif
 
+ORIG_BIN =
+ifneq ($(BIN),$(APPDIR)$(DELIM)libapps$(LIBEXT))
+  ORIG_BIN := $(BIN)
+  BIN := $(addprefix $(APPDIR)$(DELIM)staging$(DELIM),$(notdir $(BIN)))
+endif
+
 # The GNU make CURDIR will always be a POSIX-like path with forward slashes
 # as path segment separators.  If we know that this is a native build, then
 # we need to fix up the path so the DELIM will match the actual delimiter.
@@ -42,9 +48,11 @@ else
 CWD = $(CURDIR)
 endif
 
-# Add the static application library to the linked libraries.
-
-LDLIBS += $(call CONVERT_PATH,$(BIN))
+# Add the static application library to the linked libraries. Don't do this
+# with CONFIG_BUILD_KERNEL as there is no static app library
+ifneq ($(CONFIG_BUILD_KERNEL),y)
+  LDLIBS += $(call CONVERT_PATH,$(BIN))
+endif
 
 # When building a module, link with the compiler runtime.
 # This should be linked after libapps. Consider that mbedtls in libapps
@@ -89,7 +97,7 @@ SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS) $(MAINSRC)
 OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS) $(RUSTOBJS) $(ZIGOBJS)
 
 ifneq ($(BUILD_MODULE),y)
-  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJ)
+  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJS)
 endif
 
 DEPPATH += --dep-path .
@@ -99,7 +107,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: $(OBJS)
+all:: built
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -124,9 +132,8 @@ define ELFCOMPILERUST
 endef
 
 define ELFCOMPILEZIG
-	@echo "ZIG: $1"
-	# Remove target suffix here since zig compiler add .o automatically
-	$(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) --name $(basename $2) $1 
+       @echo "ZIG: $1"
+       $(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) $1 --name $2
 endef
 
 define ELFLD
@@ -158,8 +165,21 @@ $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
 
-archive:
-	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $(OBJS))
+.built: $(OBJS)
+	$(if $(wildcard $<), $(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^))
+	$(Q) touch $@
+
+built: .built
+	$(if $(wildcard $(OBJS)), \
+	  $(if $(ORIG_BIN), \
+	    $(shell mkdir -p $(dir $(ORIG_BIN))) \
+	    $(shell cp -rf $(call CONVERT_PATH,$(BIN)) $(ORIG_BIN)) \
+	   ), \
+	   $(if $(wildcard $(ORIG_BIN)), \
+	     $(shell cp -rf $(ORIG_BIN) $(call CONVERT_PATH,$(BIN))), \
+	    ) \
+	  )
+	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -218,13 +238,17 @@ install::
 endif # BUILD_MODULE
 
 context::
+ifneq ($(ORIG_BIN),)
+	$(Q) mkdir -p $(dir $(BIN))
+	$(Q) mkdir -p $(dir $(ORIG_BIN))
+endif
 
 ifneq ($(PROGNAME),)
 
 REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
 APPLIST := $(PROGNAME)
 
-$(REGLIST): $(DEPCONFIG) Makefile
+$(REGLIST): $(DEPCONFIG) $(firstword $(MAKEFILE_LIST))
 	$(call REGISTER,$(firstword $(APPLIST)),$(firstword $(PRIORITY)),$(firstword $(STACKSIZE)),$(if $(BUILD_MODULE),,$(firstword $(APPLIST))_main))
 	$(eval APPLIST=$(filter-out $(firstword $(APPLIST)),$(APPLIST)))
 	$(if $(filter-out $(firstword $(PRIORITY)),$(PRIORITY)),$(eval PRIORITY=$(filter-out $(firstword $(PRIORITY)),$(PRIORITY))))
@@ -235,7 +259,7 @@ else
 register::
 endif
 
-.depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
+.depend: $(firstword $(MAKEFILE_LIST)) $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$^) >Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$^) >>Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$^) >>Make.dep
@@ -244,6 +268,8 @@ endif
 depend:: .depend
 
 clean::
+	$(call DELFILE, .built)
+	$(call DELDIR, $(APPDIR)$(DELIM)staging)
 	$(call CLEAN)
 
 distclean:: clean

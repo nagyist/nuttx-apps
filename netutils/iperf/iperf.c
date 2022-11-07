@@ -22,7 +22,6 @@
  * Included Files
  ****************************************************************************/
 
-#include <sys/prctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <net/if.h>
@@ -42,6 +41,7 @@
 #define IPERF_REPORT_TASK_NAME       "iperf_report"
 #define IPERF_REPORT_TASK_PRIORITY   100
 #define IPERF_REPORT_TASK_STACK      4096
+#define IPERF_REPORT_TASK_NAME       "iperf_report"
 
 #define IPERF_UDP_TX_LEN             (1472)
 #define IPERF_UDP_RX_LEN             (16 << 10)
@@ -57,12 +57,11 @@
 
 struct iperf_ctrl_t
 {
-  FAR struct iperf_ctrl_t *flink;
   struct iperf_cfg_t cfg;
   bool finish;
   uintmax_t total_len;
   uint32_t buffer_len;
-  FAR uint8_t *buffer;
+  uint8_t *buffer;
   uint32_t sockfd;
 };
 
@@ -77,27 +76,27 @@ struct iperf_udp_pkt_t
  * Private Data
  ****************************************************************************/
 
-static pthread_mutex_t g_iperf_ctrl_mutex = PTHREAD_MUTEX_INITIALIZER;
-static sq_queue_t      g_iperf_ctrl_list;
+static bool s_iperf_is_running = false;
+static struct iperf_ctrl_t s_iperf_ctrl;
 
 /****************************************************************************
  * Private Functions Prototypes
  ****************************************************************************/
 
-inline static bool iperf_is_udp_client(FAR struct iperf_ctrl_t *ctrl);
-inline static bool iperf_is_udp_server(FAR struct iperf_ctrl_t *ctrl);
-inline static bool iperf_is_tcp_client(FAR struct iperf_ctrl_t *ctrl);
-inline static bool iperf_is_tcp_server(FAR struct iperf_ctrl_t *ctrl);
+inline static bool iperf_is_udp_client(void);
+inline static bool iperf_is_udp_server(void);
+inline static bool iperf_is_tcp_client(void);
+inline static bool iperf_is_tcp_server(void);
 static int iperf_get_socket_error_code(int sockfd);
-static int iperf_show_socket_error_reason(FAR const char *str, int sockfd);
-static void iperf_report_task(FAR void *arg);
-static int iperf_start_report(FAR struct iperf_ctrl_t *ctrl);
-static int iperf_run_tcp_server(FAR struct iperf_ctrl_t *ctrl);
-static int iperf_run_udp_server(FAR struct iperf_ctrl_t *ctrl);
-static int iperf_run_udp_client(FAR struct iperf_ctrl_t *ctrl);
-static int iperf_run_tcp_client(FAR struct iperf_ctrl_t *ctrl);
-static void iperf_task_traffic(FAR void *arg);
-static uint32_t iperf_get_buffer_len(FAR struct iperf_ctrl_t *ctrl);
+static int iperf_show_socket_error_reason(const char *str, int sockfd);
+static void iperf_report_task(void *arg);
+static int iperf_start_report(void);
+static int iperf_run_tcp_server(void);
+static int iperf_run_udp_server(void);
+static int iperf_run_udp_client(void);
+static int iperf_run_tcp_client(void);
+static void iperf_task_traffic(void *arg);
+static uint32_t iperf_get_buffer_len(void);
 
 /****************************************************************************
  * Private Functions
@@ -111,10 +110,10 @@ static uint32_t iperf_get_buffer_len(FAR struct iperf_ctrl_t *ctrl);
  *
  ****************************************************************************/
 
-inline static bool iperf_is_udp_client(FAR struct iperf_ctrl_t *ctrl)
+inline static bool iperf_is_udp_client(void)
 {
-  return ((ctrl->cfg.flag & IPERF_FLAG_CLIENT)
-         && (ctrl->cfg.flag & IPERF_FLAG_UDP));
+  return ((s_iperf_ctrl.cfg.flag & IPERF_FLAG_CLIENT)
+         && (s_iperf_ctrl.cfg.flag & IPERF_FLAG_UDP));
 }
 
 /****************************************************************************
@@ -125,10 +124,10 @@ inline static bool iperf_is_udp_client(FAR struct iperf_ctrl_t *ctrl)
  *
  ****************************************************************************/
 
-inline static bool iperf_is_udp_server(FAR struct iperf_ctrl_t *ctrl)
+inline static bool iperf_is_udp_server(void)
 {
-  return ((ctrl->cfg.flag & IPERF_FLAG_SERVER)
-         && (ctrl->cfg.flag & IPERF_FLAG_UDP));
+  return ((s_iperf_ctrl.cfg.flag & IPERF_FLAG_SERVER)
+         && (s_iperf_ctrl.cfg.flag & IPERF_FLAG_UDP));
 }
 
 /****************************************************************************
@@ -139,10 +138,10 @@ inline static bool iperf_is_udp_server(FAR struct iperf_ctrl_t *ctrl)
  *
  ****************************************************************************/
 
-inline static bool iperf_is_tcp_client(FAR struct iperf_ctrl_t *ctrl)
+inline static bool iperf_is_tcp_client(void)
 {
-  return ((ctrl->cfg.flag & IPERF_FLAG_CLIENT)
-         && (ctrl->cfg.flag & IPERF_FLAG_TCP));
+  return ((s_iperf_ctrl.cfg.flag & IPERF_FLAG_CLIENT)
+         && (s_iperf_ctrl.cfg.flag & IPERF_FLAG_TCP));
 }
 
 /****************************************************************************
@@ -153,10 +152,10 @@ inline static bool iperf_is_tcp_client(FAR struct iperf_ctrl_t *ctrl)
  *
  ****************************************************************************/
 
-inline static bool iperf_is_tcp_server(FAR struct iperf_ctrl_t *ctrl)
+inline static bool iperf_is_tcp_server(void)
 {
-  return ((ctrl->cfg.flag & IPERF_FLAG_SERVER)
-         && (ctrl->cfg.flag & IPERF_FLAG_TCP));
+  return ((s_iperf_ctrl.cfg.flag & IPERF_FLAG_SERVER)
+         && (s_iperf_ctrl.cfg.flag & IPERF_FLAG_TCP));
 }
 
 /****************************************************************************
@@ -180,7 +179,7 @@ static int iperf_get_socket_error_code(int sockfd)
  *
  ****************************************************************************/
 
-static int iperf_show_socket_error_reason(FAR const char *str, int sockfd)
+static int iperf_show_socket_error_reason(const char *str, int sockfd)
 {
   int err = errno;
   if (err != 0)
@@ -226,19 +225,16 @@ static double ts_diff(const struct timespec *a, const struct timespec *b)
  *
  ****************************************************************************/
 
-static void iperf_report_task(FAR void *arg)
+static void iperf_report_task(void *arg)
 {
-  FAR struct iperf_ctrl_t *ctrl = arg;
-  uint32_t interval = ctrl->cfg.interval;
-  uint32_t time = ctrl->cfg.time;
+  uint32_t interval = s_iperf_ctrl.cfg.interval;
+  uint32_t time = s_iperf_ctrl.cfg.time;
   struct timespec now;
   struct timespec start;
   uintmax_t now_len;
   int ret;
 
-  prctl(PR_SET_NAME, IPERF_REPORT_TASK_NAME);
-
-  now_len = ctrl->total_len;
+  now_len = s_iperf_ctrl.total_len;
   ret = clock_gettime(CLOCK_MONOTONIC, &now);
   if (ret != 0)
     {
@@ -248,7 +244,7 @@ static void iperf_report_task(FAR void *arg)
 
   start = now;
   printf("\n%19s %16s %18s\n", "Interval", "Transfer", "Bandwidth\n");
-  while (!ctrl->finish)
+  while (!s_iperf_ctrl.finish)
     {
       uintmax_t last_len;
       struct timespec last;
@@ -256,7 +252,7 @@ static void iperf_report_task(FAR void *arg)
       sleep(interval);
       last_len = now_len;
       last = now;
-      now_len = ctrl->total_len;
+      now_len = s_iperf_ctrl.total_len;
       ret = clock_gettime(CLOCK_MONOTONIC, &now);
       if (ret != 0)
         {
@@ -286,7 +282,7 @@ static void iperf_report_task(FAR void *arg)
              ts_diff(&now, &start) / 1e6));
     }
 
-  ctrl->finish = true;
+  s_iperf_ctrl.finish = true;
 
   pthread_exit(NULL);
 }
@@ -299,20 +295,20 @@ static void iperf_report_task(FAR void *arg)
  *
  ****************************************************************************/
 
-static int iperf_start_report(FAR struct iperf_ctrl_t *ctrl)
+static int iperf_start_report(void)
 {
+  int ret;
+  pthread_t thread;
   struct sched_param param;
   pthread_attr_t attr;
-  pthread_t thread;
-  int ret;
 
   pthread_attr_init(&attr);
   param.sched_priority = IPERF_REPORT_TASK_PRIORITY;
   pthread_attr_setschedparam(&attr, &param);
   pthread_attr_setstacksize(&attr, IPERF_REPORT_TASK_STACK);
 
-  ret = pthread_create(&thread, &attr, (FAR void *)iperf_report_task,
-                       ctrl);
+  ret = pthread_create(&thread, &attr, (void *)iperf_report_task,
+                       IPERF_REPORT_TASK_NAME);
   if (ret != 0)
     {
       printf("iperf_thread: pthread_create failed: %d, %s\n",
@@ -333,14 +329,14 @@ static int iperf_start_report(FAR struct iperf_ctrl_t *ctrl)
  *
  ****************************************************************************/
 
-static int iperf_run_tcp_server(FAR struct iperf_ctrl_t *ctrl)
+static int iperf_run_tcp_server(void)
 {
   socklen_t addr_len = sizeof(struct sockaddr);
   struct sockaddr_in remote_addr;
   struct sockaddr_in addr;
   int actual_recv = 0;
   int want_recv = 0;
-  FAR uint8_t *buffer;
+  uint8_t *buffer;
   int listen_socket;
   struct timeval t;
   int sockfd;
@@ -355,9 +351,9 @@ static int iperf_run_tcp_server(FAR struct iperf_ctrl_t *ctrl)
 
   setsockopt(listen_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(ctrl->cfg.sport);
-  addr.sin_addr.s_addr = ctrl->cfg.sip;
-  if (bind(listen_socket, (FAR struct sockaddr *)&addr, sizeof(addr)) != 0)
+  addr.sin_port = htons(s_iperf_ctrl.cfg.sport);
+  addr.sin_addr.s_addr = s_iperf_ctrl.cfg.sip;
+  if (bind(listen_socket, (struct sockaddr *)&addr, sizeof(addr)) != 0)
     {
       iperf_show_socket_error_reason("tcp server bind", listen_socket);
       close(listen_socket);
@@ -371,13 +367,13 @@ static int iperf_run_tcp_server(FAR struct iperf_ctrl_t *ctrl)
       return -1;
     }
 
-  buffer = ctrl->buffer;
-  want_recv = ctrl->buffer_len;
-  while (!ctrl->finish)
+  buffer = s_iperf_ctrl.buffer;
+  want_recv = s_iperf_ctrl.buffer_len;
+  while (!s_iperf_ctrl.finish)
     {
       /* TODO need to change to non-block mode */
 
-      sockfd = accept(listen_socket, (FAR struct sockaddr *)&remote_addr,
+      sockfd = accept(listen_socket, (struct sockaddr *)&remote_addr,
                       &addr_len);
       if (sockfd < 0)
         {
@@ -393,14 +389,14 @@ static int iperf_run_tcp_server(FAR struct iperf_ctrl_t *ctrl)
                  inet_ntoa_r(remote_addr.sin_addr, inetaddr,
                              sizeof(inetaddr)),
                  htons(remote_addr.sin_port));
-          iperf_start_report(ctrl);
+          iperf_start_report();
 
           t.tv_sec = IPERF_SOCKET_RX_TIMEOUT;
           t.tv_usec = 0;
           setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &t, sizeof(t));
         }
 
-      while (!ctrl->finish)
+      while (!s_iperf_ctrl.finish)
         {
           actual_recv = recv(sockfd, buffer, want_recv, 0);
           if (actual_recv == 0)
@@ -415,26 +411,26 @@ static int iperf_run_tcp_server(FAR struct iperf_ctrl_t *ctrl)
                * exits after finishing a single connection.
                */
 
-              ctrl->finish = true;
+              s_iperf_ctrl.finish = true;
               break;
             }
           else if (actual_recv < 0)
             {
               iperf_show_socket_error_reason("tcp server recv",
                                              listen_socket);
-              ctrl->finish = true;
+              s_iperf_ctrl.finish = true;
               break;
             }
           else
             {
-              ctrl->total_len += actual_recv;
+              s_iperf_ctrl.total_len += actual_recv;
             }
         }
 
       close(sockfd);
     }
 
-  ctrl->finish = true;
+  s_iperf_ctrl.finish = true;
   close(listen_socket);
 
   return 0;
@@ -448,14 +444,14 @@ static int iperf_run_tcp_server(FAR struct iperf_ctrl_t *ctrl)
  *
  ****************************************************************************/
 
-static int iperf_run_udp_server(FAR struct iperf_ctrl_t *ctrl)
+static int iperf_run_udp_server(void)
 {
   socklen_t addr_len = sizeof(struct sockaddr_in);
   struct sockaddr_in addr;
   int actual_recv = 0;
   struct timeval t;
   int want_recv = 0;
-  FAR uint8_t *buffer;
+  uint8_t *buffer;
   int sockfd;
   int opt;
   bool udp_recv_start = true;
@@ -470,30 +466,30 @@ static int iperf_run_udp_server(FAR struct iperf_ctrl_t *ctrl)
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(ctrl->cfg.sport);
-  addr.sin_addr.s_addr = ctrl->cfg.sip;
-  if (bind(sockfd, (FAR struct sockaddr *)&addr, sizeof(addr)) != 0)
+  addr.sin_port = htons(s_iperf_ctrl.cfg.sport);
+  addr.sin_addr.s_addr = s_iperf_ctrl.cfg.sip;
+  if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) != 0)
     {
       iperf_show_socket_error_reason("udp server bind", sockfd);
       return -1;
     }
 
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(ctrl->cfg.sport);
-  addr.sin_addr.s_addr = ctrl->cfg.sip;
+  addr.sin_port = htons(s_iperf_ctrl.cfg.sport);
+  addr.sin_addr.s_addr = s_iperf_ctrl.cfg.sip;
 
-  buffer = ctrl->buffer;
-  want_recv = ctrl->buffer_len;
+  buffer = s_iperf_ctrl.buffer;
+  want_recv = s_iperf_ctrl.buffer_len;
   printf("want recv=%d\n", want_recv);
 
   t.tv_sec = IPERF_SOCKET_RX_TIMEOUT;
   t.tv_usec = 0;
   setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &t, sizeof(t));
 
-  while (!ctrl->finish)
+  while (!s_iperf_ctrl.finish)
     {
       actual_recv = recvfrom(sockfd, buffer, want_recv, 0,
-                             (FAR struct sockaddr *)&addr, &addr_len);
+                             (struct sockaddr *)&addr, &addr_len);
       if (actual_recv < 0)
         {
           iperf_show_socket_error_reason("udp server recv", sockfd);
@@ -502,15 +498,15 @@ static int iperf_run_udp_server(FAR struct iperf_ctrl_t *ctrl)
         {
           if (udp_recv_start == true)
             {
-              iperf_start_report(ctrl);
+              iperf_start_report();
               udp_recv_start = false;
             }
 
-          ctrl->total_len += actual_recv;
+          s_iperf_ctrl.total_len += actual_recv;
         }
     }
 
-  ctrl->finish = true;
+  s_iperf_ctrl.finish = true;
   close(sockfd);
 
   return 0;
@@ -524,10 +520,10 @@ static int iperf_run_udp_server(FAR struct iperf_ctrl_t *ctrl)
  *
  ****************************************************************************/
 
-static int iperf_run_udp_client(FAR struct iperf_ctrl_t *ctrl)
+static int iperf_run_udp_client(void)
 {
-  FAR struct iperf_udp_pkt_t *udp;
   struct sockaddr_in addr;
+  struct iperf_udp_pkt_t *udp;
   int actual_send = 0;
   bool retry = false;
   uint32_t delay = 1;
@@ -548,16 +544,16 @@ static int iperf_run_udp_client(FAR struct iperf_ctrl_t *ctrl)
   setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(ctrl->cfg.dport);
-  addr.sin_addr.s_addr = ctrl->cfg.dip;
+  addr.sin_port = htons(s_iperf_ctrl.cfg.dport);
+  addr.sin_addr.s_addr = s_iperf_ctrl.cfg.dip;
 
-  iperf_start_report(ctrl);
-  buffer = ctrl->buffer;
-  udp = (FAR struct iperf_udp_pkt_t *)buffer;
-  want_send = ctrl->buffer_len;
+  iperf_start_report();
+  buffer = s_iperf_ctrl.buffer;
+  udp = (struct iperf_udp_pkt_t *)buffer;
+  want_send = s_iperf_ctrl.buffer_len;
   id = 0;
 
-  while (!ctrl->finish)
+  while (!s_iperf_ctrl.finish)
     {
       if (false == retry)
         {
@@ -568,7 +564,7 @@ static int iperf_run_udp_client(FAR struct iperf_ctrl_t *ctrl)
 
       retry = false;
       actual_send = sendto(sockfd, buffer, want_send, 0,
-                           (FAR struct sockaddr *)&addr, sizeof(addr));
+                           (struct sockaddr *)&addr, sizeof(addr));
 
       if (actual_send != want_send)
         {
@@ -592,11 +588,11 @@ static int iperf_run_udp_client(FAR struct iperf_ctrl_t *ctrl)
         }
       else
         {
-          ctrl->total_len += actual_send;
+          s_iperf_ctrl.total_len += actual_send;
         }
     }
 
-  ctrl->finish = true;
+  s_iperf_ctrl.finish = true;
   close(sockfd);
 
   return 0;
@@ -610,12 +606,12 @@ static int iperf_run_udp_client(FAR struct iperf_ctrl_t *ctrl)
  *
  ****************************************************************************/
 
-static int iperf_run_tcp_client(FAR struct iperf_ctrl_t *ctrl)
+static int iperf_run_tcp_client(void)
 {
   struct sockaddr_in remote_addr;
-  FAR uint8_t *buffer;
   int actual_send = 0;
   int want_send = 0;
+  uint8_t *buffer;
   int sockfd;
 
   sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -627,20 +623,20 @@ static int iperf_run_tcp_client(FAR struct iperf_ctrl_t *ctrl)
 
   memset(&remote_addr, 0, sizeof(remote_addr));
   remote_addr.sin_family = AF_INET;
-  remote_addr.sin_port = htons(ctrl->cfg.dport);
-  remote_addr.sin_addr.s_addr = ctrl->cfg.dip;
-  if (connect(sockfd, (FAR struct sockaddr *)&remote_addr,
+  remote_addr.sin_port = htons(s_iperf_ctrl.cfg.dport);
+  remote_addr.sin_addr.s_addr = s_iperf_ctrl.cfg.dip;
+  if (connect(sockfd, (struct sockaddr *)&remote_addr,
               sizeof(remote_addr)) < 0)
     {
       iperf_show_socket_error_reason("tcp client connect", sockfd);
       return -1;
     }
 
-  iperf_start_report(ctrl);
-  buffer = ctrl->buffer;
-  want_send = ctrl->buffer_len;
+  iperf_start_report();
+  buffer = s_iperf_ctrl.buffer;
+  want_send = s_iperf_ctrl.buffer_len;
 
-  while (!ctrl->finish)
+  while (!s_iperf_ctrl.finish)
     {
       actual_send = send(sockfd, buffer, want_send, 0);
       if (actual_send <= 0)
@@ -650,11 +646,11 @@ static int iperf_run_tcp_client(FAR struct iperf_ctrl_t *ctrl)
         }
       else
         {
-          ctrl->total_len += actual_send;
+          s_iperf_ctrl.total_len += actual_send;
         }
     }
 
-  ctrl->finish = true;
+  s_iperf_ctrl.finish = true;
   close(sockfd);
 
   return 0;
@@ -668,27 +664,23 @@ static int iperf_run_tcp_client(FAR struct iperf_ctrl_t *ctrl)
  *
  ****************************************************************************/
 
-static void iperf_task_traffic(FAR void *arg)
+static void iperf_task_traffic(void *arg)
 {
-  FAR struct iperf_ctrl_t *ctrl = arg;
-
-  prctl(PR_SET_NAME, IPERF_TRAFFIC_TASK_NAME);
-
-  if (iperf_is_udp_client(ctrl))
+  if (iperf_is_udp_client())
     {
-      iperf_run_udp_client(ctrl);
+      iperf_run_udp_client();
     }
-  else if (iperf_is_udp_server(ctrl))
+  else if (iperf_is_udp_server())
     {
-      iperf_run_udp_server(ctrl);
+      iperf_run_udp_server();
     }
-  else if (iperf_is_tcp_client(ctrl))
+  else if (iperf_is_tcp_client())
     {
-      iperf_run_tcp_client(ctrl);
+      iperf_run_tcp_client();
     }
-  else if (iperf_is_tcp_server(ctrl))
+  else if (iperf_is_tcp_server())
     {
-      iperf_run_tcp_server(ctrl);
+      iperf_run_tcp_server();
     }
   else
     {
@@ -697,28 +689,29 @@ static void iperf_task_traffic(FAR void *arg)
       assert(false);
     }
 
-  if (ctrl->buffer)
+  if (s_iperf_ctrl.buffer)
     {
-      free(ctrl->buffer);
-      ctrl->buffer = NULL;
+      free(s_iperf_ctrl.buffer);
+      s_iperf_ctrl.buffer = NULL;
     }
 
   printf("iperf exit\n");
+  s_iperf_is_running = false;
 
   pthread_exit(NULL);
 }
 
-static uint32_t iperf_get_buffer_len(FAR struct iperf_ctrl_t *ctrl)
+static uint32_t iperf_get_buffer_len(void)
 {
-  if (iperf_is_udp_client(ctrl))
+  if (iperf_is_udp_client())
     {
       return IPERF_UDP_TX_LEN;
     }
-  else if (iperf_is_udp_server(ctrl))
+  else if (iperf_is_udp_server())
     {
       return IPERF_UDP_RX_LEN;
     }
-  else if (iperf_is_tcp_client(ctrl))
+  else if (iperf_is_tcp_client())
     {
       return IPERF_TCP_TX_LEN;
     }
@@ -742,57 +735,54 @@ static uint32_t iperf_get_buffer_len(FAR struct iperf_ctrl_t *ctrl)
  *
  ****************************************************************************/
 
-int iperf_start(FAR struct iperf_cfg_t *cfg)
+int iperf_start(struct iperf_cfg_t *cfg)
 {
-  struct iperf_ctrl_t ctrl;
-  struct sched_param param;
-  pthread_attr_t attr;
-  pthread_t thread;
-  FAR void *retval;
   int ret;
+  void *retval;
+  struct sched_param param;
+  pthread_t thread;
+  pthread_attr_t attr;
 
   if (!cfg)
     {
       return -1;
     }
 
-  memset(&ctrl, 0, sizeof(ctrl));
-  memcpy(&ctrl.cfg, cfg, sizeof(*cfg));
-  ctrl.finish = false;
-  ctrl.buffer_len = iperf_get_buffer_len(&ctrl);
-  ctrl.buffer = (FAR uint8_t *)malloc(ctrl.buffer_len);
-  if (ctrl.buffer == NULL)
+  if (s_iperf_is_running)
+    {
+      printf("iperf is running\n");
+      return -1;
+    }
+
+  memset(&s_iperf_ctrl, 0, sizeof(s_iperf_ctrl));
+  memcpy(&s_iperf_ctrl.cfg, cfg, sizeof(*cfg));
+  s_iperf_is_running = true;
+  s_iperf_ctrl.finish = false;
+  s_iperf_ctrl.buffer_len = iperf_get_buffer_len();
+  s_iperf_ctrl.buffer = (uint8_t *)malloc(s_iperf_ctrl.buffer_len);
+  if (!s_iperf_ctrl.buffer)
     {
       printf("create buffer: not enough memory\n");
       return -1;
     }
 
-  memset(ctrl.buffer, 0, ctrl.buffer_len);
+  memset(s_iperf_ctrl.buffer, 0, s_iperf_ctrl.buffer_len);
   pthread_attr_init(&attr);
   param.sched_priority = IPERF_TRAFFIC_TASK_PRIORITY;
   pthread_attr_setschedparam(&attr, &param);
   pthread_attr_setstacksize(&attr, IPERF_TRAFFIC_TASK_STACK);
-  ret = pthread_create(&thread, &attr, (FAR void *)iperf_task_traffic,
-                       &ctrl);
+  ret = pthread_create(&thread, &attr, (void *)iperf_task_traffic,
+                       IPERF_TRAFFIC_TASK_NAME);
 
   if (ret != 0)
     {
       printf("iperf_task_traffic: create task failed: %d\n", ret);
-      free(ctrl.buffer);
-      ctrl.buffer = NULL;
+      free(s_iperf_ctrl.buffer);
+      s_iperf_ctrl.buffer = NULL;
       return -1;
     }
 
-  pthread_mutex_lock(&g_iperf_ctrl_mutex);
-  sq_addlast((FAR sq_entry_t *)&ctrl, &g_iperf_ctrl_list);
-  pthread_mutex_unlock(&g_iperf_ctrl_mutex);
-
   pthread_join(thread, &retval);
-
-  pthread_mutex_lock(&g_iperf_ctrl_mutex);
-  sq_rem((FAR sq_entry_t *)&ctrl, &g_iperf_ctrl_list);
-  pthread_mutex_unlock(&g_iperf_ctrl_mutex);
-
   return 0;
 }
 
@@ -806,20 +796,16 @@ int iperf_start(FAR struct iperf_cfg_t *cfg)
 
 int iperf_stop(void)
 {
-  FAR struct iperf_ctrl_t *ctrl;
-  FAR sq_entry_t *tmp;
-  FAR sq_entry_t *p;
-
-  pthread_mutex_lock(&g_iperf_ctrl_mutex);
-
-  sq_for_every_safe(&g_iperf_ctrl_list, p, tmp)
+  if (s_iperf_is_running)
     {
-      ctrl = (FAR struct iperf_ctrl_t *)p;
-      ctrl->finish = true;
-      sq_rem(p, &g_iperf_ctrl_list);
+      s_iperf_ctrl.finish = true;
     }
 
-  pthread_mutex_unlock(&g_iperf_ctrl_mutex);
+  while (s_iperf_is_running)
+    {
+      printf("wait current iperf to stop ...\n");
+      usleep(300 * 1000);
+    }
 
   return 0;
 }
