@@ -67,9 +67,6 @@ enum telnetd_state_e
 
 int nsh_telnetmain(int argc, FAR char *argv[])
 {
-  UNUSED(argc);
-  UNUSED(argv);
-
   FAR struct console_stdio_s *pstate = nsh_newconsole(true);
   int ret;
 

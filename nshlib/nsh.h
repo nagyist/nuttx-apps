@@ -56,7 +56,9 @@
 #endif
 
 #ifndef CONFIG_FILE_STREAM
+#  undef CONFIG_NSH_TELNET
 #  undef CONFIG_NSH_FILE_APPS
+#  undef CONFIG_NSH_TELNET
 #  undef CONFIG_NSH_CMDPARMS
 #endif
 
@@ -1212,7 +1214,7 @@ int cmd_pmconfig(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_UPTIME
-  int cmd_uptime(FAR struct nsh_vtbl_s *vtbl, int argc, char **argv);
+  int cmd_uptime(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 #endif
 
 #if defined(CONFIG_NETUTILS_CODECS) && defined(CONFIG_CODECS_BASE64)

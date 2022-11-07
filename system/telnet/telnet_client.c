@@ -115,17 +115,13 @@ static const struct telnet_telopt_s g_telopts[] =
 
 static void send_local_input(char *buffer, int size)
 {
-  static char crlf[] =
-  {
-    '\r', '\n'
-  };
-
+  static char crlf[] = { '\r', '\n' };
   int i;
 
   for (i = 0; i != size; ++i)
     {
-      /* If we got a CR or LF, replace with CRLF NOTE that usually you'd get
-       * a CR in UNIX, but in raw mode we get LF instead (not sure why).
+      /* If we got a CR or LF, replace with CRLF NOTE that usually you'd get a
+       * CR in UNIX, but in raw mode we get LF instead (not sure why).
        */
 
       if (buffer[i] == '\r' || buffer[i] == '\n')
@@ -169,7 +165,6 @@ static void telnet_ev_send(int sock, const char *buffer, size_t size)
             {
               fprintf(stderr, "send() unexpectedly returned 0\n");
             }
-
           telnet_free(g_telnet);
           exit(1);
         }
@@ -204,7 +199,6 @@ static void _event_handler(struct telnet_s *telnet,
     /* Request to enable remote feature (or receipt) */
 
     case TELNET_EV_WILL:
-
       /* We'll agree to turn off our echo if server wants us to stop */
 
       if (ev->neg.telopt == TELNET_TELOPT_ECHO)
@@ -236,7 +230,6 @@ static void _event_handler(struct telnet_s *telnet,
     /* Respond to TTYPE commands */
 
     case TELNET_EV_TTYPE:
-
       /* Respond with our terminal type, if requested */
 
       if (ev->ttype.cmd == TELNET_TTYPE_SEND)
@@ -258,7 +251,6 @@ static void _event_handler(struct telnet_s *telnet,
       exit(1);
 
     default:
-
       /* Ignore */
 
       break;
@@ -270,13 +262,10 @@ static void show_usage(const char *progname, int exitcode)
   fprintf(stderr, "Usage:\n");
   fprintf(stderr, "\t%s <server-IP-addr> [<port>]\n", progname);
   fprintf(stderr, "Where:\n");
-  fprintf(stderr,
-    "\t<server-IP-addr> is the address of the Telnet server.  Either\n");
+  fprintf(stderr, "\t<server-IP-addr> is the address of the Telnet server.  Either\n");
   fprintf(stderr, "\t\tIPv4 form: ddd.ddd.ddd.ddd\n");
-  fprintf(stderr,
-    "\t\tIPv6 form: xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx\n");
-  fprintf(stderr,
-    "\t<port> is the (optional) listening port of the Telnet server.\n");
+  fprintf(stderr, "\t\tIPv6 form: xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx\n");
+  fprintf(stderr, "\t<port> is the (optional) listening port of the Telnet server.\n");
   fprintf(stderr, "\t\tDefault: %u\n", DEFAULT_PORT);
   exit(exitcode);
 }
@@ -297,9 +286,7 @@ int main(int argc, FAR char *argv[])
 #ifdef CONFIG_NET_IPv4
     struct sockaddr_in ipv4;
 #endif
-  }
-
-  server;
+  } server;
   union
   {
 #ifdef CONFIG_NET_IPv6
@@ -308,9 +295,7 @@ int main(int argc, FAR char *argv[])
 #ifdef CONFIG_NET_IPv4
     struct sockaddr_in ipv4;
 #endif
-  }
-
-  local;
+  } local;
   struct pollfd pfd[2];
   sa_family_t family;
   uint16_t addrlen;
@@ -379,7 +364,7 @@ int main(int argc, FAR char *argv[])
   /* Create server socket */
 
   sock = socket(family, SOCK_STREAM, 0);
-  if (sock < 0)
+   if (sock < 0)
     {
       fprintf(stderr, "socket() failed: %d\n", errno);
       return 1;
