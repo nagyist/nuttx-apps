@@ -2143,7 +2143,7 @@ FAR httpd_server *httpd_initialize(FAR httpd_sockaddr *sa)
 {
   FAR httpd_server *hs;
 
-  /* Save the PID of the main thread */
+  /* Save the TID of the main thread */
 
   main_thread = gettid();
 
