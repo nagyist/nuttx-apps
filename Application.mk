@@ -32,12 +32,6 @@ ifneq ($(MAINSRC),)
   endif
 endif
 
-ORIG_BIN =
-ifneq ($(BIN),$(APPDIR)$(DELIM)libapps$(LIBEXT))
-  ORIG_BIN := $(BIN)
-  BIN := $(addprefix $(APPDIR)$(DELIM)staging$(DELIM),$(notdir $(BIN)))
-endif
-
 # The GNU make CURDIR will always be a POSIX-like path with forward slashes
 # as path segment separators.  If we know that this is a native build, then
 # we need to fix up the path so the DELIM will match the actual delimiter.
@@ -48,11 +42,9 @@ else
 CWD = $(CURDIR)
 endif
 
-# Add the static application library to the linked libraries. Don't do this
-# with CONFIG_BUILD_KERNEL as there is no static app library
-ifneq ($(CONFIG_BUILD_KERNEL),y)
-  LDLIBS += $(call CONVERT_PATH,$(BIN))
-endif
+# Add the static application library to the linked libraries.
+
+LDLIBS += $(call CONVERT_PATH,$(BIN))
 
 # When building a module, link with the compiler runtime.
 # This should be linked after libapps. Consider that mbedtls in libapps
@@ -97,7 +89,7 @@ SRCS = $(ASRCS) $(CSRCS) $(CXXSRCS) $(MAINSRC)
 OBJS = $(RAOBJS) $(CAOBJS) $(COBJS) $(CXXOBJS) $(RUSTOBJS) $(ZIGOBJS)
 
 ifneq ($(BUILD_MODULE),y)
-  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJS)
+  OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJ)
 endif
 
 DEPPATH += --dep-path .
@@ -107,7 +99,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: .built
+all:: $(OBJS)
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -132,8 +124,9 @@ define ELFCOMPILERUST
 endef
 
 define ELFCOMPILEZIG
-       @echo "ZIG: $1"
-       $(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) $1 --name $2
+	@echo "ZIG: $1"
+	# Remove target suffix here since zig compiler add .o automatically
+	$(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) --name $(basename $2) $1 
 endef
 
 define ELFLD
@@ -165,18 +158,8 @@ $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
 
-.built: $(OBJS)
-	$(if $(wildcard $<), \
-	  $(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^) \
-	  $(if $(ORIG_BIN), \
-	    $(shell mkdir -p $(dir $(ORIG_BIN))) \
-	    $(shell cp $(call CONVERT_PATH,$(BIN)) $(ORIG_BIN)) \
-	   ), \
-	   $(if $(wildcard $(ORIG_BIN)), \
-	     $(shell cp $(ORIG_BIN) $(call CONVERT_PATH,$(BIN))), \
-	    ) \
-	  )
-	$(Q) touch $@
+archive:
+	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $(OBJS))
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -216,8 +199,8 @@ $(MAINCXXOBJ): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
 $(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
-	$(eval $<_CFLAGS += ${shell $(DEFINE) "$(CC)" main=$(firstword $(MAINNAME))})
-	$(eval $<_CELFFLAGS += ${shell $(DEFINE) "$(CC)" main=$(firstword $(MAINNAME))})
+	$(eval $<_CFLAGS += ${DEFINE_PREFIX}main=$(firstword $(MAINNAME)))
+	$(eval $<_CELFFLAGS += ${DEFINE_PREFIX}main=$(firstword $(MAINNAME)))
 	$(eval MAINNAME=$(filter-out $(firstword $(MAINNAME)),$(MAINNAME)))
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
@@ -235,17 +218,13 @@ install::
 endif # BUILD_MODULE
 
 context::
-ifneq ($(ORIG_BIN),)
-	$(Q) mkdir -p $(dir $(BIN))
-	$(Q) mkdir -p $(dir $(ORIG_BIN))
-endif
 
 ifneq ($(PROGNAME),)
 
 REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
 APPLIST := $(PROGNAME)
 
-$(REGLIST): $(DEPCONFIG) $(firstword $(MAKEFILE_LIST))
+$(REGLIST): $(DEPCONFIG) Makefile
 	$(call REGISTER,$(firstword $(APPLIST)),$(firstword $(PRIORITY)),$(firstword $(STACKSIZE)),$(if $(BUILD_MODULE),,$(firstword $(APPLIST))_main))
 	$(eval APPLIST=$(filter-out $(firstword $(APPLIST)),$(APPLIST)))
 	$(if $(filter-out $(firstword $(PRIORITY)),$(PRIORITY)),$(eval PRIORITY=$(filter-out $(firstword $(PRIORITY)),$(PRIORITY))))
@@ -256,7 +235,7 @@ else
 register::
 endif
 
-.depend: $(firstword $(MAKEFILE_LIST)) $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
+.depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$^) >Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$^) >>Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$^) >>Make.dep
@@ -265,8 +244,6 @@ endif
 depend:: .depend
 
 clean::
-	$(call DELFILE, .built)
-	$(call DELDIR, $(APPDIR)$(DELIM)staging)
 	$(call CLEAN)
 
 distclean:: clean
