@@ -31,9 +31,7 @@ SYMTABOBJ = $(SYMTABSRC:.c=$(OBJEXT))
 # We first remove libapps.a before letting the other rules add objects to it
 # so that we ensure libapps.a does not contain objects from prior build
 
-all:
-	$(RM) $(BIN)
-	$(MAKE) $(BIN)
+all: $(BIN)
 
 .PHONY: import install dirlinks export .depdirs preconfig depend clean distclean
 .PHONY: context clean_context context_all register register_all
@@ -62,12 +60,10 @@ ifeq ($(CONFIG_BUILD_KERNEL),y)
 
 install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
-$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+.import: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) for app in ${CONFIGURED_APPS}; do \
 		$(MAKE) -C "$${app}" archive ; \
 	done
-
-.import: $(BIN)
 	$(Q) install libapps.a $(APPDIR)$(DELIM)import$(DELIM)libs
 	$(Q) $(MAKE) install
 
@@ -85,17 +81,11 @@ else
 ifeq ($(CONFIG_BUILD_LOADABLE),)
 
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) for app in ${CONFIGURED_APPS}; do \
-		$(MAKE) -C "$${app}" archive ; \
-	done
 
 else
 
 $(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) for app in ${CONFIGURED_APPS}; do \
-		$(MAKE) -C "$${app}" archive ; \
-	done
-	$(Q) $(MAKE) install
+	$(Q) $(MAKE) install 
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINDIR) >$@.tmp
 	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
 
@@ -103,7 +93,7 @@ $(SYMTABOBJ): %$(OBJEXT): %.c
 	$(call COMPILE, -fno-lto -fno-builtin $<, $@)
 
 $(BIN): $(SYMTABOBJ)
-	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $^)
+	$(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^)
 
 endif # !CONFIG_BUILD_LOADABLE
 
@@ -160,9 +150,7 @@ ifneq ($(EXPORTDIR),)
 ifneq ($(CONFIG_BUILD_KERNEL),y)
 ifneq ($(BUILTIN_REGISTRY),)
 	for f in "${BUILTIN_REGISTRY}"$(DELIM)*.bdat "${BUILTIN_REGISTRY}"$(DELIM)*.pdat ; do \
-		if [ -f "$${f}" ]; then \
-			cp -f "$${f}" "${EXPORTDIR}"$(DELIM)registry ; \
-		fi \
+		[ -f "$${f}" ] && cp -f "$${f}" "${EXPORTDIR}"$(DELIM)registry ; \
 	done
 endif
 endif
@@ -202,6 +190,7 @@ else
 		fi; \
 	)
 endif
+	$(call DELFILE, *.lock)
 	$(call DELFILE, .depend)
 	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(SYMTABOBJ))
