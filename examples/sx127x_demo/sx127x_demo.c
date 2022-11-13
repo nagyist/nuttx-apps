@@ -464,7 +464,7 @@ int main(int argc, FAR char *argv[])
   if (ret != OK)
     {
       printf("sx127x_main: validate arguments failed!\n");
-      return 0;
+      goto errout;
     }
 
   printf("Start sx127x_demo\n");
@@ -476,7 +476,7 @@ int main(int argc, FAR char *argv[])
     {
       int errcode = errno;
       printf("ERROR: Failed to open device %s: %d\n", DEV_NAME, errcode);
-      return 0;
+      goto errout;
     }
 
   /* Set modulation */
