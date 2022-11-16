@@ -22,7 +22,6 @@
  * Included Files
  ****************************************************************************/
 
-#include <sys/prctl.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <net/if.h>
@@ -185,7 +184,7 @@ static int iperf_show_socket_error_reason(const char *str, int sockfd)
   int err = errno;
   if (err != 0)
     {
-      printf("%s error, error code: %d, reason: %s\n",
+      printf("%s error, error code: %d, reason: %s",
              str, err, strerror(err));
     }
 
@@ -234,8 +233,6 @@ static void iperf_report_task(void *arg)
   struct timespec start;
   uintmax_t now_len;
   int ret;
-
-  prctl(PR_SET_NAME, IPERF_REPORT_TASK_NAME);
 
   now_len = s_iperf_ctrl.total_len;
   ret = clock_gettime(CLOCK_MONOTONIC, &now);
@@ -311,7 +308,7 @@ static int iperf_start_report(void)
   pthread_attr_setstacksize(&attr, IPERF_REPORT_TASK_STACK);
 
   ret = pthread_create(&thread, &attr, (void *)iperf_report_task,
-                       NULL);
+                       IPERF_REPORT_TASK_NAME);
   if (ret != 0)
     {
       printf("iperf_thread: pthread_create failed: %d, %s\n",
@@ -483,7 +480,7 @@ static int iperf_run_udp_server(void)
 
   buffer = s_iperf_ctrl.buffer;
   want_recv = s_iperf_ctrl.buffer_len;
-  printf("want recv=%d\n", want_recv);
+  printf("want recv=%d", want_recv);
 
   t.tv_sec = IPERF_SOCKET_RX_TIMEOUT;
   t.tv_usec = 0;
@@ -585,7 +582,7 @@ static int iperf_run_udp_client(void)
             }
           else
             {
-              printf("udp client send abort: err=%d\n", err);
+              printf("udp client send abort: err=%d", err);
               break;
             }
         }
@@ -669,8 +666,6 @@ static int iperf_run_tcp_client(void)
 
 static void iperf_task_traffic(void *arg)
 {
-  prctl(PR_SET_NAME, IPERF_TRAFFIC_TASK_NAME);
-
   if (iperf_is_udp_client())
     {
       iperf_run_udp_client();
@@ -700,7 +695,7 @@ static void iperf_task_traffic(void *arg)
       s_iperf_ctrl.buffer = NULL;
     }
 
-  printf("iperf exit\n");
+  printf("iperf exit");
   s_iperf_is_running = false;
 
   pthread_exit(NULL);
@@ -777,7 +772,7 @@ int iperf_start(struct iperf_cfg_t *cfg)
   pthread_attr_setschedparam(&attr, &param);
   pthread_attr_setstacksize(&attr, IPERF_TRAFFIC_TASK_STACK);
   ret = pthread_create(&thread, &attr, (void *)iperf_task_traffic,
-                       NULL);
+                       IPERF_TRAFFIC_TASK_NAME);
 
   if (ret != 0)
     {

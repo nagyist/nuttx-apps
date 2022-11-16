@@ -114,7 +114,6 @@ static void get_prime_in_parallel(int n)
   pthread_t thread[MAX_THREADS];
   pthread_attr_t attr;
   pthread_addr_t result;
-  int arg[MAX_THREADS];
   int status;
   int i;
 
@@ -142,10 +141,9 @@ static void get_prime_in_parallel(int n)
 
   for (i = 0; i < n; i++)
     {
-      arg[i] = i;
       printf("Start thread #%d\n", i);
       status = pthread_create(&thread[i], &attr,
-                              thread_func, (FAR void *)&arg[i]);
+                              thread_func, (FAR void *)&i);
       ASSERT(status == OK);
     }
 

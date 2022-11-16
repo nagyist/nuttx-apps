@@ -22,8 +22,6 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-
 #include <sys/types.h>
 
 #include <stdio.h>
@@ -171,9 +169,9 @@ int ftpd_daemon(int s_argc, char **s_argv)
   /* Open FTPD */
 
 #if ADDR_FAMILY == AF_INET6
-  handle = ftpd_open(CONFIG_EXAMPLES_FTPD_PORT, AF_INET6);
+  handle = ftpd_open(AF_INET6);
 #else
-  handle = ftpd_open(CONFIG_EXAMPLES_FTPD_PORT, AF_INET);
+  handle = ftpd_open(AF_INET);
 #endif
 
   if (!handle)
