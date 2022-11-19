@@ -148,7 +148,7 @@ static bool wapi_json_update(FAR cJSON *root,
           int len = strlen(obj->valuestring);
           if (len > 0)
             {
-              if (!strcmp(value, obj->valuestring))
+              if (!strncmp(value, obj->valuestring, len))
                 {
                   return false;
                 }
