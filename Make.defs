@@ -94,10 +94,6 @@ define REGISTER
 	$(Q) touch "$(BUILTIN_REGISTRY)$(DELIM).updated"
 endef
 
-define ARLOCK
-	$(Q) flock $1.lock $(call ARCHIVE, $1, $(2))
-endef
-
 # Standard include path
 
 CFLAGS   += ${INCDIR_PREFIX}"$(APPDIR)$(DELIM)include"
