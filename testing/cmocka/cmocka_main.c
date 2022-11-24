@@ -117,6 +117,7 @@ int main(int argc, FAR char *argv[])
       ret = exec_builtin(builtin->name, bypass, NULL, 0);
       if (ret >= 0)
         {
+
           waitpid(ret, &ret, WUNTRACED);
         }
     }
