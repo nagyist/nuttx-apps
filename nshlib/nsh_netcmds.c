@@ -369,6 +369,7 @@ static int nsh_foreach_netdev(nsh_netdev_callback_t callback,
                               FAR char *cmd)
 {
   FAR struct dirent *entry;
+  uint8_t flags;
   FAR DIR *dir;
   int ret = OK;
 
@@ -393,7 +394,7 @@ static int nsh_foreach_netdev(nsh_netdev_callback_t callback,
        */
 
       if (entry->d_type == DTYPE_FILE &&
-          strcmp(entry->d_name, "stat") != 0)
+          netlib_getifstatus(entry->d_name, &flags) >= 0)
         {
           /* Performt he callback.  It returns any non-zero value, then
            * terminate the search.
@@ -1049,7 +1050,6 @@ int cmd_arp(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   struct sockaddr_in inaddr;
   struct ether_addr mac;
   FAR const char *ifname = NULL;
-  bool badarg = false;
   int option;
   int ret;
 
@@ -1083,22 +1083,19 @@ int cmd_arp(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
             ifname = optarg;
             break;
 
+          case ':':
+            goto errout_missing;
+
           case '?':
           default:
-            badarg = true;
-            break;
+            goto errout_invalid;
         }
-    }
-
-  if (badarg)
-    {
-      goto errout_invalid;
     }
 
 #ifdef CONFIG_NETLINK_ROUTE
   if (opt_type == OPT_TYPE_ARP_LIST)
     {
-      FAR struct arpreq *arptab;
+      FAR struct arp_entry_s *arptab;
       size_t arpsize;
       ssize_t nentries;
       char ipaddr[16];
@@ -1107,8 +1104,8 @@ int cmd_arp(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 
       /* Allocate a buffer to hold the ARP table */
 
-      arpsize = CONFIG_NET_ARPTAB_SIZE * sizeof(struct arpreq);
-      arptab  = (FAR struct arpreq *)malloc(arpsize);
+      arpsize = CONFIG_NET_ARPTAB_SIZE * sizeof(struct arp_entry_s);
+      arptab  = (FAR struct arp_entry_s *)malloc(arpsize);
       if (arptab == NULL)
         {
           nsh_error(vtbl, g_fmtcmdoutofmemory, argv[0]);
@@ -1131,39 +1128,36 @@ int cmd_arp(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
        * xx.xx.xx.xx xx:xx:xx:xx:xx:xx xxxxxxxx[xxxxxxxx]
        */
 
-      nsh_output(vtbl, "%-12s %-17s %s\n",
-                 "IP Address", "Ethernet Address", "Interface");
+      nsh_output(vtbl, "%-12s %-17s Last Access Time\n",
+                 "IP Address", "Ethernet Address");
 
       for (i = 0; i < nentries; i++)
         {
-          FAR struct sockaddr_in *addr;
           FAR uint8_t *ptr;
-
-          if (ifname != NULL &&
-              strcmp(ifname, (FAR char *)arptab[i].arp_dev) != 0)
-            {
-              continue;
-            }
 
           /* Convert the IPv4 address to a string */
 
-          addr = (FAR struct sockaddr_in *)&arptab[i].arp_pa;
-          ptr = (FAR uint8_t *)&addr->sin_addr.s_addr;
+          ptr = (FAR uint8_t *)&arptab[i].at_ipaddr;
           snprintf(ipaddr, 16, "%u.%u.%u.%u",
                    ptr[0], ptr[1], ptr[2], ptr[3]);
 
           /* Convert the MAC address string to a binary */
 
           snprintf(ethaddr, 24, "%02x:%02x:%02x:%02x:%02x:%02x",
-                   (uint8_t)arptab[i].arp_ha.sa_data[0],
-                   (uint8_t)arptab[i].arp_ha.sa_data[1],
-                   (uint8_t)arptab[i].arp_ha.sa_data[2],
-                   (uint8_t)arptab[i].arp_ha.sa_data[3],
-                   (uint8_t)arptab[i].arp_ha.sa_data[4],
-                   (uint8_t)arptab[i].arp_ha.sa_data[5]);
+                   arptab[i].at_ethaddr.ether_addr_octet[0],
+                   arptab[i].at_ethaddr.ether_addr_octet[1],
+                   arptab[i].at_ethaddr.ether_addr_octet[2],
+                   arptab[i].at_ethaddr.ether_addr_octet[3],
+                   arptab[i].at_ethaddr.ether_addr_octet[4],
+                   arptab[i].at_ethaddr.ether_addr_octet[5]);
 
-          nsh_output(vtbl, "%-12s %-17s %s\n",
-                     ipaddr, ethaddr, arptab[i].arp_dev);
+#ifdef CONFIG_SYSTEM_TIME64
+          nsh_output(vtbl, "%-12s %-17s 0x%" PRIx64 "\n",
+                     ipaddr, ethaddr, (uint64_t)arptab[i].at_time);
+#else
+          nsh_output(vtbl, "%-12s %-17s 0x%" PRIx32 "\n",
+                     ipaddr, ethaddr, (uint32_t)arptab[i].at_time);
+#endif
         }
 
       free(arptab);

@@ -276,8 +276,8 @@ int netlib_set_arpmapping(FAR const struct sockaddr_in *inaddr,
                           FAR const uint8_t *macaddr,
                           FAR const char *ifname);
 #ifdef CONFIG_NETLINK_ROUTE
-struct arpreq;
-ssize_t netlib_get_arptable(FAR struct arpreq *arptab,
+struct arp_entry_s;
+ssize_t netlib_get_arptable(FAR struct arp_entry_s *arptab,
                             unsigned int nentries);
 #endif
 #endif
