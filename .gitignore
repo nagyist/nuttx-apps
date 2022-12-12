@@ -17,14 +17,17 @@
 *.swp
 *.sym
 *~
+.built
 .context
 .depend
 .kconfig
+/*.lock
 /bin
 /boot_romfsimg.h
 /external
 /Kconfig
 /romfs.img
+/staging
 /symtab_apps.c
 cscope.out
 Make.dep
