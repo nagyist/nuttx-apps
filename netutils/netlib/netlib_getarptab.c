@@ -30,8 +30,9 @@
 #include <string.h>
 #include <errno.h>
 
-#include <netinet/arp.h>
 #include <netpacket/netlink.h>
+
+#include <nuttx/net/arp.h>
 
 #include "netutils/netlib.h"
 

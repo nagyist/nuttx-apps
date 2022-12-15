@@ -33,6 +33,8 @@
 
 #include <netpacket/netlink.h>
 
+#include <nuttx/net/arp.h>
+
 #include "netutils/netlib.h"
 
 #ifdef CONFIG_NETLINK_ROUTE

@@ -56,6 +56,7 @@
 #include <net/if.h>
 #include <netinet/in.h>
 
+#include <nuttx/net/arp.h>
 #include "netutils/netlib.h"
 
 #ifdef CONFIG_EXAMPLES_WEBSERVER_DHCPC
