@@ -37,7 +37,6 @@
 
 #include "nsh.h"
 #include "nsh_console.h"
-#include "nshlib/nshlib.h"
 
 #ifdef CONFIG_NSH_CONSOLE_LOGIN
 
