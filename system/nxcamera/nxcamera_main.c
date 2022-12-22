@@ -266,7 +266,7 @@ static int nxcamera_cmd_output(FAR struct nxcamera_s *pcam, FAR char *parg)
   int      ret;
   char     path[PATH_MAX];
   FAR char *ext;
-  bool     isimage = false;
+  bool     isimage;
 
   /* First try to open the device directly */
 
