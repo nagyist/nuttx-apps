@@ -20,16 +20,4 @@ config NETUTILS_CJSON_VERSION
 	string "Version number"
 	default "1.7.12"
 
-config NETUTILS_CJSON_TEST
-	bool "enable cjson test"
-	default n
-
-if NETUTILS_CJSON_TEST
-
-config CJSON_UNITY_TEST_DIR
-	string "cjson test dir"
-	default "/data"
-
-endif
-
 endif
