@@ -48,9 +48,9 @@ int main(int argc, FAR char *argv[])
   const char prefix[] = CONFIG_TESTING_CMOCKA_PROGNAME"_";
   FAR const struct builtin_s *builtin;
   int len = strlen(prefix);
-  FAR char *bypass[argc + 1];
-  FAR char *cases[argc + 1];
-  FAR char *skip[argc + 1];
+  FAR char *bypass[argc];
+  FAR char *cases[argc];
+  FAR char *skip[argc];
   int num_bypass = 1;
   int num_cases = 0;
   int num_skip = 0;
@@ -117,7 +117,6 @@ int main(int argc, FAR char *argv[])
       ret = exec_builtin(builtin->name, bypass, NULL, 0);
       if (ret >= 0)
         {
-
           waitpid(ret, &ret, WUNTRACED);
         }
     }

@@ -183,7 +183,7 @@ static void dump_neighbor(void)
 static void dump_arp(void)
 {
   FAR struct arpreq *arptab;
-  FAR char buffer[INET_ADDRSTRLEN];
+  char buffer[INET_ADDRSTRLEN];
   size_t allocsize;
   ssize_t nentries;
   int i;
