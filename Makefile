@@ -21,16 +21,6 @@
 export APPDIR = $(CURDIR)
 include $(APPDIR)/Make.defs
 
-# The GNU make CURDIR will always be a POSIX-like path with forward slashes
-# as path segment separators.  This is fine for the above inclusions but
-# will cause problems later for the native build.  If we know that this is
-# a native build, then we need to fix up the APPDIR path for subsequent
-# use
-
-ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-export APPDIR = $(subst /,\,$(CURDIR))
-endif
-
 # Symbol table for loadable apps.
 
 SYMTABSRC = symtab_apps.c
@@ -41,9 +31,7 @@ SYMTABOBJ = $(SYMTABSRC:.c=$(OBJEXT))
 # We first remove libapps.a before letting the other rules add objects to it
 # so that we ensure libapps.a does not contain objects from prior build
 
-all:
-	$(RM) $(BIN)
-	$(MAKE) $(BIN)
+all: $(BIN)
 
 .PHONY: import install dirlinks export .depdirs preconfig depend clean distclean
 .PHONY: context clean_context context_all register register_all
@@ -72,12 +60,10 @@ ifeq ($(CONFIG_BUILD_KERNEL),y)
 
 install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
-$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+.import: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) for app in ${CONFIGURED_APPS}; do \
 		$(MAKE) -C "$${app}" archive ; \
 	done
-
-.import: $(BIN)
 	$(Q) install libapps.a $(APPDIR)$(DELIM)import$(DELIM)libs
 	$(Q) $(MAKE) install
 
@@ -93,23 +79,13 @@ else
 # symbol table is required.
 
 ifeq ($(CONFIG_BUILD_LOADABLE),)
-ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) for %%G in ($(CONFIGURED_APPS)) do ( $(MAKE) -C %%G archive )
-else
-$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) for app in ${CONFIGURED_APPS}; do \
-		$(MAKE) -C "$${app}" archive ; \
-	done
-endif
 
 else
 
 $(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
-	$(Q) for app in ${CONFIGURED_APPS}; do \
-		$(MAKE) -C "$${app}" archive ; \
-	done
-	$(Q) $(MAKE) install
+	$(Q) $(MAKE) install 
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINDIR) >$@.tmp
 	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
 
@@ -117,7 +93,7 @@ $(SYMTABOBJ): %$(OBJEXT): %.c
 	$(call COMPILE, -fno-lto -fno-builtin $<, $@)
 
 $(BIN): $(SYMTABOBJ)
-	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $^)
+	$(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^)
 
 endif # !CONFIG_BUILD_LOADABLE
 
@@ -174,9 +150,7 @@ ifneq ($(EXPORTDIR),)
 ifneq ($(CONFIG_BUILD_KERNEL),y)
 ifneq ($(BUILTIN_REGISTRY),)
 	for f in "${BUILTIN_REGISTRY}"$(DELIM)*.bdat "${BUILTIN_REGISTRY}"$(DELIM)*.pdat ; do \
-		if [ -f "$${f}" ]; then \
-			cp -f "$${f}" "${EXPORTDIR}"$(DELIM)registry ; \
-		fi \
+		[ -f "$${f}" ] && cp -f "$${f}" "${EXPORTDIR}"$(DELIM)registry ; \
 	done
 endif
 endif
@@ -203,10 +177,10 @@ clean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_clean)
 
 distclean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_distclean)
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-	$(Q) ( if exist  external \
-		echo "********************************************************" \
-		echo "* The external directory/link must be removed manually *" \
-		echo "********************************************************" \
+	$(Q) (if exist  external ( \
+		echo ********************************************************" \
+		echo * The external directory/link must be removed manually *" \
+		echo ********************************************************" \
 	)
 else
 	$(Q) (if [ -e external ]; then \
@@ -216,6 +190,7 @@ else
 		fi; \
 	)
 endif
+	$(call DELFILE, *.lock)
 	$(call DELFILE, .depend)
 	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(SYMTABOBJ))

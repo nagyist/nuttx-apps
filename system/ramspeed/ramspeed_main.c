@@ -344,7 +344,7 @@ static void print_rate(FAR const char *name, size_t bytes,
       printf(RAMSPEED_PREFIX
              "Time-consuming is too short,"
              " please increase the <repeat number>\n");
-      exit(EXIT_FAILURE);
+      return;
     }
 
   rate = (uint64_t)bytes * 1000 / cost_time / 1024;
@@ -367,7 +367,7 @@ static void memcpy_speed_test(FAR void *dest, FAR const void *src,
   uint32_t cnt;
   uint32_t step;
   size_t total_size;
-  irqstate_t flags = 0;
+  irqstate_t flags;
 
   printf("______memcpy performance______\n");
 
@@ -377,11 +377,12 @@ static void memcpy_speed_test(FAR void *dest, FAR const void *src,
 
       if (step < 1024)
         {
-          printf("______do %" PRIu32 " B operation______\n", step);
+          printf("______Perform %" PRIu32 " Bytes access ______\n", step);
         }
       else
         {
-          printf("______do %" PRIu32  " KB operation______\n", step / 1024);
+          printf("______Perform %" PRIu32  " KBytes access ______\n",
+                 step / 1024);
         }
 
       if (irq_disable)
@@ -431,7 +432,7 @@ static void memset_speed_test(FAR void *dest, uint8_t value,
   uint32_t cnt;
   uint32_t step;
   size_t total_size;
-  irqstate_t flags = 0;
+  irqstate_t flags;
 
   printf("______memset performance______\n");
 
@@ -441,11 +442,12 @@ static void memset_speed_test(FAR void *dest, uint8_t value,
 
       if (step < 1024)
         {
-          printf("______do %" PRIu32 " B operation______\n", step);
+          printf("______Perform %" PRIu32 " Bytes access______\n", step);
         }
       else
         {
-          printf("______do %" PRIu32  " KB operation______\n", step / 1024);
+          printf("______Perform %" PRIu32  " KBytes access______\n",
+                 step / 1024);
         }
 
       if (irq_disable)
