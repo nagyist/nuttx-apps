@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/thttpd/tdate_parse.c
+ * apps/netutils/thttpd/timers.c
  * Parse string dates into internal form, stripped-down version
  *
  *   Copyright (C) 2009 Gregory Nutt. All rights reserved.
@@ -7,7 +7,7 @@
  *
  * Derived from the file of the same name in the original THTTPD package:
  *
- *   Copyright Â© 1995 by Jef Poskanzer <jef@mail.acme.com>.
+ *   Copyright © 1995 by Jef Poskanzer <jef@mail.acme.com>.
  *   All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -93,14 +93,11 @@ static int strlong_compare(const void *v1, const void *v2)
 #ifdef HAVE_DAY_OF_WEEK /* Day of week not yet supported by NuttX */
 static int strlong_search(char *str, struct strlong *tab, int n, long *lP)
 {
-  int i;
-  int h;
-  int l;
-  int r;
+  int i, h, l, r;
 
   l = 0;
   h = n - 1;
-  for (; ; )
+  for (;;)
     {
       i = (h + l) / 2;
       r = strcmp(str, tab[i].s);
@@ -138,7 +135,6 @@ static int scan_wday(char *str_wday, long *tm_wdayP)
     {"fri", 5}, {"friday", 5},
     {"sat", 6}, {"saturday", 6},
   };
-
   static int sorted = 0;
 
   if (!sorted)
@@ -147,7 +143,6 @@ static int scan_wday(char *str_wday, long *tm_wdayP)
             sizeof(struct strlong), strlong_compare);
       sorted = 1;
     }
-
   pound_case(str_wday);
   return strlong_search(str_wday, wday_tab,
                         sizeof(wday_tab) / sizeof(struct strlong), tm_wdayP);
@@ -171,7 +166,6 @@ static int scan_mon(char *str_mon, long *tm_monP)
     {"nov", 10}, {"november", 10},
     {"dec", 11}, {"december", 11},
   };
-
   static int sorted = 0;
 
   if (!sorted)
@@ -180,13 +174,11 @@ static int scan_mon(char *str_mon, long *tm_monP)
             sizeof(struct strlong), strlong_compare);
       sorted = 1;
     }
-
   pound_case(str_mon);
   return strlong_search(str_mon, mon_tab,
                         sizeof(mon_tab) / sizeof(struct strlong), tm_monP);
 }
 #endif
-
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -221,13 +213,11 @@ time_t tdate_parse(char *str)
       continue;
     }
 
-  /* And do the sscanfs. WARNING: you can add more formats here, but be
+  /* And do the sscanfs.  WARNING: you can add more formats here, but be
    * careful! You can easily screw up the parsing of existing formats when
-   * you add new ones. The order is important.
-   */
+   * you add new ones.  The order is important. */
 
   /* DD-mth-YY HH:MM:SS GMT */
-
   if (sscanf(cp, "%d-%400[a-zA-Z]-%d %d:%d:%d GMT",
              &tm_mday, str_mon, &tm_year, &tm_hour, &tm_min,
              &tm_sec) == 6 && scan_mon(str_mon, &tm_mon))
@@ -241,7 +231,6 @@ time_t tdate_parse(char *str)
     }
 
   /* DD mth YY HH:MM:SS GMT */
-
   else if (sscanf(cp, "%d %400[a-zA-Z] %d %d:%d:%d GMT",
                   &tm_mday, str_mon, &tm_year, &tm_hour, &tm_min,
                   &tm_sec) == 6 && scan_mon(str_mon, &tm_mon))
@@ -255,7 +244,6 @@ time_t tdate_parse(char *str)
     }
 
   /* HH:MM:SS GMT DD-mth-YY */
-
   else if (sscanf(cp, "%d:%d:%d GMT %d-%400[a-zA-Z]-%d",
                   &tm_hour, &tm_min, &tm_sec, &tm_mday, str_mon,
                   &tm_year) == 6 && scan_mon(str_mon, &tm_mon))
@@ -269,7 +257,6 @@ time_t tdate_parse(char *str)
     }
 
   /* HH:MM:SS GMT DD mth YY */
-
   else if (sscanf(cp, "%d:%d:%d GMT %d %400[a-zA-Z] %d",
                   &tm_hour, &tm_min, &tm_sec, &tm_mday, str_mon,
                   &tm_year) == 6 && scan_mon(str_mon, &tm_mon))
@@ -348,6 +335,6 @@ time_t tdate_parse(char *str)
 
   return mktime(&tm);
 #else
-  return 0; /* For now. */
+  return 0; // for now
 #endif
 }
