@@ -22,7 +22,7 @@
  * Included Files
  ****************************************************************************/
 
-#include <logging/embedlog.h>
+#include <system/embedlog.h>
 #include <errno.h>
 #include <nuttx/config.h>
 #include <stdio.h>

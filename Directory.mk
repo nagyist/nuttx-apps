@@ -22,15 +22,12 @@ include $(APPDIR)/Make.defs
 
 # Sub-directories that have been built or configured.
 
-SUBDIRS       := $(dir $(wildcard */Makefile))
-CONFIGSUBDIRS := $(filter-out $(dir $(wildcard */Kconfig)),$(SUBDIRS))
-CLEANSUBDIRS  += $(dir $(wildcard */.depend))
-CLEANSUBDIRS  += $(dir $(wildcard */.kconfig))
+SUBDIRS       := $(dir $(wildcard *$(DELIM)Makefile))
+CONFIGSUBDIRS := $(filter-out $(dir $(wildcard *$(DELIM)Kconfig)),$(SUBDIRS))
+CLEANSUBDIRS  := $(dir $(wildcard *$(DELIM).built))
+CLEANSUBDIRS  += $(dir $(wildcard *$(DELIM).depend))
+CLEANSUBDIRS  += $(dir $(wildcard *$(DELIM).kconfig))
 CLEANSUBDIRS  := $(sort $(CLEANSUBDIRS))
-ifeq ($(CONFIG_WINDOWS_NATIVE),y)
-	CONFIGSUBDIRS  := $(subst /,\,$(CONFIGSUBDIRS))
-	CLEANSUBDIRS  := $(subst /,\,$(CLEANSUBDIRS))
-endif
 
 all: nothing
 
