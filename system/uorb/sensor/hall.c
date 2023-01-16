@@ -35,8 +35,7 @@ static void print_sensor_hall_message(FAR const struct orb_metadata *meta,
   FAR const struct sensor_hall *message = buffer;
   const orb_abstime now = orb_absolute_time();
 
-  uorbinfo_raw("%s:\ttimestamp: %" PRIu64 " (%" PRIu64 " us ago) "
-               "hall: %" PRIi32 "",
+  uorbinfo_raw("%s:\ttimestamp: %" PRIu64 " (%" PRIu64 " us ago) hall: %d",
                meta->o_name, message->timestamp, now - message->timestamp,
                message->hall);
 }
