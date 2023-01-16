@@ -309,36 +309,6 @@ static int nxlooper_enqueueplaybuffer(FAR struct nxlooper_s *plooper,
 }
 
 /****************************************************************************
- * Name: nxlooper_jointhread
- ****************************************************************************/
-
-static void nxlooper_jointhread(FAR struct nxlooper_s *plooper)
-{
-  FAR void *value;
-  int id = 0;
-
-  if (gettid() == plooper->loop_id)
-    {
-      return;
-    }
-
-  pthread_mutex_lock(&plooper->mutex);
-
-  if (plooper->loop_id > 0)
-    {
-      id = plooper->loop_id;
-      plooper->loop_id = 0;
-    }
-
-  pthread_mutex_unlock(&plooper->mutex);
-
-  if (id > 0)
-    {
-      pthread_join(id, &value);
-    }
-}
-
-/****************************************************************************
  * Name: nxlooper_thread_loopthread
  *
  *  This is the thread that record the raw audio data and enqueues /
@@ -700,7 +670,9 @@ err_out:
 
   /* Cleanup */
 
-  pthread_mutex_lock(&plooper->mutex);
+  while (sem_wait(&plooper->sem) < 0)
+    {
+    }
 
   close(plooper->playdev_fd);             /* Close the play device */
   close(plooper->recorddev_fd);           /* Close the record device */
@@ -710,7 +682,7 @@ err_out:
   mq_unlink(plooper->mqname);             /* Unlink the message queue */
   plooper->loopstate = NXLOOPER_STATE_IDLE;
 
-  pthread_mutex_unlock(&plooper->mutex);
+  sem_post(&plooper->sem);                /* Release the semaphore */
 
   audinfo("Exit\n");
 
@@ -734,7 +706,10 @@ int nxlooper_setvolume(FAR struct nxlooper_s *plooper, uint16_t volume)
   struct audio_caps_desc_s  cap_desc;
   int ret;
 
-  pthread_mutex_lock(&plooper->mutex);
+  /* Thread sync using the semaphore */
+
+  while (sem_wait(&plooper->sem) < 0)
+    ;
 
   /* If we are currently looping, then we need to post a message to
    * the loopthread to perform the volume change operation.  If we
@@ -760,7 +735,7 @@ int nxlooper_setvolume(FAR struct nxlooper_s *plooper, uint16_t volume)
           DEBUGASSERT(errcode > 0);
 
           auderr("ERROR: AUDIOIOC_CONFIGURE ioctl failed: %d\n", errcode);
-          pthread_mutex_unlock(&plooper->mutex);
+          sem_post(&plooper->sem);
           return -errcode;
         }
     }
@@ -768,7 +743,7 @@ int nxlooper_setvolume(FAR struct nxlooper_s *plooper, uint16_t volume)
   /* Store the volume setting */
 
   plooper->volume = volume;
-  pthread_mutex_unlock(&plooper->mutex);
+  sem_post(&plooper->sem);
 
   return OK;
 }
@@ -934,19 +909,20 @@ int nxlooper_setdevice(FAR struct nxlooper_s *plooper,
 int nxlooper_stop(FAR struct nxlooper_s *plooper)
 {
   struct audio_msg_s term_msg;
+  FAR void           *value;
 
   DEBUGASSERT(plooper != NULL);
 
   /* Validate we are not in IDLE state */
 
-  pthread_mutex_lock(&plooper->mutex);
+  sem_wait(&plooper->sem);                      /* Get the semaphore */
   if (plooper->loopstate == NXLOOPER_STATE_IDLE)
     {
-      pthread_mutex_unlock(&plooper->mutex);
+      sem_post(&plooper->sem);                  /* Release the semaphore */
       return OK;
     }
 
-  pthread_mutex_unlock(&plooper->mutex);
+  sem_post(&plooper->sem);
 
   /* Notify the loopback thread that it needs to cancel the loopback */
 
@@ -957,7 +933,8 @@ int nxlooper_stop(FAR struct nxlooper_s *plooper)
 
   /* Join the thread.  The thread will do all the cleanup. */
 
-  nxlooper_jointhread(plooper);
+  pthread_join(plooper->loop_id, &value);
+  plooper->loop_id = 0;
 
   return OK;
 }
@@ -994,6 +971,7 @@ int nxlooper_loopraw(FAR struct nxlooper_s *plooper,
   pthread_attr_t           tattr;
   struct audio_caps_desc_s cap_desc;
   struct ap_buffer_info_s  buf_info;
+  FAR void                 *value;
   int                      ret;
 
   DEBUGASSERT(plooper != NULL);
@@ -1125,7 +1103,10 @@ int nxlooper_loopraw(FAR struct nxlooper_s *plooper,
    * to perform clean-up.
    */
 
-  nxlooper_jointhread(plooper);
+  if (plooper->loop_id != 0)
+    {
+      pthread_join(plooper->loop_id, &value);
+    }
 
   pthread_attr_init(&tattr);
   sparam.sched_priority = sched_get_priority_max(SCHED_FIFO) - 9;
@@ -1226,7 +1207,7 @@ FAR struct nxlooper_s *nxlooper_create(void)
   plooper->precordses = NULL;
 #endif
 
-  pthread_mutex_init(&plooper->mutex, NULL);
+  sem_init(&plooper->sem, 0, 1);
 
   return plooper;
 }
@@ -1247,17 +1228,47 @@ FAR struct nxlooper_s *nxlooper_create(void)
 void nxlooper_release(FAR struct nxlooper_s *plooper)
 {
   int      refcount;
+  FAR void *value;
+
+  /* Grab the semaphore */
+
+  while (sem_wait(&plooper->sem) < 0)
+    {
+      int errcode = errno;
+      DEBUGASSERT(errcode > 0);
+
+      if (errcode != EINTR)
+        {
+          auderr("ERROR: sem_wait failed: %d\n", errcode);
+          return;
+        }
+    }
 
   /* Check if there was a previous thread and join it if there was */
 
-  nxlooper_jointhread(plooper);
+  if (plooper->loop_id != 0)
+    {
+      sem_post(&plooper->sem);
+      pthread_join(plooper->loop_id, &value);
+      plooper->loop_id = 0;
 
-  pthread_mutex_lock(&plooper->mutex);
+      while (sem_wait(&plooper->sem) < 0)
+        {
+          int errcode = errno;
+          DEBUGASSERT(errcode > 0);
+
+          if (errcode != EINTR)
+            {
+              auderr("ERROR: sem_wait failed: %d\n", errcode);
+              return;
+            }
+        }
+    }
 
   /* Reduce the reference count */
 
   refcount = plooper->crefs--;
-  pthread_mutex_unlock(&plooper->mutex);
+  sem_post(&plooper->sem);
 
   /* If the ref count *was* one, then free the context */
 
@@ -1281,12 +1292,24 @@ void nxlooper_release(FAR struct nxlooper_s *plooper)
 
 void nxlooper_reference(FAR struct nxlooper_s *plooper)
 {
-  pthread_mutex_lock(&plooper->mutex);
+  /* Grab the semaphore */
+
+  while (sem_wait(&plooper->sem) < 0)
+    {
+      int errcode = errno;
+      DEBUGASSERT(errcode > 0);
+
+      if (errcode != EINTR)
+        {
+          auderr("ERROR: sem_wait failed: %d\n", errcode);
+          return;
+        }
+    }
 
   /* Increment the reference count */
 
   plooper->crefs++;
-  pthread_mutex_unlock(&plooper->mutex);
+  sem_post(&plooper->sem);
 }
 
 /****************************************************************************

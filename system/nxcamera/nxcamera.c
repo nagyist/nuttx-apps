@@ -168,36 +168,6 @@ static int nxcamera_opendevice(FAR struct nxcamera_s *pcam)
 }
 
 /****************************************************************************
- * Name: nxcameraer_jointhread
- ****************************************************************************/
-
-static void nxcamera_jointhread(FAR struct nxcamera_s *pcam)
-{
-  FAR void *value;
-  int id = 0;
-
-  if (gettid() == pcam->loop_id)
-    {
-      return;
-    }
-
-  pthread_mutex_lock(&pcam->mutex);
-
-  if (pcam->loop_id > 0)
-    {
-      id = pcam->loop_id;
-      pcam->loop_id = 0;
-    }
-
-  pthread_mutex_unlock(&pcam->mutex);
-
-  if (id > 0)
-    {
-      pthread_join(id, &value);
-    }
-}
-
-/****************************************************************************
  * Name: nxcamera_loopthread
  *
  *  This is the thread that streams the video and handles video controls.
@@ -507,6 +477,7 @@ int nxcamera_setfile(FAR struct nxcamera_s *pcam, FAR const char *pfile,
 int nxcamera_stop(FAR struct nxcamera_s *pcam)
 {
   struct video_msg_s term_msg;
+  FAR void           *value;
 
   DEBUGASSERT(pcam != NULL);
 
@@ -530,7 +501,8 @@ int nxcamera_stop(FAR struct nxcamera_s *pcam)
 
   /* Join the thread.  The thread will do all the cleanup. */
 
-  nxcamera_jointhread(pcam);
+  pthread_join(pcam->loop_id, &value);
+  pcam->loop_id = 0;
 
   return OK;
 }
@@ -564,6 +536,7 @@ int nxcamera_stream(FAR struct nxcamera_s *pcam,
   struct mq_attr             attr;
   struct sched_param         sparam;
   pthread_attr_t             tattr;
+  FAR void                   *value;
   int                        ret;
   int                        i;
   struct v4l2_buffer         buf;
@@ -708,7 +681,10 @@ int nxcamera_stream(FAR struct nxcamera_s *pcam,
    * to perform clean-up.
    */
 
-  nxcamera_jointhread(pcam);
+  if (pcam->loop_id != 0)
+    {
+      pthread_join(pcam->loop_id, &value);
+    }
 
   pthread_attr_init(&tattr);
   sparam.sched_priority = sched_get_priority_max(SCHED_FIFO) - 9;
@@ -816,15 +792,23 @@ FAR struct nxcamera_s *nxcamera_create(void)
 
 void nxcamera_release(FAR struct nxcamera_s *pcam)
 {
+  FAR void *value;
   int      refcount;
-
-  /* Check if there was a previous thread and join it if there was */
-
-  nxcamera_jointhread(pcam);
 
   /* Lock the mutex */
 
   pthread_mutex_lock(&pcam->mutex);
+
+  /* Check if there was a previous thread and join it if there was */
+
+  if (pcam->loop_id != 0)
+    {
+      pthread_mutex_unlock(&pcam->mutex);
+      pthread_join(pcam->loop_id, &value);
+      pcam->loop_id = 0;
+
+      pthread_mutex_lock(&pcam->mutex);
+    }
 
   /* Reduce the reference count */
 
