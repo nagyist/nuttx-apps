@@ -32,7 +32,6 @@
 #include <sched.h>
 #include <errno.h>
 #include <signal.h>
-#include <unistd.h>
 
 #include <nuttx/leds/userled.h>
 

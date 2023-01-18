@@ -27,7 +27,6 @@
 #include <assert.h>
 #include <pthread.h>
 #include <stdio.h>
-#include <unistd.h>
 
 #include "logging/nxscope/nxscope.h"
 

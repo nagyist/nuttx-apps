@@ -42,7 +42,6 @@
 #include <signal.h>
 #include <assert.h>
 #include <debug.h>
-#include <unistd.h>
 
 #include <net/if.h>
 #include <arpa/inet.h>

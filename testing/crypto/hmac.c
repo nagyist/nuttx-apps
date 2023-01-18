@@ -22,10 +22,9 @@
 #include <err.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
 #include <crypto/cryptodev.h>
+#include <string.h>
+#include <sys/ioctl.h>
 #include <crypto/md5.h>
 #include <crypto/sha1.h>
 #include <crypto/sha2.h>

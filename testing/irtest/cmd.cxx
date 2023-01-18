@@ -29,7 +29,6 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #include "enum.hpp"
 #include "cmd.hpp"

@@ -47,7 +47,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
-#include <unistd.h>
 
 #include <nuttx/sensors/ioctl.h>
 #include <nuttx/sensors/mlx90614.h>

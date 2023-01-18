@@ -210,8 +210,7 @@ static int nxscope_ch_validate(FAR struct nxscope_s *s, uint8_t ch,
 
       if (s->cribuf_len < next_i)
         {
-          _err("ERROR: no space in cribuf %zu < %zu\n", s->cribuf_len,
-               next_i);
+          _err("ERROR: no space in cribuf %d < %d\n", s->cribuf_len, next_i);
           ret = -ENOBUFS;
           goto errout;
         }
@@ -231,7 +230,7 @@ static int nxscope_ch_validate(FAR struct nxscope_s *s, uint8_t ch,
 
   if (next_i > s->streambuf_len)
     {
-      _err("ERROR: no space for data %zu\n", s->stream_i);
+      _err("ERROR: no space for data %d\n", s->stream_i);
       nxscope_stream_overflow(s);
       ret = -ENOBUFS;
       goto errout;

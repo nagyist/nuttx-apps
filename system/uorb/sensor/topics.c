@@ -24,7 +24,6 @@
 
 #include <fcntl.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/ioctl.h>
 
 #include <sensor/accel.h>

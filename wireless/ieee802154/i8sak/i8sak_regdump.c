@@ -28,7 +28,6 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/ioctl.h>
 #include <nuttx/fs/ioctl.h>
 

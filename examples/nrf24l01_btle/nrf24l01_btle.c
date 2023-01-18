@@ -26,7 +26,6 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <debug.h>
-#include <unistd.h>
 
 #include <nuttx/signal.h>
 #include <nuttx/sensors/dhtxx.h>
@@ -36,7 +35,6 @@
 #include <stdio.h>
 #include <poll.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #include "nrf24l01_btle.h"
 

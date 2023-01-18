@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/param.h>
 #include <unistd.h>
 
 #include <nuttx/input/buttons.h>
@@ -39,6 +38,10 @@
 
 #define DELAY_MS(ms) usleep((ms) * 1000)
 #define ABS(a)       ((a) > 0 ? (a) : -(a))
+
+#ifndef MAX
+#  define MAX(a,b)   ((a) > (b) ? (a) : (b))
+#endif
 
 /****************************************************************************
  * Private Types
