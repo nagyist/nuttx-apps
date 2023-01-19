@@ -37,8 +37,7 @@
 #if defined(CONFIG_NSH_ROMFSETC) || defined(CONFIG_NSH_ROMFSRC)
 static int nsh_script_redirect(FAR struct nsh_vtbl_s *vtbl,
                                FAR const char *cmd,
-                               FAR const char *path,
-                               bool log)
+                               FAR const char *path)
 {
   uint8_t save[SAVE_SIZE];
   int fd = -1;
@@ -53,7 +52,7 @@ static int nsh_script_redirect(FAR struct nsh_vtbl_s *vtbl,
         }
     }
 
-  ret = nsh_script(vtbl, cmd, path, log);
+  ret = nsh_script(vtbl, cmd, path);
   if (CONFIG_NSH_SCRIPT_REDIRECT_PATH[0])
     {
       if (fd > 0)
@@ -80,7 +79,7 @@ static int nsh_script_redirect(FAR struct nsh_vtbl_s *vtbl,
  ****************************************************************************/
 
 int nsh_script(FAR struct nsh_vtbl_s *vtbl, FAR const FAR char *cmd,
-               FAR const char *path, bool log)
+               FAR const char *path)
 {
   FAR char *fullpath;
   FAR FILE *savestream;
@@ -110,10 +109,7 @@ int nsh_script(FAR struct nsh_vtbl_s *vtbl, FAR const FAR char *cmd,
       vtbl->np.np_stream = fopen(fullpath, "r");
       if (!vtbl->np.np_stream)
         {
-          if (log)
-            {
-              nsh_error(vtbl, g_fmtcmdfailed, cmd, "fopen", NSH_ERRNO);
-            }
+          nsh_error(vtbl, g_fmtcmdfailed, cmd, "fopen", NSH_ERRNO);
 
           /* Free the allocated path */
 
@@ -145,7 +141,7 @@ int nsh_script(FAR struct nsh_vtbl_s *vtbl, FAR const FAR char *cmd,
           vtbl->np.np_foffs = ftell(vtbl->np.np_stream);
           vtbl->np.np_loffs = 0;
 
-          if (vtbl->np.np_foffs < 0 && log)
+          if (vtbl->np.np_foffs < 0)
             {
               nsh_error(vtbl, g_fmtcmdfailed, "loop", "ftell", NSH_ERRNO);
             }
@@ -198,11 +194,7 @@ int nsh_script(FAR struct nsh_vtbl_s *vtbl, FAR const FAR char *cmd,
 #ifdef CONFIG_NSH_ROMFSETC
 int nsh_sysinitscript(FAR struct nsh_vtbl_s *vtbl)
 {
-  /* Since most existing systems only use the NSH_INITPATH script file.
-   * Do not log error output for a missing NSH_SYSINITPATH script file.
-   */
-
-  return nsh_script_redirect(vtbl, "sysinit", NSH_SYSINITPATH, false);
+  return nsh_script_redirect(vtbl, "sysinit", NSH_SYSINITPATH);
 }
 #endif
 
@@ -235,7 +227,7 @@ int nsh_initscript(FAR struct nsh_vtbl_s *vtbl)
 
   if (!already)
     {
-      ret = nsh_script_redirect(vtbl, "init", NSH_INITPATH, true);
+      ret = nsh_script_redirect(vtbl, "init", NSH_INITPATH);
 #ifndef CONFIG_NSH_DISABLESCRIPT
       /* Reset the option flags */
 
@@ -258,7 +250,7 @@ int nsh_initscript(FAR struct nsh_vtbl_s *vtbl)
 #ifdef CONFIG_NSH_ROMFSRC
 int nsh_loginscript(FAR struct nsh_vtbl_s *vtbl)
 {
-  return nsh_script_redirect(vtbl, "login", NSH_RCPATH, true);
+  return nsh_script_redirect(vtbl, "login", NSH_RCPATH);
 }
 #endif
 #endif /* CONFIG_NSH_ROMFSETC */

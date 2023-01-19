@@ -10,7 +10,6 @@ config NETUTILS_MQTTC
 		Enable MQTT-C
 
 if NETUTILS_MQTTC
-
 config NETUTILS_MQTTC_WITH_MBEDTLS
 	bool "Enable MQTT-C with mbedtls"
 	default n
