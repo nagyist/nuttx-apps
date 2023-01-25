@@ -148,11 +148,11 @@ static void dump_neighbor(void)
         {
           if ((j + 1) >= nb->ne_addr.na_llsize)
             {
-              printf("%02x", nb->ne_addr.u.na_addr[j]);
+              printf("%02x", nb->ne_addr.u.na_addr);
             }
           else
             {
-              printf("%02x.", nb->ne_addr.u.na_addr[j]);
+              printf("%02x.", nb->ne_addr.u.na_addr);
             }
         }
 
@@ -183,7 +183,7 @@ static void dump_neighbor(void)
 static void dump_arp(void)
 {
   FAR struct arpreq *arptab;
-  char buffer[INET_ADDRSTRLEN];
+  FAR char buffer[INET_ADDRSTRLEN];
   size_t allocsize;
   ssize_t nentries;
   int i;
