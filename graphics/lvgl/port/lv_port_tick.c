@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/tcp_ipc_server/protocol.h
+ * apps/graphics/lvgl/port/lv_port_tick.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,24 +18,44 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_SERVER_TCP_PROTOCOL_H
-#define __APPS_EXAMPLES_SERVER_TCP_PROTOCOL_H
-
 /****************************************************************************
- * Public Types
+ * Included Files
  ****************************************************************************/
 
-typedef struct
+#include <nuttx/config.h>
+#include <time.h>
+#include "lv_port_tick.h"
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Type Declarations
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+uint32_t millis(void)
 {
-  unsigned char opcode;
-  unsigned char msg_size;
-  unsigned char msg[12];
-} protocolo_ipc;
+  struct timespec ts;
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  uint32_t tick = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
 
-void send_msg_to_lpwan (unsigned char *msg, protocolo_ipc *pt_protocol);
-
-#endif /* __APPS_EXAMPLES_SERVER_TCP_PROTOCOL_H */
+  return tick;
+}
