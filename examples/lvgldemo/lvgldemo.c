@@ -33,12 +33,8 @@
 #include <debug.h>
 
 #include <lvgl/lvgl.h>
-#include <lv_porting/lv_porting.h>
+#include <port/lv_port.h>
 #include <lvgl/demos/lv_demos.h>
-
-#if defined(CONFIG_LIBUV)
-#include <uv.h>
-#endif
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -61,17 +57,11 @@
 #  define NEED_BOARDINIT 1
 #endif
 
-#if defined(CONFIG_LV_USE_FBDEV_INTERFACE) \
-&& !defined(CONFIG_LV_FBDEV_ENABLE_WAITFORVSYNC) \
-&& defined(CONFIG_LIBUV)
-#  define USE_UI_UV_LOOP 1
-#endif
-
 /****************************************************************************
  * Private Type Declarations
  ****************************************************************************/
 
-typedef void (*demo_create_func_t)(void);
+typedef CODE void (*demo_create_func_t)(void);
 
 struct func_key_pair_s
 {
@@ -82,10 +72,6 @@ struct func_key_pair_s
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-
-#if defined(USE_UI_UV_LOOP)
-static uv_loop_t g_ui_loop;
-#endif
 
 static const struct func_key_pair_s func_key_pair[] =
 {
@@ -185,14 +171,27 @@ static demo_create_func_t find_demo_create_func(FAR const char *name)
 int main(int argc, FAR char *argv[])
 {
   demo_create_func_t demo_create_func;
+  FAR const char *demo = NULL;
+  const int func_key_pair_len = sizeof(func_key_pair) /
+                                sizeof(func_key_pair[0]);
 
-  if (argc != 2)
+  /* If no arguments are specified and only 1 demo exists, select the demo */
+
+  if (argc == 1 && func_key_pair_len == 2)  /* 2 because of NULL sentinel */
+    {
+      demo = func_key_pair[0].name;
+    }
+  else if (argc != 2)
     {
       show_usage();
       return EXIT_FAILURE;
     }
+  else
+    {
+      demo = argv[1];
+    }
 
-  demo_create_func = find_demo_create_func(argv[1]);
+  demo_create_func = find_demo_create_func(demo);
 
   if (demo_create_func == NULL)
     {
@@ -216,9 +215,9 @@ int main(int argc, FAR char *argv[])
 
   lv_init();
 
-  /* LVGL interface initialization */
+  /* LVGL port initialization */
 
-  lv_porting_init();
+  lv_port_init();
 
   /* LVGL demo creation */
 
@@ -226,17 +225,16 @@ int main(int argc, FAR char *argv[])
 
   /* Handle LVGL tasks */
 
-#if defined(USE_UI_UV_LOOP)
-  uv_loop_init(&g_ui_loop);
-  lv_uv_start(&g_ui_loop);
-  uv_run(&g_ui_loop, UV_RUN_DEFAULT);
-#else
   while (1)
     {
-      lv_timer_handler();
-      usleep(1000);
+      uint32_t idle;
+      idle = lv_timer_handler();
+
+      /* Minimum sleep of 1ms */
+
+      idle = idle ? idle : 1;
+      usleep(idle * 1000);
     }
-#endif
 
   return EXIT_SUCCESS;
 }
