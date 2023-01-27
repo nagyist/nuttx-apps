@@ -33,7 +33,7 @@ libyuv.tar.gz:
 	$(Q) patch -p0 < 0001-include-libyuv-fix-strict-prototype-warning.patch
 
 # Download and unpack tarball if no git repo found
-ifeq ($(wildcard libyuv/.git),)
+ifeq ($(wildcard libyuv/libyuv),)
 context:: libyuv.tar.gz
 
 distclean::
