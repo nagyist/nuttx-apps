@@ -26,6 +26,7 @@
 
 #include <sys/boardctl.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -61,6 +62,11 @@
 
 static void nsh_configstdio(int fd)
 {
+  /* Make sure the stdout, and stderr are flushed */
+
+  fflush(stdout);
+  fflush(stderr);
+
   /* Dup the fd to create standard fd 0-2 */
 
   dup2(fd, 0);

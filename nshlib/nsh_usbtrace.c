@@ -24,7 +24,7 @@
 
 #include <nuttx/config.h>
 
-#include <stdarg.h>
+#include <stdio.h>
 #include <debug.h>
 
 #include <nuttx/usb/usbdev_trace.h>

@@ -24,8 +24,6 @@
 
 #include <nuttx/config.h>
 
-#include <string.h>
-
 #include "nsh.h"
 #include "nsh_console.h"
 

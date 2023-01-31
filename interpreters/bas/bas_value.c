@@ -13,8 +13,8 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
  * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
@@ -136,9 +136,7 @@ static void format_double(struct String *buf, double value, int width,
       else                      /* print decimal numbers or integers, if
                                  * possible */
         {
-          int o;
-          int n;
-          int p = 6;
+          int o, n, p = 6;
 
           while (x >= 10.0 && p > 0)
             {
@@ -155,7 +153,6 @@ static void format_double(struct String *buf, double value, int width,
                 {
                   --buf->length;
                 }
-
               if (buf->character[buf->length - 1] == '.')
                 {
                   --buf->length;
@@ -225,8 +222,8 @@ struct Value *Value_new_NIL(struct Value *this)
   return this;
 }
 
-struct Value *Value_new_ERROR(struct Value *this, int code,
-                              const char *error, ...)
+struct Value *Value_new_ERROR(struct Value *this, int code, const char *error,
+                              ...)
 {
   va_list ap;
   char buf[128];
@@ -1154,7 +1151,6 @@ struct Value *Value_eq(struct Value *this, struct Value *x, int calc)
         Value_new_INTEGER(this, v);
         break;
       }
-
     case V_STRING:
       {
         int v;
@@ -1360,8 +1356,7 @@ struct Value *Value_ne(struct Value *this, struct Value *x, int calc)
   return this;
 }
 
-int Value_exitFor(struct Value *this,
-                  struct Value *limit, struct Value *step)
+int Value_exitFor(struct Value *this, struct Value *limit, struct Value *step)
 {
   switch (this->type)
     {
@@ -1388,8 +1383,7 @@ int Value_exitFor(struct Value *this,
 
 void Value_errorPrefix(struct Value *this, const char *prefix)
 {
-  size_t prefixlen;
-  size_t msglen;
+  size_t prefixlen, msglen;
 
   assert(this->type == V_ERROR);
   prefixlen = strlen(prefix);
@@ -1401,8 +1395,7 @@ void Value_errorPrefix(struct Value *this, const char *prefix)
 
 void Value_errorSuffix(struct Value *this, const char *suffix)
 {
-  size_t suffixlen;
-  size_t msglen;
+  size_t suffixlen, msglen;
 
   assert(this->type == V_ERROR);
   suffixlen = strlen(suffix);
@@ -1416,8 +1409,7 @@ struct Value *Value_new_typeError(struct Value *this, enum ValueType t1,
 {
   assert(typestr[t1]);
   assert(typestr[t2]);
-  return Value_new_ERROR(this, TYPEMISMATCH1,
-                         _(typestr[t1]), _(typestr[t2]));
+  return Value_new_ERROR(this, TYPEMISMATCH1, _(typestr[t1]), _(typestr[t2]));
 }
 
 static void retypeError(struct Value *this, enum ValueType to)
@@ -1624,8 +1616,8 @@ struct String *Value_toString(struct Value *this, struct String *s, char pad,
           {
             if (precision > 0 || exponent)
               {
-                format_double(&buf, (double)this->u.integer, width,
-                              precision, exponent);
+                format_double(&buf, (double)this->u.integer, width, precision,
+                              exponent);
               }
             else if (precision == 0)
               {
@@ -1803,14 +1795,12 @@ struct Value *Value_toStringUsing(struct Value *this, struct String *s,
 
             break;
           }
-
         case '&':              /* output string */
           {
             width = 0;
             ++(*usingpos);
             goto work;
           }
-
         case '*':
         case '$':
         case '0':
@@ -1859,12 +1849,10 @@ struct Value *Value_toStringUsing(struct Value *this, struct String *s,
                   default:
                     ++width;
                   }
-
                 ++(*usingpos);
               }
 
-            if (*usingpos < using->length &&
-                using->character[*usingpos] == '.')
+            if (*usingpos < using->length && using->character[*usingpos] == '.')
               {
                 ++(*usingpos);
                 ++width;
@@ -1884,15 +1872,13 @@ struct Value *Value_toStringUsing(struct Value *this, struct String *s,
                   }
               }
 
-            if (*usingpos < using->length &&
-                using->character[*usingpos] == '-')
+            if (*usingpos < using->length && using->character[*usingpos] == '-')
               {
                 ++(*usingpos);
                 if (headingsign == 0)
                   {
                     headingsign = 2;
                   }
-
                 trailingsign = -1;
               }
             else if (*usingpos < using->length &&
@@ -1903,7 +1889,6 @@ struct Value *Value_toStringUsing(struct Value *this, struct String *s,
                   {
                     headingsign = 2;
                   }
-
                 trailingsign = 1;
               }
 
@@ -1925,8 +1910,8 @@ struct Value *Value_toStringUsing(struct Value *this, struct String *s,
     }
 
 work:
-  Value_toString(this, s, pad, headingsign, width, commas, dollar,
-                 dollarleft, precision, exponent, trailingsign);
+  Value_toString(this, s, pad, headingsign, width, commas, dollar, dollarleft,
+                 precision, exponent, trailingsign);
   if ((this->type == V_INTEGER || this->type == V_REAL) && width == 0 &&
       precision == -1)
     {
@@ -1984,8 +1969,7 @@ struct String *Value_toWrite(struct Value *this, struct String *s)
       {
         double x;
         int p = DBL_DIG;
-        int n;
-        int o;
+        int n, o;
 
         x = (this->u.real < 0.0 ? -this->u.real : this->u.real);
         while (x > 1.0 && p > 0)
@@ -2042,21 +2026,10 @@ struct String *Value_toWrite(struct Value *this, struct String *s)
 
 struct Value *Value_nullValue(enum ValueType type)
 {
-  static struct Value integer =
-  {
-    V_INTEGER
-  };
-
-  static struct Value real =
-  {
-    V_REAL
-  };
-
-  static struct Value string =
-  {
-    V_STRING
-  };
-
+  static struct Value integer = { V_INTEGER };
+  static struct Value real = { V_REAL };
+  static struct Value string = { V_STRING };
+  static char n[] = "";
   static int init = 0;
 
   if (!init)
@@ -2064,8 +2037,7 @@ struct Value *Value_nullValue(enum ValueType type)
       integer.u.integer = 0;
       real.u.real = 0.0;
       string.u.string.length = 0;
-      string.u.string.character = "";
-      init = 1;
+      string.u.string.character = n;
     }
 
   switch (type)

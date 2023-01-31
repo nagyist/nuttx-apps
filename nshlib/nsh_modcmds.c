@@ -24,11 +24,10 @@
 
 #include <nuttx/config.h>
 
-#include <fcntl.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <nuttx/module.h>
-#include <system/readline.h>
 
 #include "nsh.h"
 #include "nsh_console.h"
@@ -104,18 +103,18 @@ int cmd_rmmod(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #if defined(CONFIG_FS_PROCFS) && !defined(CONFIG_FS_PROCFS_EXCLUDE_MODULE)
 int cmd_lsmod(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
-  int fd;
-
   UNUSED(argc);
+
+  FILE *stream;
 
   /* Usage: lsmod */
 
   /* Open /proc/modules */
 
-  fd = open("/proc/modules", O_RDONLY);
-  if (fd < 0)
+  stream = fopen("/proc/modules", "r");
+  if (stream == NULL)
     {
-      nsh_error(vtbl, g_fmtcmdfailed, argv[0], "open", NSH_ERRNO);
+      nsh_error(vtbl, g_fmtcmdfailed, argv[0], "fopen", NSH_ERRNO);
       return ERROR;
     }
 
@@ -127,7 +126,7 @@ int cmd_lsmod(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 
   /* Read each line from the procfs "file" */
 
-  while (readline_fd(vtbl->iobuffer, IOBUFFERSIZE, fd, -1) >= 0)
+  while (fgets(vtbl->iobuffer, IOBUFFERSIZE, stream) != NULL)
     {
       FAR char *modulename;
       FAR char *initializer;
@@ -176,7 +175,7 @@ int cmd_lsmod(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
                  datasize      ? datasize      : "");
     }
 
-  close(fd);
+  fclose(stream);
   return OK;
 }
 #endif /* CONFIG_FS_PROCFS && !CONFIG_FS_PROCFS_EXCLUDE_MODULE */

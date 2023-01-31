@@ -27,7 +27,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/param.h>
 #include <inttypes.h>
 #include <unistd.h>
 #include <string.h>
@@ -51,6 +50,10 @@
 #  define CLEAR_WIDTH (CONFIG_EXAMPLES_PWLINES_LINEWIDTH + 2)
 #else
 #  define CLEAR_WIDTH CONFIG_EXAMPLES_PWLINES_LINEWIDTH
+#endif
+
+#ifndef MIN
+#  define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
 /****************************************************************************

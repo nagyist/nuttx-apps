@@ -73,10 +73,6 @@ int passwd_find(FAR const char *username, FAR struct passwd_s *passwd)
   stream = fopen(CONFIG_FSUTILS_PASSWD_PATH, "r");
   if (stream == NULL)
     {
-      /* Free an I/O buffer for the transfer */
-
-      free(iobuffer);
-
       int errcode = errno;
       DEBUGASSERT(errcode > 0);
       return -errcode;

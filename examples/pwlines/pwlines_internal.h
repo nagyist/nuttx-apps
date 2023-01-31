@@ -30,7 +30,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <semaphore.h>
-#include <sys/param.h>
 #include <fixedmath.h>
 
 #include <nuttx/nx/nx.h>
@@ -150,6 +149,15 @@
 #  else
 #    define CONFIG_EXAMPLES_PWLINES_LINECOLOR RGB8_GOLD
 #  endif
+#endif
+
+/* Helpers */
+
+#ifndef MIN
+#  define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
+#ifndef MAX
+#  define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
 /****************************************************************************
