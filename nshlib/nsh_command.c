@@ -104,6 +104,13 @@ static const struct cmdmap_s g_cmdmap[] =
   { "addroute", cmd_addroute, 3, 4, "<target> [<netmask>] <router>" },
 #endif
 
+#ifdef CONFIG_NSH_ALIAS
+  { "alias",    cmd_alias,    1, CONFIG_NSH_MAXARGUMENTS,
+    "[name[=value] ... ]" },
+  { "unalias",  cmd_unalias,  1, CONFIG_NSH_MAXARGUMENTS,
+    "[-a] name [name ... ]" },
+#endif
+
 #if defined(CONFIG_NET) && defined(CONFIG_NET_ARP) && !defined(CONFIG_NSH_DISABLE_ARP)
   { "arp",      cmd_arp,      1, 6,
     "[-i <ifname>] [-a <ipaddr>|-d <ipaddr>|-s <ipaddr> <hwaddr>]" },
@@ -119,7 +126,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_BASENAME
-  { "basename",  cmd_basename, 2, 3, "<path> [<suffix>]" },
+  { "basename", cmd_basename, 2, 3, "<path> [<suffix>]" },
 #endif
 
 #if defined(CONFIG_BOARDCTL_BOOT_IMAGE) && !defined(CONFIG_NSH_DISABLE_BOOT)
@@ -127,7 +134,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #if !defined(CONFIG_NSH_DISABLESCRIPT) && !defined(CONFIG_NSH_DISABLE_LOOPS)
-  { "break",     cmd_break,   1, 1, NULL },
+  { "break",    cmd_break,    1, 1, NULL },
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_CAT
@@ -272,7 +279,7 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #ifndef CONFIG_DISABLE_MOUNTPOINT
 # if defined(CONFIG_DEV_LOOP) && !defined(CONFIG_NSH_DISABLE_LOSETUP)
-  { "losetup",   cmd_losetup, 3, 6,
+  { "losetup",  cmd_losetup,  3, 6,
     "[-d <dev-path>] | [[-o <offset>] [-r] [-s <sect-size>] "
     "<dev-path> <file-path>]" },
 # endif
@@ -280,7 +287,7 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #ifndef CONFIG_DISABLE_MOUNTPOINT
 # if defined(CONFIG_SMART_DEV_LOOP) && !defined(CONFIG_NSH_DISABLE_LOSMART)
-  { "losmart",   cmd_losmart, 2, 11,
+  { "losmart",  cmd_losmart,  2, 11,
     "[-d <dev-path>] | [[-m <minor>] [-o <offset>] [-e <erase-size>] "
     "[-s <sect-size>] [-r] <file-path>]" },
 # endif
@@ -288,7 +295,7 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #ifndef CONFIG_DISABLE_MOUNTPOINT
 # if defined(CONFIG_MTD_LOOP) && !defined(CONFIG_NSH_DISABLE_LOMTD)
-  { "lomtd",   cmd_lomtd, 3, 9,
+  { "lomtd",    cmd_lomtd,    3, 9,
     "[-d <dev-path>] | [[-o <offset>] [-e <erase-size>] "
     "[-s <sect-size>] <dev-path> <file-path>]]" },
 # endif
@@ -348,10 +355,10 @@ static const struct cmdmap_s g_cmdmap[] =
     defined(CONFIG_FSUTILS_MKSMARTFS)
 # ifndef CONFIG_NSH_DISABLE_MKSMARTFS
 #  ifdef CONFIG_SMARTFS_MULTI_ROOT_DIRS
-  { "mksmartfs",  cmd_mksmartfs,  2, 6,
+  { "mksmartfs", cmd_mksmartfs, 2, 6,
     "[-s <sector-size>] [-f] <path> [<num-root-directories>]" },
 #  else
-  { "mksmartfs",  cmd_mksmartfs,  2, 5, "[-s <sector-size>] [-f] <path>" },
+  { "mksmartfs", cmd_mksmartfs, 2, 5, "[-s <sector-size>] [-f] <path>" },
 #  endif
 # endif
 #endif
@@ -405,12 +412,12 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #if defined(CONFIG_PM) && !defined(CONFIG_NSH_DISABLE_PMCONFIG)
-  { "pmconfig", cmd_pmconfig,  1, 4,
+  { "pmconfig", cmd_pmconfig, 1, 4,
     "[stay|relax] [normal|idle|standby|sleep] [domain]" },
 #endif
 
 #if defined(CONFIG_BOARDCTL_POWEROFF) && !defined(CONFIG_NSH_DISABLE_POWEROFF)
-  { "poweroff", cmd_poweroff,  1, 2, NULL },
+  { "poweroff", cmd_poweroff, 1, 2, NULL },
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_PRINTF
@@ -449,7 +456,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #if defined(CONFIG_BOARDCTL_RESET_CAUSE) && !defined(CONFIG_NSH_DISABLE_RESET_CAUSE)
-  { "resetcause",   cmd_reset_cause,   1, 1, NULL },
+  { "resetcause", cmd_reset_cause, 1, 1, NULL },
 #endif
 
 #ifdef NSH_HAVE_DIROPTS
@@ -523,7 +530,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #if defined(CONFIG_BOARDCTL_SWITCH_BOOT) && !defined(CONFIG_NSH_DISABLE_SWITCHBOOT)
-  { "swtichboot", cmd_switchboot, 2, 2, "<image path>" },
+  { "swtichboot", cmd_swtichboot, 2, 2, "<image path>" },
 #endif
 
 #if !defined(CONFIG_NSH_DISABLESCRIPT) && !defined(CONFIG_NSH_DISABLE_TEST)
@@ -583,10 +590,10 @@ static const struct cmdmap_s g_cmdmap[] =
      defined(CONFIG_NSH_LOGIN_PASSWD) && \
     !defined(CONFIG_FSUTILS_PASSWD_READONLY)
 #  ifndef CONFIG_NSH_DISABLE_USERADD
-  { "useradd",   cmd_useradd, 3, 3, "<username> <password>" },
+  { "useradd",  cmd_useradd,  3, 3, "<username> <password>" },
 #  endif
 #  ifndef CONFIG_NSH_DISABLE_USERDEL
-  { "userdel",   cmd_userdel, 2, 2, "<username>" },
+  { "userdel",  cmd_userdel,  2, 2, "<username>" },
 #  endif
 #endif
 
@@ -626,6 +633,8 @@ static inline void help_cmdlist(FAR struct nsh_vtbl_s *vtbl)
   unsigned int k;
   unsigned int offset;
 
+  /* Extra 5 bytes for tab before newline and '\0' */
+
   char line[HELP_LINELEN + HELP_TABSIZE + 1];
 
   /* Pick an optimal column width */
@@ -639,7 +648,7 @@ static inline void help_cmdlist(FAR struct nsh_vtbl_s *vtbl)
         }
     }
 
-  colwidth += HELP_TABSIZE;
+  colwidth += 2;
 
   /* Determine the number of commands to put on one line */
 
@@ -854,7 +863,7 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
       return;
     }
 
-  column_width += HELP_TABSIZE;
+  column_width += 2;
 
   /* Determine the number of commands to put on one line */
 
@@ -877,7 +886,7 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
   nsh_write(vtbl, g_builtin_prompt, strlen(g_builtin_prompt));
   for (i = 0; i < num_builtin_rows; i++)
     {
-      offset = HELP_TABSIZE;
+      offset = 4;
       memset(line, ' ', offset);
 
       for (j = 0, k = i;

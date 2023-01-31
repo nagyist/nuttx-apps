@@ -122,7 +122,6 @@ static int critmon_process_directory(FAR struct dirent *entryp)
   FAR char *runtime;
   FAR char *endptr;
   FILE *stream;
-  int errcode;
   int len;
   int ret;
 
@@ -135,13 +134,11 @@ static int critmon_process_directory(FAR struct dirent *entryp)
   ret = asprintf(&filepath,
                  CONFIG_SYSTEM_CRITMONITOR_MOUNTPOINT "/%s/status",
                  entryp->d_name);
-  if (ret < 0 || filepath == NULL)
+  if (ret < 0)
     {
-      errcode = errno;
       fprintf(stderr,
-              "Csection Monitor: Failed to create path to status file: %d\n",
-              errcode);
-      return -errcode;
+              "Csection Monitor: Failed to create path to status file\n");
+      return -ENOMEM;
     }
 
   /* Open the status file */
@@ -188,12 +185,10 @@ static int critmon_process_directory(FAR struct dirent *entryp)
   ret = asprintf(&filepath,
                  CONFIG_SYSTEM_CRITMONITOR_MOUNTPOINT "/%s/critmon",
                  entryp->d_name);
-  if (ret < 0 || filepath == NULL)
+  if (ret < 0)
     {
-      errcode = errno;
       fprintf(stderr, "Csection Monitor: "
-              "Failed to create path to Csection file: %d\n",
-              errcode);
+              "Failed to create path to Csection file\n");
       ret = -EINVAL;
       goto errout_with_name;
     }
@@ -253,14 +248,12 @@ static int critmon_process_directory(FAR struct dirent *entryp)
       else
         {
           maxrun = "None";
-          runtime = "None";
         }
     }
   else
     {
       maxcrit = "None";
       maxrun  = "None";
-      runtime = "None";
     }
 
   /* Finally, output the stack info that we gleaned from the procfs */
@@ -336,12 +329,10 @@ static void critmon_global_crit(void)
 
   ret = asprintf(&filepath,
                  CONFIG_SYSTEM_CRITMONITOR_MOUNTPOINT "/critmon");
-  if (ret < 0 || filepath == NULL)
+  if (ret < 0)
     {
-      errcode = errno;
       fprintf(stderr, "Csection Monitor: "
-              "Failed to create path to Csection file: %d\n",
-              errcode);
+              "Failed to create path to Csection file\n");
       return;
     }
 
