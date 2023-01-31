@@ -28,7 +28,6 @@
 
 #include <nuttx/compiler.h>
 
-#include <sys/param.h>
 #include <sys/stat.h>    /* Needed for open */
 #include <stdint.h>
 #include <stdbool.h>
@@ -115,6 +114,12 @@
 #    define HAVE_HWADDR    1
 #    define HAVE_RADIOADDR 1
 #  endif
+#endif
+
+/* Get the larger value */
+
+#ifndef MAX
+#  define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
 /****************************************************************************
