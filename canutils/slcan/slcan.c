@@ -361,7 +361,8 @@ int main(int argc, char *argv[])
 
                           /* set the device name */
 
-                          strlcpy(ifr.ifr_name, argv[1], IFNAMSIZ);
+                          strncpy(ifr.ifr_name, argv[1], IFNAMSIZ - 1);
+                          ifr.ifr_name[IFNAMSIZ - 1] = '\0';
 
                           ifr.ifr_ifru.ifru_can_data.arbi_bitrate =
                             canspeed / 1000; /* Convert bit/s to kbit/s */

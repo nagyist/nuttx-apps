@@ -27,7 +27,6 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>
-#include <unistd.h>
 
 #include <dsp.h>
 

@@ -30,7 +30,6 @@
 #include <nuttx/config.h>
 
 #include <errno.h>
-#include <unistd.h>
 
 #include <nuttx/lcd/ft80x.h>
 

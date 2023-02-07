@@ -50,7 +50,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 #include <nuttx/modem/u-blox.h>
 
@@ -304,9 +303,8 @@ static int ubloxmodem_reset(FAR struct ubloxmodem_cxt *cxt)
 
 static int ubloxmodem_status(FAR struct ubloxmodem_cxt *cxt)
 {
+  int ret, i;
   struct ubxmdm_status status;
-  int ret;
-  int i;
 
   /* Allocate name-value pairs */
 
@@ -344,10 +342,9 @@ static int ubloxmodem_status(FAR struct ubloxmodem_cxt *cxt)
 
 static int ubloxmodem_at(FAR struct ubloxmodem_cxt *cxt)
 {
+  int fd, ret;
   FAR char *atcmd;
   FAR char *resp;
-  int ret;
-  int fd;
 
   atcmd = cxt->argv[2];
   resp  = cxt->argv[3];

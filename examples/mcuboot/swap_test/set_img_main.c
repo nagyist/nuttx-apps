@@ -26,8 +26,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-
 #include <sys/boardctl.h>
 
 #include <bootutil/bootutil_public.h>

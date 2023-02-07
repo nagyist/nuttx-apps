@@ -30,7 +30,6 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <errno.h>
-#include <unistd.h>
 
 #include <nuttx/fs/userfs.h>
 

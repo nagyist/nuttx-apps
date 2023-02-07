@@ -29,7 +29,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <debug.h>
-#include <unistd.h>
 #include <sys/ioctl.h>
 
 #include "platform/configdata.h"

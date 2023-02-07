@@ -34,7 +34,6 @@
 #include <string.h>
 #include <assert.h>
 #include <signal.h>
-#include <unistd.h>
 
 /****************************************************************************
  * Private Data

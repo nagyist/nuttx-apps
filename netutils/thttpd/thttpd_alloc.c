@@ -24,7 +24,6 @@
 
 #include <nuttx/config.h>
 
-#include <sys/param.h>
 #include <sys/types.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -35,6 +34,18 @@
 #include "thttpd_alloc.h"
 
 #ifdef CONFIG_THTTPD
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#ifndef MAX
+#  define MAX(a,b) ((a) > (b) ? (a) : (b))
+#endif
+
+#ifndef MIN
+#  define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
 
 /****************************************************************************
  * Private Data
