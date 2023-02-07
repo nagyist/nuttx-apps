@@ -234,12 +234,6 @@ static const struct cmdmap_s g_cmdmap[] =
   CMD_MAP("false",    cmd_false,    1, 1, NULL),
 #endif
 
-#ifdef CONFIG_FS_PROCFS
-#  ifndef CONFIG_NSH_DISABLE_FDINFO
-  CMD_MAP("fdinfo",   cmd_fdinfo,   1, 2, "[pid]"),
-#  endif
-#endif
-
 #ifndef CONFIG_NSH_DISABLE_FREE
   CMD_MAP("free",     cmd_free,     1, 1, NULL),
 #endif
@@ -660,6 +654,8 @@ static inline void help_cmdlist(FAR struct nsh_vtbl_s *vtbl)
   unsigned int k;
   unsigned int offset;
 
+  /* Extra 5 bytes for tab before newline and '\0' */
+
   char line[HELP_LINELEN + HELP_TABSIZE + 1];
 
   /* Pick an optimal column width */
@@ -673,7 +669,7 @@ static inline void help_cmdlist(FAR struct nsh_vtbl_s *vtbl)
         }
     }
 
-  colwidth += HELP_TABSIZE;
+  colwidth += 2;
 
   /* Determine the number of commands to put on one line */
 
@@ -888,7 +884,7 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
       return;
     }
 
-  column_width += HELP_TABSIZE;
+  column_width += 2;
 
   /* Determine the number of commands to put on one line */
 
@@ -911,7 +907,7 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
   nsh_write(vtbl, g_builtin_prompt, strlen(g_builtin_prompt));
   for (i = 0; i < num_builtin_rows; i++)
     {
-      offset = HELP_TABSIZE;
+      offset = 4;
       memset(line, ' ', offset);
 
       for (j = 0, k = i;
