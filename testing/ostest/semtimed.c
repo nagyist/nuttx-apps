@@ -28,7 +28,6 @@
 #include <time.h>
 #include <sched.h>
 #include <errno.h>
-#include <unistd.h>
 
 #include "ostest.h"
 

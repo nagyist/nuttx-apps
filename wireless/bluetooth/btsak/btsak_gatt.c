@@ -31,7 +31,6 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <unistd.h>
 
 #include <nuttx/wireless/bluetooth/bt_core.h>
 #include <nuttx/wireless/bluetooth/bt_gatt.h>
@@ -84,7 +83,7 @@ static void btsak_cmd_discover_common(FAR struct btsak_s *btsak,
       btsak_gatt_showusage(btsak->progname, argv[0], EXIT_FAILURE);
     }
 
-  strlcpy(btreq.btr_name, btsak->ifname, IFNAMSIZ);
+  strncpy(btreq.btr_name, btsak->ifname, IFNAMSIZ);
   btreq.btr_dtype = (uint8_t)type;
 
   ret = btsak_str2addr(argv[1], btreq.btr_dpeer.val);
@@ -209,7 +208,7 @@ static void btsak_cmd_connect_common(FAR struct btsak_s *btsak, int argc,
 
   /* Perform the IOCTL to start/end the connection */
 
-  strlcpy(btreq.btr_name, btsak->ifname, IFNAMSIZ);
+  strncpy(btreq.btr_name, btsak->ifname, IFNAMSIZ);
 
   sockfd = btsak_socket(btsak);
   if (sockfd >= 0)
@@ -287,7 +286,7 @@ static void btsak_cmd_read_common(FAR struct btsak_s *btsak, int argc,
 
   /* Perform the IOCTL to start the read */
 
-  strlcpy(btreq.btr_name, btsak->ifname, IFNAMSIZ);
+  strncpy(btreq.btr_name, btsak->ifname, IFNAMSIZ);
   btreq.btr_rdsize = HCI_GATTRD_DATA;
   btreq.btr_rddata = data;
 
@@ -372,7 +371,7 @@ void btsak_cmd_gatt_exchange_mtu(FAR struct btsak_s *btsak, int argc,
 
   /* Perform the IOCTL to start the MTU exchange */
 
-  strlcpy(btreq.btr_name, btsak->ifname, IFNAMSIZ);
+  strncpy(btreq.btr_name, btsak->ifname, IFNAMSIZ);
 
   sockfd = btsak_socket(btsak);
   if (sockfd >= 0)
@@ -546,7 +545,7 @@ void btsak_cmd_gatt_write(FAR struct btsak_s *btsak, int argc,
 
   /* Perform the IOCTL to start the read */
 
-  strlcpy(btreq.btr_name, btsak->ifname, IFNAMSIZ);
+  strncpy(btreq.btr_name, btsak->ifname, IFNAMSIZ);
 
   sockfd = btsak_socket(btsak);
   if (sockfd >= 0)

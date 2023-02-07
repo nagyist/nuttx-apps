@@ -26,7 +26,6 @@
 #include <inttypes.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <unistd.h>
 
 #include <nuttx/sensors/bmi160.h>
 

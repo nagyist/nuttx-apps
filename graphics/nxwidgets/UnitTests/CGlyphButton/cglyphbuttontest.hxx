@@ -31,7 +31,6 @@
 #include <cstdio>
 #include <semaphore.h>
 #include <debug.h>
-#include <sys/param.h>
 
 #include <nuttx/nx/nx.h>
 
@@ -60,6 +59,12 @@
 
 #ifndef CONFIG_CGLYPHBUTTONTEST_FONTCOLOR
 #  define CONFIG_CGLYPHBUTTONTEST_FONTCOLOR CONFIG_NXWIDGETS_DEFAULT_FONTCOLOR
+#endif
+
+// Helper macros
+
+#ifndef MAX
+#  define MAX(a,b) ((a) > (b) ? (a) : (b))
 #endif
 
 /////////////////////////////////////////////////////////////////////////////

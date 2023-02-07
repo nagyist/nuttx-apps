@@ -24,7 +24,6 @@
 
 #include <fcntl.h>
 #include <errno.h>
-#include <unistd.h>
 
 #include "defines.h"
 

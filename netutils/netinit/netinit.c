@@ -42,7 +42,6 @@
 #include <signal.h>
 #include <assert.h>
 #include <debug.h>
-#include <unistd.h>
 
 #include <net/if.h>
 #include <arpa/inet.h>
@@ -786,7 +785,7 @@ static int netinit_monitor(void)
       /* Configure to receive a signal on changes in link status */
 
       memset(&ifr, 0, sizeof(struct ifreq));
-      strlcpy(ifr.ifr_name, NET_DEVNAME, IFNAMSIZ);
+      strncpy(ifr.ifr_name, NET_DEVNAME, IFNAMSIZ);
 
       ifr.ifr_mii_notify_event.sigev_notify = SIGEV_SIGNAL;
       ifr.ifr_mii_notify_event.sigev_signo  = CONFIG_NETINIT_SIGNO;

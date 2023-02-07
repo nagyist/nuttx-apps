@@ -25,7 +25,6 @@
 #include <nuttx/config.h>
 
 #include <stdlib.h>
-#include <unistd.h>
 
 #include <nuttx/i2c/i2c_master.h>
 

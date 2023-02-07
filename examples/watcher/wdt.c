@@ -32,8 +32,6 @@
 #include <fcntl.h>
 #include <debug.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
-
 #include "wdt.h"
 #include "task_mn.h"
 

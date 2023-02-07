@@ -31,8 +31,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <unistd.h>
-
 #include <nuttx/note/noteram_driver.h>
 #include "task_mn.h"
 

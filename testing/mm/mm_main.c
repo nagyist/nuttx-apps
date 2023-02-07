@@ -29,7 +29,6 @@
 #include <malloc.h>
 #include <string.h>
 #include <assert.h>
-#include <unistd.h>
 
 #ifdef CONFIG_TESTING_MM_POWEROFF
 #include <sys/boardctl.h>
