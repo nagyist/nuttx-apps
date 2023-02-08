@@ -29,6 +29,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #ifdef CONFIG_EXAMPLES_NXSCOPE_TIMER
 #  include <sys/ioctl.h>
