@@ -166,12 +166,13 @@ int nsh_login(FAR struct console_stdio_s *pstate)
       /* Ask for the login username */
 
       username[0] = '\0';
-      write(OUTFD(pstate), g_userprompt, strlen(g_userprompt));
+      fputs(g_userprompt, pstate->cn_outstream);
+      fflush(pstate->cn_outstream);
 
       /* readline() returns EOF on failure */
 
-      ret = readline_fd(pstate->cn_line, CONFIG_NSH_LINELEN,
-                        INFD(pstate), OUTFD(pstate));
+      ret = readline(pstate->cn_line, CONFIG_NSH_LINELEN,
+                     INSTREAM(pstate), OUTSTREAM(pstate));
       if (ret != EOF)
         {
           /* Parse out the username */
@@ -187,16 +188,18 @@ int nsh_login(FAR struct console_stdio_s *pstate)
 
 #ifdef CONFIG_NSH_PLATFORM_CHALLENGE
       platform_challenge(challenge, sizeof(challenge));
-      write(OUTFD(pstate), challenge, strlen(challenge));
+      fputs(challenge, pstate->cn_outstream);
+      fflush(pstate->cn_outstream);
 #endif
 
       /* Ask for the login password */
 
-      write(OUTFD(pstate), g_passwordprompt, strlen(g_passwordprompt));
+      fputs(g_passwordprompt, pstate->cn_outstream);
+      fflush(pstate->cn_outstream);
 
       password[0] = '\0';
-      if (readline_fd(pstate->cn_line, CONFIG_NSH_LINELEN,
-                      INFD(pstate), -1) > 0)
+      if (fgets(pstate->cn_line, CONFIG_NSH_LINELEN,
+                INSTREAM(pstate)) != NULL)
         {
           /* Parse out the password */
 
@@ -223,13 +226,14 @@ int nsh_login(FAR struct console_stdio_s *pstate)
 #  error No user verification method selected
 #endif
             {
-              write(OUTFD(pstate), g_loginsuccess, strlen(g_loginsuccess));
+              fputs(g_loginsuccess, pstate->cn_outstream);
+              fflush(pstate->cn_outstream);
               return OK;
             }
           else
             {
-              write(OUTFD(pstate), g_badcredentials,
-                    strlen(g_badcredentials));
+              fputs(g_badcredentials, pstate->cn_outstream);
+              fflush(pstate->cn_outstream);
 #if CONFIG_NSH_LOGIN_FAILDELAY > 0
               usleep(CONFIG_NSH_LOGIN_FAILDELAY * 1000L);
 #endif
@@ -239,7 +243,8 @@ int nsh_login(FAR struct console_stdio_s *pstate)
 
   /* Too many failed login attempts */
 
-  write(OUTFD(pstate), g_loginfailure, strlen(g_loginsuccess));
+  fputs(g_loginfailure, pstate->cn_outstream);
+  fflush(pstate->cn_outstream);
   return -1;
 }
 
