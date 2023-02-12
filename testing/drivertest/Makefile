@@ -86,4 +86,9 @@ MAINSRC  += drivertest_audio.c
 PROGNAME += cmocka_driver_audio
 endif
 
+ifneq ($(CONFIG_DEV_GPIO),)
+PROGNAME += cmocka_driver_gpio
+MAINSRC  += drivertest_gpio.c
+endif
+
 include $(APPDIR)/Application.mk
