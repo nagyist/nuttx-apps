@@ -28,7 +28,6 @@
 #include <sched.h>
 #include <errno.h>
 #include <debug.h>
-#include <unistd.h>
 
 #include <net/if.h>
 #include <arpa/inet.h>

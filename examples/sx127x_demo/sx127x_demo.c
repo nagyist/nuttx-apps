@@ -28,6 +28,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 
+#include <unistd.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>

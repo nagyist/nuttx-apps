@@ -33,7 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
 
 #include "nsh.h"
 #include "nsh_console.h"

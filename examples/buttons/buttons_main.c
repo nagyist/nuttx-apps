@@ -33,7 +33,6 @@
 #include <fcntl.h>
 #include <sched.h>
 #include <errno.h>
-#include <unistd.h>
 
 #include <nuttx/input/buttons.h>
 

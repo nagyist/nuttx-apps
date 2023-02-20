@@ -37,7 +37,6 @@
 
 #include <cstdio>
 #include <cerrno>
-#include <sys/param.h>
 
 #include <nuttx/nx/nxbe.h>
 
@@ -64,6 +63,10 @@
 #define MINWIDTH      0             // had been 60
 
 #define makemult(a,b) ((b == 1) ? (a) : (((int)((a) / (b))) * (b)))
+
+#ifndef MIN
+#  define MIN(a,b)    ((a) < (b) ? (a) : (b))
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 // Class Implementations

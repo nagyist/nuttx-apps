@@ -29,6 +29,11 @@ MAINSRC  += drivertest_simple.c
 PROGNAME += cmocka_driver_simple
 endif
 
+ifeq ($(CONFIG_BCH),y)
+PROGNAME += cmocka_driver_block
+MAINSRC  += drivertest_block.c
+endif
+
 ifneq ($(CONFIG_RTC),)
 MAINSRC  += drivertest_rtc.c
 PROGNAME += cmocka_driver_rtc
@@ -39,29 +44,46 @@ MAINSRC  += drivertest_timer.c
 PROGNAME += cmocka_driver_timer
 endif
 
-ifneq ($(CONFIG_PWM),)
-MAINSRC  += drivertest_pwm.c
-PROGNAME += cmocka_driver_pwm
-endif
-
 ifneq ($(CONFIG_WATCHDOG),)
 MAINSRC  += drivertest_watchdog.c
 PROGNAME += cmocka_driver_watchdog
 endif
 
-ifneq ($(CONFIG_BCH),)
-PROGNAME += cmocka_driver_block
-MAINSRC  += drivertest_block.c
+ifneq ($(CONFIG_PWM),)
+MAINSRC  += drivertest_pwm.c
+PROGNAME += cmocka_driver_pwm
 endif
 
-ifneq ($(CONFIG_DEV_GPIO),)
+ifneq ($(CONFIG_I2C)$(CONFIG_SPI),)
+ifneq ($(CONFIG_SENSORS_BMI160),)
+MAINSRC  += drivertest_i2c_spi.c
+PROGNAME += cmocka_driver_i2c_spi
+endif
+endif
+
+ifeq ($(CONFIG_DEV_GPIO),y)
 PROGNAME += cmocka_driver_gpio
 MAINSRC  += drivertest_gpio.c
 endif
 
-ifneq ($(CONFIG_RELAY),)
-MAINSRC  += drivertest_relay.c
-PROGNAME += cmocka_driver_relay
+ifneq ($(CONFIG_LCD_FRAMEBUFFER)$(CONFIG_SIM_FRAMEBUFFER),)
+MAINSRC  += drivertest_framebuffer.c
+PROGNAME += cmocka_driver_framebuffer
+endif
+
+ifneq ($(CONFIG_LCD_DEV),)
+MAINSRC  += drivertest_lcd.c
+PROGNAME += cmocka_driver_lcd
+endif
+
+ifneq ($(CONFIG_SERIAL),)
+MAINSRC  += drivertest_uart.c
+PROGNAME += cmocka_driver_uart
+endif
+
+ifneq ($(CONFIG_AUDIO),)
+MAINSRC  += drivertest_audio.c
+PROGNAME += cmocka_driver_audio
 endif
 
 ifneq ($(CONFIG_RELAY),)

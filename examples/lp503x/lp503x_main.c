@@ -32,8 +32,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include <unistd.h>
-
 #include "system/readline.h"
 
 #include <nuttx/leds/lp503x.h>

@@ -210,8 +210,7 @@ static int nxscope_ch_validate(FAR struct nxscope_s *s, uint8_t ch,
 
       if (s->cribuf_len < next_i)
         {
-          _err("ERROR: no space in cribuf %zu < %zu\n", s->cribuf_len,
-               next_i);
+          _err("ERROR: no space in cribuf %d < %d\n", s->cribuf_len, next_i);
           ret = -ENOBUFS;
           goto errout;
         }
@@ -231,7 +230,7 @@ static int nxscope_ch_validate(FAR struct nxscope_s *s, uint8_t ch,
 
   if (next_i > s->streambuf_len)
     {
-      _err("ERROR: no space for data %zu\n", s->stream_i);
+      _err("ERROR: no space for data %d\n", s->stream_i);
       nxscope_stream_overflow(s);
       ret = -ENOBUFS;
       goto errout;
@@ -360,14 +359,13 @@ static int nxscope_put_vector(FAR uint8_t *buff, uint8_t type, FAR void *val,
 
       case NXSCOPE_TYPE_CHAR:
         {
-          /* Copy string bytes and fill with '\0' */
+          /* Copy only string bytes + '\0' */
 
           DEBUGASSERT(val);
 
           strncpy((FAR char *)buff, (FAR const char *)val, d);
           j += strnlen((FAR char *)buff, d);
-          memset(&buff[j], '\0', d - j);
-          j = d;
+          buff[j++] = '\0';
 
           break;
         }

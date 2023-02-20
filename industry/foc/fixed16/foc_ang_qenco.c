@@ -30,7 +30,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <fcntl.h>
-#include <unistd.h>
 
 #include <nuttx/sensors/qencoder.h>
 

@@ -31,7 +31,6 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <unistd.h>
 
 #include <nuttx/fs/fs.h>
 #include <nuttx/mtd/mtd.h>

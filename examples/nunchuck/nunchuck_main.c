@@ -25,14 +25,12 @@
 #include <nuttx/config.h>
 
 #include <sys/ioctl.h>
-#include <sys/param.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <fixedmath.h>
 #include <debug.h>
-#include <unistd.h>
 
 #include <nuttx/input/nunchuck.h>
 
@@ -51,6 +49,16 @@
 #endif
 
 #define FULL_RANGE 16
+
+/* Helpers ******************************************************************/
+
+#ifndef MIN
+#  define MIN(a,b) ((a) < (b) ? (a) : (b))
+#endif
+
+#ifndef MAX
+#  define MAX(a,b) ((a) > (b) ? (a) : (b))
+#endif
 
 /****************************************************************************
  * Private Function Prototypes

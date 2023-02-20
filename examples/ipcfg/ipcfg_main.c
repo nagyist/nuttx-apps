@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <debug.h>
-#include <unistd.h>
 
 #include <arpa/inet.h>
 

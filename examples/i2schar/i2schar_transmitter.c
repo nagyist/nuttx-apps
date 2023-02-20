@@ -30,7 +30,6 @@
 #include <pthread.h>
 #include <errno.h>
 #include <debug.h>
-#include <unistd.h>
 
 #include <nuttx/audio/audio.h>
 

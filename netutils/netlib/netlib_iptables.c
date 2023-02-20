@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <unistd.h>
 
 #include <nuttx/net/netconfig.h>
 #include <nuttx/net/netfilter/ip_tables.h>
