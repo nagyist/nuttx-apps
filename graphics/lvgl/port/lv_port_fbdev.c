@@ -228,6 +228,16 @@ static void fbdev_disp_vsync_refr(FAR lv_timer_t *timer)
 #endif /* CONFIG_FB_SYNC */
 
 /****************************************************************************
+ * Name: fbdev_refr_start
+ ****************************************************************************/
+
+static void fbdev_refr_start(FAR lv_disp_drv_t *disp_drv)
+{
+  FAR struct fbdev_obj_s *fbdev_obj = disp_drv->user_data;
+  ioctl(fbdev_obj->fd, FBIO_CLEARNOTIFY, NULL);
+}
+
+/****************************************************************************
  * Name: fbdev_render_start
  ****************************************************************************/
 
@@ -499,6 +509,7 @@ static FAR lv_disp_t *fbdev_init(FAR struct fbdev_obj_s *state)
   disp_drv->user_data = fbdev_obj;
   disp_drv->hor_res = fb_xres;
   disp_drv->ver_res = fb_yres;
+  disp_drv->refr_start_cb = fbdev_refr_start;
 
   if (fbdev_obj->double_buffer)
     {
