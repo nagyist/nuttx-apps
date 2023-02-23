@@ -323,14 +323,13 @@ static int user_main(int argc, char *argv[])
       check_test_memory_usage();
 #endif
 
-#ifdef CONFIG_DEV_NULL
       /* Checkout /dev/null */
 
+#ifdef CONFIG_DEV_NULL
       printf("\nuser_main: /dev/null test\n");
-      dev_null();
-#endif
-
+      dev_null_test();
       check_test_memory_usage();
+#endif
 
 #ifdef CONFIG_TESTING_OSTEST_AIO
       /* Check asynchronous I/O */
