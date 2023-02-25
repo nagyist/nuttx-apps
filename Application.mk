@@ -32,12 +32,6 @@ ifneq ($(MAINSRC),)
   endif
 endif
 
-ORIG_BIN =
-ifneq ($(BIN),$(APPDIR)$(DELIM)libapps$(LIBEXT))
-  ORIG_BIN := $(BIN)
-  BIN := $(addprefix $(APPDIR)$(DELIM)staging$(DELIM),$(notdir $(BIN)))
-endif
-
 # The GNU make CURDIR will always be a POSIX-like path with forward slashes
 # as path segment separators.  If we know that this is a native build, then
 # we need to fix up the path so the DELIM will match the actual delimiter.
@@ -110,7 +104,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: .built
+all:: $(OBJS)
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -175,28 +169,8 @@ $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
 
-define TESTANDCOPYFILE
-	if [ -f $2 ]; then \
-		if ! cmp -s $1 $2; then \
-			cp $1 $2; \
-		fi \
-	elif [ -f $1 ]; then \
-		cp $1 $2; \
-	fi
-endef
-
-.built: $(OBJS)
-	$(if $(wildcard $<), \
-	  $(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^) \
-	  $(if $(ORIG_BIN), \
-	    $(shell mkdir -p $(dir $(ORIG_BIN))) \
-	    $(shell $(call TESTANDCOPYFILE,$(call CONVERT_PATH,$(BIN)),$(ORIG_BIN))) \
-	   ), \
-	   $(if $(wildcard $(ORIG_BIN)), \
-	     $(shell $(call TESTANDCOPYFILE,$(ORIG_BIN),$(call CONVERT_PATH,$(BIN)))) \
-	    ) \
-	  )
-	$(Q) touch $@
+archive:
+	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $(OBJS))
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -261,7 +235,7 @@ ifneq ($(PROGNAME),)
 REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
 APPLIST := $(PROGNAME)
 
-$(REGLIST): $(DEPCONFIG) $(firstword $(MAKEFILE_LIST))
+$(REGLIST): $(DEPCONFIG) Makefile
 	$(call REGISTER,$(firstword $(APPLIST)),$(firstword $(PRIORITY)),$(firstword $(STACKSIZE)),$(if $(BUILD_MODULE),,$(firstword $(APPLIST))_main))
 	$(eval APPLIST=$(filter-out $(firstword $(APPLIST)),$(APPLIST)))
 	$(if $(filter-out $(firstword $(PRIORITY)),$(PRIORITY)),$(eval PRIORITY=$(filter-out $(firstword $(PRIORITY)),$(PRIORITY))))
@@ -272,21 +246,15 @@ else
 register::
 endif
 
-.depend: $(firstword $(MAKEFILE_LIST)) $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
+.depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$^) >Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$^) >>Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$^) >>Make.dep
 	$(Q) touch $@
 
 depend:: .depend
-ifneq ($(ORIG_BIN),)
-	$(Q) mkdir -p $(dir $(BIN))
-	$(Q) mkdir -p $(dir $(ORIG_BIN))
-endif
 
 clean::
-	$(call DELFILE, .built)
-	$(call DELDIR, $(APPDIR)$(DELIM)staging)
 	$(call CLEAN)
 
 distclean:: clean
