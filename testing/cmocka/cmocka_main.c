@@ -31,7 +31,6 @@
 #include <setjmp.h>
 #include <stdint.h>
 #include <cmocka.h>
-#include <syslog.h>
 #include <sys/wait.h>
 
 #include <builtin/builtin.h>
@@ -91,7 +90,6 @@ int main(int argc, FAR char *argv[])
       cmocka_set_skip_filter(skip[i]);
     }
 
-  syslog(LOG_INFO, "Cmocka Test Start.");
   for (i = 0; (builtin = builtin_for_index(i)) != NULL; i++)
     {
       if (builtin->main == NULL ||
@@ -123,6 +121,5 @@ int main(int argc, FAR char *argv[])
         }
     }
 
-  syslog(LOG_INFO, "Cmocka Test Completed.");
   return 0;
 }
