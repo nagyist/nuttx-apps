@@ -56,17 +56,6 @@
 #  define LOAD_FRAC(x) (LOAD_INT(((x) & (FIXED_1 - 1)) * 100))
 #endif
 
-#if CONFIG_MM_BACKTRACE >= 0 && !defined(CONFIG_NSH_DISABLE_PSHEAPUSAGE)
-#  define PS_SHOW_HEAPSIZE
-#endif
-
-#ifndef CONFIG_NSH_DISABLE_PSSTACKUSAGE
-#  define PS_SHOW_STACKSIZE
-#  ifdef CONFIG_STACK_COLORATION
-#    define PS_SHOW_STACKUSAGE
-#  endif
-#endif
-
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -352,20 +341,17 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
   /* Finally, print the status information */
 
-  nsh_output(vtbl,
-             "%5s %5s "
+  nsh_output(vtbl, "%5s ", entryp->d_name);
+  nsh_output(vtbl, "%5s ", status.td_groupid);
+
 #ifdef CONFIG_SMP
-             "%3s "
+  nsh_output(vtbl, "%3s ", status.td_cpu);
 #endif
 
-             "%3s %-8s %-7s %3s %-8s %-9s %-8s ",
-             entryp->d_name, status.td_groupid,
-#ifdef CONFIG_SMP
-             status.td_cpu,
-#endif
+  nsh_output(vtbl, "%3s %-8s %-7s %3s %-8s %-9s ",
              status.td_priority, status.td_policy, status.td_type,
-             status.td_flags, status.td_state, status.td_event,
-             status.td_sigmask);
+             status.td_flags, status.td_state, status.td_event);
+  nsh_output(vtbl, "%-8s ", status.td_sigmask);
 
 #if CONFIG_MM_BACKTRACE >= 0 && !defined(CONFIG_NSH_DISABLE_PSHEAPUSAGE)
   /* Get the Heap AllocSize */
@@ -426,6 +412,7 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
         }
     }
 
+  nsh_output(vtbl, "%08lu ", heap_size);
 #endif
 
 #if !defined(CONFIG_NSH_DISABLE_PSSTACKUSAGE)
@@ -493,7 +480,10 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
         }
     }
 
+  nsh_output(vtbl, "%06lu ", stack_size);
+
 #ifdef CONFIG_STACK_COLORATION
+  nsh_output(vtbl, "%06lu ", stack_used);
 
   if (stack_size > 0 && stack_used > 0)
     {
@@ -501,6 +491,12 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
       stack_filled = 10 * 100 * stack_used / stack_size;
     }
+
+  /* Additionally print a '!' if the stack is filled more than 80% */
+
+  nsh_output(vtbl, "%3lu.%lu%%%c ",
+             stack_filled / 10, stack_filled % 10,
+             (stack_filled >= 10 * 80 ? '!' : ' '));
 #endif
 #endif
 
@@ -524,40 +520,8 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
           vtbl->iobuffer[0] = '\0';
         }
     }
-#endif
 
-#if defined(PS_SHOW_HEAPSIZE) || defined (PS_SHOW_STACKSIZE) || \
-    defined (PS_SHOW_STACKUSAGE) || defined (NSH_HAVE_CPULOAD)
-    nsh_output(vtbl,
-#ifdef PS_SHOW_HEAPSIZE
-               "%08lu "
-#endif
-#ifdef PS_SHOW_STACKSIZE
-               "%06lu "
-#endif
-#ifdef PS_SHOW_STACKUSAGE
-               "%06lu "
-               "%3lu.%lu%%%c "
-#endif
-#ifdef NSH_HAVE_CPULOAD
-               "%6s "
-#endif
-#if CONFIG_MM_BACKTRACE >= 0 && !defined(CONFIG_NSH_DISABLE_PSHEAPUSAGE)
-               , heap_size
-#endif
-#if !defined(CONFIG_NSH_DISABLE_PSSTACKUSAGE)
-               , stack_size
-#endif
-#ifdef PS_SHOW_STACKUSAGE
-               , stack_used,
-               stack_filled / 10,
-               stack_filled % 10,
-               (stack_filled >= 10 * 80 ? '!' : ' ')
-#endif
-#ifdef NSH_HAVE_CPULOAD
-               , nsh_trimspaces(vtbl->iobuffer)
-#endif
-             );
+  nsh_output(vtbl, "%6s ", nsh_trimspaces(vtbl->iobuffer));
 #endif
 
   /* Read the task/thread command line */
@@ -622,47 +586,33 @@ int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   UNUSED(argc);
   UNUSED(argv);
 
-  nsh_output(vtbl, "%5s %5s "
+  nsh_output(vtbl, "%5s ", "PID");
+  nsh_output(vtbl, "%5s ", "GROUP");
+
 #ifdef CONFIG_SMP
-                   "%3s "
+  nsh_output(vtbl, "%3s ", "CPU");
 #endif
-                   "%3s %-8s %-7s %3s %-8s %-9s "
-                   "%-8s "
+
+  nsh_output(vtbl, "%3s %-8s %-7s %3s %-8s %-9s ",
+             "PRI", "POLICY", "TYPE", "NPX", "STATE", "EVENT");
+  nsh_output(vtbl, "%-8s ", "SIGMASK");
+
 #if CONFIG_MM_BACKTRACE >= 0 && !defined(CONFIG_NSH_DISABLE_PSHEAPUSAGE)
-                   "%8s "
+  nsh_output(vtbl, "%8s ", "HEAP");
 #endif
+
 #if !defined(CONFIG_NSH_DISABLE_PSSTACKUSAGE)
-                   "%6s "
+  nsh_output(vtbl, "%6s ", "STACK");
 #ifdef CONFIG_STACK_COLORATION
-                   "%6s "
-                   "%7s "
+  nsh_output(vtbl, "%6s ", "USED");
+  nsh_output(vtbl, "%7s ", "FILLED");
 #endif
 #endif
+
 #ifdef NSH_HAVE_CPULOAD
-                    "%6s "
+  nsh_output(vtbl, "%6s ", "CPU");
 #endif
-                    "%s\n",
-                    "PID", "GROUP",
-#ifdef CONFIG_SMP
-                    "CPU",
-#endif
-                    "PRI", "POLICY", "TYPE", "NPX", "STATE", "EVENT",
-                    "SIGMASK",
-#if CONFIG_MM_BACKTRACE >= 0 && !defined(CONFIG_NSH_DISABLE_PSHEAPUSAGE)
-                    "HEAP",
-#endif
-#if !defined(CONFIG_NSH_DISABLE_PSSTACKUSAGE)
-                    "STACK",
-#ifdef CONFIG_STACK_COLORATION
-                    "USED",
-                    "FILLED",
-#endif
-#endif
-#ifdef NSH_HAVE_CPULOAD
-                    "CPU",
-#endif
-                    "COMMAND"
-                    );
+  nsh_output(vtbl, "%s\n", "COMMAND");
 
   return nsh_foreach_direntry(vtbl, "ps", CONFIG_NSH_PROC_MOUNTPOINT,
                               ps_callback, NULL);

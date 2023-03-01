@@ -45,7 +45,6 @@
 /* Help command summary layout */
 
 #define HELP_LINELEN  80
-#define HELP_TABSIZE  4
 #define NUM_CMDS      ((sizeof(g_cmdmap)/sizeof(struct cmdmap_s)) - 1)
 
 /****************************************************************************
@@ -616,11 +615,6 @@ static inline void help_cmdlist(FAR struct nsh_vtbl_s *vtbl)
   unsigned int i;
   unsigned int j;
   unsigned int k;
-  unsigned int offset;
-
-  /* Extra 5 bytes for tab before newline and '\0' */
-
-  char line[HELP_LINELEN + HELP_TABSIZE + 1];
 
   /* Pick an optimal column width */
 
@@ -656,32 +650,22 @@ static inline void help_cmdlist(FAR struct nsh_vtbl_s *vtbl)
 
   for (i = 0; i < ncmdrows; i++)
     {
-      /* Tab before a new line */
-
-      offset = HELP_TABSIZE;
-      memset(line, ' ', offset);
-
+      nsh_output(vtbl, "  ");
       for (j = 0, k = i;
            j < cmdsperline && k < NUM_CMDS;
            j++, k += ncmdrows)
         {
-          /* Copy the cmd name to line buffer */
-
-          offset += strlcpy(line + offset, g_cmdmap[k].cmd,
-                            sizeof(line) - offset);
-
-          /* Add space between commands */
+          nsh_output(vtbl, "%s", g_cmdmap[k].cmd);
 
           for (cmdwidth = strlen(g_cmdmap[k].cmd);
                cmdwidth < colwidth;
                cmdwidth++)
             {
-              line[offset++] = ' ';
+              nsh_output(vtbl, " ");
             }
         }
 
-      line[offset++] = '\n';
-      nsh_write(vtbl, line, offset);
+      nsh_output(vtbl, "\n");
     }
 }
 #endif
@@ -812,9 +796,6 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
   unsigned int i;
   unsigned int j;
   unsigned int k;
-  unsigned int offset;
-  char line[HELP_LINELEN];
-  static const char *g_builtin_prompt = "\nBuiltin Apps:\n";
 
   /* Count the number of built-in commands and get the optimal column width */
 
@@ -864,12 +845,10 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
 
   /* List the set of available built-in commands */
 
-  nsh_write(vtbl, g_builtin_prompt, strlen(g_builtin_prompt));
+  nsh_output(vtbl, "\nBuiltin Apps:\n");
   for (i = 0; i < num_builtin_rows; i++)
     {
-      offset = 4;
-      memset(line, ' ', offset);
-
+      nsh_output(vtbl, "  ");
       for (j = 0, k = i;
            j < builtins_per_line &&
            (builtin = builtin_for_index(k));
@@ -880,19 +859,17 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
               continue;
             }
 
-          offset += strlcpy(line + offset, builtin->name,
-                            sizeof(line) - offset);
+          nsh_output(vtbl, "%s", builtin->name);
 
           for (builtin_width = strlen(builtin->name);
                builtin_width < column_width;
                builtin_width++)
             {
-              line[offset++] = ' ';
+              nsh_output(vtbl, " ");
             }
         }
 
-      line[offset++] = '\n';
-      nsh_write(vtbl, line, offset);
+      nsh_output(vtbl, "\n");
     }
 #endif
 }
