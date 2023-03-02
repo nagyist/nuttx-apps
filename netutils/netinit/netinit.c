@@ -33,19 +33,20 @@
 #  define CONFIG_DEBUG_NET 1
 #endif
 
-#include <arpa/inet.h>
-#include <assert.h>
-#include <debug.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <pthread.h>
-#include <sched.h>
-#include <semaphore.h>
-#include <signal.h>
+#include <sys/ioctl.h>
+
 #include <stdint.h>
 #include <string.h>
-#include <sys/ioctl.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <signal.h>
+#include <assert.h>
+#include <debug.h>
 #include <unistd.h>
+
+#include <net/if.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include <nuttx/net/mii.h>
 

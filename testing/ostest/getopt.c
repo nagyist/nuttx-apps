@@ -24,9 +24,8 @@
 
 #include <nuttx/config.h>
 
-#include <getopt.h>
 #include <stdio.h>
-#include <string.h>
+#include <getopt.h>
 
 #include "ostest.h"
 

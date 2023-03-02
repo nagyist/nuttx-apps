@@ -20,14 +20,14 @@
 
 include $(APPDIR)/Make.defs
 
-# APDS9960 built-in application info
+# Hello, World! built-in application info
 
 PROGNAME = $(CONFIG_EXAMPLES_APDS9960_PROGNAME)
 PRIORITY = $(CONFIG_EXAMPLES_APDS9960_PRIORITY)
 STACKSIZE = $(CONFIG_EXAMPLES_APDS9960_STACKSIZE)
 MODULE = $(CONFIG_EXAMPLES_APDS9960)
 
-# APDS9960 Example
+# Hello, World! Example
 
 MAINSRC = apds9960_main.c
 

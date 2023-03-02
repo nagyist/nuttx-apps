@@ -24,12 +24,11 @@
 
 #include <nuttx/config.h>
 
-#include <errno.h>
-#include <sched.h>
-#include <signal.h>
+#include <sys/wait.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <sys/wait.h>
+#include <signal.h>
+#include <errno.h>
 #include <unistd.h>
 
 #include "ostest.h"

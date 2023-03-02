@@ -22,12 +22,11 @@
  * Included Files
  ****************************************************************************/
 
-#include <errno.h>
-#include <pthread.h>
-#include <sched.h>
 #include <stdio.h>
 #include <time.h>
+#include <pthread.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "ostest.h"
 
