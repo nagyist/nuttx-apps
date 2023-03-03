@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/qencoder/qe.h
+ * apps/examples/examples/qe/qe.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

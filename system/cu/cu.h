@@ -45,7 +45,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <semaphore.h>
-#include <termios.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -71,13 +70,10 @@
 
 struct cu_globals_s
 {
-  int infd;              /* Incoming data from serial port */
-  int outfd;             /* Outgoing data to serial port */
-  int stdfd;             /* I/O data to standard console */
-  struct termios devtio; /* Original serial port setting */
-  struct termios stdtio; /* Original standard console setting */
-  pthread_t listener;    /* Terminal listener thread */
-  bool force_exit;       /* Force exit */
+  int infd;            /* Incoming data from serial port */
+  int outfd;           /* Outgoing data to serial port */
+  pthread_t listener;  /* Terminal listener thread */
+  bool force_exit;     /* Force exit */
 };
 
 /****************************************************************************
