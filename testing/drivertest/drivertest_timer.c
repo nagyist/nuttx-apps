@@ -142,9 +142,8 @@ static void parse_commandline(FAR struct timer_state_s *timer_state,
       switch (ch)
         {
           case 'd':
-            strncpy(timer_state->devpath, optarg,
+            strlcpy(timer_state->devpath, optarg,
                     sizeof(timer_state->devpath));
-            timer_state->devpath[sizeof(timer_state->devpath) - 1] = '\0';
             break;
 
           case 'i':
@@ -259,7 +258,7 @@ static void test_case_timer(FAR void **state)
       tim = get_timestamp();
       usleep(2 * timer_state->interval);
       tim = get_timestamp() - tim;
-      range = abs(timer_state->interval / 1000 - tim);
+      range = timer_state->interval / 1000 - tim;
       assert_in_range(range, 0, timer_state->range);
     }
 
