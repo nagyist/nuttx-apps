@@ -128,8 +128,8 @@ static int pubsubtest_thread_entry(int argc, FAR char *argv[])
       char fname[32];
       FAR FILE *f;
 
-      snprintf(fname, sizeof(fname),
-               CONFIG_UORB_SRORAGE_DIR"/uorb_timings%u.txt", timingsgroup);
+      sprintf(fname, CONFIG_UORB_SRORAGE_DIR"/uorb_timings%u.txt",
+              timingsgroup);
 
       f = fopen(fname, "w");
       if (f == NULL)

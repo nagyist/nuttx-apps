@@ -179,15 +179,14 @@ int main(int argc, char *argv[])
   path_info = getenv("PATH_INFO");
   if (path_info)
     {
-      size_t len = strlen(script_name) + strlen(path_info) + 1;
-      cp = (char *)malloc(len);
+      cp = (char *)malloc(strlen(script_name) + strlen(path_info) + 1);
       if (!cp)
         {
           internal_error("Out of memory.");
           return 2;
         }
 
-      snprintf(cp, len, "%s%s", script_name, path_info);
+      sprintf(cp, "%s%s", script_name, path_info);
       script_name = cp;
     }
 
