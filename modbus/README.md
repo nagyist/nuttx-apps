@@ -110,8 +110,9 @@ The NuttX-named configuration options that are available include:
 See also other serial settings, in particular:
 
 - `CONFIG_SERIAL_TERMIOS` – Serial driver supports `termios.h` interfaces
-  If this is not defined, then the terminal settings (baud, parity, etc.)
-  are not configurable at runtime.
+  (`tcsetattr`, `tcflush`, etc.). If this is not defined, then the terminal
+  settings (baud, parity, etc.) are not configurable at runtime; serial streams
+  will not be flushed when closed.
 
 ## Note
 

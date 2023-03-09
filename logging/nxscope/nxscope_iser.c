@@ -34,6 +34,14 @@
 #include <logging/nxscope/nxscope.h>
 
 /****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#ifndef CONFIG_SERIAL_TERMIOS
+#  error Termios support must be enabled
+#endif
+
+/****************************************************************************
  * Private Type Definition
  ****************************************************************************/
 
@@ -206,7 +214,6 @@ int nxscope_ser_init(FAR struct nxscope_intf_s *intf,
 
   tcgetattr(priv->fd, &tio);
 
-#ifdef CONFIG_SERIAL_TERMIOS
   /* Configure a baud rate */
 
   DEBUGASSERT(priv->cfg->baud > 0);
@@ -217,7 +224,6 @@ int nxscope_ser_init(FAR struct nxscope_intf_s *intf,
       _err("ERROR: failed to set baud rate %d\n", errno);
       goto errout;
     }
-#endif
 
   /* Configure RAW mode */
 
