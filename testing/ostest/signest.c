@@ -22,18 +22,15 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-
-#include <errno.h>
-#include <pthread.h>
-#include <sched.h>
-#include <semaphore.h>
-#include <signal.h>
+#include <sys/types.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <sys/types.h>
+#include <stdlib.h>
 #include <unistd.h>
-
+#include <semaphore.h>
+#include <signal.h>
+#include <sched.h>
+#include <errno.h>
 #include "ostest.h"
 
 /****************************************************************************

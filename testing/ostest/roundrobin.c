@@ -24,11 +24,10 @@
 
 #include <nuttx/config.h>
 
-#include <pthread.h>
-#include <sched.h>
-#include <semaphore.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <semaphore.h>
+#include <sched.h>
 
 #include "ostest.h"
 

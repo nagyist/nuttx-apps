@@ -22,7 +22,6 @@
  * Included Files
  ****************************************************************************/
 
-#include <sched.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <semaphore.h>

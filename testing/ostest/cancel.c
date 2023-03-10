@@ -24,13 +24,13 @@
 
 #include <nuttx/config.h>
 
-#include <errno.h>
-#include <fcntl.h>
-#include <mqueue.h>
-#include <pthread.h>
-#include <signal.h>
 #include <stdio.h>
 #include <time.h>
+#include <fcntl.h>
+#include <pthread.h>
+#include <signal.h>
+#include <mqueue.h>
+#include <errno.h>
 #include <unistd.h>
 
 #include "ostest.h"

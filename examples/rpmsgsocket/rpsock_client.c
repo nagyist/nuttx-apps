@@ -24,16 +24,16 @@
 
 #include <nuttx/config.h>
 
-#include <assert.h>
-#include <errno.h>
+#include <sys/socket.h>
 #include <netpacket/rpmsg.h>
-#include <poll.h>
-#include <pthread.h>
+
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
-#include <sys/socket.h>
+#include <string.h>
+#include <poll.h>
+#include <errno.h>
 
 /****************************************************************************
  * Pre-processor Definitions
