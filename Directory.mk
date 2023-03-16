@@ -47,15 +47,15 @@ install:
 preconfig: $(foreach SDIR, $(CONFIGSUBDIRS), $(SDIR)_preconfig)
 ifneq ($(MENUDESC),)
 	$(Q) $(MKKCONFIG) -m $(MENUDESC)
-endif
 	$(Q) touch .kconfig
+endif
 
 clean: $(foreach SDIR, $(CLEANSUBDIRS), $(SDIR)_clean)
 
 distclean: $(foreach SDIR, $(CLEANSUBDIRS), $(SDIR)_distclean)
 ifneq ($(MENUDESC),)
 	$(call DELFILE, Kconfig)
-endif
 	$(call DELFILE, .kconfig)
+endif
 
 -include Make.dep

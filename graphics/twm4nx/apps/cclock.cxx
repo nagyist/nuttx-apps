@@ -297,6 +297,7 @@ bool CClock::run(void)
   // start the new Clock task
 
   sem_init(&GClockVars.waitSem, 0, 0);
+  sem_setprotocol(&GClockVars.waitSem, SEM_PRIO_NONE);
 
   GClockVars.that    = this;
   GClockVars.success = false;
