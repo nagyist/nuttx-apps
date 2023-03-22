@@ -45,7 +45,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <assert.h>
-#include <termios.h>
+
+#ifdef CONFIG_SERIAL_TERMIOS
+#  include <termios.h>
+#endif
 
 #include "port.h"
 
@@ -75,7 +78,9 @@ static uint8_t  ucBuffer[BUF_SIZE];
 static int      uiRxBufferPos;
 static int      uiTxBufferPos;
 
+#ifdef CONFIG_SERIAL_TERMIOS
 static struct termios xOldTIO;
+#endif
 
 /****************************************************************************
  * Private Function Prototypes
@@ -177,7 +182,9 @@ void vMBPortSerialEnable(bool bEnableRx, bool bEnableTx)
 
   if (bEnableRx)
     {
+#ifdef CONFIG_SERIAL_TERMIOS
       tcflush(iSerialFd, TCIFLUSH);
+#endif
       uiRxBufferPos = 0;
       bRxEnabled = true;
     }
@@ -202,7 +209,10 @@ bool xMBPortSerialInit(uint8_t ucPort, speed_t ulBaudRate,
 {
   char szDevice[16];
   bool bStatus = true;
+
+#ifdef CONFIG_SERIAL_TERMIOS
   struct termios xNewTIO;
+#endif
 
   snprintf(szDevice, 16, "/dev/ttyS%d", ucPort);
 
@@ -212,10 +222,11 @@ bool xMBPortSerialInit(uint8_t ucPort, speed_t ulBaudRate,
                  szDevice, errno);
       bStatus = false;
     }
+
+#ifdef CONFIG_SERIAL_TERMIOS
   else if (tcgetattr(iSerialFd, &xOldTIO) != 0)
     {
-      vMBPortLog(MB_LOG_ERROR,
-                 "SER-INIT", "Can't get settings from port %s: %d\n",
+      vMBPortLog(MB_LOG_ERROR, "SER-INIT", "Can't get settings from port %s: %d\n",
                  szDevice, errno);
     }
   else
@@ -262,24 +273,22 @@ bool xMBPortSerialInit(uint8_t ucPort, speed_t ulBaudRate,
            *
            * (1) In NuttX, cfset[i|o]speed always return OK so failures will
            *     really only be reported when tcsetattr() is called.
-           * (2) NuttX does not support separate input and output speeds so
-           *     it is not necessary to call both cfsetispeed() and
+           * (2) NuttX does not support separate input and output speeds so it
+           *     is not necessary to call both cfsetispeed() and
            *     cfsetospeed(), and
            * (3) In NuttX, the input value to cfiset[i|o]speed is not
-           *     encoded, but is the absolute baud value.  The following
-           *     might not be
+           *     encoded, but is the absolute baud value.  The following might
+           *     not be
            */
 
           if (cfsetispeed(&xNewTIO, ulBaudRate) != 0 /* || cfsetospeed(&xNewTIO, ulBaudRate) != 0 */)
             {
-              vMBPortLog(MB_LOG_ERROR, "SER-INIT",
-                         "Can't set baud rate %ld for port %s: %d\n",
+              vMBPortLog(MB_LOG_ERROR, "SER-INIT", "Can't set baud rate %ld for port %s: %d\n",
                          ulBaudRate, szDevice, errno);
             }
           else if (tcsetattr(iSerialFd, TCSANOW, &xNewTIO) != 0)
             {
-              vMBPortLog(MB_LOG_ERROR,
-                         "SER-INIT", "Can't set settings for port %s: %d\n",
+              vMBPortLog(MB_LOG_ERROR, "SER-INIT", "Can't set settings for port %s: %d\n",
                          szDevice, errno);
             }
           else
@@ -289,6 +298,7 @@ bool xMBPortSerialInit(uint8_t ucPort, speed_t ulBaudRate,
             }
         }
     }
+#endif
 
   return bStatus;
 }
@@ -311,7 +321,9 @@ void vMBPortClose(void)
 {
   if (iSerialFd != -1)
     {
+#ifdef CONFIG_SERIAL_TERMIOS
       tcsetattr(iSerialFd, TCSANOW, &xOldTIO);
+#endif
       close(iSerialFd);
       iSerialFd = -1;
     }
@@ -347,8 +359,7 @@ bool xMBPortSerialPoll(void)
         }
       else
         {
-          vMBPortLog(MB_LOG_ERROR,
-                     "SER-POLL", "read failed on serial device: %d\n",
+          vMBPortLog(MB_LOG_ERROR, "SER-POLL", "read failed on serial device: %d\n",
                      errno);
           bStatus = false;
         }
@@ -365,8 +376,7 @@ bool xMBPortSerialPoll(void)
 
       if (!prvbMBPortSerialWrite(&ucBuffer[0], uiTxBufferPos))
         {
-          vMBPortLog(MB_LOG_ERROR,
-                     "SER-POLL", "write failed on serial device: %d\n",
+          vMBPortLog(MB_LOG_ERROR, "SER-POLL", "write failed on serial device: %d\n",
                      errno);
           bStatus = false;
         }

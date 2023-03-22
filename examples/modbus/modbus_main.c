@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/modbus/modbus_main.c
+ * apps/examples/modbus/main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -49,6 +49,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <termios.h>
 #include <signal.h>
 #include <errno.h>
 
@@ -66,8 +67,11 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-
 /* Configuration ************************************************************/
+
+#ifndef CONFIG_SERIAL_TERMIOS
+#  error "CONFIG_SERIAL_TERMIOS is needed by modbus example"
+#endif
 
 #ifndef CONFIG_EXAMPLES_MODBUS_PORT
 #  define CONFIG_EXAMPLES_MODBUS_PORT 0
@@ -140,10 +144,7 @@ static void modbus_showusage(FAR const char *progname, int exitcode);
  ****************************************************************************/
 
 static struct modbus_state_s g_modbus;
-static const uint8_t g_slaveid[] =
-{
-  0xaa, 0xbb, 0xcc
-};
+static const uint8_t g_slaveid[] = { 0xaa, 0xbb, 0xcc };
 
 /****************************************************************************
  * Private Functions
@@ -194,8 +195,7 @@ static inline int modbus_initialize(void)
    */
 
   mberr = eMBInit(MB_RTU, 0x0a, CONFIG_EXAMPLES_MODBUS_PORT,
-                  CONFIG_EXAMPLES_MODBUS_BAUD,
-                  CONFIG_EXAMPLES_MODBUS_PARITY);
+                  CONFIG_EXAMPLES_MODBUS_BAUD, CONFIG_EXAMPLES_MODBUS_PARITY);
   if (mberr != MB_ENOERR)
     {
       fprintf(stderr, "modbus_main: "
@@ -235,7 +235,6 @@ static inline int modbus_initialize(void)
   return OK;
 
 errout_with_modbus:
-
   /* Release hardware resources. */
 
   eMBClose();
@@ -381,8 +380,7 @@ static inline int modbus_create_pollthread(void)
 
   if (g_modbus.threadstate == STOPPED)
     {
-      ret = pthread_create(&g_modbus.threadid, NULL,
-                           modbus_pollthread, NULL);
+      ret = pthread_create(&g_modbus.threadid, NULL, modbus_pollthread, NULL);
     }
     else
     {
@@ -450,8 +448,7 @@ int main(int argc, FAR char *argv[])
               if (ret != OK)
                 {
                   fprintf(stderr, "modbus_main: "
-                          "ERROR: modbus_create_pollthread failed: %d\n",
-                          ret);
+                          "ERROR: modbus_create_pollthread failed: %d\n", ret);
                   exit(EXIT_FAILURE);
                 }
             }
@@ -543,8 +540,8 @@ eMBErrorCode eMBRegInputCB(uint8_t *buffer, uint16_t address, uint16_t nregs)
  *
  ****************************************************************************/
 
-eMBErrorCode eMBRegHoldingCB(uint8_t *buffer, uint16_t address,
-                             uint16_t nregs, eMBRegisterMode mode)
+eMBErrorCode eMBRegHoldingCB(uint8_t *buffer, uint16_t address, uint16_t nregs,
+                             eMBRegisterMode mode)
 {
   eMBErrorCode    mberr = MB_ENOERR;
   int             index;
@@ -558,7 +555,6 @@ eMBErrorCode eMBRegHoldingCB(uint8_t *buffer, uint16_t address,
       switch (mode)
         {
           /* Pass current register values to the protocol stack. */
-
           case MB_REG_READ:
             while (nregs > 0)
               {
@@ -600,8 +596,8 @@ eMBErrorCode eMBRegHoldingCB(uint8_t *buffer, uint16_t address,
  *
  ****************************************************************************/
 
-eMBErrorCode eMBRegCoilsCB(uint8_t *buffer, uint16_t address,
-                           uint16_t ncoils, eMBRegisterMode mode)
+eMBErrorCode eMBRegCoilsCB(uint8_t *buffer, uint16_t address, uint16_t ncoils,
+                           eMBRegisterMode mode)
 {
   eMBErrorCode    mberr = MB_ENOERR;
   int             index;
@@ -657,8 +653,7 @@ eMBErrorCode eMBRegCoilsCB(uint8_t *buffer, uint16_t address,
  *
  ****************************************************************************/
 
-eMBErrorCode eMBRegDiscreteCB(uint8_t *buffer, uint16_t address,
-                              uint16_t ndiscrete)
+eMBErrorCode eMBRegDiscreteCB(uint8_t *buffer, uint16_t address, uint16_t ndiscrete)
 {
   return MB_ENOREG;
 }

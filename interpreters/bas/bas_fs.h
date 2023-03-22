@@ -13,8 +13,8 @@
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
  * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
@@ -69,24 +69,20 @@
 
 struct FileStream
 {
-  int dev;
-  int tty;
+  int dev,tty;
   int recLength;
 
   int infd;
   char inBuf[1024];
-  size_t inSize;
-  size_t inCapacity;
+  size_t inSize,inCapacity;
 
   int outfd;
   int outPos;
   int outLineWidth;
   int outColWidth;
   char outBuf[1024];
-  size_t outSize;
-  size_t outCapacity;
-  int outforeground;
-  int outbackground;
+  size_t outSize,outCapacity;
+  int outforeground,outbackground;
 
   int randomfd;
   int recPos;
@@ -116,7 +112,13 @@ int FS_openbinaryChn(int chn, const char *name, int mode);
 int FS_freechn(void);
 int FS_flush(int dev);
 int FS_close(int dev);
+
+#ifdef CONFIG_SERIAL_TERMIOS
 int FS_istty(int chn);
+#else
+#  define FS_istty(chn) (1)
+#endif
+
 int FS_lock(int chn, off_t offset, off_t length, int mode, int w);
 int FS_truncate(int chn);
 void FS_shellmode(int chn);

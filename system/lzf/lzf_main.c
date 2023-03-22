@@ -538,6 +538,7 @@ int main(int argc, FAR char *argv[])
     {
       /* stdin stdout */
 
+#ifdef CONFIG_SERIAL_TERMIOS
       if (!g_force)
         {
           if ((g_mode == UNCOMPRESS) && isatty(0))
@@ -556,6 +557,7 @@ int main(int argc, FAR char *argv[])
               lzf_exit(1);
             }
         }
+#endif
 
       if (g_mode == COMPRESS)
         {
