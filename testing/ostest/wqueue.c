@@ -119,12 +119,7 @@ static FAR void *verifier(FAR void *arg)
 
   /* Wait for count workers to run. */
 
-  do
-    {
-      usleep(SLEEP_TIME);
-      sem_getvalue(&call_sem, &call_count);
-    }
-  while (call_count != VERIFY_COUNT);
+  usleep(SLEEP_TIME);
 
   sem_getvalue(&call_sem, &call_count);
   printf("wqueue_test: call = %d, expect = %d\n", call_count, VERIFY_COUNT);
