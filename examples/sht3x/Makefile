@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/sht3x/Makefile
+# apps/examples/sht3x/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
