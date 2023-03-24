@@ -18,10 +18,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-import argparse
 import sys
+from random import randint, choices
+import argparse
 import time
-from random import choices, randint
 
 try:
     import serial
@@ -35,21 +35,11 @@ DEFAULT_CONTENT = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXY
 def parse_args():
     parser = argparse.ArgumentParser(
         description="Use this script to test whether the serial port is working properly. If the device path is not "
-        "provided, the text of the test will be output manually, which requires the user to copy and "
-        "paste manually to complete the test. If provided, it will be tested automatically."
-    )
-    parser.add_argument("dev", type=str, nargs="?", help="tty device", default="")
-    parser.add_argument(
-        "-t", "--turn", type=int, nargs="?", help="test turns [10]", default=10
-    )
-    parser.add_argument(
-        "-l",
-        "--length",
-        type=int,
-        nargs="?",
-        help="each turn max length [100]",
-        default=100,
-    )
+                    "provided, the text of the test will be output manually, which requires the user to copy and "
+                    "paste manually to complete the test. If provided, it will be tested automatically.")
+    parser.add_argument('dev', type=str, nargs="?", help='tty device', default='')
+    parser.add_argument('-t', '--turn', type=int, nargs="?", help='test turns [10]', default=10)
+    parser.add_argument('-l', '--length', type=int, nargs="?", help='each turn max length [100]', default=100)
 
     return parser.parse_args()
 
@@ -118,12 +108,8 @@ def make_test(device: str, default_content: str, turn: int, max_length: int):
         print("### ALL PASSED ###")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     args = parse_args()
 
-    make_test(
-        args.dev,
-        default_content=DEFAULT_CONTENT,
-        turn=args.turn,
-        max_length=args.length,
-    )
+    make_test(args.dev, default_content=DEFAULT_CONTENT, turn=args.turn, max_length=args.length)
+

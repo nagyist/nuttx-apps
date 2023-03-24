@@ -24,13 +24,12 @@
 
 #include <nuttx/config.h>
 
-#include <errno.h>
-#include <sched.h>
+#include <sys/stat.h>
+#include <sys/boardctl.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <sys/boardctl.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <sched.h>
+#include <errno.h>
 
 #include "nshlib/nshlib.h"
 

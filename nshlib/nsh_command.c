@@ -104,13 +104,6 @@ static const struct cmdmap_s g_cmdmap[] =
   { "addroute", cmd_addroute, 3, 4, "<target> [<netmask>] <router>" },
 #endif
 
-#ifdef CONFIG_NSH_ALIAS
-  { "alias",    cmd_alias,   1, CONFIG_NSH_MAXARGUMENTS,
-    "[name[=value] ... ]" },
-  { "unalias",  cmd_unalias, 1, CONFIG_NSH_MAXARGUMENTS,
-    "[-a] name [name ... ]" },
-#endif
-
 #if defined(CONFIG_NET) && defined(CONFIG_NET_ARP) && !defined(CONFIG_NSH_DISABLE_ARP)
   { "arp",      cmd_arp,      1, 6,
     "[-i <ifname>] [-a <ipaddr>|-d <ipaddr>|-s <ipaddr> <hwaddr>]" },
@@ -625,9 +618,7 @@ static inline void help_cmdlist(FAR struct nsh_vtbl_s *vtbl)
   unsigned int k;
   unsigned int offset;
 
-  /* Extra 5 bytes for tab before newline and '\0' */
-
-  char line[HELP_LINELEN + HELP_TABSIZE + 1];
+  char line[HELP_LINELEN];
 
   /* Pick an optimal column width */
 
@@ -640,7 +631,7 @@ static inline void help_cmdlist(FAR struct nsh_vtbl_s *vtbl)
         }
     }
 
-  colwidth += 2;
+  colwidth += HELP_TABSIZE;
 
   /* Determine the number of commands to put on one line */
 
@@ -855,7 +846,7 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
       return;
     }
 
-  column_width += 2;
+  column_width += HELP_TABSIZE;
 
   /* Determine the number of commands to put on one line */
 
@@ -878,7 +869,7 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
   nsh_write(vtbl, g_builtin_prompt, strlen(g_builtin_prompt));
   for (i = 0; i < num_builtin_rows; i++)
     {
-      offset = 4;
+      offset = HELP_TABSIZE;
       memset(line, ' ', offset);
 
       for (j = 0, k = i;

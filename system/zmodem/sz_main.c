@@ -260,7 +260,6 @@ errout_with_zmodem:
   zms_release(handle);
 
 errout_with_device:
-
   /* Flush the serial output to assure do not hang trying to drain it */
 
   tcflush(fd, TCIOFLUSH);

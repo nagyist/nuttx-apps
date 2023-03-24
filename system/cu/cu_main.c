@@ -190,15 +190,19 @@ static int set_termios(int fd, int nocrlf)
       goto errout;
     }
 
-  /* Let the remote machine to handle all crlf/echo except Ctrl-C */
+  /* for tty stdout force enable or disable \n -> \r\n conversion */
 
   if (fd_std_tty >= 0)
   {
     tio = g_tio_std;
-
-    tio.c_iflag = 0;
-    tio.c_oflag = 0;
-    tio.c_lflag &= ~ECHO;
+    if (nocrlf == 0)
+      {
+        tio.c_oflag |= ONLCR;
+      }
+    else
+      {
+        tio.c_oflag &= ~ONLCR;
+      }
 
     ret = tcsetattr(fd_std_tty, TCSANOW, &tio);
     if (ret)
