@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_SERIALRX)
-  nuttx_add_application(
-    NAME
-    serialrx
-    PRIORITY
-    ${CONFIG_EXAMPLES_SERIALRX_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_SERIALRX_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_SERIALRX}
-    SRCS
-    serialrx_main.c)
+  nuttx_add_application(NAME serialrx)
 endif()

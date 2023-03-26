@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_USERFS)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_USERFS_PROGNAME}
-    PRIORITY
-    ${CONFIG_EXAMPLES_USERFS_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_USERFS_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_USERFS}
-    SRCS
-    userfs_main.c)
+  nuttx_add_application(NAME userfs)
 endif()
