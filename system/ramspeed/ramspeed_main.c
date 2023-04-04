@@ -143,7 +143,6 @@ static void parse_commandline(int argc, FAR char **argv,
                 printf(RAMSPEED_PREFIX "<size> must >= 32");
                 exit(EXIT_FAILURE);
               }
-
             break;
           case 'v':
             OPTARG_TO_VALUE(info->value, uint8_t, 16);
@@ -156,7 +155,6 @@ static void parse_commandline(int argc, FAR char **argv,
                 exit(EXIT_FAILURE);
               }
 
-            break;
           case 'i':
             info->irq_disable = true;
             break;
