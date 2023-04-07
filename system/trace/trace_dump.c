@@ -585,17 +585,9 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
 
           nih = (FAR struct note_irqhandler_s *)p;
           trace_dump_header(out, note, ctx);
+          fprintf(out, "irq_handler_entry: irq=%u name=%d\n",
+                  nih->nih_irq, nih->nih_irq);
           cctx->intr_nest++;
-          if (type == TRACE_TYPE_ANDROID)
-            {
-              fprintf(out, "tracing_mark_write: B|0|irq=%d\n",
-                      nih->nih_irq);
-            }
-          else
-            {
-              fprintf(out, "irq_handler_entry: irq=%u name=%d\n",
-                      nih->nih_irq, nih->nih_irq);
-            }
         }
         break;
 
@@ -605,17 +597,9 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
 
           nih = (FAR struct note_irqhandler_s *)p;
           trace_dump_header(out, note, ctx);
+          fprintf(out, "irq_handler_exit: irq=%u ret=handled\n",
+                  nih->nih_irq);
           cctx->intr_nest--;
-          if (type == TRACE_TYPE_ANDROID)
-            {
-              fprintf(out, "tracing_mark_write: E|0|irq=%d\n",
-                      nih->nih_irq);
-            }
-          else
-            {
-              fprintf(out, "irq_handler_exit: irq=%u ret=handled\n",
-                      nih->nih_irq);
-            }
 
           if (cctx->intr_nest <= 0)
             {
@@ -628,34 +612,6 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
                   trace_dump_sched_switch(out, note, ctx);
                 }
             }
-        }
-        break;
-#endif
-
-#ifdef CONFIG_SCHED_INSTRUMENTATION_CSECTION
-      case NOTE_CSECTION_ENTER:
-      case NOTE_CSECTION_LEAVE:
-        {
-          struct note_csection_s *ncs;
-          ncs = (FAR struct note_csection_s *)p;
-          trace_dump_header(out, &ncs->ncs_cmn, ctx);
-          fprintf(out, "tracing_mark_write: %c|%d|critical_section\n",
-                  note->nc_type == NOTE_CSECTION_ENTER ? 'B': 'E', pid);
-        }
-        break;
-#endif
-
-#ifdef CONFIG_SCHED_INSTRUMENTATION_PREEMPTION
-      case NOTE_PREEMPT_LOCK:
-      case NOTE_PREEMPT_UNLOCK:
-        {
-          struct note_preempt_s *npr;
-          int16_t count;
-          npr = (FAR struct note_preempt_s *)p;
-          trace_dump_unflatten(&count, npr->npr_count, sizeof(count));
-          trace_dump_header(out, &npr->npr_cmn, ctx);
-          fprintf(out, "tracing_mark_write: %c|%d|sched_lock:%d\n",
-                  note->nc_type == NOTE_PREEMPT_LOCK ? 'B': 'E', pid, count);
         }
         break;
 #endif
@@ -678,7 +634,10 @@ static int trace_dump_one(trace_dump_t type, FAR FILE *out, FAR uint8_t *p,
               fprintf(out, "tracing_mark_write: %c|%d|%pS\n",
                       nst->nst_data[0], pid, (FAR void *)ip);
             }
-          else if (type == TRACE_TYPE_ANDROID)
+          else if (type == TRACE_TYPE_ANDROID &&
+              nst->nst_data[1] == '|' &&
+              (nst->nst_data[0] == 'B' ||
+               nst->nst_data[0] == 'E'))
             {
               fprintf(out, "tracing_mark_write: %s\n",
                       nst->nst_data);
