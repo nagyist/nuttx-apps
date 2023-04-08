@@ -29,7 +29,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -77,8 +76,8 @@ struct dd_s
   uint32_t     skip;       /* The number of sectors skipped on input */
   bool         eof;        /* true: The end of the input or output file has been hit */
   bool         verify;     /* true: Verify infile and outfile correctness */
-  uint16_t     sectsize;   /* Size of one sector */
-  uint16_t     nbytes;     /* Number of valid bytes in the buffer */
+  size_t       sectsize;   /* Size of one sector */
+  size_t       nbytes;     /* Number of valid bytes in the buffer */
   FAR uint8_t *buffer;     /* Buffer of data to write to the output file */
 };
 
@@ -93,7 +92,7 @@ struct dd_s
 static int dd_write(FAR struct dd_s *dd)
 {
   FAR uint8_t *buffer = dd->buffer;
-  uint16_t written ;
+  size_t written;
   ssize_t nbytes;
 
   /* Is the out buffer full (or is this the last one)? */
@@ -187,8 +186,11 @@ static int dd_verify(FAR const char *infile, FAR const char *outfile,
                      FAR struct dd_s *dd)
 {
   FAR uint8_t *buffer;
-  int sector = 0;
+  unsigned sector = 0;
   int ret = OK;
+
+  UNUSED(infile);
+  UNUSED(outfile);
 
   ret = lseek(dd->infd, dd->skip ? dd->skip * dd->sectsize : 0, SEEK_SET);
   if (ret < 0)
@@ -228,11 +230,38 @@ static int dd_verify(FAR const char *infile, FAR const char *outfile,
 
       if (memcmp(dd->buffer, buffer, dd->nbytes) != 0)
         {
-          char msg[32];
-          snprintf(msg, sizeof(msg), "infile sector %d", sector);
-          nsh_dumpbuffer(dd->vtbl, msg, dd->buffer, dd->nbytes);
-          snprintf(msg, sizeof(msg), "\noutfile sector %d", sector);
-          nsh_dumpbuffer(dd->vtbl, msg, buffer, dd->nbytes);
+          int i;
+
+          nsh_output(dd->vtbl, "infile sector %d", sector);
+          for (i = 0; i < dd->nbytes; i++)
+            {
+              if (i % 16 == 0)
+                {
+                  nsh_output(dd->vtbl, "\n");
+                }
+
+              nsh_output(dd->vtbl, "%02x", dd->buffer[i]);
+              if (i + 1 % 2 == 0)
+                {
+                  nsh_output(dd->vtbl, " ");
+                }
+            }
+
+          nsh_output(dd->vtbl, "\noutfile sector %d", sector);
+          for (i = 0; i < dd->nbytes; i++)
+            {
+              if (i % 16 == 0)
+                {
+                  nsh_output(dd->vtbl, "\n");
+                }
+
+              nsh_output(dd->vtbl, "%02x", dd->buffer[i]);
+              if (i + 1 % 2 == 0)
+                {
+                  nsh_output(dd->vtbl, " ");
+                }
+            }
+
           nsh_output(dd->vtbl, "\n");
           ret = ERROR;
           break;

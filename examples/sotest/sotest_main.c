@@ -36,7 +36,6 @@
 #include <dlfcn.h>
 #include <errno.h>
 #include <debug.h>
-#include <unistd.h>
 
 #include <nuttx/symtab.h>
 
@@ -283,8 +282,6 @@ int main(int argc, FAR char *argv[])
               BINDIR, errno);
       exit(EXIT_FAILURE);
     }
-
-  unlink(devname);
 #endif /* CONFIG_EXAMPLES_SOTEST_BUILTINFS */
 
   return EXIT_SUCCESS;
