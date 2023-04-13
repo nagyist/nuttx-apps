@@ -17,7 +17,10 @@
 # the License.
 #
 # ##############################################################################
+
 if(CONFIG_CANUTILS_CANDUMP)
+
+  set(LIBCANUTILS_DIR ${NUTTX_APPS_DIR}/canutils/libcanutils)
 
   nuttx_add_application(
     NAME
@@ -27,6 +30,8 @@ if(CONFIG_CANUTILS_CANDUMP)
     MODULE
     ${CONFIG_CANUTILS_CANDUMP}
     SRCS
-    candump.c)
+    candump.c
+    INCLUDE_DIRECTORIES
+    ${LIBCANUTILS_DIR})
 
 endif()

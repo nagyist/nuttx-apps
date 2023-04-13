@@ -21,7 +21,7 @@
 include $(APPDIR)/Make.defs
 
 LIBSODIUM_VERSION = $(patsubst "%",%,$(strip $(CONFIG_LIBSODIUM_VERSION)))
-LIBSODIUM_URL ?= "https://github.com/jedisct1/libsodium/archive"
+LIBSODIUM_URL ?= "https://github.com/jedisct1/libsodium/archive/refs/tags/$(LIBSODIUM_VERSION).zip"
 
 LIBSODIUM_ZIP = $(LIBSODIUM_VERSION).zip
 
@@ -33,8 +33,7 @@ LIBSODIUM_UNPACKTESTDIR = $(LIBSODIUM_UNPACKNAME)$(DELIM)test$(DELIM)default
 
 CSRCS += $(shell find $(LIBSODIUM_UNPACKLIBDIR) -name "*.c")
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/crypto/libsodium/libsodium/src/libsodium/include/sodium
-CFLAGS += -Wno-unused-function -Wno-undef -Wno-unused-variable -Wno-deprecated-declarations \
-          -Wno-shadow
+CFLAGS += -Wno-unused-function -Wno-undef -Wno-unused-variable -Wno-deprecated-declarations
 
 ifneq ($(CONFIG_LIBSODIUM_TEST),)
 MODULE = $(CONFIG_LIBSODIUM_TEST)
@@ -62,7 +61,7 @@ ifeq ($(wildcard $(LIBSODIUM_UNPACKNAME)/.git),)
 context:: $(LIBSODIUM_UNPACKNAME)
 
 distclean::
-	$(Q) rm -rf $(LIBSODIUM_UNPACKNAME)
+    $(Q) rm -rf $(LIBSODIUM_UNPACKNAME)
 endif
 
 include $(APPDIR)/Application.mk
