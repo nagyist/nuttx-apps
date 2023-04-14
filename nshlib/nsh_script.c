@@ -25,7 +25,6 @@
 #include <nuttx/config.h>
 
 #include <fcntl.h>
-#include <sched.h>
 #include <unistd.h>
 
 #include "nsh.h"
