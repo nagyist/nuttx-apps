@@ -48,7 +48,7 @@
 #define TIMER_DEFAULT_DEVPATH "/dev/timer0"
 #define TIMER_DEFAULT_INTERVAL 1000000
 #define TIMER_DEFAULT_NSAMPLES 20
-#define TIMER_DEFAULT_SIGNO 17
+#define TIMER_DEFAULT_SIGNO 32
 #define TIMER_DEFAULT_RANGE 1
 
 #define OPTARG_TO_VALUE(value, type, base)                            \
@@ -259,7 +259,7 @@ static void test_case_timer(FAR void **state)
       tim = get_timestamp();
       usleep(2 * timer_state->interval);
       tim = get_timestamp() - tim;
-      range = abs(timer_state->interval / 1000 - tim);
+      range = timer_state->interval / 1000 - tim;
       assert_in_range(range, 0, timer_state->range);
     }
 
