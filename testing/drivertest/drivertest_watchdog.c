@@ -28,6 +28,8 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/boardctl.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -35,14 +37,16 @@
 #include <errno.h>
 #include <debug.h>
 #include <inttypes.h>
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
 #include <stdint.h>
 #include <cmocka.h>
+
 #include <time.h>
 #include <nuttx/timers/watchdog.h>
-#include <nuttx/board.h>
+#include <sys/boardctl.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -53,7 +57,6 @@
 #define WDG_DEFAULT_PINGDELAY 500
 #define WDG_DEFAULT_TIMEOUT 2000
 #define WDG_DEFAULT_TESTCASE 0
-#define WDG_DEFAULT_DEVIATION 20
 #define WDG_COUNT_TESTCASE 4
 
 #define OPTARG_TO_VALUE(value, type, base)                            \
@@ -78,7 +81,6 @@ struct wdg_state_s
   uint32_t pingtime;
   uint32_t pingdelay;
   uint32_t timeout;
-  uint32_t deviation;
   int test_case;
 };
 
@@ -89,6 +91,8 @@ struct wdg_state_s
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+extern int board_reset_cause(FAR struct boardioc_reset_cause_s *cause);
 
 /****************************************************************************
  * Name: get_timestamp
@@ -161,7 +165,7 @@ static void show_usage(FAR const char *progname,
                        FAR struct wdg_state_s *wdg_state, int exitcode)
 {
   printf("Usage: %s -d <devpath> -r <test case> -t <pingtime>"
-         "-l <pingdelay> -o <timeout> -a <deviation>\n", progname);
+         "-l <pingdelay> -o <timeout>\n", progname);
   printf("  [-d devpath] selects the WATCHDOG device.\n"
          "  Default: %s Current: %s\n", WDG_DEFAULT_DEV_PATH,
          wdg_state->devpath);
@@ -177,9 +181,6 @@ static void show_usage(FAR const char *progname,
   printf("  [-o timeout] Time in milliseconds that the testcase will\n"
          "  Default: %d Current: %" PRIu32 "\n",
          WDG_DEFAULT_TIMEOUT, wdg_state->timeout);
-  printf("  [-a deviation] Watchdog getstatus precision.\n"
-         "  Default: %d Current: %" PRIu32 "\n",
-         WDG_DEFAULT_DEVIATION, wdg_state->deviation);
   printf("  [-h] = Shows this message and exits\n");
 
   exit(exitcode);
@@ -195,7 +196,7 @@ static void parse_commandline(FAR struct wdg_state_s *wdg_state, int argc,
   int ch;
   int converted;
 
-  while ((ch = getopt(argc, argv, "d:r:t:l:o:a:h")) != ERROR)
+  while ((ch = getopt(argc, argv, "d:r:t:l:o:h")) != ERROR)
     {
       switch (ch)
         {
@@ -203,6 +204,9 @@ static void parse_commandline(FAR struct wdg_state_s *wdg_state, int argc,
             strlcpy(wdg_state->devpath, optarg, sizeof(wdg_state->devpath));
             break;
 
+          case 'p':
+            strlcpy(wdg_state->infopath, optarg,
+                    sizeof(wdg_state->infopath));
           case 'r':
             OPTARG_TO_VALUE(converted, uint32_t, 10);
             if (converted < WDG_DEFAULT_TESTCASE ||
@@ -241,22 +245,11 @@ static void parse_commandline(FAR struct wdg_state_s *wdg_state, int argc,
             OPTARG_TO_VALUE(converted, uint32_t, 10);
             if (converted < 1 || converted > INT_MAX)
               {
-                printf("signal out of range: %d\n", converted);
+                printf("signal out of range: %d", converted);
                 show_usage(argv[0], wdg_state, EXIT_FAILURE);
               }
 
             wdg_state->timeout = (uint32_t)converted;
-            break;
-
-          case 'a':
-            OPTARG_TO_VALUE(converted, uint32_t, 10);
-            if (converted < 1 || converted > INT_MAX)
-              {
-                printf("signal out of range: %d\n", converted);
-                show_usage(argv[0], wdg_state, EXIT_FAILURE);
-              }
-
-            wdg_state->deviation = (uint32_t)converted;
             break;
 
           case '?':
@@ -292,7 +285,7 @@ static void test_case_wdog_01(FAR void **state)
       return;
     }
 
-  boardctl(BOARDIOC_RESET_CAUSE, (uintptr_t)&reset_cause);
+  board_reset_cause(&reset_cause);
   assert_int_equal(reset_cause.cause, BOARDIOC_RESETCAUSE_SYS_CHIPPOR);
 
   dev_fd = wdg_init(wdg_state);
@@ -344,7 +337,7 @@ static void test_case_wdog_02(FAR void **state)
       return;
     }
 
-  boardctl(BOARDIOC_RESET_CAUSE, (uintptr_t)&reset_cause);
+  board_reset_cause(&reset_cause);
   assert_int_equal(reset_cause.cause, BOARDIOC_RESETCAUSE_SYS_RWDT);
 
   wdg_init(wdg_state);
@@ -389,7 +382,7 @@ static void test_case_wdog_03(FAR void **state)
       return;
     }
 
-  boardctl(BOARDIOC_RESET_CAUSE, (uintptr_t)&reset_cause);
+  board_reset_cause(&reset_cause);
   assert_int_equal(reset_cause.cause, BOARDIOC_RESETCAUSE_SYS_RWDT);
 
   wdg_init(wdg_state);
@@ -418,14 +411,13 @@ static void test_case_wdog_04(FAR void **state)
   int ret;
   uint32_t start_ms;
   FAR struct wdg_state_s *wdg_state;
-  struct watchdog_status_s status;
   struct boardioc_reset_cause_s reset_cause;
 
   wdg_state = (FAR struct wdg_state_s *)*state;
 
   assert_int_equal(wdg_state->test_case, 3);
 
-  boardctl(BOARDIOC_RESET_CAUSE, (uintptr_t)&reset_cause);
+  board_reset_cause(&reset_cause);
   assert_int_equal(reset_cause.cause, BOARDIOC_RESETCAUSE_SYS_RWDT);
 
   dev_fd = wdg_init(wdg_state);
@@ -441,17 +433,6 @@ static void test_case_wdog_04(FAR void **state)
       /* Sleep for the requested amount of time */
 
       usleep(wdg_state->pingdelay * 1000);
-
-      /* Get Status */
-
-      ret = ioctl(dev_fd, WDIOC_GETSTATUS, &status);
-      assert_return_code(ret, OK);
-
-      assert_int_equal(status.timeout, wdg_state->timeout);
-      assert_in_range(
-        status.timeout - status.timeleft,
-        wdg_state->pingdelay - wdg_state->deviation,
-        wdg_state->pingdelay + wdg_state->deviation);
 
       /* Then ping */
 
@@ -484,8 +465,7 @@ int main(int argc, FAR char *argv[])
     .pingtime = WDG_DEFAULT_PINGTIMER,
     .pingdelay = WDG_DEFAULT_PINGDELAY,
     .timeout = WDG_DEFAULT_TIMEOUT,
-    .test_case = WDG_DEFAULT_TESTCASE,
-    .deviation = WDG_DEFAULT_DEVIATION
+    .test_case = WDG_DEFAULT_TESTCASE
   };
 
   parse_commandline(&wdg_state, argc, argv);

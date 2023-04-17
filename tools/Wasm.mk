@@ -33,7 +33,7 @@ WAR ?= $(WASI_SDK_PATH)/bin/llvm-ar rcs
 
 ifeq ($(WSYSROOT),)
 	WSYSROOT := $(TOPDIR)
-
+	
 	# Force disable wasm build when WASM_SYSROOT is not defined and on specific
 	# targets that do not support wasm build.
 	# Since some architecture level inline assembly instructions can not be
@@ -57,11 +57,6 @@ CFLAGS_STRIP += $(ARCHCPUFLAGS) $(ARCHCFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(A
 WCFLAGS += $(filter-out $(CFLAGS_STRIP),$(CFLAGS))
 WCFLAGS += --sysroot=$(WSYSROOT) -nostdlib -D__NuttX__
 
-# Keep optimization and lto flags
-
-WCFLAGS += $(filter -O%, $(ARCHOPTIMIZATION))
-WCFLAGS += $(filter -flto%, $(ARCHOPTIMIZATION))
-
 # If CONFIG_LIBM not defined, then define it to 1
 ifeq ($(CONFIG_LIBM),)
 WCFLAGS += -DCONFIG_LIBM=1 -I$(APPDIR)$(DELIM)include$(DELIM)wasm
@@ -71,7 +66,6 @@ WLDFLAGS = -z stack-size=$(STACKSIZE) -Wl,--initial-memory=$(INITIAL_MEMORY)
 WLDFLAGS += -Wl,--export=main -Wl,--export=__main_argc_argv
 WLDFLAGS += -Wl,--export=__heap_base -Wl,--export=__data_end
 WLDFLAGS += -Wl,--no-entry -Wl,--strip-all -Wl,--allow-undefined
-WLDFLAGS += $(filter -flto%, $(ARCHOPTIMIZATION))
 
 COMPILER_RT_LIB = $(shell $(WCC) --print-libgcc-file-name)
 ifeq ($(wildcard $(COMPILER_RT_LIB)),)
@@ -113,11 +107,9 @@ WASM_BUILD ?= n
 
 ifneq ($(WASM_BUILD),n)
 
+WASM_INITIAL_MEMORY ?= 65536
 STACKSIZE           ?= $(CONFIG_DEFAULT_TASK_STACKSIZE)
 PRIORITY            ?= SCHED_PRIORITY_DEFAULT
-
-# Alignup the initial memory to multiple of 64KB
-WASM_INITIAL_MEMORY ?= $(shell expr \( $(STACKSIZE) / 65536 + 1 \) \* 65536)
 
 # Wamr mode:
 # INT: Interpreter (Default)
