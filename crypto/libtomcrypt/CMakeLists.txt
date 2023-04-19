@@ -514,34 +514,6 @@ if(CONFIG_CRYPTO_LIBTOMCRYPT)
 
   endif()
 
-  if(CONFIG_LIBTOMCRYPT_TEST)
-
-    file(GLOB TEST_CSRCS ${LIBTOMCRYPT_DIR}/tests/*.c)
-    list(REMOVE_ITEM TEST_CSRCS ${LIBTOMCRYPT_DIR}/tests/test.c)
-    list(APPEND CSRCS ${TEST_CSRCS})
-    target_compile_definitions(
-      libtomcrypt
-      PRIVATE KEY_DIR="/resource/libtomcrypt"
-              base64_decode=libtomcrypt_base64_decode
-              base64_encode=libtomcrypt_encode)
-    list(APPEND INCDIR ${LIBTOMCRYPT_DIR}/tests)
-
-    nuttx_add_application(
-      NAME
-      ${CONFIG_LIBTOMCRYPT_TEST_PROGNAME}
-      STACKSIZE
-      ${CONFIG_LIBTOMCRYPT_TEST_STACKSIZE}
-      PRIORITY
-      ${CONFIG_LIBTOMCRYPT_TEST_PRIORITY}
-      SRCS
-      ${LIBTOMCRYPT_DIR}/tests/test.c
-      INCLUDE_DIRECTORIES
-      ${INCDIR}
-      DEPENDS
-      libtomcrypt)
-
-  endif(CONFIG_LIBTOMCRYPT_TEST)
-
   # ############################################################################
   # Library Configuration
   # ############################################################################
@@ -551,10 +523,7 @@ if(CONFIG_CRYPTO_LIBTOMCRYPT)
   target_include_directories(
     libtomcrypt
     PRIVATE $<GENEX_EVAL:$<TARGET_PROPERTY:libtommath,INCLUDE_DIRECTORIES>>)
-  target_compile_definitions(
-    libtomcrypt
-    PRIVATE LTC_SOURCE LTM_DESC blake2s_init=libtomcrypt_blake2s_init
-            md5_init=libtomcrypt_md5_init)
+  target_compile_definitions(libtomcrypt PRIVATE LTC_SOURCE LTM_DESC)
   target_compile_options(libtomcrypt PRIVATE -Wno-deprecated-declarations)
 
 endif()
