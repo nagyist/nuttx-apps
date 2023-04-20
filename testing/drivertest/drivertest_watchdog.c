@@ -46,18 +46,16 @@
 
 #include <time.h>
 #include <nuttx/timers/watchdog.h>
-#include <sys/boardctl.h>
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
 #define WDG_DEFAULT_DEV_PATH "/dev/watchdog0"
+#define WDG_DEFAULT_INFO_PATH "/data/wdg_info"
 #define WDG_DEFAULT_PINGTIMER 5000
 #define WDG_DEFAULT_PINGDELAY 500
 #define WDG_DEFAULT_TIMEOUT 2000
-#define WDG_DEFAULT_TESTCASE 0
-#define WDG_COUNT_TESTCASE 4
 
 #define OPTARG_TO_VALUE(value, type, base)                            \
   do                                                                  \
@@ -75,13 +73,22 @@
  * Private Types
  ****************************************************************************/
 
+enum wdg_reset_cause_e
+{
+  WDG_RESET_CAUSE_NONE,
+  WDG_RESET_CAUSE_NO_KEEP_ALIVE,
+  WDG_RESET_CAUSE_CRITICAL_SECTION_BUSY_LOOP,
+  WDG_RESET_CAUSE_IRQ_BUSY_LOOP
+};
+
 struct wdg_state_s
 {
   char devpath[PATH_MAX];
+  char infopath[PATH_MAX];
   uint32_t pingtime;
   uint32_t pingdelay;
   uint32_t timeout;
-  int test_case;
+  enum wdg_reset_cause_e reset_cause;
 };
 
 /****************************************************************************
@@ -91,8 +98,6 @@ struct wdg_state_s
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-
-extern int board_reset_cause(FAR struct boardioc_reset_cause_s *cause);
 
 /****************************************************************************
  * Name: get_timestamp
@@ -131,6 +136,46 @@ static uint32_t get_time_elaps(uint32_t prev_tick)
 }
 
 /****************************************************************************
+ * Name: wdg_write_reset_cause
+ ****************************************************************************/
+
+static void wdg_write_reset_cause(FAR struct wdg_state_s *state)
+{
+  int fd;
+  ssize_t size;
+
+  fd = open(state->infopath, O_WRONLY | O_CREAT);
+  assert_true(fd > 0);
+
+  size = write(fd, &state->reset_cause, sizeof(state->reset_cause));
+  assert_int_equal(size, sizeof(state->reset_cause));
+
+  close(fd);
+}
+
+/****************************************************************************
+ * Name: wdg_read_reset_cause
+ ****************************************************************************/
+
+static void wdg_read_reset_cause(FAR struct wdg_state_s *state)
+{
+  int fd;
+  ssize_t size;
+
+  fd = open(state->infopath, O_RDONLY);
+  if (fd < 0)
+    {
+      state->reset_cause = WDG_RESET_CAUSE_NONE;
+      return;
+    }
+
+  size = read(fd, &state->reset_cause, sizeof(state->reset_cause));
+  assert_int_equal(size, sizeof(state->reset_cause));
+
+  close(fd);
+}
+
+/****************************************************************************
  * Name: wdg_init
  ****************************************************************************/
 
@@ -164,14 +209,14 @@ static int wdg_init(FAR struct wdg_state_s *state)
 static void show_usage(FAR const char *progname,
                        FAR struct wdg_state_s *wdg_state, int exitcode)
 {
-  printf("Usage: %s -d <devpath> -r <test case> -t <pingtime>"
+  printf("Usage: %s -d <devpath> -p <infopath> -t <pingtime>"
          "-l <pingdelay> -o <timeout>\n", progname);
   printf("  [-d devpath] selects the WATCHDOG device.\n"
          "  Default: %s Current: %s\n", WDG_DEFAULT_DEV_PATH,
          wdg_state->devpath);
-  printf("  [-r test_case] selects the testcase.\n"
-         "  Default: %d Current: %d\n", WDG_DEFAULT_TESTCASE,
-         wdg_state->test_case);
+  printf("  [-p infopath] selects the WATCHDOG reset cause path.\n"
+         "  Default: %s Current: %s\n", WDG_DEFAULT_INFO_PATH,
+         wdg_state->infopath);
   printf("  [-t pingtime] Selects the <delay> time in milliseconds.\n"
          "  Default: %d Current: %" PRIu32 "\n",
          WDG_DEFAULT_PINGTIMER, wdg_state->pingtime);
@@ -196,7 +241,7 @@ static void parse_commandline(FAR struct wdg_state_s *wdg_state, int argc,
   int ch;
   int converted;
 
-  while ((ch = getopt(argc, argv, "d:r:t:l:o:h")) != ERROR)
+  while ((ch = getopt(argc, argv, "d:p:t:l:o:h")) != ERROR)
     {
       switch (ch)
         {
@@ -205,16 +250,10 @@ static void parse_commandline(FAR struct wdg_state_s *wdg_state, int argc,
             wdg_state->devpath[sizeof(wdg_state->devpath) - 1] = '\0';
             break;
 
-          case 'r':
-            OPTARG_TO_VALUE(converted, uint32_t, 10);
-            if (converted < WDG_DEFAULT_TESTCASE ||
-                converted >= WDG_COUNT_TESTCASE)
-              {
-                printf("signal out of range: %d\n", converted);
-                show_usage(argv[0], wdg_state, EXIT_FAILURE);
-              }
-
-            wdg_state->test_case = converted;
+          case 'p':
+            strncpy(wdg_state->infopath, optarg,
+                    sizeof(wdg_state->infopath));
+            wdg_state->infopath[sizeof(wdg_state->infopath) - 1] = '\0';
             break;
 
           case 't':
@@ -272,19 +311,17 @@ static void test_case_wdog_01(FAR void **state)
   int ret;
   uint32_t start_ms;
   FAR struct wdg_state_s *wdg_state;
-  struct boardioc_reset_cause_s reset_cause;
 
   wdg_state = (FAR struct wdg_state_s *)*state;
 
+  wdg_read_reset_cause(wdg_state);
+
   /* If it's not the first step, skip... */
 
-  if (wdg_state->test_case != 0)
+  if (wdg_state->reset_cause != WDG_RESET_CAUSE_NONE)
     {
       return;
     }
-
-  board_reset_cause(&reset_cause);
-  assert_int_equal(reset_cause.cause, BOARDIOC_RESETCAUSE_SYS_CHIPPOR);
 
   dev_fd = wdg_init(wdg_state);
 
@@ -306,6 +343,11 @@ static void test_case_wdog_01(FAR void **state)
       assert_return_code(ret, OK);
     }
 
+  /* write the reset cause */
+
+  wdg_state->reset_cause = WDG_RESET_CAUSE_NO_KEEP_ALIVE;
+  wdg_write_reset_cause(wdg_state);
+
   /* Then stop pinging */
 
   /* Sleep for the requested amount of time */
@@ -326,19 +368,20 @@ static void test_case_wdog_01(FAR void **state)
 static void test_case_wdog_02(FAR void **state)
 {
   FAR struct wdg_state_s *wdg_state;
-  struct boardioc_reset_cause_s reset_cause;
 
   wdg_state = (FAR struct wdg_state_s *)*state;
 
-  if (wdg_state->test_case != 1)
+  wdg_read_reset_cause(wdg_state);
+
+  if (wdg_state->reset_cause != WDG_RESET_CAUSE_NO_KEEP_ALIVE)
     {
       return;
     }
 
-  board_reset_cause(&reset_cause);
-  assert_int_equal(reset_cause.cause, BOARDIOC_RESETCAUSE_SYS_RWDT);
-
   wdg_init(wdg_state);
+
+  wdg_state->reset_cause = WDG_RESET_CAUSE_CRITICAL_SECTION_BUSY_LOOP;
+  wdg_write_reset_cause(wdg_state);
 
   enter_critical_section();
 
@@ -371,19 +414,20 @@ static void test_case_wdog_03(FAR void **state)
   int ret;
   static struct wdog_s wdog;
   FAR struct wdg_state_s *wdg_state;
-  struct boardioc_reset_cause_s reset_cause;
 
   wdg_state = (FAR struct wdg_state_s *)*state;
 
-  if (wdg_state->test_case != 2)
+  wdg_read_reset_cause(wdg_state);
+
+  if (wdg_state->reset_cause != WDG_RESET_CAUSE_CRITICAL_SECTION_BUSY_LOOP)
     {
       return;
     }
 
-  board_reset_cause(&reset_cause);
-  assert_int_equal(reset_cause.cause, BOARDIOC_RESETCAUSE_SYS_RWDT);
-
   wdg_init(wdg_state);
+
+  wdg_state->reset_cause = WDG_RESET_CAUSE_IRQ_BUSY_LOOP;
+  wdg_write_reset_cause(wdg_state);
 
   ret = wd_start(&wdog, 1, wdg_wdentry, (wdparm_t)0);
   assert_return_code(ret, OK);
@@ -409,14 +453,13 @@ static void test_case_wdog_04(FAR void **state)
   int ret;
   uint32_t start_ms;
   FAR struct wdg_state_s *wdg_state;
-  struct boardioc_reset_cause_s reset_cause;
 
   wdg_state = (FAR struct wdg_state_s *)*state;
 
-  assert_int_equal(wdg_state->test_case, 3);
+  wdg_read_reset_cause(wdg_state);
+  assert_int_equal(wdg_state->reset_cause, WDG_RESET_CAUSE_IRQ_BUSY_LOOP);
 
-  board_reset_cause(&reset_cause);
-  assert_int_equal(reset_cause.cause, BOARDIOC_RESETCAUSE_SYS_RWDT);
+  remove(wdg_state->infopath);
 
   dev_fd = wdg_init(wdg_state);
 
@@ -443,8 +486,7 @@ static void test_case_wdog_04(FAR void **state)
   ret = ioctl(dev_fd, WDIOC_STOP, 0);
   assert_return_code(ret, OK);
 
-  ret = close(dev_fd);
-  assert_return_code(ret, OK);
+  close(dev_fd);
 }
 
 /****************************************************************************
@@ -460,10 +502,10 @@ int main(int argc, FAR char *argv[])
   struct wdg_state_s wdg_state =
   {
     .devpath = WDG_DEFAULT_DEV_PATH,
+    .infopath = WDG_DEFAULT_INFO_PATH,
     .pingtime = WDG_DEFAULT_PINGTIMER,
     .pingdelay = WDG_DEFAULT_PINGDELAY,
-    .timeout = WDG_DEFAULT_TIMEOUT,
-    .test_case = WDG_DEFAULT_TESTCASE
+    .timeout = WDG_DEFAULT_TIMEOUT
   };
 
   parse_commandline(&wdg_state, argc, argv);
