@@ -261,11 +261,11 @@ static int trace_cmd_cmd(int index, int argc, FAR char **argv, int notectlfd)
       return ERROR;
     }
 
-  command[0] = '\0';
+  memset(command, 0, sizeof(command));
   while (index < argc)
     {
-      strlcat(command, argv[index], sizeof(command));
-      strlcat(command, " ", sizeof(command));
+      strcat(command, argv[index]);
+      strcat(command, " ");
       index++;
     }
 

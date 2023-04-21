@@ -24,10 +24,9 @@
 
 #include <nuttx/config.h>
 
+#include <fcntl.h>
 #include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
-#include <sched.h>
 
 #include "foc_mq.h"
 #include "foc_thr.h"
@@ -107,7 +106,7 @@ static FAR void *foc_control_thr(FAR void *arg)
 
   /* Get queue name */
 
-  snprintf(mqname, sizeof(mqname), "%s%d", CONTROL_MQ_MQNAME, envp->id);
+  sprintf(mqname, "%s%d", CONTROL_MQ_MQNAME, envp->id);
 
   /* Open queue */
 
@@ -299,7 +298,7 @@ int foc_ctrlthr_init(FAR struct foc_ctrl_env_s *foc, int i, FAR mqd_t *mqd,
 
   /* Get queue name */
 
-  snprintf(mqname, sizeof(mqname), "%s%d", CONTROL_MQ_MQNAME, foc->id);
+  sprintf(mqname, "%s%d", CONTROL_MQ_MQNAME, foc->id);
 
   /* Initialize thread recv queue */
 
