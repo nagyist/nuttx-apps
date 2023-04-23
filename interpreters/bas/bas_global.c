@@ -179,7 +179,7 @@ static struct Value *hex(struct Value *v, long int value, long int digits)
 {
   char buf[sizeof(long int) * 2 + 1];
 
-  snprintf(buf, sizeof(buf), "%0*lx", (int)digits, value);
+  sprintf(buf, "%0*lx", (int)digits, value);
   Value_new_STRING(v);
   String_appendChars(&v->u.string, buf);
   return v;
@@ -686,9 +686,8 @@ static struct Value *fn_date(struct Value *v, struct Auto *stack)
   String_size(&v->u.string, 10);
   time(&t);
   now = localtime(&t);
-  snprintf(v->u.string.character, v->u.string.length + 1,
-           "%02d-%02d-%04d", now->tm_mon + 1,
-           now->tm_mday, now->tm_year + 1900);
+  sprintf(v->u.string.character, "%02d-%02d-%04d", now->tm_mon + 1,
+          now->tm_mday, now->tm_year + 1900);
   return v;
 }
 
@@ -965,7 +964,7 @@ static struct Value *fn_hexi(struct Value *v, struct Auto *stack)
 {
   char buf[sizeof(long int) * 2 + 1];
 
-  snprintf(buf, sizeof(buf), "%lx", intValue(stack, 0));
+  sprintf(buf, "%lx", intValue(stack, 0));
   Value_new_STRING(v);
   String_appendChars(&v->u.string, buf);
   return v;
@@ -983,7 +982,7 @@ static struct Value *fn_hexd(struct Value *v, struct Auto *stack)
       return Value_new_ERROR(v, OUTOFRANGE, _("number"));
     }
 
-  snprintf(buf, sizeof(buf), "%lx", n);
+  sprintf(buf, "%lx", n);
   Value_new_STRING(v);
   String_appendChars(&v->u.string, buf);
   return v;
@@ -1640,7 +1639,7 @@ static struct Value *fn_oct(struct Value *v, struct Auto *stack)
 {
   char buf[sizeof(long int) * 3 + 1];
 
-  snprintf(buf, sizeof(buf), "%lo", intValue(stack, 0));
+  sprintf(buf, "%lo", intValue(stack, 0));
   Value_new_STRING(v);
   String_appendChars(&v->u.string, buf);
   return v;
@@ -1911,9 +1910,8 @@ static struct Value *fn_times(struct Value *v, struct Auto *stack)
   String_size(&v->u.string, 8);
   time(&t);
   now = localtime(&t);
-  snprintf(v->u.string.character, v->u.string.length + 1,
-           "%02d:%02d:%02d", now->tm_hour, now->tm_min,
-           now->tm_sec);
+  sprintf(v->u.string.character, "%02d:%02d:%02d", now->tm_hour, now->tm_min,
+          now->tm_sec);
   return v;
 }
 

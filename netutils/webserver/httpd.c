@@ -809,7 +809,7 @@ static void single_server(uint16_t portno, pthread_startroutine_t handler,
 
       /* Handle the request. This blocks until complete. */
 
-      handler((FAR void *)acceptsd);
+      httpd_handler((FAR void *)acceptsd);
     }
 
   /* Close the sockets */

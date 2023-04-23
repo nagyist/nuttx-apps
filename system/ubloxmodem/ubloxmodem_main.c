@@ -313,6 +313,8 @@ static int ubloxmodem_status(FAR struct ubloxmodem_cxt *cxt)
   FAR struct ubxmdm_regval register_values[UBLOXMODEM_MAX_REGISTERS];
   char regname[4];   /* Null-terminated string buffer */
 
+  regname[3] = '\0'; /* Set the null string terminator */
+
   /* Set the maximum value, to be updated by driver */
 
   status.register_values_size = UBLOXMODEM_MAX_REGISTERS;
@@ -330,7 +332,7 @@ static int ubloxmodem_status(FAR struct ubloxmodem_cxt *cxt)
        i < status.register_values_size && i < UBLOXMODEM_MAX_REGISTERS;
        i++)
     {
-      strlcpy(regname, status.register_values[i].name, sizeof(regname));
+      strncpy(regname, status.register_values[i].name, 3);
       printf("%s=%d ",
              regname,
              (int) status.register_values[i].val);
