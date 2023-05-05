@@ -1,5 +1,5 @@
 ############################################################################
-# apps/examples/hello/Make.defs
+# apps/examples/hello/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -33,7 +33,7 @@ MAINSRC = hello_main.c
 
 # Build with WebAssembly when CONFIG_INTERPRETERS_WAMR is enabled
 
-WASM_BUILD = y
+WASM_BUILD = both
 
 # Mode of WebAssembly Micro Runtime
 
