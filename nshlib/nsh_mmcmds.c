@@ -56,19 +56,11 @@ int cmd_free(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 
 int cmd_memdump(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
-  char arg[CONFIG_NSH_LINELEN] = "";
+  FAR const char *arg = "used";
 
-  if (argc == 1)
+  if (argc > 1)
     {
-      strlcpy(arg, "used", CONFIG_NSH_LINELEN);
-    }
-  else
-    {
-      for (int i = 1; i < argc; i++)
-        {
-          strlcat(arg, argv[i], CONFIG_NSH_LINELEN);
-          strlcat(arg, " ", CONFIG_NSH_LINELEN);
-        }
+      arg = argv[1];
     }
 
   return nsh_writefile(vtbl, argv[0], arg, strlen(arg),

@@ -25,11 +25,11 @@
 #include <nuttx/config.h>
 
 #include <assert.h>
-
-#include "foc_motor_b16.h"
+#include <string.h>
 
 #include "foc_cfg.h"
 #include "foc_debug.h"
+#include "foc_motor_b16.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -887,10 +887,10 @@ int foc_motor_init(FAR struct foc_motor_b16_s *motor,
 
   /* Get qenco devpath */
 
-  sprintf(motor->qedpath,
-          "%s%d",
-          CONFIG_EXAMPLES_FOC_QENCO_DEVPATH,
-          motor->envp->id);
+  snprintf(motor->qedpath, sizeof(motor->qedpath),
+           "%s%d",
+           CONFIG_EXAMPLES_FOC_QENCO_DEVPATH,
+           motor->envp->id);
 
   /* Configure qenco angle handler */
 
@@ -918,10 +918,10 @@ int foc_motor_init(FAR struct foc_motor_b16_s *motor,
 
   /* Get hall devpath */
 
-  sprintf(motor->hldpath,
-          "%s%d",
-          CONFIG_EXAMPLES_FOC_HALL_DEVPATH,
-          motor->envp->id);
+  snprintf(motor->hldpath, sizeof(motor->hldpath),
+           "%s%d",
+           CONFIG_EXAMPLES_FOC_HALL_DEVPATH,
+           motor->envp->id);
 
   /* Configure hall angle handler */
 
