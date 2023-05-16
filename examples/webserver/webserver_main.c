@@ -110,7 +110,7 @@ int main(int argc, FAR char *argv[])
   uint8_t mac[IFHWADDRLEN];
 #endif
 #ifdef CONFIG_EXAMPLES_WEBSERVER_DHCPC
-  FAR void *handle;
+  void *handle;
 #endif
 
   /* Many embedded network interfaces must have a software assigned MAC */
