@@ -24,14 +24,15 @@
 
 #include <nuttx/arch.h>
 #include <nuttx/cache.h>
-#include <nuttx/config.h>
 #include <nuttx/irq.h>
 
-#include <inttypes.h>
-#include <malloc.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include <inttypes.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -39,38 +40,17 @@
 
 #define CACHESPEED_PREFIX "CACHE Speed: "
 
-#ifdef CACHESPEED_PERFTIME
-  #define TIME uint64_t
-  #define REPEAT_NUM 10000
-
-  #define CONVERT(cost) \
+#define GET_VALUE(value, type) \
   do \
   { \
-    struct timespec ts; \
-    up_perf_convert(cost, &ts); \
-    cost = ts.tv_sec * 1000000000 + ts.tv_nsec; \
+   FAR char *ptr; \
+   value = (type)strtoul(optarg, &ptr, 0); \
+   if (*ptr != '\0') \
+    { \
+      printf(CACHESPEED_PREFIX "Parameter error: -%c %s\n", option, optarg); \
+      show_usage(argv[0], EXIT_FAILURE); \
+    } \
   } while (0)
-
-  #define TIMESTAMP(x) (x) = up_perf_gettime()
-#else
-  #define TIME time_t
-  #define REPEAT_NUM 1000
-
-  #define CONVERT(cost)
-
-  #define TIMESTAMP(x) \
-  do \
-  { \
-    struct timespec ts; \
-    clock_gettime(CLOCK_MONOTONIC, &ts); \
-    x = ts.tv_sec * 1000000000 + ts.tv_nsec; \
-  } while (0)
-#endif
-
-#define GET_DCACHE_LINE up_get_dcache_linesize()
-#define GET_ICACHE_LINE up_get_icache_linesize()
-#define GET_DCACHE_SIZE up_get_dcache_size()
-#define GET_ICACHE_SIZE up_get_icache_size()
 
 /****************************************************************************
  * Private Types
@@ -78,8 +58,10 @@
 
 struct cachespeed_s
 {
-  uintptr_t addr;
-  size_t alloc;
+  FAR void *begin;
+  size_t memset_size;
+  uint32_t repeat_num;
+  size_t opt_size;
 };
 
 /****************************************************************************
@@ -91,143 +73,274 @@ struct cachespeed_s
  ****************************************************************************/
 
 /****************************************************************************
- * Name: setup
+ * Name: show_usage
  ****************************************************************************/
 
-static void setup(FAR struct cachespeed_s *cs)
+static void show_usage(FAR const char *progname, int exitcode)
 {
-  struct mallinfo info = mallinfo();
-
-  /* Get the currently available memory from the system. We want the
-   * memset range to be as large as possible in our tests to ensure
-   * that the cache is filled with our dirty data
-   */
-
-  cs->alloc = info.fordblks / 2;
-  cs->addr = (uintptr_t)malloc(cs->alloc);
-  if (cs->addr == 0)
-    {
-      printf(CACHESPEED_PREFIX "Unable to request memory.\n");
-      exit(EXIT_FAILURE);
-    }
-
-  /* Let's export the test message */
-
-  printf(CACHESPEED_PREFIX "address src: %" PRIxPTR "\n", cs->addr);
+  printf("\nUsage: %s -b <address>  -o <operation size>"
+         "  -s <memset size>[262144] -n <repeat number>[100] \n",
+         progname);
+  printf("\nWhere:\n");
+  printf("  -b <hex-address> begin memset address.\n");
+  printf("  -o <operation size> The size of the operation.\n");
+  printf("  -s <memset size> Execute memset size (in bytes)."
+         "  [default value: 262144].\n");
+  printf("  -n <repeat num> number of repetitions"
+         " [default value: 1000].\n");
+  exit(exitcode);
 }
 
 /****************************************************************************
- * Name: teardown
+ * Name: parse_commandline
  ****************************************************************************/
 
-static void teardown(FAR struct cachespeed_s *cs)
+static void parse_commandline(int argc, FAR char **argv,
+                              FAR struct cachespeed_s *info)
 {
-  free((void *)cs->addr);
-  printf(CACHESPEED_PREFIX "Done!\n");
-}
+  int option;
 
-/****************************************************************************
- * Name: report_line
- ****************************************************************************/
+  memset(info, 0, sizeof(struct cachespeed_s));
+  info->repeat_num = 1000;
+  info->memset_size = 262144;
 
-static void report_line(size_t bytes, TIME cost)
-{
-  double rate;
-
-  /* There is a situation: if the time is 0, then the
-   * calculated speed is wrong.
-   */
-
-  CONVERT(cost);
-
-  if (cost == 0)
+  while ((option = getopt(argc, argv, "b:o:s:n:")) != ERROR)
     {
-      printf(CACHESPEED_PREFIX "%d bytes cost time too small!\n", bytes);
-      return;
-    }
-
-  /* rate = Test Data Size / Execution Time */
-
-  rate = 1.00 * bytes * REPEAT_NUM / cost;
-
-  printf("%d Bytes: %4lf, %4llu, %4llu\n\r",
-         bytes, rate, cost / REPEAT_NUM, cost);
-}
-
-/****************************************************************************
- * Name: test_skeleton
- ****************************************************************************/
-
-static void test_skeleton(FAR struct cachespeed_s *cs,
-                          const size_t cache_size,
-                          const size_t cache_line_size, int align,
-                          void (*func)(uintptr_t, uintptr_t),
-                          const char *name)
-{
-  size_t update_size;
-  printf("** %s [rate, avg, cost] in nanoseconds(bytes/nesc) %s **\n",
-         name, align ? "align" : "unalign");
-
-  if (!align)
-    {
-      update_size = cache_line_size - 1;
-    }
-  else
-    {
-      update_size = cache_line_size;
-    }
-
-  for (size_t bytes = cache_line_size;
-       bytes <= cache_size; bytes += update_size)
-    {
-      irqstate_t irq;
-      TIME start;
-      TIME end;
-      TIME cost = 0;
-
-      /* Make sure that test with all the contents
-       * of our address in the cache.
-       */
-
-      up_flush_dcache_all();
-
-      irq = enter_critical_section();
-      for (int i = 0; i < REPEAT_NUM; i++)
+      switch (option)
         {
-          memset((void *)cs->addr, 1, cs->alloc);
-          TIMESTAMP(start);
-          func(cs->addr, (uintptr_t)(cs->addr + bytes));
-          TIMESTAMP(end);
-          cost += end - start;
+          case 'b':
+            GET_VALUE(info->begin, void *);
+            break;
+          case 'o':
+            GET_VALUE(info->opt_size, size_t);
+            break;
+          case 's':
+            GET_VALUE(info->memset_size, size_t);
+            break;
+          case 'n':
+            GET_VALUE(info->repeat_num, uint32_t);
+            if (info->repeat_num == 0)
+              {
+                printf(CACHESPEED_PREFIX "<repeat number> must > 0\n");
+                exit(EXIT_FAILURE);
+              }
+            break;
+          case '?':
+            printf(CACHESPEED_PREFIX "Unknown option: %c\n", optopt);
+            show_usage(argv[0], EXIT_FAILURE);
+            break;
+        }
+    }
+
+    if (info->opt_size == 0 || info->begin == 0)
+      {
+        printf(CACHESPEED_PREFIX "Missing required arguments\n");
+        show_usage(argv[0], EXIT_FAILURE);
+      }
+}
+
+/****************************************************************************
+ * Name: get_perf_time
+ ****************************************************************************/
+
+static uint32_t get_perf_time(void)
+{
+  return up_perf_gettime();
+}
+
+/****************************************************************************
+ * Name: get_time_elaps
+ ****************************************************************************/
+
+static uint32_t get_time_elaps(uint32_t prev_time)
+{
+  return get_perf_time() - prev_time;
+}
+
+/****************************************************************************
+ * Name: print_result
+ ****************************************************************************/
+
+static void print_result(FAR const char *name, size_t bytes,
+                         uint32_t cost_time, uint32_t repeat_cnt)
+{
+  uint32_t rate;
+  struct timespec ts;
+
+  /* Converted to ns */
+
+  up_perf_convert(cost_time, &ts);
+  cost_time = ts.tv_sec * 1000000000 + ts.tv_nsec;
+
+  if (cost_time / 1000000 == 0)
+    {
+      printf(CACHESPEED_PREFIX
+             "The total overhead time in millisecond precision"
+             "is too short.\n");
+    }
+
+  /* rate  = (bytes / 1024) / (cost_time / 1000000000) */
+
+  rate = (uint64_t)bytes * 1000000000 / cost_time / 1024;
+  printf(CACHESPEED_PREFIX
+         "%s avg = %"PRIu32 " ns\t Rate: %" PRIu32 " KB/s\t"
+         "[cost = %" PRIu32 " ms]\n",
+         name, cost_time / repeat_cnt, rate, cost_time / 1000000);
+}
+
+/****************************************************************************
+ * Name: dcache_speed_test
+ ****************************************************************************/
+
+static void dcache_speed_test(FAR void *begin, size_t memset_size,
+                              size_t opt_size, uint32_t repeat_cnt)
+{
+  size_t total_size = memset_size * repeat_cnt;
+  uint32_t invalidate_cost_time;
+  uint32_t clean_cost_time;
+  uint32_t flush_cost_time;
+  uint32_t cnt;
+  uint32_t pt;
+  irqstate_t flags;
+
+  /* Initialize a variable */
+
+  invalidate_cost_time = 0;
+  clean_cost_time = 0;
+  flush_cost_time = 0;
+
+  /* Accumulate the time to get the total time */
+
+  printf("______dcache performance______\n");
+
+  printf("______do all operation______\n");
+  flags = enter_critical_section();
+  for (cnt = 0; cnt < repeat_cnt; cnt++)
+    {
+      uint32_t start_time;
+      memset(begin, 0, memset_size);
+      start_time = get_perf_time();
+      up_clean_dcache_all();
+      clean_cost_time += get_time_elaps(start_time);
+
+      memset(begin, 0, memset_size);
+      start_time = get_perf_time();
+      up_flush_dcache_all();
+      flush_cost_time += get_time_elaps(start_time);
+    }
+
+  leave_critical_section(flags);
+  print_result("clean dcache():\t", total_size, clean_cost_time, repeat_cnt);
+  print_result("flush dcache():\t", total_size, flush_cost_time, repeat_cnt);
+
+  for (pt = 32; pt <= opt_size; pt <<= 1)
+    {
+      total_size =  pt * repeat_cnt;
+      invalidate_cost_time = 0;
+      clean_cost_time = 0;
+      flush_cost_time = 0;
+
+      if (pt < 1024)
+        {
+          printf("______do %" PRIu32 " B operation______\n", pt);
+        }
+      else
+        {
+          printf("______do %" PRIu32  " KB operation______\n", pt / 1024);
         }
 
-      leave_critical_section(irq);
-      report_line(bytes, cost);
+      flags = enter_critical_section();
+      for (cnt = 0; cnt < repeat_cnt; cnt++)
+        {
+          uint32_t start_time;
+          memset(begin, 0, memset_size);
+          start_time = get_perf_time();
+          up_invalidate_dcache((uintptr_t)begin,
+                               (uintptr_t)((uint8_t *)begin + pt));
+          invalidate_cost_time += get_time_elaps(start_time);
+
+          memset(begin, 0, memset_size);
+          start_time = get_perf_time();
+          up_clean_dcache((uintptr_t)begin,
+                          (uintptr_t)((uint8_t *)begin + pt));
+          clean_cost_time += get_time_elaps(start_time);
+
+          memset(begin, 0, memset_size);
+          start_time = get_perf_time();
+          up_flush_dcache((uintptr_t)begin,
+                          (uintptr_t)((uint8_t *)begin + pt));
+          flush_cost_time += get_time_elaps(start_time);
+        }
+
+      leave_critical_section(flags);
+      print_result("invalidate dcache():\t",
+                   total_size, invalidate_cost_time, repeat_cnt);
+      print_result("clean dcache():\t", total_size, clean_cost_time,
+                    repeat_cnt);
+      print_result("flush dcache():\t", total_size, flush_cost_time,
+                    repeat_cnt);
     }
 }
 
 /****************************************************************************
- * Name: cachespeed_common
+ * Name: icache_speed_test
  ****************************************************************************/
 
-static void cachespeed_common(struct cachespeed_s *cs)
+static void icache_speed_test(FAR void *begin, size_t memset_size,
+                              size_t opt_size, uint32_t repeat_cnt)
 {
-  test_skeleton(cs, GET_DCACHE_SIZE, GET_DCACHE_LINE, 1,
-                up_invalidate_dcache, "dcache invalidate");
-  test_skeleton(cs, GET_DCACHE_SIZE, GET_DCACHE_LINE, 0,
-                up_invalidate_dcache, "dcache invalidate");
-  test_skeleton(cs, GET_DCACHE_SIZE, GET_DCACHE_LINE, 1,
-                up_clean_dcache, "dcache clean");
-  test_skeleton(cs, GET_DCACHE_SIZE, GET_DCACHE_LINE, 0,
-                up_clean_dcache, "dcache clean");
-  test_skeleton(cs, GET_DCACHE_SIZE, GET_DCACHE_LINE, 1,
-                up_flush_dcache, "dcache flush");
-  test_skeleton(cs, GET_DCACHE_SIZE, GET_DCACHE_LINE, 0,
-                up_flush_dcache, "dcache flush");
-  test_skeleton(cs, GET_ICACHE_SIZE, GET_ICACHE_LINE, 1,
-                up_invalidate_icache, "icache invalidate");
-  test_skeleton(cs, GET_ICACHE_SIZE, GET_ICACHE_LINE, 0,
-                up_invalidate_icache, "icache invalidate");
+  irqstate_t flags;
+  int32_t cnt;
+  uint32_t pt;
+  uint32_t invalidate_cost_time = 0;
+
+  /* Accumulate the time to get the total time */
+
+  printf("______icache performance______\n");
+
+  printf("______do all operation______\n");
+  flags = enter_critical_section();
+  for (cnt = 0; cnt < repeat_cnt; cnt++)
+    {
+      uint32_t start_time;
+      memset(begin, 0, memset_size);
+      start_time = get_perf_time();
+      up_invalidate_icache_all();
+      invalidate_cost_time += get_time_elaps(start_time);
+    }
+
+  leave_critical_section(flags);
+  print_result("invalidate dcache():\t",
+               memset_size * repeat_cnt, invalidate_cost_time, repeat_cnt);
+
+  for (pt = 32; pt <= opt_size; pt <<= 1)
+    {
+      const size_t total_size =  pt * repeat_cnt;
+      invalidate_cost_time = 0;
+      if (pt < 1024)
+        {
+          printf("______do %" PRIu32 " B operation______\n", pt);
+        }
+      else
+        {
+          printf("______do %" PRIu32  " KB operation______\n", pt / 1024);
+        }
+
+      flags = enter_critical_section();
+      for (cnt = 0; cnt < repeat_cnt; cnt++)
+        {
+          uint32_t start_time;
+          memset(begin, 0, memset_size);
+          start_time = get_perf_time();
+          up_invalidate_icache((uintptr_t)begin,
+                               (uintptr_t)((uint8_t *)begin + pt));
+          invalidate_cost_time += get_time_elaps(start_time);
+        }
+
+      leave_critical_section(flags);
+      print_result("invalidate icache():\t",
+                   total_size, invalidate_cost_time, repeat_cnt);
+    }
 }
 
 /****************************************************************************
@@ -240,14 +353,19 @@ static void cachespeed_common(struct cachespeed_s *cs)
 
 int main(int argc, FAR char *argv[])
 {
-  struct cachespeed_s cs =
-    {
-      .addr = 0,
-      .alloc = 0
-    };
+  struct cachespeed_s cachespeed;
 
-  setup(&cs);
-  cachespeed_common(&cs);
-  teardown(&cs);
+  /* Setup defaults and parse the command line */
+
+  parse_commandline(argc, argv, &cachespeed);
+
+  /* Perform the dcache and icache test */
+
+  dcache_speed_test(cachespeed.begin, cachespeed.memset_size,
+                    cachespeed.opt_size, cachespeed.repeat_num);
+
+  icache_speed_test(cachespeed.begin, cachespeed.memset_size,
+                    cachespeed.opt_size, cachespeed.repeat_num);
+
   return 0;
 }

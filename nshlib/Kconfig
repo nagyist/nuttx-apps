@@ -70,6 +70,12 @@ config NSH_PROMPT_STRING
 	---help---
 		Provide the shell prompt string, default is "nsh> ".
 
+config NSH_DISABLE_ECHOBACK
+	bool "Disable echoback"
+	default n
+	---help---
+		If this option is selected, the NSH disables echoback.
+
 choice
 	prompt "Command Line Editor"
 	default NSH_READLINE if DEFAULT_SMALL
@@ -184,6 +190,24 @@ config NSH_DISABLEBG
 		the '&' command suffix.  This would only be set on systems
 		where a minimal footprint is a necessity and background command
 		execution is not.
+
+config NSH_ALIAS
+	bool "Enable alias support"
+	default !DEFAULT_SMALL
+	---help---
+		Enable alias support for nsh. This enables command substitution from
+		a table of alias strings for individual commands. The maximum amount
+		of alias strings is configurable with NSH_ALIAS_MAX_AMOUNT.
+
+if NSH_ALIAS
+
+config NSH_ALIAS_MAX_AMOUNT
+	int "Maximum amount of aliases"
+	default 1
+	---help---
+		Set the maximum amount of alias entries.
+
+endif # NSH_ALIAS
 
 endmenu # Command Line Configuration
 
