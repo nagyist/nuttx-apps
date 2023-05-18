@@ -27,7 +27,6 @@
 
 #include <nuttx/config.h>
 
-#include <stdint.h>
 #include <pthread.h>
 #include <mqueue.h>
 
@@ -80,7 +79,6 @@ enum foc_motor_mode_e
 #ifdef CONFIG_EXAMPLES_FOC_HAVE_IDENT
   FOC_MMODE_IDENT_ONLY = 5,  /* Motor identification only */
 #endif
-  FOC_MMODE_IDLE       = 6,  /* IDLE state */
 };
 
 /* Controller state */
@@ -125,7 +123,6 @@ struct foc_ctrl_env_s
 int foc_threads_init(void);
 void foc_threads_deinit(void);
 bool foc_threads_terminated(void);
-uint32_t foc_threads_get(void);
 int foc_ctrlthr_init(FAR struct foc_ctrl_env_s *foc, int i, FAR mqd_t *mqd,
                      FAR pthread_t *thread);
 

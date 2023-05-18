@@ -205,7 +205,6 @@ int main(int argc, char *argv[])
   pthread_t              threads[CONFIG_MOTOR_FOC_INST];
   mqd_t                  mqd[CONFIG_MOTOR_FOC_INST];
   struct foc_intf_data_s data;
-  uint32_t               thrs_active  = 0;
   int                    ret          = OK;
   int                    i            = 0;
   int                    time         = 0;
@@ -229,7 +228,7 @@ int main(int argc, char *argv[])
   if (ret < 0)
     {
       PRINTF("ERROR: validate args failed\n");
-      goto errout_no_threads;
+      goto errout_no_mutex;
     }
 
 #ifndef CONFIG_NSH_ARCHINIT
@@ -252,7 +251,7 @@ int main(int argc, char *argv[])
   if (ret < 0)
     {
       PRINTF("ERROR: failed to initialize threads %d\n", ret);
-      goto errout_no_intf;
+      goto errout_no_mutex;
     }
 
   /* Initialize control interface */
@@ -311,10 +310,6 @@ int main(int argc, char *argv[])
     {
       PRINTFV("foc_main loop %d\n", time);
 
-      /* Get active control threads */
-
-      thrs_active = foc_threads_get();
-
       /* Update control interface */
 
       ret = foc_intf_update(&data);
@@ -330,7 +325,7 @@ int main(int argc, char *argv[])
         {
           for (i = 0; i < CONFIG_MOTOR_FOC_INST; i += 1)
             {
-              if ((g_args.en & (1 << i)) && (thrs_active & (1 << i)))
+              if (g_args.en & (1 << i))
                 {
                   PRINTFV("Send vbus to %d\n", i);
 
@@ -356,7 +351,7 @@ int main(int argc, char *argv[])
         {
           for (i = 0; i < CONFIG_MOTOR_FOC_INST; i += 1)
             {
-              if ((g_args.en & (1 << i)) && (thrs_active & (1 << i)))
+              if (g_args.en & (1 << i))
                 {
                   PRINTFV("Send state %" PRIu32 " to %d\n", data.state, i);
 
@@ -382,7 +377,7 @@ int main(int argc, char *argv[])
         {
           for (i = 0; i < CONFIG_MOTOR_FOC_INST; i += 1)
             {
-              if ((g_args.en & (1 << i)) && (thrs_active & (1 << i)))
+              if (g_args.en & (1 << i))
                 {
                   PRINTFV("Send setpoint = %" PRIu32 "to %d\n",
                           data.sp_raw, i);
@@ -409,7 +404,7 @@ int main(int argc, char *argv[])
         {
           for (i = 0; i < CONFIG_MOTOR_FOC_INST; i += 1)
             {
-              if ((g_args.en & (1 << i)) && (thrs_active & (1 << i)))
+              if (g_args.en & (1 << i))
                 {
                   PRINTFV("Send start to %d\n", i);
 
@@ -455,25 +450,11 @@ int main(int argc, char *argv[])
 
 errout:
 
-  /* De-initialize control interface */
-
-  ret = foc_intf_deinit();
-  if (ret < 0)
-    {
-      PRINTF("ERROR: foc_inf_deinit failed %d\n", ret);
-    }
-
-errout_no_intf:
-
   /* Stop FOC control threads */
 
   for (i = 0; i < CONFIG_MOTOR_FOC_INST; i += 1)
     {
-      /* Only for active threads */
-
-      thrs_active = foc_threads_get();
-
-      if ((g_args.en & (1 << i)) && (thrs_active & (1 << i)))
+      if (g_args.en & (1 << i))
         {
           if (mqd[i] != (mqd_t)-1)
             {
@@ -510,11 +491,17 @@ errout_no_intf:
         }
     }
 
-  /* De-initialize control threads */
+  /* De-initialize control interface */
 
+  ret = foc_intf_deinit();
+  if (ret < 0)
+    {
+      PRINTF("ERROR: foc_inf_deinit failed %d\n", ret);
+      goto errout;
+    }
+
+errout_no_mutex:
   foc_threads_deinit();
-
-errout_no_threads:
 
   PRINTF("foc_main exit\n");
   return 0;
