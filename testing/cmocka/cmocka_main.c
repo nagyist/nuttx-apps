@@ -31,7 +31,6 @@
 #include <setjmp.h>
 #include <stdint.h>
 #include <cmocka.h>
-#include <syslog.h>
 #include <sys/wait.h>
 
 #include <builtin/builtin.h>
@@ -49,11 +48,9 @@ int main(int argc, FAR char *argv[])
   const char prefix[] = CONFIG_TESTING_CMOCKA_PROGNAME"_";
   FAR const struct builtin_s *builtin;
   int len = strlen(prefix);
-  FAR char *testcase[argc + 1];
   FAR char *bypass[argc + 1];
   FAR char *cases[argc + 1];
   FAR char *skip[argc + 1];
-  int num_test = 0;
   int num_bypass = 1;
   int num_cases = 0;
   int num_skip = 0;
@@ -67,18 +64,13 @@ int main(int argc, FAR char *argv[])
       return 0;
     }
 
-  memset(testcase, 0, sizeof(testcase));
   memset(cases, 0, sizeof(cases));
   memset(skip, 0, sizeof(skip));
   memset(bypass, 0, sizeof(bypass));
 
   for (i = 1; i < argc; i++)
     {
-      if (strcmp("--test", argv[i]) == 0)
-        {
-          testcase[num_test++] = argv[++i];
-        }
-      else if (strcmp("--case", argv[i]) == 0)
+      if (strcmp("--case", argv[i]) == 0)
         {
           cases[num_cases++] = argv[++i];
         }
@@ -92,19 +84,12 @@ int main(int argc, FAR char *argv[])
         }
     }
 
-  cmocka_set_test_filter(NULL);
-  for (i = 0; testcase[i]; i++)
-    {
-      cmocka_set_test_filter(testcase[i]);
-    }
-
   cmocka_set_skip_filter(NULL);
   for (i = 0; skip[i]; i++)
     {
       cmocka_set_skip_filter(skip[i]);
     }
 
-  syslog(LOG_INFO, "Cmocka Test Start.");
   for (i = 0; (builtin = builtin_for_index(i)) != NULL; i++)
     {
       if (builtin->main == NULL ||
@@ -136,6 +121,5 @@ int main(int argc, FAR char *argv[])
         }
     }
 
-  syslog(LOG_INFO, "Cmocka Test Completed.");
   return 0;
 }
