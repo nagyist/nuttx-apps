@@ -204,7 +204,7 @@ static void show_environment(bool var1_valid, bool var2_valid,
   show_variable(g_var3_name, g_var3_value, var3_valid);
 }
 #else
-#  define show_environment()
+# define show_environment()
 #endif
 
 /****************************************************************************
@@ -323,10 +323,13 @@ static int user_main(int argc, char *argv[])
       check_test_memory_usage();
 #endif
 
+#ifdef CONFIG_DEV_NULL
       /* Checkout /dev/null */
 
       printf("\nuser_main: /dev/null test\n");
       dev_null();
+#endif
+
       check_test_memory_usage();
 
 #ifdef CONFIG_TESTING_OSTEST_AIO
