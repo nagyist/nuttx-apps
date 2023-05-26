@@ -83,7 +83,6 @@
 #define LSFLAGS_SIZE          1
 #define LSFLAGS_LONG          2
 #define LSFLAGS_RECURSIVE     4
-#define LSFLAGS_UID_GID       8
 
 /****************************************************************************
  * Private Functions
@@ -118,11 +117,9 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
   /* Check if any options will require that we stat the file */
 
-  if ((lsflags & (LSFLAGS_SIZE | LSFLAGS_LONG | LSFLAGS_UID_GID)) != 0)
+  if ((lsflags & (LSFLAGS_SIZE | LSFLAGS_LONG)) != 0)
     {
       struct stat buf;
-
-      memset(&buf, 0, sizeof(struct stat));
 
       /* stat the file */
 
@@ -214,15 +211,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
               details[2] = 'w';
             }
 
-          if ((buf.st_mode & S_IXUSR) != 0 && (buf.st_mode & S_ISUID) != 0)
-            {
-              details[3] = 's';
-            }
-          else if ((buf.st_mode & S_ISUID) != 0)
-            {
-              details[3] = 'S';
-            }
-          else if ((buf.st_mode & S_IXUSR) != 0)
+          if ((buf.st_mode & S_IXUSR) != 0)
             {
               details[3] = 'x';
             }
@@ -237,15 +226,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
               details[5] = 'w';
             }
 
-          if ((buf.st_mode & S_IXGRP) != 0 && (buf.st_mode & S_ISGID) != 0)
-            {
-              details[6] = 's';
-            }
-          else if ((buf.st_mode & S_ISGID) != 0)
-            {
-              details[6] = 'S';
-            }
-          else if ((buf.st_mode & S_IXGRP) != 0)
+          if ((buf.st_mode & S_IXGRP) != 0)
             {
               details[6] = 'x';
             }
@@ -267,14 +248,6 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
           nsh_output(vtbl, " %s", details);
         }
-
-#ifdef CONFIG_SCHED_USER_IDENTITY
-      if ((lsflags & LSFLAGS_UID_GID) != 0)
-        {
-          nsh_output(vtbl, "%8d", buf.st_uid);
-          nsh_output(vtbl, "%8d", buf.st_gid);
-        }
-#endif
 
       if ((lsflags & LSFLAGS_SIZE) != 0)
         {
@@ -1287,7 +1260,7 @@ int cmd_ls(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       switch (option)
         {
           case 'l':
-            lsflags |= (LSFLAGS_SIZE | LSFLAGS_LONG | LSFLAGS_UID_GID);
+            lsflags |= (LSFLAGS_SIZE | LSFLAGS_LONG);
             break;
 
           case 'R':
