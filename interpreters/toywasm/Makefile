@@ -28,7 +28,6 @@ MODULE    = $(CONFIG_INTERPRETERS_TOYWASM)
 # cli
 MAINSRC = main.c
 CSRCS += repl.c
-CSRCS += toywasm_config.c
 
 # lib
 CSRCS += bitmap.c
@@ -46,30 +45,40 @@ CSRCS += insn.c
 CSRCS += instance.c
 CSRCS += leb128.c
 CSRCS += list.c
+CSRCS += load_context.c
 CSRCS += module.c
 CSRCS += module_writer.c
 CSRCS += nbio.c
+CSRCS += options.c
 CSRCS += report.c
+CSRCS += shared_memory.c
 CSRCS += timeutil.c
+CSRCS += toywasm_config.c
 CSRCS += type.c
 CSRCS += util.c
 CSRCS += validation.c
 CSRCS += vec.c
-CSRCS += wasi.c
 CSRCS += xlog.c
 
 # TOYWASM_ENABLE_WASM_THREADS
+CSRCS += cluster.c
 CSRCS += lock.c
+CSRCS += suspend.c
 CSRCS += waitlist.c
+#CSRCS += usched.c
+
+# libwasi
+CSRCS += wasi.c
+CSRCS += wasi_fdtable.c
 
 # TOYWASM_ENABLE_WASI_THREADS
-CSRCS += shared_memory.c
 CSRCS += wasi_threads.c
 
 CFLAGS += ${shell $(INCDIR) "$(CC)" $(APPDIR)/interpreters/toywasm/include}
 CFLAGS += ${shell $(INCDIR) "$(CC)" $(APPDIR)/interpreters/toywasm/toywasm/lib}
+CFLAGS += ${shell $(INCDIR) "$(CC)" $(APPDIR)/interpreters/toywasm/toywasm/libwasi}
 
-TOYWASM_VERSION  = 5a1d6bf349571e0b63a9d02d73e01b8e212fb8c0
+TOYWASM_VERSION  = 031ac96574bf95c5ec31e5aeb02787a84e6d4af0
 TOYWASM_UNPACK   = toywasm
 TOYWASM_TARBALL  = $(TOYWASM_VERSION).zip
 TOYWASM_URL_BASE = https://github.com/yamt/toywasm/archive/
@@ -77,6 +86,7 @@ TOYWASM_URL      = $(TOYWASM_URL_BASE)/$(TOYWASM_TARBALL)
 
 VPATH += $(TOYWASM_UNPACK)/cli
 VPATH += $(TOYWASM_UNPACK)/lib
+VPATH += $(TOYWASM_UNPACK)/libwasi
 VPATH += src
 
 $(TOYWASM_TARBALL):

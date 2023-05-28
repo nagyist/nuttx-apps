@@ -339,7 +339,8 @@ static struct dhcpd_config_s g_dhcpd_config =
  * Name: dhcpd_arpupdate
  ****************************************************************************/
 
-#ifndef CONFIG_NETUTILS_DHCPD_HOST
+#ifndef CONFIG_NETUTILS_DHCPD_IGNOREBROADCAST
+#  ifndef CONFIG_NETUTILS_DHCPD_HOST
 static inline void dhcpd_arpupdate(FAR uint8_t *ipaddr, FAR uint8_t *hwaddr)
 {
   struct sockaddr_in inaddr;
@@ -356,8 +357,9 @@ static inline void dhcpd_arpupdate(FAR uint8_t *ipaddr, FAR uint8_t *hwaddr)
 
   netlib_set_arpmapping(&inaddr, hwaddr, NULL);
 }
-#else
-#  define dhcpd_arpupdate(ipaddr,hwaddr)
+#  else
+#    define dhcpd_arpupdate(ipaddr,hwaddr)
+#  endif
 #endif
 
 /****************************************************************************
