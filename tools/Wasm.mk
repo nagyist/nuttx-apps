@@ -100,20 +100,20 @@ WAMR_MODE ?= INT
 .PRECIOUS: $(WBIN)
 
 WSRCS := $(MAINSRC) $(CSRCS)
-WOBJS := $(WSRCS:=$(SUFFIX).wo)
+WOBJS := $(WSRCS:%.c=%.wo)
 
 all:: $(WBIN)
 
-$(WOBJS): %.c$(SUFFIX).wo : %.c
+$(WOBJS): %.wo : %.c
 	$(Q) $(WCC) $(WCFLAGS) -c $^ -o $@
 
 $(WBIN): $(WOBJS)
 	$(shell mkdir -p $(APPDIR)/wasm)
-	$(Q) $(WAR) $@ $(filter-out $(MAINSRC:=$(SUFFIX).wo),$^)
+	$(Q) $(WAR) $@ $(filter-out $(MAINSRC:%.c=%.wo),$^)
 	$(foreach main,$(MAINSRC), \
 	  $(eval mainindex=$(strip $(call GETINDEX,$(main),$(MAINSRC)))) \
-	$(eval dstname=$(shell echo $(main:=$(SUFFIX).wo) | sed -e 's/\//_/g')) \
-	  $(shell cp -rf $(strip $(main:=$(SUFFIX).wo)) \
+	  $(eval dstname=$(shell echo $(main:%.c=%.wo) | sed -e 's/\//_/g')) \
+	  $(shell cp -rf $(strip $(main:%.c=%.wo)) \
 	    $(strip $(APPDIR)/wasm/$(word $(mainindex),$(PROGNAME))#$(WASM_INITIAL_MEMORY)#$(STACKSIZE)#$(PRIORITY)#$(WAMR_MODE)#$(dstname)) \
 	   ) \
 	 )
