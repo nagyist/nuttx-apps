@@ -50,11 +50,6 @@ CFLAGS += -DCONFIG_BIGNUM
 CSRCS  += qjscalc.c
 endif
 
-ifeq ($(CONFIG_INTERPRETERS_QUICKJS_DEBUG),y)
-CSRCS  += quickjs-debugger.c
-CSRCS  += quickjs-memorydump.c
-endif
-
 VPATH += $(QUICKJS_UNPACK)
 
 ifneq ($(CONFIG_INTERPRETERS_QUICKJS_NONE),y)
