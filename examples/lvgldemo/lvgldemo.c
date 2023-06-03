@@ -25,7 +25,6 @@
 #include <nuttx/config.h>
 
 #include <sys/boardctl.h>
-#include <sys/param.h>
 #include <unistd.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -34,12 +33,15 @@
 #include <debug.h>
 
 #include <lvgl/lvgl.h>
-#include <port/lv_port.h>
+#include <lv_porting/lv_porting.h>
 #include <lvgl/demos/lv_demos.h>
 
-#ifdef CONFIG_LIBUV
-#  include <uv.h>
-#  include <port/lv_port_libuv.h>
+#if defined(CONFIG_LIBUV)
+#include <uv.h>
+#endif
+
+#ifdef CONFIG_ANIMATION_ENGINE_EXAMPLES
+#include <api_demo/api_demo.h>
 #endif
 
 /****************************************************************************
@@ -63,11 +65,17 @@
 #  define NEED_BOARDINIT 1
 #endif
 
+#if defined(CONFIG_LV_USE_FBDEV_INTERFACE) \
+&& !defined(CONFIG_LV_FBDEV_ENABLE_WAITFORVSYNC) \
+&& defined(CONFIG_LIBUV)
+#  define USE_UI_UV_LOOP 1
+#endif
+
 /****************************************************************************
  * Private Type Declarations
  ****************************************************************************/
 
-typedef CODE void (*demo_create_func_t)(void);
+typedef void (*demo_create_func_t)(void);
 
 struct func_key_pair_s
 {
@@ -78,6 +86,10 @@ struct func_key_pair_s
 /****************************************************************************
  * Private Data
  ****************************************************************************/
+
+#if defined(USE_UI_UV_LOOP)
+static uv_loop_t g_ui_loop;
+#endif
 
 static const struct func_key_pair_s func_key_pair[] =
 {
@@ -100,6 +112,10 @@ static const struct func_key_pair_s func_key_pair[] =
 #ifdef CONFIG_LV_USE_DEMO_MUSIC
   { "music",          lv_demo_music          },
 #endif
+
+#ifdef CONFIG_ANIMATION_ENGINE_EXAMPLES
+  { "animengine",     anim_api_demo          },
+#endif
   { "", NULL }
 };
 
@@ -114,7 +130,8 @@ static const struct func_key_pair_s func_key_pair[] =
 static void show_usage(void)
 {
   int i;
-  const int len = nitems(func_key_pair) - 1;
+  const int len = sizeof(func_key_pair)
+                  / sizeof(struct func_key_pair_s) - 1;
 
   if (len == 0)
     {
@@ -141,7 +158,8 @@ static void show_usage(void)
 static demo_create_func_t find_demo_create_func(FAR const char *name)
 {
   int i;
-  const int len = nitems(func_key_pair) - 1;
+  const int len = sizeof(func_key_pair)
+                  / sizeof(struct func_key_pair_s) - 1;
 
   for (i = 0; i < len; i++)
     {
@@ -176,11 +194,8 @@ int main(int argc, FAR char *argv[])
 {
   demo_create_func_t demo_create_func;
   FAR const char *demo = NULL;
-  const int func_key_pair_len = nitems(func_key_pair);
-
-#ifdef CONFIG_LIBUV
-  uv_loop_t ui_loop;
-#endif
+  const int func_key_pair_len = sizeof(func_key_pair) /
+                                sizeof(func_key_pair[0]);
 
   /* If no arguments are specified and only 1 demo exists, select the demo */
 
@@ -222,9 +237,9 @@ int main(int argc, FAR char *argv[])
 
   lv_init();
 
-  /* LVGL port initialization */
+  /* LVGL interface initialization */
 
-  lv_port_init();
+  lv_porting_init();
 
   /* LVGL demo creation */
 
@@ -232,20 +247,15 @@ int main(int argc, FAR char *argv[])
 
   /* Handle LVGL tasks */
 
-#ifdef CONFIG_LIBUV
-  uv_loop_init(&ui_loop);
-  lv_port_libuv_init(&ui_loop);
-  uv_run(&ui_loop, UV_RUN_DEFAULT);
+#if defined(USE_UI_UV_LOOP)
+  uv_loop_init(&g_ui_loop);
+  lv_uv_start(&g_ui_loop);
+  uv_run(&g_ui_loop, UV_RUN_DEFAULT);
 #else
   while (1)
     {
-      uint32_t idle;
-      idle = lv_timer_handler();
-
-      /* Minimum sleep of 1ms */
-
-      idle = idle ? idle : 1;
-      usleep(idle * 1000);
+      lv_timer_handler();
+      usleep(1000);
     }
 #endif
 
