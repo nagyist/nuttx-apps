@@ -36,6 +36,11 @@
 #include <lv_porting/lv_porting.h>
 #include <lvgl/demos/lv_demos.h>
 
+#ifdef CONFIG_LVX_USE_VIDEO_EXAMPLE
+#include <ext/test/lv_ext_test_demos.h>
+#include <ext/lv_ext.h>
+#endif
+
 #if defined(CONFIG_LIBUV)
 #include <uv.h>
 #endif
@@ -119,6 +124,13 @@ static const struct func_key_pair_s func_key_pair[] =
 
 #ifdef CONFIG_ANIM_ENGINE_LVGL_IMAGE_DEMO
   { "anim_image",     lvgl_test          },
+#endif
+
+#ifdef CONFIG_LVX_USE_VIDEO_EXAMPLE
+  { "video",          lvx_example_video             },
+  { "video_ctl",      lvx_example_video_controller  },
+  { "video_call",     lvx_example_video_call        },
+  { "camera",         lvx_example_camera            },
 #endif
   { "", NULL }
 };
@@ -245,6 +257,9 @@ int main(int argc, FAR char *argv[])
 
   lv_porting_init();
 
+#ifdef CONFIG_LVX_USE_VIDEO_EXAMPLE
+  lv_ext_init();
+#endif
   /* LVGL demo creation */
 
   demo_create_func();
