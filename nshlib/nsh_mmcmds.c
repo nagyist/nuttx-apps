@@ -57,7 +57,6 @@ int cmd_free(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 int cmd_memdump(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   char arg[CONFIG_NSH_LINELEN] = "";
-  int i;
 
   if (argc == 1)
     {
@@ -65,7 +64,7 @@ int cmd_memdump(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
     }
   else
     {
-      for (i = 1; i < argc; i++)
+      for (int i = 1; i < argc; i++)
         {
           strlcat(arg, argv[i], CONFIG_NSH_LINELEN);
           if (i < argc - 1)
