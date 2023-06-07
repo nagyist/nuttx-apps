@@ -132,7 +132,13 @@ vg_lite_error_t vg_lite_test_blit(
  ****************************************************************************/
 
 vg_lite_error_t vg_lite_test_global_alpha(
-  FAR struct gpu_test_context_s *ctx);
+FAR struct gpu_test_context_s *ctx);
+
+/****************************************************************************
+ * Name: vg_lite_test_global_alpha
+ ****************************************************************************/
+
+vg_lite_error_t vg_lite_test_rotation(FAR struct gpu_test_context_s *ctx);
 
 #ifdef __cplusplus
 }

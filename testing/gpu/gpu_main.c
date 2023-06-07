@@ -137,7 +137,7 @@ static void parse_commandline(int argc, FAR char **argv,
   param->img_width = 128;
   param->img_height = 128;
 
-  while ((ch = getopt(argc, argv, "ho:m:i:s")) != ERROR)
+  while ((ch = getopt(argc, argv, "ho:m:i:sc:")) != ERROR)
     {
       switch (ch)
         {
@@ -169,6 +169,10 @@ static void parse_commandline(int argc, FAR char **argv,
 
           case 's':
             param->screenshot_en = true;
+            break;
+
+          case 'c':
+            param->test_case = atoi(optarg);
             break;
 
           case '?':

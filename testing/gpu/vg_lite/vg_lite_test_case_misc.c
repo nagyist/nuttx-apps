@@ -83,7 +83,7 @@ vg_lite_error_t vg_lite_test_blit(FAR struct gpu_test_context_s *ctx)
   vg_lite_buffer_t *image = VG_LITE_SRC_BUF;
   gpu_color32_t *dest;
   VG_LITE_CHECK_ERROR(vg_lite_create_image(
-    image, IMG_WIDTH, IMG_HEIGHT, VG_LITE_BGRA8888));
+    image, IMG_WIDTH, IMG_HEIGHT, VG_LITE_BGRA8888, false));
 
   /* Draw image */
 
@@ -139,7 +139,7 @@ vg_lite_error_t vg_lite_test_global_alpha(FAR struct gpu_test_context_s *ctx)
 
   vg_lite_buffer_t *image = VG_LITE_SRC_BUF;
   VG_LITE_CHECK_ERROR(vg_lite_create_image(
-    image, IMG_WIDTH, IMG_HEIGHT, VG_LITE_BGRA8888));
+    image, IMG_WIDTH, IMG_HEIGHT, VG_LITE_BGRA8888, false));
 
   /* Draw image */
 

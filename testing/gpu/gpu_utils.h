@@ -64,6 +64,7 @@ struct gpu_test_param_s
   int img_width;
   int img_height;
   bool screenshot_en;
+  int test_case;
 };
 
 struct gpu_test_context_s

@@ -260,7 +260,11 @@ int vg_lite_test(FAR struct gpu_test_context_s *ctx)
   vg_lite_enable_scissor();
   vg_lite_set_scissor(0, 0, buffer->width, buffer->height);
 
-  vg_lite_test_run(ctx);
+  if (ctx->param.test_case == 0)
+    vg_lite_test_run(ctx);
+  else {
+    vg_lite_test_rotation(ctx);
+  }
 
 error_handler:
   if (buffer->handle)
