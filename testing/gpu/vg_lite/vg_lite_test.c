@@ -262,9 +262,14 @@ int vg_lite_test(FAR struct gpu_test_context_s *ctx)
 
   if (ctx->param.test_case == 0)
     vg_lite_test_run(ctx);
-  else {
+  else if (ctx->param.test_case == 1){
     vg_lite_test_rotation(ctx);
   }
+  else if (ctx->param.test_case == 2){
+    vg_lite_test_rotation_rgb(ctx);
+  }
+
+
 
 error_handler:
   if (buffer->handle)

@@ -24,6 +24,7 @@
 
 #include "vg_lite_test_utils.h"
 #include "image_yuyv_tiled.h"
+#include "image_rgb.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -96,6 +97,37 @@ vg_lite_error_t vg_lite_test_rotation(FAR struct gpu_test_context_s *ctx)
 
   /* copy image content */
   memcpy(image->memory, image_yuyv_tiled_48x480, 48 * 480 * 2);
+
+  int i = 10 * 1000;
+  int angle = 0;
+  while(i--) {
+    vg_lite_test_image_transform(ctx, VG_LITE_BLEND_SRC_OVER,
+                                 VG_LITE_FILTER_LINEAR, angle, 24, 240);
+    angle++;
+    if (angle > 360)
+      angle = 0;
+
+    usleep(1000);
+  }
+
+  vg_lite_delete_image(image);
+  return error;
+}
+
+vg_lite_error_t vg_lite_test_rotation_rgb(FAR struct gpu_test_context_s *ctx)
+{
+  vg_lite_error_t error = VG_LITE_SUCCESS;
+  vg_lite_buffer_t *image = VG_LITE_SRC_BUF;
+  error = vg_lite_create_image(image, 48, 480, VG_LITE_BGRA8888, false);
+  if (error != VG_LITE_SUCCESS)
+    {
+      GPU_LOG_ERROR("Execute vg_lite_create_image error(%d): %s", (int)error,
+                    vg_lite_get_error_type_string(error));
+      return error;
+    }
+
+  /* copy image content */
+  memcpy(image->memory, image_rgb_48x480, 48 * 480 * 4);
 
   int i = 10 * 1000;
   int angle = 0;

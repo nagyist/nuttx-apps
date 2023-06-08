@@ -140,6 +140,8 @@ FAR struct gpu_test_context_s *ctx);
 
 vg_lite_error_t vg_lite_test_rotation(FAR struct gpu_test_context_s *ctx);
 
+vg_lite_error_t vg_lite_test_rotation_rgb(FAR struct gpu_test_context_s *ctx);
+
 #ifdef __cplusplus
 }
 #endif

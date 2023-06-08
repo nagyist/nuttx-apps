@@ -42,6 +42,7 @@
  * Name: vg_lite_get_error_type_string
  ****************************************************************************/
 
+#ifndef CONFIG_LV_USE_GPU_MANAGER
 FAR const char *vg_lite_get_error_type_string(vg_lite_error_t error)
 {
   switch (error)
@@ -196,6 +197,8 @@ FAR const char *vg_lite_get_global_alpha_string(
   return "UNKNOW_GLOBAL_ALPHA";
 }
 
+#endif
+
 /****************************************************************************
  * Name: vg_lite_get_feature_string
  ****************************************************************************/
@@ -220,9 +223,35 @@ FAR const char *vg_lite_get_feature_string(vg_lite_feature_t feature)
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_FLEXA);
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_24BIT);
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_DITHER);
-      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_YUV_INPUT);
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_USE_DST);
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_PE_CLEAR);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_IM_INPUT);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_DEC_COMPRESS);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_LINEAR_GRADIENT_EXT);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_MASK);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_MIRROR);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_GAMMA);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_NEW_BLEND_MODE);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_STENCIL);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_SRC_PREMULTIPLIED);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_HW_PREMULTIPLY);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_COLOR_TRANSFORMATION);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_LVGL_SUPPORT);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_INDEX_ENDIAN);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_24BIT_PLANAR);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_PIXEL_MATRIX);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_NEW_IMAGE_INDEX);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_PARALLEL_PATHS);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_STRIPE_MODE);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_IM_DEC_INPUT);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_GAUSSIAN_BLUR);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_RECTANGLE_TILED_OUT);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_TESSELLATION_TILED_OUT);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_IM_REPEAT_REFLECT);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_YUY2_INPUT);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_YUV_INPUT);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_YUV_TILED_INPUT);
+      ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_AYUV_INPUT);
     default:
       break;
     }
@@ -293,6 +322,7 @@ void vg_lite_draw_fb_center(FAR struct gpu_test_context_s *ctx,
     (ctx->yres - buffer->height) / 2);
 }
 
+#ifndef CONFIG_LV_USE_GPU_MANAGER
 /****************************************************************************
  * Name: vg_lite_buffer_init
  ****************************************************************************/
@@ -301,6 +331,7 @@ void vg_lite_buffer_init(FAR vg_lite_buffer_t *buffer)
 {
   memset(buffer, 0, sizeof(vg_lite_buffer_t));
 }
+#endif
 
 /****************************************************************************
  * Name: vg_lite_create_image
@@ -345,6 +376,7 @@ void vg_lite_delete_image(FAR vg_lite_buffer_t *image)
   vg_lite_free(image);
 }
 
+#ifndef CONFIG_LV_USE_GPU_MANAGER
 /****************************************************************************
  * Name: vg_lite_get_format_bytes
  ****************************************************************************/
@@ -450,6 +482,7 @@ void vg_lite_get_format_bytes(vg_lite_buffer_format_t format,
           break;
     }
 }
+#endif
 
 /****************************************************************************
  * Name: vg_lite_init_custon_buffer
