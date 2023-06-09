@@ -31,6 +31,7 @@
 #include <setjmp.h>
 #include <stdint.h>
 #include <cmocka.h>
+#include <syslog.h>
 #include <sys/wait.h>
 
 #include <builtin/builtin.h>
@@ -48,15 +49,16 @@ int main(int argc, FAR char *argv[])
   const char prefix[] = CONFIG_TESTING_CMOCKA_PROGNAME"_";
   FAR const struct builtin_s *builtin;
   int len = strlen(prefix);
+  FAR char *testcase = NULL;
   FAR char *bypass[argc + 1];
   FAR char *cases[argc + 1];
-  FAR char *skip[argc + 1];
+  FAR char *skip = NULL;
   int num_bypass = 1;
   int num_cases = 0;
-  int num_skip = 0;
   int ret;
   int i;
   int j;
+  int list_tests = 0;
 
   if (strlen(argv[0]) < len - 1 ||
       strncmp(argv[0], prefix, len - 1))
@@ -65,18 +67,25 @@ int main(int argc, FAR char *argv[])
     }
 
   memset(cases, 0, sizeof(cases));
-  memset(skip, 0, sizeof(skip));
   memset(bypass, 0, sizeof(bypass));
 
   for (i = 1; i < argc; i++)
     {
-      if (strcmp("--case", argv[i]) == 0)
+      if (strcmp("--list", argv[i]) == 0)
+        {
+          list_tests = 1;
+        }
+      else if (strcmp("--test", argv[i]) == 0)
+        {
+          testcase = argv[++i];
+        }
+      else if (strcmp("--case", argv[i]) == 0)
         {
           cases[num_cases++] = argv[++i];
         }
       else if (strcmp("--skip", argv[i]) == 0)
         {
-          skip[num_skip++] = argv[++i];
+          skip = argv[++i];
         }
       else
         {
@@ -84,12 +93,17 @@ int main(int argc, FAR char *argv[])
         }
     }
 
+  cmocka_set_test_filter(NULL);
   cmocka_set_skip_filter(NULL);
-  for (i = 0; skip[i]; i++)
+  cmocka_set_list_test(list_tests);
+
+  if (list_tests == 0)
     {
-      cmocka_set_skip_filter(skip[i]);
+      cmocka_set_test_filter(testcase);
+      cmocka_set_skip_filter(skip);
     }
 
+  print_message("Cmocka Test Start.");
   for (i = 0; (builtin = builtin_for_index(i)) != NULL; i++)
     {
       if (builtin->main == NULL ||
@@ -121,5 +135,6 @@ int main(int argc, FAR char *argv[])
         }
     }
 
+  print_message("Cmocka Test Completed.");
   return 0;
 }
