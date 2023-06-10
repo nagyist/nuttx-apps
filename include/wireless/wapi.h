@@ -304,7 +304,7 @@ enum wapi_pta_prio_e
  * Public Data
  ****************************************************************************/
 
- #ifdef __cplusplus
+#ifdef __cplusplus
 #define EXTERN extern "C"
 extern "C"
 {
