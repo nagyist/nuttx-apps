@@ -31,4 +31,8 @@ config TESTING_CMOCKA_LEAKDETECT
 	bool "Memory leaks can be checked using cmocka, please use in local environment"
 	default n
 
+config TESTING_CMOCKA_LEAKDETECT
+	bool "Memory leaks can be checked using cmocka, please use in local environment"
+	default n
+
 endif
