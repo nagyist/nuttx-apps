@@ -42,4 +42,4 @@ config SYSTEM_TELNETD_SESSION_STACKSIZE
 	int "Telnetd session task stack size"
 	default 3072
 
-endif
+endif # SYSTEM_TELNETD
