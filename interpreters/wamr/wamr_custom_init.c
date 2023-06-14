@@ -26,18 +26,87 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <semaphore.h>
 #include <sys/param.h>
 #include <sys/types.h>
+#include <iconv.h>
 
 #include "wasm_export.h"
+#include "wasm_native.h"
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static sem_t g_aligned_memory_map_sem = SEM_INITIALIZER(1);
+static uintptr_t g_aligned_memory_map
+  [CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX_POSIXMEMALIGN_MAP_SIZE][2] =
+{
+  0
+};
+
+static bool
+add_to_aligned_map(uintptr_t mapped, uintptr_t raw)
+{
+  int i;
+  bool ret = false;
+
+  sem_wait(&g_aligned_memory_map_sem);
+
+  for (i = 0; i < CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX_POSIXMEMALIGN_MAP_SIZE;
+       i++)
+    {
+      DEBUGASSERT(g_aligned_memory_map[i][0] != mapped);
+
+      if (g_aligned_memory_map[i][0] == 0 && g_aligned_memory_map[i][1] == 0)
+      {
+        g_aligned_memory_map[i][0] = mapped;
+        g_aligned_memory_map[i][1] = raw;
+        ret = true;
+        break;
+      }
+    }
+
+  sem_post(&g_aligned_memory_map_sem);
+  return ret;
+}
+
+static uintptr_t
+remove_from_aligned_map(uintptr_t mapped)
+{
+  int i;
+  uintptr_t ret = 0;
+
+  if (mapped == 0)
+    {
+      return ret;
+    }
+
+  sem_wait(&g_aligned_memory_map_sem);
+
+  for (i = 0; i < CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX_POSIXMEMALIGN_MAP_SIZE;
+       i++)
+    {
+      if (g_aligned_memory_map[i][0] == mapped)
+        {
+          g_aligned_memory_map[i][0] = 0;
+          ret = g_aligned_memory_map[i][1];
+          g_aligned_memory_map[i][1] = 0;
+          break;
+        }
+    }
+
+  sem_post(&g_aligned_memory_map_sem);
+  return ret;
+}
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
 static void
-va_list_string2native(wasm_exec_env_t exec_env, const char *format,
-                      va_list ap)
+va_list_string2conv(wasm_exec_env_t exec_env, const char *format,
+                      va_list ap, bool to_native)
 {
   wasm_module_inst_t module_inst = get_module_inst(exec_env);
   char *pos = *((char **)&ap);
@@ -128,8 +197,17 @@ va_list_string2native(wasm_exec_env_t exec_env, const char *format,
 
               case 's':
                 {
-                  *(uint32_t *)pos =
-                      (uintptr_t)addr_app_to_native(*(uintptr_t *)pos);
+                  if (to_native)
+                    {
+                      *(uintptr_t *)pos =
+                          (uintptr_t)addr_app_to_native(*(uintptr_t *)pos);
+                    }
+                  else
+                    {
+                      *(uintptr_t *)pos =
+                          (uintptr_t)addr_native_to_app(*(uintptr_t *)pos);
+                    }
+
                   pos += sizeof(uintptr_t);
                   break;
                 }
@@ -145,6 +223,12 @@ va_list_string2native(wasm_exec_env_t exec_env, const char *format,
       ++format;
   }
 }
+
+#define va_list_string2native(exec_env, format, ap) \
+  va_list_string2conv(exec_env, format, ap, true)
+
+#define va_list_string2app(exec_env, format, ap) \
+  va_list_string2conv(exec_env, format, ap, false)
 
 static void
 scanf_begin(wasm_module_inst_t module_inst, va_list ap)
@@ -203,7 +287,7 @@ void glue_qsort(wasm_exec_env_t env, uintptr_t parm1, uintptr_t parm2,
   pthread_mutex_lock(&g_compare_mutex);
   g_compare_env = env;
   g_compare_func = parm4;
-  qsort((FAR void *)addr_app_to_native(parm1), (size_t)parm2,
+  qsort((FAR void *)parm1, (size_t)parm2,
         (size_t)parm3, compare_proxy);
   pthread_mutex_unlock(&g_compare_mutex);
 }
@@ -221,10 +305,11 @@ uintptr_t glue_bsearch(wasm_exec_env_t env, uintptr_t parm1, uintptr_t parm2,
   pthread_mutex_lock(&g_compare_mutex);
   g_compare_env = env;
   g_compare_func = parm5;
-  ret = bsearch((FAR const void *)addr_app_to_native(parm1),
-                (FAR const void *)addr_app_to_native(parm2),
+  ret = bsearch((FAR const void *)parm1,
+                (FAR const void *)parm2,
                 (size_t)parm3, (size_t)parm4, compare_proxy);
   pthread_mutex_unlock(&g_compare_mutex);
+  ret = addr_native_to_app((void *)ret);
   return ret;
 }
 
@@ -285,11 +370,11 @@ uintptr_t glue_sendmsg(wasm_exec_env_t env, uintptr_t parm1,
 {
   wasm_module_inst_t module_inst = get_module_inst(env);
   FAR struct msghdr *hdr =
-    (FAR struct msghdr *)addr_app_to_native((uintptr_t)parm2);
+    (FAR struct msghdr *)(uintptr_t)parm2;
 
   glue_msghdr_begin(module_inst, hdr);
   uintptr_t ret = sendmsg((int)parm1,
-                          (FAR struct msghdr *)addr_app_to_native(parm2),
+                          (FAR struct msghdr *)(parm2),
                           (int)parm3);
   glue_msghdr_end(module_inst, hdr);
 
@@ -305,11 +390,11 @@ uintptr_t glue_recvmsg(wasm_exec_env_t env, uintptr_t parm1,
 {
   wasm_module_inst_t module_inst = get_module_inst(env);
   FAR struct msghdr *hdr =
-    (FAR struct msghdr *)addr_app_to_native((uintptr_t)parm2);
+    (FAR struct msghdr *)((uintptr_t)parm2);
 
   glue_msghdr_begin(module_inst, hdr);
   uintptr_t ret = recvmsg((int)parm1,
-                          (FAR struct msghdr *)addr_app_to_native(parm2),
+                          (FAR struct msghdr *)(parm2),
                           (int)parm3);
   glue_msghdr_end(module_inst, hdr);
 
@@ -343,10 +428,22 @@ uintptr_t glue_scandir(wasm_exec_env_t env, uintptr_t parm1, uintptr_t parm2,
                        uintptr_t parm3, uintptr_t parm4)
 {
   wasm_module_inst_t module_inst = get_module_inst(env);
+  int ret = 0;
+  int i = 0;
 
-  return scandir((FAR const char *)addr_app_to_native(parm1),
-                 (FAR struct dirent ***)addr_app_to_native(parm2),
-                 (FAR void *)addr_app_to_native(parm3), alphasort);
+  ret = scandir((FAR const char *)parm1,
+                (FAR struct dirent ***)parm2,
+                (FAR void *)parm3, alphasort);
+
+  for (i = 0; i < ret; i++)
+    {
+      (*(uintptr_t **)parm2)[i] =
+        addr_native_to_app((*(uintptr_t **)parm2)[i]);
+    }
+
+  *(uintptr_t *)parm2 = addr_native_to_app(*(uintptr_t *)parm2);
+
+  return ret;
 }
 
 #endif /* GLUE_FUNCTION_scandir */
@@ -359,6 +456,184 @@ uintptr_t glue_daemon(wasm_exec_env_t env, uintptr_t parm1, uintptr_t parm2)
 }
 
 #endif /* GLUE_FUNCTION_daemon */
+
+#ifndef GLUE_FUNCTION_posix_memalign
+#define GLUE_FUNCTION_posix_memalign
+uintptr_t glue_posix_memalign(wasm_exec_env_t env, uintptr_t parm1,
+                              uintptr_t parm2, uintptr_t parm3)
+{
+  uintptr_t rawptr;
+  wasm_module_inst_t module_inst = get_module_inst(env);
+
+  /* Extra size for align */
+
+  parm3 += parm2;
+  int ret = posix_memalign((FAR void **)parm1, (size_t)parm2, (size_t)parm3);
+
+  /* If the memory allocation is failed, return NULL */
+
+  if (ret != OK)
+    {
+      return NULL;
+    }
+
+  /* Add the original pointer to the map */
+
+  rawptr = *(uintptr_t *)parm1;
+  *(void **)parm1 = addr_native_to_app((uintptr_t)*(void **)parm1);
+  *(uintptr_t *)parm1 = (*(uintptr_t *)parm1 + parm2 - 1) & ~(parm2 - 1);
+
+  if (add_to_aligned_map(*(uintptr_t *)parm1, rawptr))
+    {
+      return ret;
+    }
+  else
+    {
+      free(rawptr);
+      return NULL;
+    }
+}
+#endif /* GLUE_FUNCTION_posix_memalign */
+
+#ifndef GLUE_FUNCTION_free
+#define GLUE_FUNCTION_free
+void glue_free(wasm_exec_env_t env, uintptr_t parm1)
+{
+  wasm_module_inst_t module_inst = get_module_inst(env);
+  uintptr_t ret = NULL;
+  uintptr_t app_addr = NULL;
+
+  /* Try to pop the original pointer from the map */
+
+  if (parm1 != (uintptr_t)NULL)
+    {
+      app_addr = addr_native_to_app(parm1);
+      ret = remove_from_aligned_map(app_addr);
+    }
+
+  if (ret)
+    {
+      parm1 = ret;
+    }
+
+  free((FAR void *)parm1);
+}
+
+#endif /* GLUE_FUNCTION_free */
+
+#ifndef GLUE_FUNCTION_vasprintf
+#define GLUE_FUNCTION_vasprintf
+uintptr_t glue_vasprintf(wasm_exec_env_t env, uintptr_t parm1,
+                         uintptr_t format, va_list ap)
+{
+  wasm_module_inst_t module_inst = get_module_inst(env);
+  uintptr_t ret;
+  va_list_string2native(env, format, ap);
+  ret = vasprintf((FAR char **)parm1, (FAR const IPTR char *)format, ap);
+  *(uintptr_t *)parm1 = addr_native_to_app(*(uintptr_t *)parm1);
+  return ret;
+}
+#endif /* GLUE_FUNCTION_vasprintf */
+
+#ifndef GLUE_FUNCTION_strtol
+#define GLUE_FUNCTION_strtol
+uintptr_t glue_strtol(wasm_exec_env_t env, uintptr_t parm1, uintptr_t parm2,
+                      uintptr_t parm3)
+{
+  wasm_module_inst_t module_inst = get_module_inst(env);
+  uintptr_t ret;
+  *(uintptr_t *)parm2 = addr_app_to_native(*(uintptr_t *)parm2);
+  ret = strtol((FAR const char *)parm1, (FAR char **)parm2, (int)parm3);
+  *(uintptr_t *)parm2 = addr_native_to_app(*(uintptr_t *)parm2);
+  return ret;
+}
+
+#endif /* GLUE_FUNCTION_strtol */
+
+#if defined(CONFIG_HAVE_LONG_LONG)
+#ifndef GLUE_FUNCTION_strtoll
+#define GLUE_FUNCTION_strtoll
+uintptr_t glue_strtoll(wasm_exec_env_t env, uintptr_t parm1, uintptr_t parm2,
+                       uintptr_t parm3)
+{
+  wasm_module_inst_t module_inst = get_module_inst(env);
+  uintptr_t ret;
+  *(uintptr_t *)parm2 = addr_app_to_native(*(uintptr_t *)parm2);
+  ret = strtoll((FAR const char *)parm1, (FAR char **)parm2, (int)parm3);
+  *(uintptr_t *)parm2 = addr_native_to_app(*(uintptr_t *)parm2);
+  return ret;
+}
+#endif /* GLUE_FUNCTION_strtoll */
+#endif
+
+#ifndef GLUE_FUNCTION_strtoul
+#define GLUE_FUNCTION_strtoul
+uintptr_t glue_strtoul(wasm_exec_env_t env, uintptr_t parm1,
+                       uintptr_t parm2, uintptr_t parm3)
+{
+  wasm_module_inst_t module_inst = get_module_inst(env);
+  uintptr_t ret;
+  *(uintptr_t *)parm2 = addr_app_to_native(*(uintptr_t *)parm2);
+  ret = strtoul((FAR const char *)parm1, (FAR char **)parm2, (int)parm3);
+  *(uintptr_t *)parm2 = addr_native_to_app(*(uintptr_t *)parm2);
+  return ret;
+}
+
+#endif /* GLUE_FUNCTION_strtoul */
+
+#ifndef GLUE_FUNCTION_strtoull
+#define GLUE_FUNCTION_strtoull
+uintptr_t glue_strtoull(wasm_exec_env_t env, uintptr_t parm1,
+                        uintptr_t parm2, uintptr_t parm3)
+{
+  wasm_module_inst_t module_inst = get_module_inst(env);
+  uintptr_t ret;
+  *(uintptr_t *)parm2 = addr_app_to_native(*(uintptr_t *)parm2);
+  ret = strtoull((FAR const char *)parm1, (FAR char **)parm2, (int)parm3);
+  *(uintptr_t *)parm2 = addr_native_to_app(*(uintptr_t *)parm2);
+  return ret;
+}
+
+#endif /* GLUE_FUNCTION_strtoull */
+
+#if defined(CONFIG_LIBC_LOCALE)
+
+#ifndef GLUE_FUNCTION_iconv
+#define GLUE_FUNCTION_iconv
+uintptr_t glue_iconv(wasm_exec_env_t env, uintptr_t parm1, uintptr_t parm2,
+                     uintptr_t parm3, uintptr_t parm4, uintptr_t parm5)
+{
+  wasm_module_inst_t module_inst = get_module_inst(env);
+  uintptr_t ret;
+  *(uintptr_t *)parm2 = addr_app_to_native(*(uintptr_t *)parm2);
+  *(uintptr_t *)parm4 = addr_app_to_native(*(uintptr_t *)parm4);
+  ret = iconv((iconv_t)parm1, (FAR char **)parm2, (FAR size_t *)parm3,
+              (FAR char **)parm4, (FAR size_t *)parm5);
+  *(uintptr_t *)parm2 = addr_native_to_app(*(uintptr_t *)parm2);
+  *(uintptr_t *)parm4 = addr_native_to_app(*(uintptr_t *)parm4);
+  return ret;
+}
+
+#endif /* GLUE_FUNCTION_iconv */
+#endif /* defined(CONFIG_LIBC_LOCALE) */
+
+#ifndef GLUE_FUNCTION_versionsort
+#define GLUE_FUNCTION_versionsort
+uintptr_t glue_versionsort(wasm_exec_env_t env, uintptr_t parm1,
+                           uintptr_t parm2)
+{
+  wasm_module_inst_t module_inst = get_module_inst(env);
+  uintptr_t ret;
+  *(uintptr_t *)parm1 = addr_app_to_native(*(uintptr_t *)parm1);
+  *(uintptr_t *)parm2 = addr_app_to_native(*(uintptr_t *)parm2);
+  ret = versionsort((FAR const struct dirent **)parm1,
+                    (FAR const struct dirent **)parm2);
+  *(uintptr_t *)parm1 = addr_native_to_app(*(uintptr_t *)parm1);
+  *(uintptr_t *)parm2 = addr_native_to_app(*(uintptr_t *)parm2);
+  return ret;
+}
+
+#endif /* GLUE_FUNCTION_versionsort */
 
 /****************************************************************************
  * Included Files
@@ -376,6 +651,11 @@ bool
 wamr_custom_init(RuntimeInitArgs *init_args)
 {
   bool ret = wasm_runtime_full_init(init_args);
+
+  if (!ret)
+    {
+      return ret;
+    }
 
   /* Add extra init hook here */
 
