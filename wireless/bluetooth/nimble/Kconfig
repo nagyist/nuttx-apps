@@ -7,13 +7,23 @@ config NIMBLE
 		host-layer stack.
 
 if NIMBLE
-config NIMBLE_STACKSIZE
-	int "nimble stack size"
-	default DEFAULT_TASK_STACKSIZE
 
 config NIMBLE_REF
 	string "Version"
 	default "17a8e61fdec48d579df3bc5af59a9cff5edee674"
 	---help---
 		Git ref name to use when downloading from nimBLE repo
-endif
+
+config NIMBLE_PORTING_EXAMPLE
+	bool "Apache nimBLE NuttX porting example"
+	default y
+
+if NIMBLE_PORTING_EXAMPLE
+
+config NIMBLE_PORTING_EXAMPLE_STACKSIZE
+	int "Apache NimBLE NuttX porting example stack size"
+	default DEFAULT_TASK_STACKSIZE
+
+endif # NIMBLE_PORTING_EXAMPLE
+
+endif # NIMBLE
