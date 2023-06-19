@@ -225,6 +225,7 @@ FAR const char *vg_lite_get_feature_string(vg_lite_feature_t feature)
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_DITHER);
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_USE_DST);
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_PE_CLEAR);
+#if 0
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_IM_INPUT);
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_DEC_COMPRESS);
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_LINEAR_GRADIENT_EXT);
@@ -252,6 +253,7 @@ FAR const char *vg_lite_get_feature_string(vg_lite_feature_t feature)
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_YUV_INPUT);
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_YUV_TILED_INPUT);
       ENUM_TO_STRING_CASE_DEF(gcFEATURE_BIT_VG_AYUV_INPUT);
+#endif
     default:
       break;
     }

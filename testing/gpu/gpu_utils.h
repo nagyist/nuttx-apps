@@ -55,6 +55,7 @@ enum gpu_test_mode_e
   GPU_TEST_MODE_DEFAULT = 0,
   GPU_TEST_MODE_RANDOM,
   GPU_TEST_MODE_STRESS,
+  GPU_TEST_MODE_STRESS_RANDOM, /* Run stress test, choose random cases */
 };
 
 struct gpu_test_param_s

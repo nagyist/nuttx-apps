@@ -113,6 +113,10 @@ static enum gpu_test_mode_e gpu_test_string_to_mode(FAR const char *str)
     {
       return GPU_TEST_MODE_STRESS;
     }
+  else if (strcmp(str, "stress_random") == 0)
+    {
+      return GPU_TEST_MODE_STRESS_RANDOM;
+    }
 
   printf(GPU_PREFIX "Unknown mode: %s\n", str);
 

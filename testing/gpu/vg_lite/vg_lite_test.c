@@ -25,6 +25,8 @@
 #include "vg_lite_test_case.h"
 #include "vg_lite_test_utils.h"
 
+#include <stdlib.h>
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -112,25 +114,37 @@ error_handler:
   return is_passed;
 }
 
+static int stress_test_get_next(FAR struct gpu_test_context_s *ctx, int current)
+{
+  if (ctx->param.mode == GPU_TEST_MODE_STRESS_RANDOM)
+    {
+      current = rand();
+    }
+  else
+    {
+      current ++;
+    }
+
+  return current % GPU_ARRAY_SIZE(g_vg_lite_test_group);
+}
+
 /****************************************************************************
  * Name: vg_lite_test_run_stress
  ****************************************************************************/
 
 static void vg_lite_test_run_stress(FAR struct gpu_test_context_s *ctx)
 {
-  int i;
+  int i = 0;
   int loop_cnt = 0;
 
   while (1)
     {
-      for (i = 0; i < GPU_ARRAY_SIZE(g_vg_lite_test_group); i++)
+      i = stress_test_get_next(ctx, i);
+      const struct vg_lite_test_item_s *item = &g_vg_lite_test_group[i];
+      if (!vg_lite_test_run_item(ctx, item))
         {
-          const struct vg_lite_test_item_s *item = &g_vg_lite_test_group[i];
-          if (!vg_lite_test_run_item(ctx, item))
-            {
-              GPU_LOG_ERROR("Stress Test Loop %d FAILED", loop_cnt);
-              return;
-            }
+          GPU_LOG_ERROR("Stress Test Loop %d FAILED", loop_cnt);
+          return;
         }
 
       loop_cnt++;
@@ -145,8 +159,10 @@ static void vg_lite_test_run(FAR struct gpu_test_context_s *ctx)
 {
   int i;
 
-  if (ctx->param.mode == GPU_TEST_MODE_STRESS)
+  if (ctx->param.mode == GPU_TEST_MODE_STRESS ||
+      ctx->param.mode == GPU_TEST_MODE_STRESS_RANDOM)
     {
+      srand(time(NULL));
       vg_lite_test_run_stress(ctx);
       return;
     }
