@@ -65,7 +65,7 @@
 #include <arpa/inet.h>
 
 #ifdef CONFIG_FTPD_LOGIN_PASSWD
-#  include "fsutils/passwd.h"
+  #include "fsutils/passwd.h"
 #endif
 
 #include "netutils/ftpd.h"
@@ -1007,13 +1007,12 @@ static ssize_t ftpd_response(int sd, int timeout, FAR const char *fmt, ...)
   FAR char *buffer;
   ssize_t bytessent;
   va_list ap;
-  int ret;
 
   va_start(ap, fmt);
-  ret = vasprintf(&buffer, fmt, ap);
+  vasprintf(&buffer, fmt, ap);
   va_end(ap);
 
-  if (ret < 0)
+  if (buffer == NULL)
     {
       return -ENOMEM;
     }
@@ -2420,8 +2419,8 @@ static int fptd_listscan(FAR struct ftpd_session_s *session, FAR char *path,
             }
         }
 
-      ret = asprintf(&temp, "%s/%s", path, entry->d_name);
-      if (ret < 0)
+      asprintf(&temp, "%s/%s", path, entry->d_name);
+      if (temp == NULL)
         {
           continue;
         }

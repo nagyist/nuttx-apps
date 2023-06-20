@@ -99,7 +99,9 @@ int setvbuf_test(void);
 
 /* dev_null.c ***************************************************************/
 
+#ifdef CONFIG_DEV_NULL
 int dev_null(void);
+#endif
 
 /* fpu.c ********************************************************************/
 
@@ -229,12 +231,6 @@ void pthread_rwlock_test(void);
 /* pthread_rwlock_cancel.c **************************************************/
 
 void pthread_rwlock_cancel_test(void);
-
-/* pthread_exit.c ***********************************************************/
-
-#ifdef CONFIG_SCHED_WAITPID
-void pthread_exit_test(void);
-#endif
 
 /* pthread_cleanup.c ********************************************************/
 

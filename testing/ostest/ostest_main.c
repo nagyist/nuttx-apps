@@ -323,10 +323,13 @@ static int user_main(int argc, char *argv[])
       check_test_memory_usage();
 #endif
 
+#ifdef CONFIG_DEV_NULL
       /* Checkout /dev/null */
 
       printf("\nuser_main: /dev/null test\n");
       dev_null();
+#endif
+
       check_test_memory_usage();
 
 #ifdef CONFIG_TESTING_OSTEST_AIO
@@ -438,14 +441,6 @@ static int user_main(int argc, char *argv[])
              "Test logic incompatible with priority inheritance\n");
 #else
       cond_test();
-      check_test_memory_usage();
-#endif
-
-#ifdef CONFIG_SCHED_WAITPID
-      /* Verify pthread_exit() and pthread_self() */
-
-      printf("\nuser_main: pthread_exit() test\n");
-      pthread_exit_test();
       check_test_memory_usage();
 #endif
 

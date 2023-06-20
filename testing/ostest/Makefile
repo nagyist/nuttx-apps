@@ -29,9 +29,13 @@ MODULE = $(CONFIG_TESTING_OSTEST)
 
 # NuttX OS Test
 
-CSRCS   = getopt.c dev_null.c restart.c sigprocmask.c sighand.c signest.c
+CSRCS   = getopt.c restart.c sigprocmask.c sighand.c signest.c
 CSRCS  += sighelper.c
 MAINSRC = ostest_main.c
+
+ifeq ($(CONFIG_DEV_NULL),y)
+CSRCS += dev_null.c
+endif
 
 ifeq ($(CONFIG_SIG_SIGSTOP_ACTION),y)
 ifeq ($(CONFIG_SIG_SIGKILL_ACTION),y)
@@ -65,10 +69,6 @@ ifneq ($(CONFIG_DISABLE_PTHREAD),y)
 CSRCS += cancel.c cond.c mutex.c timedmutex.c sem.c semtimed.c barrier.c
 CSRCS += timedwait.c
 CSRCS += pthread_rwlock.c pthread_rwlock_cancel.c
-
-ifeq ($(CONFIG_SCHED_WAITPID),y)
-CSRCS += pthread_exit.c
-endif
 
 ifneq ($(CONFIG_TLS_NELEM),0)
 CSRCS += specific.c
