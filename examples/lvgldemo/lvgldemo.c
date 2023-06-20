@@ -25,6 +25,7 @@
 #include <nuttx/config.h>
 
 #include <sys/boardctl.h>
+#include <sys/param.h>
 #include <unistd.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -33,24 +34,12 @@
 #include <debug.h>
 
 #include <lvgl/lvgl.h>
-#include <lv_porting/lv_porting.h>
+#include <port/lv_port.h>
 #include <lvgl/demos/lv_demos.h>
 
-#ifdef CONFIG_LVX_USE_VIDEO_EXAMPLE
-#include <ext/test/lv_ext_test_demos.h>
-#include <ext/lv_ext.h>
-#endif
-
-#if defined(CONFIG_LIBUV)
-#include <uv.h>
-#endif
-
-#ifdef CONFIG_ANIM_ENGINE_API_DEMO
-#include <api_demo/api_demo.h>
-#endif
-
-#ifdef CONFIG_ANIM_ENGINE_LVGL_IMAGE_DEMO
-#include <lvgl_test/ui_test.h>
+#ifdef CONFIG_LIBUV
+#  include <uv.h>
+#  include <port/lv_port_libuv.h>
 #endif
 
 /****************************************************************************
@@ -74,17 +63,11 @@
 #  define NEED_BOARDINIT 1
 #endif
 
-#if defined(CONFIG_LV_USE_FBDEV_INTERFACE) \
-&& !defined(CONFIG_LV_FBDEV_ENABLE_WAITFORVSYNC) \
-&& defined(CONFIG_LIBUV)
-#  define USE_UI_UV_LOOP 1
-#endif
-
 /****************************************************************************
  * Private Type Declarations
  ****************************************************************************/
 
-typedef void (*demo_create_func_t)(void);
+typedef CODE void (*demo_create_func_t)(void);
 
 struct func_key_pair_s
 {
@@ -95,10 +78,6 @@ struct func_key_pair_s
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-
-#if defined(USE_UI_UV_LOOP)
-static uv_loop_t g_ui_loop;
-#endif
 
 static const struct func_key_pair_s func_key_pair[] =
 {
@@ -121,25 +100,6 @@ static const struct func_key_pair_s func_key_pair[] =
 #ifdef CONFIG_LV_USE_DEMO_MUSIC
   { "music",          lv_demo_music          },
 #endif
-
-#ifdef CONFIG_LV_USE_DEMO_BANDX
-  { "bandx",          lv_demo_bandx          },
-#endif
-
-#ifdef CONFIG_ANIM_ENGINE_API_DEMO
-  { "animengine",     anim_api_demo          },
-#endif
-
-#ifdef CONFIG_ANIM_ENGINE_LVGL_IMAGE_DEMO
-  { "anim_image",     lvgl_test          },
-#endif
-
-#ifdef CONFIG_LVX_USE_VIDEO_EXAMPLE
-  { "video",          lvx_example_video             },
-  { "video_ctl",      lvx_example_video_controller  },
-  { "video_call",     lvx_example_video_call        },
-  { "camera",         lvx_example_camera            },
-#endif
   { "", NULL }
 };
 
@@ -154,8 +114,7 @@ static const struct func_key_pair_s func_key_pair[] =
 static void show_usage(void)
 {
   int i;
-  const int len = sizeof(func_key_pair)
-                  / sizeof(struct func_key_pair_s) - 1;
+  const int len = nitems(func_key_pair) - 1;
 
   if (len == 0)
     {
@@ -182,8 +141,7 @@ static void show_usage(void)
 static demo_create_func_t find_demo_create_func(FAR const char *name)
 {
   int i;
-  const int len = sizeof(func_key_pair)
-                  / sizeof(struct func_key_pair_s) - 1;
+  const int len = nitems(func_key_pair) - 1;
 
   for (i = 0; i < len; i++)
     {
@@ -218,8 +176,11 @@ int main(int argc, FAR char *argv[])
 {
   demo_create_func_t demo_create_func;
   FAR const char *demo = NULL;
-  const int func_key_pair_len = sizeof(func_key_pair) /
-                                sizeof(func_key_pair[0]);
+  const int func_key_pair_len = nitems(func_key_pair);
+
+#ifdef CONFIG_LIBUV
+  uv_loop_t ui_loop;
+#endif
 
   /* If no arguments are specified and only 1 demo exists, select the demo */
 
@@ -261,28 +222,30 @@ int main(int argc, FAR char *argv[])
 
   lv_init();
 
-  /* LVGL interface initialization */
+  /* LVGL port initialization */
 
-  lv_porting_init();
+  lv_port_init();
 
-#ifdef CONFIG_LVX_USE_VIDEO_EXAMPLE
-  lv_ext_init();
-#endif
   /* LVGL demo creation */
 
   demo_create_func();
 
   /* Handle LVGL tasks */
 
-#if defined(USE_UI_UV_LOOP)
-  uv_loop_init(&g_ui_loop);
-  lv_uv_start(&g_ui_loop);
-  uv_run(&g_ui_loop, UV_RUN_DEFAULT);
+#ifdef CONFIG_LIBUV
+  uv_loop_init(&ui_loop);
+  lv_port_libuv_init(&ui_loop);
+  uv_run(&ui_loop, UV_RUN_DEFAULT);
 #else
   while (1)
     {
-      lv_timer_handler();
-      usleep(1000);
+      uint32_t idle;
+      idle = lv_timer_handler();
+
+      /* Minimum sleep of 1ms */
+
+      idle = idle ? idle : 1;
+      usleep(idle * 1000);
     }
 #endif
 

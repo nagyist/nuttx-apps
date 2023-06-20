@@ -71,6 +71,11 @@ MAINSRC  += drivertest_pwm.c
 PROGNAME += cmocka_driver_pwm
 endif
 
+ifneq ($(CONFIG_WATCHDOG),)
+MAINSRC  += drivertest_watchdog.c
+PROGNAME += cmocka_driver_watchdog
+endif
+
 ifneq ($(CONFIG_ADC),)
 MAINSRC  += drivertest_adc.c
 PROGNAME += cmocka_driver_adc
@@ -83,19 +88,19 @@ PROGNAME += cmocka_driver_i2c_spi
 endif
 endif
 
-ifeq ($(CONFIG_DEV_GPIO),y)
+ifneq ($(CONFIG_BCH),)
+PROGNAME += cmocka_driver_block
+MAINSRC  += drivertest_block.c
+endif
+
+ifneq ($(CONFIG_DEV_GPIO),)
 PROGNAME += cmocka_driver_gpio
 MAINSRC  += drivertest_gpio.c
 endif
 
-ifneq ($(CONFIG_VIDEO_FB),)
-MAINSRC  += drivertest_framebuffer.c
-PROGNAME += cmocka_driver_framebuffer
-endif
-
-ifneq ($(CONFIG_LCD_DEV),)
-MAINSRC  += drivertest_lcd.c
-PROGNAME += cmocka_driver_lcd
+ifneq ($(CONFIG_RELAY),)
+MAINSRC  += drivertest_relay.c
+PROGNAME += cmocka_driver_relay
 endif
 
 ifneq ($(CONFIG_SERIAL),)
@@ -108,29 +113,24 @@ MAINSRC  += drivertest_audio.c
 PROGNAME += cmocka_driver_audio
 endif
 
-ifneq ($(CONFIG_RELAY),)
-MAINSRC  += drivertest_relay.c
-PROGNAME += cmocka_driver_relay
+ifneq ($(CONFIG_VIDEO_FB),)
+MAINSRC  += drivertest_framebuffer.c
+PROGNAME += cmocka_driver_framebuffer
 endif
 
-ifneq ($(CONFIG_LV_USE_TOUCHPAD_INTERFACE),)
-MAINSRC  += drivertest_touchpanel.c
-PROGNAME += cmocka_driver_touchpanel
-endif
-
-ifneq ($(CONFIG_CPUFREQ),)
-MAINSRC  += drivertest_cpufreq.c
-PROGNAME += cmocka_driver_cpufreq
-endif
-
-ifneq ($(CONFIG_PM_RUNTIME),)
-MAINSRC  += drivertest_pm_runtime.c
-PROGNAME += cmocka_driver_pm_runtime
+ifneq ($(CONFIG_LCD_DEV),)
+MAINSRC  += drivertest_lcd.c
+PROGNAME += cmocka_driver_lcd
 endif
 
 ifneq ($(CONFIG_REGULATOR),)
 MAINSRC  += drivertest_regulator.c
 PROGNAME += cmocka_driver_regulator
+endif
+
+ifneq ($(CONFIG_LV_USE_TOUCHPAD_INTERFACE),)
+MAINSRC  += drivertest_touchpanel.c
+PROGNAME += cmocka_driver_touchpanel
 endif
 
 include $(APPDIR)/Application.mk

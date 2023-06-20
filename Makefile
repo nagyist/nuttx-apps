@@ -42,9 +42,6 @@ SYMTABOBJ = $(SYMTABSRC:.c=$(OBJEXT))
 # We first remove libapps.a before letting the other rules add objects to it
 # so that we ensure libapps.a does not contain objects from prior build
 
-# We first remove libapps.a before letting the other rules add objects to it
-# so that we ensure libapps.a does not contain objects from prior build
-
 all:
 	$(RM) $(BIN)
 	$(MAKE) $(BIN)
@@ -76,6 +73,11 @@ ifeq ($(CONFIG_BUILD_KERNEL),y)
 
 install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
+$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) for app in ${CONFIGURED_APPS}; do \
+		$(MAKE) -C "$${app}" archive ; \
+	done
+
 .import: $(BIN)
 	$(Q) install libapps.a $(APPDIR)$(DELIM)import$(DELIM)libs
 	$(Q) $(MAKE) install
@@ -92,18 +94,22 @@ else
 # symbol table is required.
 
 ifeq ($(CONFIG_BUILD_LOADABLE),)
-
+ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) for %%G in ($(CONFIGURED_APPS)) do ( $(MAKE) -C %%G archive )
+else
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) for app in ${CONFIGURED_APPS}; do \
-	  $(MAKE) -C "$${app}" archive TOPDIR="${TOPDIR}" APPDIR="${APPDIR}" ; \
+		$(MAKE) -C "$${app}" archive ; \
 	done
 	$(call LINK_WASM)
+endif
 
 else
 
 $(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(Q) for app in ${CONFIGURED_APPS}; do \
-	  $(MAKE) -C "$${app}" archive TOPDIR="${TOPDIR}" APPDIR="${APPDIR}" ; \
+		$(MAKE) -C "$${app}" archive ; \
 	done
 	$(Q) $(MAKE) install
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINDIR) >$@.tmp
