@@ -186,11 +186,8 @@ static int dd_verify(FAR const char *infile, FAR const char *outfile,
                      FAR struct dd_s *dd)
 {
   FAR uint8_t *buffer;
-  unsigned sector = 0;
+  int sector = 0;
   int ret = OK;
-
-  UNUSED(infile);
-  UNUSED(outfile);
 
   ret = lseek(dd->infd, dd->skip ? dd->skip * dd->sectsize : 0, SEEK_SET);
   if (ret < 0)
@@ -255,7 +252,7 @@ static int dd_verify(FAR const char *infile, FAR const char *outfile,
                   nsh_output(dd->vtbl, "\n");
                 }
 
-              nsh_output(dd->vtbl, "%02x", dd->buffer[i]);
+              nsh_output(dd->vtbl, "%02x", buffer[i]);
               if (i + 1 % 2 == 0)
                 {
                   nsh_output(dd->vtbl, " ");
