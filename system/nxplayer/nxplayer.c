@@ -24,28 +24,27 @@
 
 #include <nuttx/config.h>
 
-#include <sys/types.h>
+#include <assert.h>
+#include <debug.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sched.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 #include <sys/ioctl.h>
-
+#include <sys/types.h>
+#include <unistd.h>
 #ifdef CONFIG_NXPLAYER_HTTP_STREAMING_SUPPORT
 #  include <sys/time.h>
 #  include <sys/socket.h>
 #  include <arpa/inet.h>
 #  include <netdb.h>
 #endif
-
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <errno.h>
-#include <dirent.h>
-#include <debug.h>
-#include <unistd.h>
 
 #include <netutils/netlib.h>
 #include <nuttx/audio/audio.h>
@@ -93,9 +92,6 @@ int nxplayer_getmidisubformat(int fd);
 int nxplayer_getmp3subformat(int fd);
 #endif
 
-#ifdef CONFIG_AUDIO_FORMAT_SBC
-int nxplayer_getsbcsubformat(int fd);
-#endif
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -123,10 +119,7 @@ static const struct nxplayer_ext_fmt_s g_known_ext[] =
   { "midi",     AUDIO_FMT_MIDI, nxplayer_getmidisubformat },
 #endif
 #ifdef CONFIG_AUDIO_FORMAT_OGG_VORBIS
-  { "ogg",      AUDIO_FMT_OGG_VORBIS, NULL },
-#endif
-#ifdef CONFIG_AUDIO_FORMAT_SBC
-  { "sbc",      AUDIO_FMT_SBC, nxplayer_getsbcsubformat }
+  { "ogg",      AUDIO_FMT_OGG_VORBIS, NULL }
 #endif
 };
 
@@ -138,11 +131,6 @@ static const struct nxplayer_dec_ops_s g_dec_ops[] =
   {
     AUDIO_FMT_MP3,
     nxplayer_parse_mp3,
-    nxplayer_fill_common
-  },
-  {
-    AUDIO_FMT_SBC,
-    nxplayer_parse_sbc,
     nxplayer_fill_common
   },
   {
@@ -543,13 +531,6 @@ int nxplayer_getmidisubformat(int fd)
 int nxplayer_getmp3subformat(int fd)
 {
   return AUDIO_SUBFMT_PCM_MP3;
-}
-#endif
-
-#ifdef CONFIG_AUDIO_FORMAT_SBC
-int nxplayer_getsbcsubformat(int fd)
-{
-  return AUDIO_FMT_SBC;
 }
 #endif
 

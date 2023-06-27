@@ -24,23 +24,24 @@
 
 #include <nuttx/config.h>
 
-#include <sys/types.h>
-#include <sys/ioctl.h>
-
-#include <stdint.h>
+#include <assert.h>
+#include <debug.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sched.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <errno.h>
-#include <dirent.h>
-#include <debug.h>
+#include <sys/ioctl.h>
+#include <sys/types.h>
 #include <unistd.h>
 
 #include <nuttx/audio/audio.h>
+
 #include "system/nxrecorder.h"
 
 /****************************************************************************
@@ -1033,8 +1034,7 @@ int nxrecorder_recordinternal(FAR struct nxrecorder_s *precorder,
 
   /* Test that the specified file exists */
 
-  if ((precorder->fd = open(pfilename, O_WRONLY | O_CREAT | O_TRUNC,
-                            0666)) == -1)
+  if ((precorder->fd = open(pfilename, O_WRONLY | O_CREAT | O_TRUNC)) == -1)
     {
       /* File not found.  Test if its in the mediadir */
 
