@@ -34,27 +34,61 @@
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
-#include <poll.h>
-#include <sensor/accel.h>
 #include <nuttx/sensors/bmi160.h>
 
 #include <cmocka.h>
-#include <uORB/uORB.h>
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define ACC_TIMEOUT      1000
+#define ACC_DEVPATH      "/dev/accel0"
 #define READ_TIMES       100
 
 /****************************************************************************
  * Private Type Declarations
  ****************************************************************************/
 
+struct test_state_s
+{
+  FAR const char *dev_path;
+  int fd;
+};
+
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+/****************************************************************************
+ * Name: setup
+ ****************************************************************************/
+
+static int setup(FAR void **state)
+{
+  FAR struct test_state_s *test_state;
+  test_state = malloc(sizeof(struct test_state_s));
+  assert_true(test_state != NULL);
+
+  test_state->dev_path = ACC_DEVPATH;
+  test_state->fd = open(test_state->dev_path, O_RDONLY);
+  assert_true(test_state->fd > 0);
+
+  *state = test_state;
+  return 0;
+}
+
+/****************************************************************************
+ * Name: teardown
+ ****************************************************************************/
+
+static int teardown(FAR void **state)
+{
+  FAR struct test_state_s *test_state;
+  test_state = (FAR struct test_state_s *)*state;
+  assert_int_equal(close(test_state->fd), 0);
+  free(test_state);
+  return 0;
+}
 
 /****************************************************************************
  * Name: read_from_device
@@ -62,68 +96,29 @@
 
 static void read_from_device(FAR void **state)
 {
-  FAR const struct orb_metadata *meta;
-  struct sensor_accel accel_data;
-  struct pollfd fds;
-  uint64_t start_time;
-  uint64_t end_time;
-  int nb_msgs = 0;
+  FAR struct test_state_s *test_state;
+  struct accel_gyro_st_s data;
+  int times;
   int fd;
-  int i;
-#ifdef CONFIG_DEBUG_UORB
-  int ret;
-#endif
 
-  meta = ORB_ID(sensor_accel_uncal);
-  fd = orb_subscribe_multi(meta, 0);
+  test_state = (FAR struct test_state_s *)*state;
+  fd = test_state->fd;
 
-  fds.fd = fd;
-  fds.events = POLLIN;
-
-  /* waiting for the sensor to initialize */
-
-  usleep(50000);
-
-  orb_copy(meta, fd, &accel_data);
-  start_time = accel_data.timestamp;
-  end_time = accel_data.timestamp;
-
-  for (i = 0; i < READ_TIMES; i++)
+  for (times = 0; times < READ_TIMES; times++)
     {
-      /* wait for up to 1000ms for data */
+      int ret;
 
-      if (poll(&fds, 1, ACC_TIMEOUT) > 0)
-        {
-          if (fds.revents & POLLIN)
-            {
-#ifdef CONFIG_DEBUG_UORB
-              ret = orb_copy(meta, fd, &accel_data);
-              if (ret == OK && meta->o_cb != NULL)
-                {
-                  meta->o_cb(ORB_ID(sensor_accel_uncal), &accel_data);
-                }
-#else
-              orb_copy(meta, fd, &accel_data);
-#endif
+      ret = read(fd, &data, sizeof(struct accel_gyro_st_s));
+      assert_true(ret == sizeof(struct accel_gyro_st_s));
 
-              end_time = accel_data.timestamp;
-              nb_msgs++;
-            }
-        }
-      else if (errno != EINTR)
-        {
-          snerr("Waited for %d milliseconds without a message. "
-                        "Giving up. err:%d", ACC_TIMEOUT, errno);
-          break;
-        }
+      /* If sensing time has been changed, show 6 axis data. */
+
+      printf("[%" PRIu32 "] %d, %d, %d / %d, %d, %d\n",
+             data.sensor_time,
+             data.gyro.x, data.gyro.y, data.gyro.z,
+             data.accel.x, data.accel.y, data.accel.z);
+      fflush(stdout);
     }
-
-  orb_unsubscribe(fd);
-
-  assert_int_equal(nb_msgs, READ_TIMES);
-  printf("mean:  %.2f ms\n", (float)(end_time - start_time) / READ_TIMES);
-  printf("spend: %d ms\n", (int)(end_time - start_time));
-  printf("recv/total: %d/%d \n", nb_msgs, READ_TIMES);
 }
 
 /****************************************************************************
@@ -131,14 +126,14 @@ static void read_from_device(FAR void **state)
  ****************************************************************************/
 
 /****************************************************************************
- * drivertest_i2c_spi_main
+ * drivertest_i2c_main
  ****************************************************************************/
 
 int main(int argc, FAR char *argv[])
 {
   const struct CMUnitTest tests[] =
     {
-      cmocka_unit_test(read_from_device),
+      cmocka_unit_test_setup_teardown(read_from_device, setup, teardown),
     };
 
   return cmocka_run_group_tests(tests, NULL, NULL);
