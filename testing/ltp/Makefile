@@ -1,17 +1,22 @@
-
-# apps/testing/ltp/ltp/Makefile
+############################################################################
+# apps/testing/ltp/Makefile
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-
-#     http://www.apache.org/licenses/LICENSE-2.0
-
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.  The
+# ASF licenses this file to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance with the
+# License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+############################################################################
 
 include $(APPDIR)/Make.defs
 
@@ -158,12 +163,6 @@ PROGNAME     += $(basename $(shell echo $(LTP_MAINCSRCS_2) | xargs -n 1 | awk -F
 PROGNAME     += $(basename $(shell echo $(LTP_MAINCSRCS_3) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))
 PROGNAME     += $(basename $(shell echo $(LTP_MAINCSRCS_4) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))
 MAINSRC       = $(LTP_MAINCSRCS_1) $(LTP_MAINCSRCS_2) $(LTP_MAINCSRCS_3) $(LTP_MAINCSRCS_4)
-ifneq ($(CONFIG_NET_CAN),)
-PROGNAME     += can_rcv_own_msgs
-PROGNAME     += can_filter
-MAINSRC      += $(TESTDIR)/../network/can/filter-tests/can_filter.c
-MAINSRC      += $(TESTDIR)/../network/can/filter-tests/can_rcv_own_msgs.c
-endif
 PRIORITY      = SCHED_PRIORITY_DEFAULT
 STACKSIZE     = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE        = $(CONFIG_TESTING_LTP)
@@ -171,11 +170,7 @@ MODULE        = $(CONFIG_TESTING_LTP)
 CSRCS        := $(LTP_CSRCS_1) $(LTP_CSRCS_2) $(LTP_CSRCS_3) $(LTP_CSRCS_4)
 CFLAGS       += -I$(CURDIR)
 CFLAGS       += -I$(TESTDIR)/include
-CFLAGS       += -I$(TESTDIR)/../../include
 endif
-
-# Use vfork to implement the fork function
-CFLAGS += -Dfork=vfork
 
 # Relax warning checks to avoid expected compile errors:
 CFLAGS += -Wno-strict-prototypes -Wno-return-type -Wno-format -Wno-uninitialized
@@ -187,7 +182,7 @@ CFLAGS += -Wno-incompatible-pointer-types -Wno-overflow -Wno-int-to-pointer-cast
 $(LTP_UNPACK):
 	$(Q) echo "git clone $(LTP_URL)"
 	$(Q) git clone $(LTP_URL)
-	$(Q) git -C $(LTP_UNPACK) am < 0001-pthread_rwlock_unlock-follow-linux.patch
+	$(Q) git -C $(LTP_UNPACK) am < 0001-Fix-static-struct-warning.patch
 	$(Q) git -C $(LTP_UNPACK) am < 0002-Use-ifdef-instead-of-if-for-__linux__.patch
 
 # Download and unpack tarball if no git repo found
