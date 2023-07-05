@@ -66,13 +66,16 @@ config INTERPRETERS_WAMR_LOG
 	bool "Enable log"
 	default n
 
+config INTERPRETERS_WAMR_LIBC_NUTTX
+	bool "Bypass to NuttX libc"
+	default n
+
 config INTERPRETERS_WAMR_LIBC_BUILTIN
 	bool "Enable built-in libc"
 	default n
 
 config INTERPRETERS_WAMR_LIBC_WASI
 	bool "Enable WASI libc"
-	select PSEUDOFS_SOFTLINKS
 	default n
 	---help---
 	Note: As of writing this, this works only with main branch of
@@ -164,13 +167,5 @@ config INTERPRETERS_WAMR_GLOBAL_HEAP_POOL_SIZE
 	default 128
 
 endif
-
-config INTERPRETERS_WAMR_CONFIGUABLE_BOUNDS_CHECKS
-	bool "Configuable bounds checks"
-	default n
-	---help---
-		Bounds checks enabled by default. With this option, you can
-		disable bounds checks passing --disable-bounds-checks to
-		iwasm.
 
 endif
