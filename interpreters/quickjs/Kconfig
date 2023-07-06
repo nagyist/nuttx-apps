@@ -28,8 +28,8 @@ config INTERPRETERS_QUICKJS_BIGNUM
 	bool "Bignum support"
 	default n
 	---help---
-	It's depend on libatomic,
-	Not all platform support it.
+		It's depend on libatomic,
+		Not all platform support it.
 
 config INTERPRETERS_QUICKJS_PRIORITY
 	int "QuickJS interpreter priority"
@@ -47,21 +47,4 @@ config INTERPRETERS_QUICKJS_EXT_HOOK
 		Since minimal interpreter only support 'console.log',
 		you can export custom module by implement init/destory hook.
 
-config INTERPRETERS_QUICKJS_DEBUG
-	bool "QuickJS interpreter debug support"
-	default n
-	---help---
-		Enable this if you want js debugger support.
-config MEMORY_LEAK_TRACK
-	bool "QuickJS interpreter memory leak track support"
-	default n
-	---help---
-		Enable this if you want js debugger support.
-
-config INTERPRETERS_QUICKJS_CONFIG_TOOL
-	bool "QuickJS interpreter config tool support"
-	default n
-	---help---
-		Enable this if you want js config tool support.
-
-endif
+endif # INTERPRETERS_QUICKJS

@@ -27,6 +27,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/param.h>
 #include <crypto/cryptodev.h>
 #include <crypto/md5.h>
 #include <crypto/sha1.h>
@@ -94,7 +95,6 @@ static int syscrypt(FAR const char *key, size_t klen,
   struct crypt_op cryp;
   int cryptodev_fd = -1;
   int fd = -1;
-  char tmp_iv[16];
 
   if ((fd = open("/dev/crypto", O_RDWR, 0)) < 0)
     {
@@ -119,14 +119,13 @@ static int syscrypt(FAR const char *key, size_t klen,
     }
 
   memset(&cryp, 0, sizeof(cryp));
-  memcpy(tmp_iv, iv, 16);
   cryp.ses = session.ses;
   cryp.op = encrypt ? COP_ENCRYPT : COP_DECRYPT;
   cryp.flags = 0;
   cryp.len = len;
   cryp.src = (caddr_t) in;
   cryp.dst = (caddr_t) out;
-  cryp.iv = (caddr_t) tmp_iv;
+  cryp.iv = (caddr_t) iv;
   cryp.mac = 0;
   if (ioctl(cryptodev_fd, CIOCCRYPT, &cryp) == -1)
     {
@@ -194,7 +193,7 @@ int main(int argc, char *argv[])
   int ret;
   unsigned char out[64];
 
-  for (int i = 0; i < sizeof(testcase) / sizeof(struct tb); i++)
+  for (int i = 0; i < nitems(testcase); i++)
     {
       ret = syscrypt(testcase[i].key, 16, testcase[i].iv, testcase[i].plain,
                      out, testcase[i].len, 1);

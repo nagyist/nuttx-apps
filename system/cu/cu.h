@@ -71,7 +71,8 @@
 
 struct cu_globals_s
 {
-  int devfd;             /* I/O data to serial port */
+  int infd;              /* Incoming data from serial port */
+  int outfd;             /* Outgoing data to serial port */
   int stdfd;             /* I/O data to standard console */
   struct termios devtio; /* Original serial port setting */
   struct termios stdtio; /* Original standard console setting */
