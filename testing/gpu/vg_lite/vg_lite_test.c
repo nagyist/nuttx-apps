@@ -60,6 +60,7 @@ static const struct vg_lite_test_item_s g_vg_lite_test_group[] =
   ITEM_DEF(path_rect),
   ITEM_DEF(path_round_rect),
   ITEM_DEF(path_glyph),
+  ITEM_DEF(path_glyph_random),
   ITEM_DEF(path_tiger),
   ITEM_DEF(global_alpha),
   ITEM_DEF(image_indexed8),

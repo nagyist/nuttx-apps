@@ -113,3 +113,68 @@ vg_lite_error_t vg_lite_test_path_glyph(
 error_handler:
   return error;
 }
+
+/****************************************************************************
+ * Name: vg_lite_test_path_glyph_random
+ ****************************************************************************/
+
+vg_lite_error_t vg_lite_test_path_glyph_random(
+  FAR struct gpu_test_context_s *ctx)
+{
+  vg_lite_error_t error = VG_LITE_SUCCESS;
+  vg_lite_matrix_t matrix;
+  vg_lite_path_t path;
+  float scale_val = 0.01;
+  int16_t bounding = 5000 + (rand() % 3000);
+
+  vg_lite_init_path(
+    &path,
+    VG_LITE_S16,
+    VG_LITE_MEDIUM,
+    sizeof(glphy_u663e_path_data),
+    (FAR void *)glphy_u663e_path_data, -300, -300, bounding, bounding);
+
+  vg_lite_identity(&matrix);
+  vg_lite_scale(scale_val, scale_val, &matrix);
+
+  matrix.m[1][1] = -matrix.m[1][1];
+
+  float offset = (float)(rand() % 100);
+  vg_lite_translate(offset/scale_val, -(offset + 200)/scale_val, &matrix);
+
+
+  VG_LITE_CHECK_ERROR(vg_lite_draw(
+    VG_LITE_DEST_BUF,
+    &path,
+    VG_LITE_FILL_EVEN_ODD,
+    &matrix,
+    VG_LITE_BLEND_SRC_OVER,
+    0xff0a59f7));
+
+  vg_lite_translate(80/scale_val, 0, &matrix);
+
+  VG_LITE_CHECK_ERROR(vg_lite_draw(
+    VG_LITE_DEST_BUF,
+    &path,
+    VG_LITE_FILL_EVEN_ODD,
+    &matrix,
+    VG_LITE_BLEND_SRC_OVER,
+    0xff0a00f7));
+
+  vg_lite_translate(80/scale_val, 0, &matrix);
+
+  VG_LITE_CHECK_ERROR(vg_lite_draw(
+    VG_LITE_DEST_BUF,
+    &path,
+    VG_LITE_FILL_EVEN_ODD,
+    &matrix,
+    VG_LITE_BLEND_SRC_OVER,
+    0xffff00f7));
+
+  GPU_PERF_RENDER_START();
+  VG_LITE_CHECK_ERROR(vg_lite_finish());
+  GPU_PERF_RENDER_STOP();
+
+error_handler:
+  return error;
+}

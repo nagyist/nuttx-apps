@@ -107,6 +107,13 @@ vg_lite_error_t vg_lite_test_path_glyph(
   FAR struct gpu_test_context_s *ctx);
 
 /****************************************************************************
+ * Name: vg_lite_test_path_glyph_random
+ ****************************************************************************/
+
+vg_lite_error_t vg_lite_test_path_glyph_random(
+  FAR struct gpu_test_context_s *ctx);
+
+/****************************************************************************
  * Name: vg_lite_test_path_tiger
  ****************************************************************************/
 
