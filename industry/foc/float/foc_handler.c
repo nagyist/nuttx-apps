@@ -27,7 +27,6 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "industry/foc/foc_log.h"
