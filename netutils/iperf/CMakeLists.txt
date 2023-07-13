@@ -19,20 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_NETUTILS_IPERF)
-
-  # iperf example! built-in application info
-
-  nuttx_add_application(
-    NAME
-    ${CONFIG_NETUTILS_IPERF_PROGNAME}
-    SRCS
-    iperf_main.c
-    STACKSIZE
-    ${CONFIG_NETUTILS_IPERF_STACKSIZE}
-    PRIORITY
-    ${CONFIG_NETUTILS_IPERF_PRIORITY})
-
-  # Iperf Example
-
-  target_sources(apps PRIVATE iperf.c)
+  nuttx_add_application(NAME iperf SRCS iperf_main.c iperf.c)
 endif()

@@ -19,6 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_MTDRWB)
-  nuttx_add_application(NAME ${CONFIG_EXAMPLES_MTDRWB_PROGNAME} SRCS
-                        mtdrwb_main.c)
+  nuttx_add_application(NAME mtdrwb)
 endif()
