@@ -234,7 +234,6 @@ static FAR void *sig_waiter(FAR void *parameter)
   printf("sig_waiter: Waiting to receive signal...\n");
 
   sigemptyset(&set);
-
   ret = sigwaitinfo(&set, &info);
 
   pthread_testcancel();

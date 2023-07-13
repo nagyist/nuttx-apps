@@ -19,5 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_FSUTILS_FLASH_ERASEALL)
-  nuttx_add_application(NAME flash_eraseall SRCS flash_eraseall.c)
+  target_sources(apps PRIVATE flash_eraseall.c)
 endif()

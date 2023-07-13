@@ -338,7 +338,6 @@ done:
       free(data[i]);
     }
 
-  free(p);
   return (fail);
 }
 
