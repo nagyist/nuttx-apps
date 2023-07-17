@@ -19,6 +19,9 @@
 #
 ############################################################################
 
+# Only build wasm if one of the following runtime is enabled
+
+ifneq ($(CONFIG_INTERPRETERS_WAMR)$(CONFIG_INTERPRETERS_WASM)$(CONFIG_INTERPRETERS_TOYWASM),)
 include $(APPDIR)$(DELIM)interpreters$(DELIM)wamr$(DELIM)Toolchain.defs
 
 # wasi-sdk toolchain setting
@@ -98,9 +101,14 @@ endef
 
 endif # WASM_BUILD
 
-# If called from Application.mk, WASM_BUILD is defined (y or n)
+# Default values for WASM_BUILD, it's a three state variable:
+#   y - build wasm module only
+#   n - don't build wasm module
+#   both - build wasm module and native module
 
-ifeq ($(WASM_BUILD),y)
+WASM_BUILD ?= n
+
+ifneq ($(WASM_BUILD),n)
 
 STACKSIZE           ?= $(CONFIG_DEFAULT_TASK_STACKSIZE)
 PRIORITY            ?= SCHED_PRIORITY_DEFAULT
@@ -157,3 +165,4 @@ clean::
 endif # WASM_BUILD
 
 endif # WCC
+endif
