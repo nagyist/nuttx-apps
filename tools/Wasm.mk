@@ -19,9 +19,6 @@
 #
 ############################################################################
 
-# Only build wasm if one of the following runtime is enabled
-
-ifneq ($(CONFIG_INTERPRETERS_WAMR)$(CONFIG_INTERPRETERS_WASM)$(CONFIG_INTERPRETERS_TOYWASM),)
 include $(APPDIR)$(DELIM)interpreters$(DELIM)wamr$(DELIM)Toolchain.defs
 
 # wasi-sdk toolchain setting
@@ -33,7 +30,7 @@ WAR ?= $(WASI_SDK_PATH)/bin/llvm-ar rcs
 
 ifeq ($(WSYSROOT),)
 	WSYSROOT := $(TOPDIR)
-	
+
 	# Force disable wasm build when WASM_SYSROOT is not defined and on specific
 	# targets that do not support wasm build.
 	# Since some architecture level inline assembly instructions can not be
@@ -57,10 +54,21 @@ CFLAGS_STRIP += $(ARCHCPUFLAGS) $(ARCHCFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(A
 WCFLAGS += $(filter-out $(CFLAGS_STRIP),$(CFLAGS))
 WCFLAGS += --sysroot=$(WSYSROOT) -nostdlib -D__NuttX__
 
+# Keep optimization and lto flags
+
+WCFLAGS += $(filter -O%, $(ARCHOPTIMIZATION))
+WCFLAGS += $(filter -flto%, $(ARCHOPTIMIZATION))
+
+# If CONFIG_LIBM not defined, then define it to 1
+ifeq ($(CONFIG_LIBM),)
+WCFLAGS += -DCONFIG_LIBM=1 -I$(APPDIR)$(DELIM)include$(DELIM)wasm
+endif
+
 WLDFLAGS = -z stack-size=$(STACKSIZE) -Wl,--initial-memory=$(INITIAL_MEMORY)
 WLDFLAGS += -Wl,--export=main -Wl,--export=__main_argc_argv
 WLDFLAGS += -Wl,--export=__heap_base -Wl,--export=__data_end
 WLDFLAGS += -Wl,--no-entry -Wl,--strip-all -Wl,--allow-undefined
+WLDFLAGS += $(filter -flto%, $(ARCHOPTIMIZATION))
 
 COMPILER_RT_LIB = $(shell $(WCC) --print-libgcc-file-name)
 ifeq ($(wildcard $(COMPILER_RT_LIB)),)
@@ -90,18 +98,15 @@ endef
 
 endif # WASM_BUILD
 
-# Default values for WASM_BUILD, it's a three state variable:
-#   y - build wasm module only
-#   n - don't build wasm module
-#   both - build wasm module and native module
+# If called from Application.mk, WASM_BUILD is defined (y or n)
 
-WASM_BUILD ?= n
+ifeq ($(WASM_BUILD),y)
 
-ifneq ($(WASM_BUILD),n)
-
-WASM_INITIAL_MEMORY ?= 65536
 STACKSIZE           ?= $(CONFIG_DEFAULT_TASK_STACKSIZE)
 PRIORITY            ?= SCHED_PRIORITY_DEFAULT
+
+# Alignup the initial memory to multiple of 64KB
+WASM_INITIAL_MEMORY ?= $(shell expr \( $(STACKSIZE) / 65536 + 1 \) \* 65536)
 
 # Wamr mode:
 # INT: Interpreter (Default)
@@ -118,7 +123,17 @@ WAMR_MODE ?= INT
 WSRCS := $(MAINSRC) $(CSRCS)
 WOBJS := $(WSRCS:=$(SUFFIX).wo)
 
+# Copy math.h from $(TOPDIR)/include/nuttx/lib/math.h to $(APPDIR)/include/wasm/math.h
+# Using declaration of math.h is OK for Wasm build
+
+$(APPDIR)$(DELIM)include$(DELIM)wasm$(DELIM)math.h:
+ifeq ($(CONFIG_LIBM),)
+	$(call COPYFILE,$(TOPDIR)$(DELIM)include$(DELIM)nuttx$(DELIM)lib$(DELIM)math.h,$@)
+endif
+
 all:: $(WBIN)
+
+depend:: $(APPDIR)$(DELIM)include$(DELIM)wasm$(DELIM)math.h
 
 $(WOBJS): %.c$(SUFFIX).wo : %.c
 	$(Q) $(WCC) $(WCFLAGS) -c $^ -o $@
@@ -137,9 +152,8 @@ $(WBIN): $(WOBJS)
 clean::
 	$(call DELFILE, $(WOBJS))
 	$(call DELFILE, $(WBIN))
-
+	$(call DELFILE, $(APPDIR)$(DELIM)include$(DELIM)wasm$(DELIM)math.h)
 
 endif # WASM_BUILD
 
 endif # WCC
-endif
