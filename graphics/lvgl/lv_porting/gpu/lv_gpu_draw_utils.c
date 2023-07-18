@@ -878,7 +878,7 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t gpu_draw_path(float* path, lv_coord_t length,
         &matrix, blend, pattern, color, filter));
 
     if (allocated_src) {
-      gpu_finish();
+      CHECK_ERROR(gpu_finish());
       lv_mem_free(vgbuf->memory);
     } else {
       CHECK_ERROR(gpu_flush());

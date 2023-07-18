@@ -352,7 +352,7 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_draw_img_decoded_gpu(
   }
 
   if (allocated_src) {
-    gpu_finish();
+    CHECK_ERROR(gpu_finish());
   } else {
     CHECK_ERROR(gpu_flush());
   }
