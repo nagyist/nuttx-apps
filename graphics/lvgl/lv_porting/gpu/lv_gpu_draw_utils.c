@@ -1033,7 +1033,7 @@ lv_draw_mask_res_t lv_gpu_draw_mask_apply_path(void* vpath,
     vg_lite_path_t* v = vpath;
     if (comm->type == LV_DRAW_MASK_TYPE_RADIUS) {
       if (masked) {
-        GPU_WARN("multiple mask unsupported");
+        GPU_INFO("multiple mask unsupported");
         lv_mem_buf_release(v->path);
         v->path = NULL;
         break;
@@ -1064,7 +1064,7 @@ lv_draw_mask_res_t lv_gpu_draw_mask_apply_path(void* vpath,
       }
     } else if (comm->type == LV_DRAW_MASK_TYPE_ANGLE) {
       if (masked) {
-        GPU_WARN("multiple mask unsupported");
+        GPU_INFO("multiple mask unsupported");
         lv_mem_buf_release(v->path);
         v->path = NULL;
         break;
@@ -1116,7 +1116,7 @@ lv_draw_mask_res_t lv_gpu_draw_mask_apply_path(void* vpath,
       v->path_length = path_length;
       masked = true;
     } else {
-      GPU_WARN("mask type %d unsupported", comm->type);
+      GPU_INFO("mask type %d unsupported", comm->type);
       masked = true;
       v->path = NULL;
     }

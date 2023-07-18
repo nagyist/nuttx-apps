@@ -60,7 +60,7 @@ LV_ATTRIBUTE_FAST_MEM static lv_res_t draw_shadow(lv_draw_ctx_t* draw_ctx,
       && dsc->shadow_ofs_x == 0 && dsc->shadow_ofs_y == 0)
     return LV_RES_OK;
 
-  GPU_WARN("Draw shadow unsupported, fallback to SW");
+  GPU_INFO("Draw shadow unsupported, fallback to SW");
   return LV_RES_INV;
 }
 
