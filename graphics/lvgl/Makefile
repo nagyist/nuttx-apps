@@ -120,4 +120,8 @@ distclean::
 	$(call DELFILE, $(LVGL_TARBALL))
 endif
 
+ifeq ($(CONFIG_DEBUG_CUSTOMOPT),y)
+  ./lvgl/src/misc/lv_mem.c_CFLAGS += -O2
+endif
+
 include $(APPDIR)/Application.mk
