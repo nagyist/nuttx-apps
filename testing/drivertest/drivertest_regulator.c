@@ -36,7 +36,8 @@
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
-#define REGULATOR_ID "fake_regulator"
+#define REGULATOR_ID        "fake_regulator"
+#define REGULATOR_SUPPLY_ID "fake_regulator_supply"
 
 /****************************************************************************
  * Private Functions Prototypes
@@ -81,6 +82,19 @@ static struct test_regulator_s g_fake_regulator =
   .state = 0,
 };
 
+static struct regulator_desc_s g_fake_regulator_supply_desc =
+{
+  .name = REGULATOR_SUPPLY_ID,
+  .boot_on = 0,
+  .always_on = 0,
+};
+
+static struct test_regulator_s g_fake_regulator_supply =
+{
+  .rdev = NULL,
+  .state = 0,
+};
+
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
@@ -105,27 +119,19 @@ int test_regulator_disable(FAR struct regulator_dev_s *rdev)
   return OK;
 }
 
-static int test_regulator_fake_driver_init(void)
-{
-  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
-                                             &g_fake_regulator_ops,
-                                             &g_fake_regulator);
-  assert_false(NULL == g_fake_regulator.rdev);
-  return OK;
-}
-
-static int test_regulator_fake_driver_uinit(void)
-{
-  regulator_unregister(g_fake_regulator.rdev);
-  return OK;
-}
-
 static void test_regulator_always_on(FAR void **state)
 {
   FAR struct regulator_s *test = NULL;
   int ret = 0;
   int cnt = 10;
 
+  g_fake_regulator_desc.boot_on = 0;
+  g_fake_regulator_desc.always_on = 1;
+  g_fake_regulator_desc.supply_name = NULL;
+  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator);
+  assert_false(NULL == g_fake_regulator.rdev);
   test = regulator_get(REGULATOR_ID);
   assert_false(NULL == test);
 
@@ -149,18 +155,275 @@ static void test_regulator_always_on(FAR void **state)
     }
 
   regulator_put(test);
-
+  regulator_unregister(g_fake_regulator.rdev);
   return;
 }
 
-static int setup(FAR void **state)
+static void test_regulator_supply_1(FAR void **state)
 {
-  return test_regulator_fake_driver_init();
+  FAR struct regulator_s *test = NULL;
+  int cnt = 10;
+  int ret = 0;
+
+  g_fake_regulator_desc.supply_name = REGULATOR_SUPPLY_ID;
+  g_fake_regulator_desc.boot_on = 0;
+  g_fake_regulator_desc.always_on = 1;
+  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator);
+  assert_true(NULL == g_fake_regulator.rdev);
+  g_fake_regulator_supply.rdev = regulator_register(
+                                             &g_fake_regulator_supply_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator_supply);
+  assert_false(NULL == g_fake_regulator_supply.rdev);
+  assert_int_equal(g_fake_regulator_supply.state, 0);
+  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator);
+  assert_false(NULL == g_fake_regulator.rdev);
+  assert_int_equal(g_fake_regulator_supply.state, 1);
+  assert_int_equal(g_fake_regulator.state, 1);
+  test = regulator_get(REGULATOR_ID);
+  assert_false(NULL == test);
+  while (cnt--)
+    {
+      ret = regulator_enable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_enable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_disable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_disable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_disable(test);
+      assert_int_equal(ret, -EIO);
+    }
+
+  regulator_put(test);
+  regulator_unregister(g_fake_regulator.rdev);
+  g_fake_regulator.rdev = NULL;
+  assert_int_equal(g_fake_regulator_supply.state, 0);
+  regulator_unregister(g_fake_regulator_supply.rdev);
+  g_fake_regulator_supply.rdev = NULL;
+  return;
 }
 
-static int teardown(FAR void **state)
+static void test_regulator_supply_2(FAR void **state)
 {
-  return test_regulator_fake_driver_uinit();
+  FAR struct regulator_s *test = NULL;
+  int cnt = 10;
+  int ret = 0;
+
+  g_fake_regulator_desc.supply_name = REGULATOR_SUPPLY_ID;
+  g_fake_regulator_desc.boot_on = 1;
+  g_fake_regulator_desc.always_on = 1;
+  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator);
+  assert_true(NULL == g_fake_regulator.rdev);
+  g_fake_regulator_supply.rdev = regulator_register(
+                                             &g_fake_regulator_supply_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator_supply);
+  assert_false(NULL == g_fake_regulator_supply.rdev);
+  assert_int_equal(g_fake_regulator_supply.state, 0);
+  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator);
+  assert_false(NULL == g_fake_regulator.rdev);
+  assert_int_equal(g_fake_regulator_supply.state, 1);
+  assert_int_equal(g_fake_regulator.state, 1);
+  test = regulator_get(REGULATOR_ID);
+  assert_false(NULL == test);
+  while (cnt--)
+    {
+      ret = regulator_enable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_enable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_disable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_disable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_disable(test);
+      assert_int_equal(ret, -EIO);
+    }
+
+  regulator_put(test);
+  regulator_unregister(g_fake_regulator.rdev);
+  g_fake_regulator.rdev = NULL;
+  assert_int_equal(g_fake_regulator_supply.state, 0);
+  regulator_unregister(g_fake_regulator_supply.rdev);
+  g_fake_regulator_supply.rdev = NULL;
+  return;
+}
+
+static void test_regulator_supply_3(FAR void **state)
+{
+  FAR struct regulator_s *test = NULL;
+  int cnt = 10;
+  int ret = 0;
+
+  g_fake_regulator_desc.supply_name = REGULATOR_SUPPLY_ID;
+  g_fake_regulator_desc.boot_on = 1;
+  g_fake_regulator_desc.always_on = 0;
+  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator);
+  assert_true(NULL == g_fake_regulator.rdev);
+  g_fake_regulator_supply.rdev = regulator_register(
+                                             &g_fake_regulator_supply_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator_supply);
+  assert_false(NULL == g_fake_regulator_supply.rdev);
+  assert_int_equal(g_fake_regulator_supply.state, 0);
+  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator);
+  assert_false(NULL == g_fake_regulator.rdev);
+  assert_int_equal(g_fake_regulator_supply.state, 1);
+  assert_int_equal(g_fake_regulator.state, 1);
+  test = regulator_get(REGULATOR_ID);
+  assert_false(NULL == test);
+  while (cnt--)
+    {
+      ret = regulator_enable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_enable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_disable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_disable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 0);
+      assert_int_equal(g_fake_regulator_supply.state, 0);
+      ret = regulator_disable(test);
+      assert_int_equal(ret, -EIO);
+    }
+
+  ret = regulator_enable(test);
+  assert_false(ret < 0);
+  assert_int_equal(g_fake_regulator.state, 1);
+  assert_int_equal(g_fake_regulator_supply.state, 1);
+
+  regulator_put(test);
+  regulator_unregister(g_fake_regulator.rdev);
+  g_fake_regulator.rdev = NULL;
+  assert_int_equal(g_fake_regulator_supply.state, 0);
+  regulator_unregister(g_fake_regulator_supply.rdev);
+  g_fake_regulator_supply.rdev = NULL;
+  return;
+}
+
+static void test_regulator_supply_4(FAR void **state)
+{
+  g_fake_regulator_desc.supply_name = REGULATOR_SUPPLY_ID;
+  g_fake_regulator_desc.boot_on = 1;
+  g_fake_regulator_desc.always_on = 0;
+  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator);
+  assert_true(NULL == g_fake_regulator.rdev);
+  g_fake_regulator_supply.rdev = regulator_register(
+                                             &g_fake_regulator_supply_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator_supply);
+  assert_false(NULL == g_fake_regulator_supply.rdev);
+  assert_int_equal(g_fake_regulator_supply.state, 0);
+  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator);
+  assert_false(NULL == g_fake_regulator.rdev);
+  assert_int_equal(g_fake_regulator_supply.state, 1);
+  assert_int_equal(g_fake_regulator.state, 1);
+  regulator_unregister(g_fake_regulator.rdev);
+  g_fake_regulator.rdev = NULL;
+  assert_int_equal(g_fake_regulator_supply.state, 0);
+  regulator_unregister(g_fake_regulator_supply.rdev);
+  g_fake_regulator_supply.rdev = NULL;
+  return;
+}
+
+static void test_regulator_supply_5(FAR void **state)
+{
+  FAR struct regulator_s *test = NULL;
+  int cnt = 10;
+  int ret = 0;
+
+  g_fake_regulator_desc.supply_name = REGULATOR_SUPPLY_ID;
+  g_fake_regulator_desc.boot_on = 0;
+  g_fake_regulator_desc.always_on = 0;
+  g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator);
+  assert_false(NULL == g_fake_regulator.rdev);
+  test = regulator_get(REGULATOR_ID);
+  assert_true(NULL == test);
+  g_fake_regulator_supply.rdev = regulator_register(
+                                             &g_fake_regulator_supply_desc,
+                                             &g_fake_regulator_ops,
+                                             &g_fake_regulator_supply);
+  assert_false(NULL == g_fake_regulator_supply.rdev);
+  assert_int_equal(g_fake_regulator_supply.state, 0);
+  assert_int_equal(g_fake_regulator.state, 0);
+  test = regulator_get(REGULATOR_ID);
+  assert_false(NULL == test);
+  while (cnt--)
+    {
+      ret = regulator_enable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_enable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_disable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 1);
+      assert_int_equal(g_fake_regulator_supply.state, 1);
+      ret = regulator_disable(test);
+      assert_false(ret < 0);
+      assert_int_equal(g_fake_regulator.state, 0);
+      assert_int_equal(g_fake_regulator_supply.state, 0);
+      ret = regulator_disable(test);
+      assert_int_equal(ret, -EIO);
+    }
+
+  ret = regulator_enable(test);
+  assert_false(ret < 0);
+  assert_int_equal(g_fake_regulator.state, 1);
+  assert_int_equal(g_fake_regulator_supply.state, 1);
+  regulator_put(test);
+  regulator_unregister(g_fake_regulator.rdev);
+  g_fake_regulator.rdev = NULL;
+  assert_int_equal(g_fake_regulator_supply.state, 0);
+  regulator_unregister(g_fake_regulator_supply.rdev);
+  g_fake_regulator_supply.rdev = NULL;
+  return;
 }
 
 /****************************************************************************
@@ -171,8 +434,12 @@ int main(int argc, FAR char *argv[])
 {
   const struct CMUnitTest tests[] =
     {
-      cmocka_unit_test_prestate_setup_teardown(test_regulator_always_on,
-                                               setup, teardown, NULL),
+      cmocka_unit_test_prestate(test_regulator_always_on, NULL),
+      cmocka_unit_test_prestate(test_regulator_supply_1, NULL),
+      cmocka_unit_test_prestate(test_regulator_supply_2, NULL),
+      cmocka_unit_test_prestate(test_regulator_supply_3, NULL),
+      cmocka_unit_test_prestate(test_regulator_supply_4, NULL),
+      cmocka_unit_test_prestate(test_regulator_supply_5, NULL),
     };
 
   return cmocka_run_group_tests(tests, NULL, NULL);
