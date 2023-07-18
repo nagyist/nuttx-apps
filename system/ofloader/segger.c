@@ -68,24 +68,26 @@ struct FlashDevice
 const struct FlashDevice FlashDevice
 locate_data("DevDscr") used_data =
 {
-  ALGO_VERSION, /* Algo version */
-  "NuttX",      /* Flash device name */
-  ONCHIP,       /* Flash device type */
-  0x00000000,   /* Flash base address */
-  0xffffffff,   /* Total flash device size in Bytes */
-  CONFIG_SYSTEM_OFLOADER_BUFFERSIZE,
-                /* Page Size (number of bytes that will be passed to ProgramPage().
-                 * May be multiple of min alignment in order to reduce overhead for
-                 * calling ProgramPage multiple times
-                 */
-  1,            /* Reserved, should be 1 */
-  0xff,         /* Flash erased value */
-  5000,         /* Program page timeout in ms */
-  5000,         /* Erase sector timeout in ms */
+  ALGO_VERSION,                      /* Algo version */
+  "NuttX",                           /* Flash device name */
+  ONCHIP,                            /* Flash device type */
+  0x00000000,                        /* Flash base address */
+  0xffffffff,                        /* Total flash device size in Bytes */
+  CONFIG_SYSTEM_OFLOADER_BUFFERSIZE, /* Page Size (number of bytes that will
+                                      * be passed to ProgramPage(). May be
+                                      * multiple of min alignment in order
+                                      * to reduce overhead for calling
+                                      * ProgramPage multiple times
+                                      */
+  1,                                 /* Reserved, should be 1 */
+  0xff,                              /* Flash erased value */
+  5000,                              /* Program page timeout in ms */
+  5000,                              /* Erase sector timeout in ms */
 
-  /* Flash sector layout definition */
+  /* Flash sector layout definition
+   * Sector size equl with page size to skip erase
+   */
 
-  /* Sector size equl with page size to skip erase */
   {
     {CONFIG_SYSTEM_OFLOADER_BUFFERSIZE, 0x00000000},
     {0xffffffff, 0xffffffff}
@@ -123,7 +125,8 @@ int SEGGER_FL_Erase(uint32_t SectorAddr, uint32_t SectorIndex,
 int SEGGER_FL_Read(uint32_t Addr, uint32_t NumBytes, FAR uint8_t *pDestBuff)
   locate_code("PrgData") used_code;
 
-uint32_t SEGGER_FL_Verify(uint32_t Addr, uint32_t NumBytes, FAR uint8_t* pData)
+uint32_t SEGGER_FL_Verify(uint32_t Addr, uint32_t NumBytes,
+                          FAR uint8_t *pData)
   locate_code("PrgData") used_code;
 
 /****************************************************************************
@@ -173,14 +176,20 @@ out:
 
 extern void __start(void);
 
-int SEGGER_FL_Prepare(uint32_t PreparePara0, uint32_t PreparePara1, uint32_t PreparePara2)
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+int SEGGER_FL_Prepare(uint32_t PreparePara0, uint32_t PreparePara1,
+                      uint32_t PreparePara2)
 {
   g_create_idle = NULL;
   __start();
   return 0;
 }
 
-int SEGGER_FL_Restore(uint32_t PreparePara0, uint32_t PreparePara1, uint32_t PreparePara2)
+int SEGGER_FL_Restore(uint32_t PreparePara0, uint32_t PreparePara1,
+                      uint32_t PreparePara2)
 {
   struct ofloader_msg msg;
 
@@ -188,7 +197,8 @@ int SEGGER_FL_Restore(uint32_t PreparePara0, uint32_t PreparePara1, uint32_t Pre
   return SEGGER_FL_SendAndWait(&msg);
 }
 
-int SEGGER_FL_Program(uint32_t DestAddr, uint32_t NumBytes, FAR uint8_t *pSrcBuff)
+int SEGGER_FL_Program(uint32_t DestAddr, uint32_t NumBytes,
+                      FAR uint8_t *pSrcBuff)
 {
   struct ofloader_msg msg;
 
@@ -199,7 +209,8 @@ int SEGGER_FL_Program(uint32_t DestAddr, uint32_t NumBytes, FAR uint8_t *pSrcBuf
   return SEGGER_FL_SendAndWait(&msg);
 }
 
-int SEGGER_FL_Erase(uint32_t SectorAddr, uint32_t SectorIndex, uint32_t NumSectors)
+int SEGGER_FL_Erase(uint32_t SectorAddr, uint32_t SectorIndex,
+                    uint32_t NumSectors)
 {
   return 0;
 }
@@ -215,7 +226,8 @@ int SEGGER_FL_Read(uint32_t Addr, uint32_t NumBytes, FAR uint8_t *pDestBuff)
   return SEGGER_FL_SendAndWait(&msg);
 }
 
-uint32_t SEGGER_FL_Verify(uint32_t Addr, uint32_t NumBytes, FAR uint8_t *pData)
+uint32_t SEGGER_FL_Verify(uint32_t Addr, uint32_t NumBytes,
+                          FAR uint8_t *pData)
 {
   struct ofloader_msg msg;
 
