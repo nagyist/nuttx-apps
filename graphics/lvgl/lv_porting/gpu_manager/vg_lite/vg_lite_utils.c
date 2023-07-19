@@ -420,7 +420,7 @@ void vg_lite_get_buffer_format_bytes(
             break;
         case VG_LITE_NV12:
         case VG_LITE_NV12_TILED:
-            *mul = 3;
+            *mul = 1;
             break;
         case VG_LITE_ANV12:
         case VG_LITE_ANV12_TILED:
@@ -501,6 +501,15 @@ bool vg_lite_custom_buffer_init(
     buffer->stride = VG_LITE_ALIGN((buffer->width * mul / div), align);
     buffer->memory = ptr;
     buffer->address = (uint32_t)(uintptr_t)ptr;
+
+    if(format == VG_LITE_NV12) {
+        buffer->yuv.swizzle = VG_LITE_SWIZZLE_UV;
+        buffer->yuv.uv_stride = buffer->stride;
+        buffer->yuv.alpha_stride = buffer->stride;
+        buffer->yuv.uv_height = buffer->height / 2;
+        buffer->yuv.uv_memory = ptr + (buffer->stride * buffer->height);
+        buffer->yuv.uv_planar = (uint32_t)(uintptr_t)buffer->yuv.uv_memory;
+    }
 
     return true;
 }
