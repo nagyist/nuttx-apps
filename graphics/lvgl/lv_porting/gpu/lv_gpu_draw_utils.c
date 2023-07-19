@@ -87,7 +87,7 @@ static lv_gpu_curve_t arc_curve = {
 };
 static lv_area_t gpu_area = { 0 };
 static uint32_t gpu_flush_count = 0;
-static lv_gpu_grad_img_map grad_mem_map[GPU_FLUSH_COUNT];
+static lv_gpu_grad_img_map grad_mem_map[GPU_FLUSH_COUNT == 0 ? 1 : GPU_FLUSH_COUNT];
 
 /****************************************************************************
  * Private Functions
@@ -1266,7 +1266,8 @@ lv_res_t gpu_grad_img_init(void* vg_grad, const lv_grad_dsc_t* lv_grad, lv_opa_t
   } else if (unused_idx >= 0) {
     mem_idx = unused_idx;
   } else {
-    GPU_WARN("can't find a grad mem index.");
+    GPU_INFO("can't find a grad mem index, do gpu finish");
+    gpu_finish();
     return LV_RES_INV;
   }
 
@@ -1729,7 +1730,7 @@ LV_ATTRIBUTE_FAST_MEM void gpu_wait_area(const lv_area_t* area)
 LV_ATTRIBUTE_FAST_MEM int gpu_flush(void)
 {
 #if GPU_FLUSH_COUNT == 0
-  return vg_lite_finish();
+  return gpu_finish();
 #else
   if (++gpu_flush_count >= GPU_FLUSH_COUNT){
     gpu_flush_count = 0;
