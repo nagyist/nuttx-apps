@@ -61,10 +61,16 @@ struct _lv_gpu_ctx_t * vg_lite_draw_ctx_create(void)
 static void vg_lite_draw_ctx_init(lv_disp_drv_t * disp_drv, lv_draw_ctx_t * draw_ctx)
 {
 #ifdef CONFIG_LV_GPU_VG_LITE_CUSTOM_INIT
-    /* from 'vendor/bes/framework/services/platform/drivers/graphic/gpu/gpu_port.c' */
-    extern void gpu_init(void);
-    gpu_init();
-    LV_GPU_LOG_TRACE("init GPU func = %p", gpu_init);
+    static bool inited = false;
+
+    /* prevent double initialization */
+    if(!inited) {
+        extern void gpu_init(void);
+        LV_GPU_LOG_INFO("call gpu_init func = %p", gpu_init);
+        gpu_init();
+        LV_GPU_LOG_INFO("gpu_init OK");
+        inited = true;
+    }
 #endif
 
     vg_lite_draw_ctx_t * ctx = (vg_lite_draw_ctx_t *)draw_ctx;
