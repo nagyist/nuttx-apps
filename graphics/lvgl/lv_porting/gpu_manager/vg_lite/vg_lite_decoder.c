@@ -96,17 +96,17 @@ void vg_lite_decoder_init(vg_lite_draw_ctx_t * draw_ctx)
 
 void vg_lite_decoder_uninit(vg_lite_draw_ctx_t * draw_ctx)
 {
-    /* clear all image cache */
+    LV_GPU_LOG_TRACE("clear image cache");
     lv_img_cache_invalidate_src(NULL);
 
-    /* delete decoders */
+    LV_GPU_LOG_TRACE("delete decoders");
     if(draw_ctx->etc2_decoder) {
         lv_img_decoder_delete(draw_ctx->etc2_decoder);
     }
     lv_img_decoder_delete(draw_ctx->evo_decoder);
     lv_img_decoder_delete(draw_ctx->raw_decoder);
 
-    /* clear decoder list */
+    LV_GPU_LOG_TRACE("clear decoder list");
     lv_img_decoder_t * dec;
     _LV_LL_READ(&draw_ctx->decoder_ll, dec) {
         lv_img_decoder_delete(dec);

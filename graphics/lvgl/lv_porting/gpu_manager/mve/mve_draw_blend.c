@@ -648,13 +648,13 @@ void mve_draw_blend(lv_draw_ctx_t * draw_ctx, const lv_draw_sw_blend_dsc_t * dsc
     lv_draw_wait_for_finish(gpu->main_draw_ctx);
 
     if(dsc->blend_mode != LV_BLEND_MODE_NORMAL) {
-        LV_GPU_LOG_WARN("only normal blend mode acceleration supported at the moment");
+        LV_GPU_LOG_INFO("only normal blend mode acceleration supported at the moment");
         return;
     }
 
     lv_disp_t * disp = _lv_refr_get_disp_refreshing();
     if(disp->driver->set_px_cb) {
-        LV_GPU_LOG_WARN("drawing with set_px_cb can't be accelerated");
+        LV_GPU_LOG_INFO("drawing with set_px_cb can't be accelerated");
         return;
     }
 

@@ -29,7 +29,7 @@ extern "C" {
 #define LV_GPU_STATIC_ASSERT(expr) static_assert(expr)
 
 #ifdef CONFIG_LV_GPU_MANAGER_USE_LOG
-#define LV_GPU_LOG_TRACE LV_LOG_INFO
+#define LV_GPU_LOG_TRACE LV_LOG_TRACE
 #define LV_GPU_LOG_INFO LV_LOG_INFO
 #define LV_GPU_LOG_WARN LV_LOG_WARN
 #define LV_GPU_LOG_ERROR LV_LOG_ERROR

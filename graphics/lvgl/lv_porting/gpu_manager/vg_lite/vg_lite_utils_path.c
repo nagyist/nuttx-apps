@@ -257,7 +257,7 @@ bool vg_lite_draw_mask_to_path(vg_lite_path_t * vg_path, const lv_area_t * coord
 
         if(comm->type == LV_DRAW_MASK_TYPE_RADIUS) {
             if(masked) {
-                LV_GPU_LOG_WARN("multiple mask unsupported");
+                LV_GPU_LOG_INFO("multiple mask unsupported");
                 lv_mem_buf_release(vg_path->path);
                 vg_path->path = NULL;
                 break;
@@ -374,7 +374,7 @@ uint16_t vg_lite_fill_path(
 
         default:
             /* TODO: add other path type fill function as needed */
-            LV_GPU_LOG_WARN("unsupport type: %d", type);
+            LV_GPU_LOG_INFO("unsupport type: %d", type);
             break;
     }
 
@@ -401,7 +401,7 @@ uint32_t vg_lite_calculate_path_length(vg_lite_shape_path_type_t type, const voi
             }
             break;
         default:
-            LV_GPU_LOG_WARN("unsupport type: %d", type);
+            LV_GPU_LOG_INFO("unsupport type: %d", type);
             break;
     }
 

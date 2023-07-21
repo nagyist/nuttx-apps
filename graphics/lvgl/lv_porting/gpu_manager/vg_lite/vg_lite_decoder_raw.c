@@ -390,7 +390,7 @@ static lv_res_t decode_indexed(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t 
     /*Open the file if it's a file*/
     if(dsc->src_type == LV_IMG_SRC_FILE) {
         /*Support only "*.bin" files*/
-        LV_GPU_LOG_WARN("opening %s", (const char *)dsc->src);
+        LV_GPU_LOG_INFO("opening %s", (const char *)dsc->src);
         if(strcmp(lv_fs_get_ext(dsc->src), "bin")) {
             LV_GPU_LOG_WARN("can't open %s", (const char *)dsc->src);
             return LV_RES_INV;
