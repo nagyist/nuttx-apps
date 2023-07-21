@@ -772,7 +772,12 @@ uint32_t vg_lite_img_buf_get_buf_size(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf
     bool alpha = cf >= LV_IMG_CF_ALPHA_1BIT && cf <= LV_IMG_CF_ALPHA_8BIT;
     uint32_t palette_size = indexed || alpha ? 1 << px_size : 0;
     uint32_t data_size = w * h * px_size >> 3;
-    return sizeof(vg_lite_img_header_t) + data_size + palette_size * sizeof(uint32_t);
+    uint32_t buf_size = sizeof(vg_lite_img_header_t) + data_size + palette_size * sizeof(uint32_t);
+
+    /* vg-lite requires that the length of buf is also aligned */
+    buf_size = VG_LITE_ALIGN(buf_size, VG_LITE_IMG_SRC_ADDR_ALIGN);
+
+    return buf_size;
 }
 
 void * vg_lite_img_alloc(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf, uint32_t * data_size)
@@ -862,18 +867,17 @@ failed:
     return data;
 }
 
-
 lv_img_dsc_t * vg_lite_img_dsc_create(lv_coord_t w, lv_coord_t h, lv_img_cf_t cf)
 {
     /*Allocate image descriptor*/
-    lv_img_dsc_t * dsc = lv_gpu_malloc(sizeof(lv_img_dsc_t));
+    lv_img_dsc_t * dsc = lv_mem_alloc(sizeof(lv_img_dsc_t));
     LV_ASSERT_MALLOC(dsc);
     lv_memset_00(dsc, sizeof(lv_img_dsc_t));
 
     /*Allocate raw buffer*/
     dsc->data = vg_lite_img_alloc(w, h, cf, &dsc->data_size);
     if(dsc->data == NULL) {
-        lv_gpu_free(dsc);
+        lv_mem_free(dsc);
         return NULL;
     }
 
@@ -894,7 +898,7 @@ void vg_lite_img_dsc_del(lv_img_dsc_t * img_dsc)
         vg_lite_img_free((void *)img_dsc->data);
         img_dsc->data = NULL;
     }
-    lv_gpu_free(img_dsc);
+    lv_mem_free(img_dsc);
 }
 
 void vg_lite_img_dsc_update_header(lv_img_dsc_t * img_dsc)
