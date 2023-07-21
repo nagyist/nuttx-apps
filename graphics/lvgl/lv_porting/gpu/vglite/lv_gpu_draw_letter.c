@@ -418,12 +418,12 @@ static void vg_lite_outline_push(lv_freetype_event_dsc_t* event_dsc)
         break;
     case LV_FREETYPE_OUTLINE_CUBIC_TO:
         VLC_SET_OP_CODE(*outline->cur_ptr++, VLC_OP_CUBIC);
-        *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.x);
-        *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.y);
         *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.control1.x);
         *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.control1.y);
         *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.control2.x);
         *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.control2.y);
+        *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.x);
+        *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.y);
         break;
     case LV_FREETYPE_OUTLINE_CONIC_TO:
         VLC_SET_OP_CODE(*outline->cur_ptr++, VLC_OP_QUAD);
