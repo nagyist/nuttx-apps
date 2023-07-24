@@ -169,7 +169,9 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
             dsc->user_data = (void *)VG_LITE_IMAGE_MAGIC_NUM;
 
             vg_lite_img_dsc_update_header(gpu_dsc);
-            lv_gpu_free(gpu_dsc); /* ??????????????? */
+
+            /* gpu_dsc has no effect after getting img_data */
+            lv_mem_free(gpu_dsc);
 
             return LV_RES_OK;
         }

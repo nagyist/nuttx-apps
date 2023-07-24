@@ -1209,7 +1209,7 @@ static bool curve_fill_image(
 
 error_handler:
     if(allocated_src) {
-        lv_mem_free(vg_buf->memory);
+        vg_lite_img_free(vg_buf->memory);
     }
     return retval;
 }
