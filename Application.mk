@@ -218,7 +218,10 @@ endef
 
 .built: $(OBJS)
 	$(if $(wildcard $<), \
-	  $(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^) \
+	  $(call SPLITVARIABLE,ALL_DEP_OBJS,$^,100) \
+	  $(foreach BATCH, $(ALL_DEP_OBJS_TOTAL), \
+	  	$(shell $(call ARLOCK, $(call CONVERT_PATH, $(BIN)), $(ALL_DEP_OBJS_$(BATCH)))) \
+	  ) \
 	  $(if $(ORIG_BIN), \
 	    $(shell mkdir -p $(dir $(ORIG_BIN))) \
 	    $(shell $(call TESTANDCOPYFILE,$(call CONVERT_PATH,$(BIN)),$(ORIG_BIN))) \
@@ -312,7 +315,10 @@ register::
 endif
 
 .depend: $(firstword $(MAKEFILE_LIST)) $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
-	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$^) >Make.dep
+	$(call SPLITVARIABLE,ALL_DEP_OBJS,$^,100)
+	$(foreach BATCH, $(ALL_DEP_OBJS_TOTAL), \
+	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$(ALL_DEP_OBJS_$(BATCH))) >Make.dep) \
+	) 
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$^) >>Make.dep
 	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$^) >>Make.dep
 	$(Q) touch $@
