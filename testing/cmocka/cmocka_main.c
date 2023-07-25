@@ -30,11 +30,12 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <stdint.h>
+#include <cmocka.h>
+#include <sys/wait.h>
 #include <stdio.h>
 #include <syslog.h>
-#include <sys/wait.h>
+
 #include <builtin/builtin.h>
-#include <cmocka.h>
 
 /****************************************************************************
  * Public Functions
