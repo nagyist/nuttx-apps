@@ -54,6 +54,11 @@ $(foreach BDIR, $(BUILDIRS), $(eval $(call Add_Application,$(BDIR))))
 CXXEXT ?= .cxx
 RUSTEXT ?= .rs
 ZIGEXT ?= .zig
+AIDLEXT ?= .aidl
+
+# Tools
+
+AIDL ?= aidl
 
 # Library path
 
@@ -82,12 +87,31 @@ BUILTIN_REGISTRY = $(APPDIR)$(DELIM)builtin$(DELIM)registry
 DEPCONFIG = $(TOPDIR)$(DELIM).config
 
 ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+ifeq ($(CONFIG_SCHED_USER_IDENTITY),y)
+define REGISTER
+	$(Q) echo Register: $1
+	$(Q) echo { "$(subst ",,$(1))", $2, $3, $(patsubst ,0,$(subst ",,$(4))), $(patsubst ,0,$(5)), $(patsubst ,0,$(6)), $(patsubst ,0,$(7))}, > "$(BUILTIN_REGISTRY)$(DELIM)$1.bdat"
+	$(Q) echo int $(subst ",,$(4))(int argc, char *argv[]); > "$(BUILTIN_REGISTRY)$(DELIM)$1.pdat"
+
+	$(Q) touch $(BUILTIN_REGISTRY)$(DELIM).updated"
+endef
+else
 define REGISTER
 	$(Q) echo Register: $1
 	$(Q) echo { "$(subst ",,$(1))", $2, $3, $(subst ",,$(4)) }, > "$(BUILTIN_REGISTRY)$(DELIM)$1.bdat"
 	$(Q) echo int $(subst ",,$(4))(int argc, char *argv[]); > "$(BUILTIN_REGISTRY)$(DELIM)$1.pdat"
 
 	$(Q) touch $(BUILTIN_REGISTRY)$(DELIM).updated"
+endef
+endif
+else
+ifeq ($(CONFIG_SCHED_USER_IDENTITY),y)
+define REGISTER
+	$(Q) echo "{ \"$1\", $2, $3, $(patsubst ,0,$(4)), $(patsubst ,0,$(5)), $(patsubst ,0,$(6)), $(patsubst ,0,$(7)) }," > "$(BUILTIN_REGISTRY)$(DELIM)$1.bdat"
+	$(Q) if [ ! -z $4 ]; then \
+	        echo "int $4(int argc, char *argv[]);" > "$(BUILTIN_REGISTRY)$(DELIM)$1.pdat"; \
+	     fi;
+	$(Q) touch "$(BUILTIN_REGISTRY)$(DELIM).updated"
 endef
 else
 define REGISTER
@@ -99,6 +123,11 @@ define REGISTER
 	$(Q) touch "$(BUILTIN_REGISTRY)$(DELIM).updated"
 endef
 endif
+endif
+
+define ARLOCK
+	flock $1.lock $(call ARCHIVE, $1, $(2))
+endef
 
 # Standard include path
 
