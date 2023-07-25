@@ -18,6 +18,9 @@
 #
 ############################################################################
 
+# Include Wasm specific definitions
+include $(APPDIR)/tools/Wasm.mk
+
 # If this is an executable program (with MAINSRC), we must build it as a
 # loadable module for the KERNEL build (always) or if the tristate module
 # has the value "m"
@@ -30,6 +33,12 @@ ifneq ($(MAINSRC),)
   ifeq ($(CONFIG_BUILD_KERNEL),y)
     BUILD_MODULE = y
   endif
+endif
+
+ORIG_BIN =
+ifneq ($(BIN),$(APPDIR)$(DELIM)libapps$(LIBEXT))
+  ORIG_BIN := $(BIN)
+  BIN := $(addprefix $(APPDIR)$(DELIM)staging$(DELIM),$(notdir $(BIN)))
 endif
 
 # The GNU make CURDIR will always be a POSIX-like path with forward slashes
@@ -61,7 +70,7 @@ ifeq ($(BUILD_MODULE),y)
   LDLIBS += $(COMPILER_RT_LIB)
 endif
 
-SUFFIX ?= $(subst $(DELIM),.,$(CWD))
+SUFFIX = $(subst $(DELIM),.,$(CWD))
 
 PROGNAME := $(subst ",,$(PROGNAME))
 
@@ -76,6 +85,7 @@ COBJS = $(CSRCS:=$(SUFFIX)$(OBJEXT))
 CXXOBJS = $(CXXSRCS:=$(SUFFIX)$(OBJEXT))
 RUSTOBJS = $(RUSTSRCS:=$(SUFFIX)$(OBJEXT))
 ZIGOBJS = $(ZIGSRCS:=$(SUFFIX)$(OBJEXT))
+AIDLOBJS = $(patsubst %$(AIDLEXT),%$(CXXEXT),$(AIDLSRCS))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
@@ -93,28 +103,29 @@ ifneq ($(BUILD_MODULE),y)
   OBJS += $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJ)
 endif
 
-ifneq ($(strip $(PROGNAME)),)
+ifneq ($(PROGNAME),)
   PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
   ifneq ($(words $(PROGOBJ)), $(words $(PROGNAME)))
-    $(error "program names $(PROGNAME) does not match mainsrcs $(PROGOBJ)")
+    $(warning "program names $(PROGNAME) does not match mainsrcs $(PROGOBJ)")
   endif
   PROGLIST := $(addprefix $(BINDIR)$(DELIM),$(PROGNAME))
   REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
 
   NLIST := $(shell seq 1 $(words $(PROGNAME)))
   $(foreach i, $(NLIST), \
-    $(eval PROGNAME_$(word $i,$(PROGOBJ)) := $(word $i,$(PROGNAME))) \
+    $(eval PROGNAME_$(word $i,$(PROGOBJ:./%=%)) := $(word $i,$(PROGNAME))) \
     $(eval PROGOBJ_$(word $i,$(PROGLIST)) := $(word $i,$(PROGOBJ))) \
-    $(eval PRIORITY_$(word $i,$(REGLIST)) := \
-        $(if $(word $i,$(PRIORITY)),$(word $i,$(PRIORITY)),$(lastword $(PRIORITY)))) \
-    $(eval STACKSIZE_$(word $i,$(REGLIST)) := \
-        $(if $(word $i,$(STACKSIZE)),$(word $i,$(STACKSIZE)),$(lastword $(STACKSIZE)))) \
-    $(eval UID_$(word $i,$(REGLIST)) := \
-        $(if $(word $i,$(UID)),$(word $i,$(UID)),$(lastword $(UID)))) \
-    $(eval GID_$(word $i,$(REGLIST)) := \
-        $(if $(word $i,$(GID)),$(word $i,$(GID)),$(lastword $(GID)))) \
-    $(eval MODE_$(word $i,$(REGLIST)) := \
-        $(if $(word $i,$(MODE)),$(word $i,$(MODE)),$(lastword $(MODE)))) \
+	$(eval PROGNAME_$(word $i,$(REGLIST)) := $(word $i,$(PROGNAME))) \
+	$(eval PRIORITY_$(word $i,$(REGLIST)) := \
+		$(if $(word $i,$(PRIORITY)),$(word $i,$(PRIORITY)),$(lastword $(PRIORITY)))) \
+	$(eval STACKSIZE_$(word $i,$(REGLIST)) := \
+		$(if $(word $i,$(STACKSIZE)),$(word $i,$(STACKSIZE)),$(lastword $(STACKSIZE)))) \
+	$(eval UID_$(word $i,$(REGLIST)) := \
+		$(if $(word $i,$(UID)),$(word $i,$(UID)),$(lastword $(UID)))) \
+	$(eval GID_$(word $i,$(REGLIST)) := \
+		$(if $(word $i,$(GID)),$(word $i,$(GID)),$(lastword $(GID)))) \
+	$(eval MODE_$(word $i,$(REGLIST)) := \
+		$(if $(word $i,$(MODE)),$(word $i,$(MODE)),$(lastword $(MODE)))) \
   )
 endif
 
@@ -133,7 +144,6 @@ endif
 # Compile flags, notice the default flags only suitable for flat build
 
 ZIGELFFLAGS ?= $(ZIGFLAGS)
-RUSTELFFLAGS ?= $(RUSTFLAGS)
 
 DEPPATH += --dep-path .
 DEPPATH += --obj-path .
@@ -142,8 +152,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: $(OBJS)
-	@:
+all:: .built
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -174,13 +183,25 @@ endef
 define ELFCOMPILEZIG
 	$(ECHO_BEGIN)"ZIG: $1 "
 	# Remove target suffix here since zig compiler add .o automatically
-	$(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) --name $(basename $2) $1
+	$(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) --name $(basename $2) $1 
 	$(ECHO_END)
 endef
 
 define ELFLD
 	$(ECHO_BEGIN)"LD: $2 "
 	$(Q) $(LD) $(LDELFFLAGS) $(LDLIBPATH) $(ARCHCRT0OBJ) $1 $(LDSTARTGROUP) $(LDLIBS) $(LDENDGROUP) -o $2
+	$(ECHO_END)
+endef
+
+define COMPILEAIDL
+	$(ECHO_BEGIN)"AIDL: $1 "
+	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1
+	$(ECHO_END)
+endef
+
+define DELAIDLOUT
+	$(ECHO_BEGIN)"DELAIDLOUT: $1 "
+	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1 --delete
 	$(ECHO_END)
 endef
 
@@ -208,11 +229,34 @@ $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
 
-archive:
-	$(call SPLITVARIABLE,ALL_OBJS,$(OBJS),100)
-	$(foreach BATCH, $(ALL_OBJS_TOTAL), \
-		$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $(ALL_OBJS_$(BATCH))) \
-	)
+$(AIDLOBJS): %$(CXXEXT): %$(AIDLEXT)
+	$(call COMPILEAIDL, $<)
+
+define TESTANDCOPYFILE
+	if [ -f $2 ]; then \
+		if ! cmp -s $1 $2; then \
+			cp $1 $2; \
+		fi \
+	elif [ -f $1 ]; then \
+		cp $1 $2; \
+	fi
+endef
+
+.built: $(OBJS)
+	$(if $(wildcard $<), \
+	  $(call SPLITVARIABLE,ALL_DEP_OBJS,$^,100) \
+	  $(foreach BATCH, $(ALL_DEP_OBJS_TOTAL), \
+	  	$(shell $(call ARLOCK, $(call CONVERT_PATH, $(BIN)), $(ALL_DEP_OBJS_$(BATCH)))) \
+	  ) \
+	  $(if $(ORIG_BIN), \
+	    $(shell mkdir -p $(dir $(ORIG_BIN))) \
+	    $(shell $(call TESTANDCOPYFILE,$(call CONVERT_PATH,$(BIN)),$(ORIG_BIN))) \
+	   ), \
+	   $(if $(wildcard $(ORIG_BIN)), \
+	     $(shell $(call TESTANDCOPYFILE,$(ORIG_BIN),$(call CONVERT_PATH,$(BIN)))) \
+	    ) \
+	  )
+	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -233,7 +277,6 @@ ifneq ($(CONFIG_DEBUG_SYMBOLS),y)
 endif
 
 install:: $(PROGLIST)
-	@:
 
 else
 
@@ -258,17 +301,13 @@ $(MAINZIGOBJ): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
 
 install::
-	@:
 
 endif # BUILD_MODULE
 
-context::
-	@:
-
+context:: $(AIDLOBJS)
 ifeq ($(DO_REGISTRATION),y)
 
-$(REGLIST): $(DEPCONFIG) Makefile
-	$(eval PROGNAME_$@ := $(basename $(notdir $@)))
+$(REGLIST): $(DEPCONFIG) $(firstword $(MAKEFILE_LIST))
 ifeq ($(CONFIG_SCHED_USER_IDENTITY),y)
 	$(call REGISTER,$(PROGNAME_$@),$(PRIORITY_$@),$(STACKSIZE_$@),$(if $(BUILD_MODULE),,$(PROGNAME_$@)_main),$(UID_$@),$(GID_$@),$(MODE_$@))
 else
@@ -276,32 +315,33 @@ else
 endif
 
 register:: $(REGLIST)
-	@:
 else
 register::
-	@:
 endif
 
-.depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
+.depend: $(firstword $(MAKEFILE_LIST)) $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
 	$(call SPLITVARIABLE,ALL_DEP_OBJS,$^,100)
 	$(foreach BATCH, $(ALL_DEP_OBJS_TOTAL), \
 	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$(ALL_DEP_OBJS_$(BATCH))) >Make.dep) \
-	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$(ALL_DEP_OBJS_$(BATCH))) >>Make.dep) \
-	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$(ALL_DEP_OBJS_$(BATCH))) >>Make.dep) \
 	) 
+	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$^) >>Make.dep
+	$(Q) $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$^) >>Make.dep
 	$(Q) touch $@
 
 depend:: .depend
-	@:
+ifneq ($(ORIG_BIN),)
+	$(Q) mkdir -p $(dir $(BIN))
+	$(Q) mkdir -p $(dir $(ORIG_BIN))
+endif
 
 clean::
+	$(call DELFILE, .built)
+	$(call DELDIR, $(APPDIR)$(DELIM)staging)
 	$(call CLEAN)
 
 distclean:: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
+	$(foreach AIDLSRC,$(AIDLSRCS),$(call DELAIDLOUT,$(AIDLSRC)))
 
 -include Make.dep
-
-# Include Wasm specific definitions
-include $(APPDIR)/tools/Wasm.mk

@@ -1,22 +1,17 @@
-############################################################################
-# apps/testing/ltp/Makefile
+
+# apps/testing/ltp/ltp/Makefile
 #
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.  The
-# ASF licenses this file to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance with the
-# License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-# License for the specific language governing permissions and limitations
-# under the License.
-#
-############################################################################
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 include $(APPDIR)/Make.defs
 
@@ -222,7 +217,7 @@ MAINWORDS += "main("
 
 LTP_ORIGS := $(shell find $(TESTDIR) -name *.c)
 ifneq ($(LTP_ORIGS),)
-$(eval $(call SPLITVARIABLE,ORIGS_SPILT,$(LTP_ORIGS),200))
+$(call SPLITVARIABLE,ORIGS_SPILT,$(LTP_ORIGS),200)
 $(foreach BATCH, $(ORIGS_SPILT_TOTAL), \
 	$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(ORIGS_SPILT_$(BATCH))))) \
 )
@@ -232,7 +227,7 @@ $(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGS))))
 
 LTP_ORIGS := $(filter-out $(BLACKLIST), $(LTP_ORIGS))
 ifneq ($(LTP_ORIGS),)
-$(eval $(call SPLITVARIABLE,ORIGS_SPILT,$(LTP_ORIGS),200))
+$(call SPLITVARIABLE,ORIGS_SPILT,$(LTP_ORIGS),200)
 $(foreach BATCH, $(ORIGS_SPILT_TOTAL), \
 	$(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS+=$(shell grep -lr $(word) $(ORIGS_SPILT_$(BATCH))))) \
 )
@@ -240,7 +235,7 @@ endif
 
 LTP_CSRCS := $(filter-out $(LTP_MAINCSRCS), $(LTP_ORIGS))
 ifneq ($(LTP_MAINCSRCS),)
-$(eval $(call SPLITVARIABLE,MAINCSRC_SPILT,$(LTP_MAINCSRCS),50))
+$(call SPLITVARIABLE,MAINCSRC_SPILT,$(LTP_MAINCSRCS),50)
 $(foreach BATCH, $(MAINCSRC_SPILT_TOTAL), \
 	$(eval PROGNAME+=$(basename $(shell echo $(MAINCSRC_SPILT_$(BATCH)) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))) \
 )
@@ -270,29 +265,15 @@ CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable
 # Should be removed if possible in the future
 CFLAGS += -Wno-incompatible-pointer-types -Wno-overflow -Wno-int-to-pointer-cast
 
-# Specific compilation errors ignored in MacOS platform
-ifneq ($(CONFIG_HOST_MACOS),)
-CFLAGS += -Wno-integer-overflow -Wno-absolute-value
-endif
-
 ltp-$(LTPS_VERSION).zip:
 	$(call DOWNLOAD,$(LTP_DOWNLOAD_URL),$(LTPS_VERSION).zip, ltp.zip)
 
 $(LTP_UNPACK): ltp-$(LTPS_VERSION).zip
 	$(Q) echo "dowload $(LTP_DOWNLOAD_URL)$(LTPS_VERSION).zip"
 	$(Q) unzip -o ltp.zip
-	$(Q) rm -f ltp.zip
 	$(Q) mv ltp-$(LTPS_VERSION) $(LTP_UNPACK)
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0001-pthread_rwlock_unlock-follow-linux.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0002-Use-ifdef-instead-of-if-for-__linux__.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0003-LTP-Re-init-static-variable-to-avoid-errors-during-m.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0004-test-update-ltp-test-case.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0005-ltp-update-pthread_cond_timedwait-testcase.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0006-test-modified-ltp-rwlock-need-init.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0007-pthread_kill-add-usleep-aviod-semcount-overturn.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0008-test-ltp-fix-ltp_interfaces_sigaction_23_10-deadloop.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0009-ltp-modify-user-code-for-fdcheck-compatibility.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0010-ltp-fix-build-warning.patch
+	$(Q) patch -p1 < 0001-pthread_rwlock_unlock-follow-linux.patch
+	$(Q) patch -p1 < 0002-Use-ifdef-instead-of-if-for-__linux__.patch
 
 # Download and unpack tarball if no git repo found
 ifeq ($(wildcard $(LTP_UNPACK)/.git),)
