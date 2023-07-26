@@ -413,10 +413,10 @@ static int fbdev_get_pinfo(int fd, FAR struct fb_planeinfo_s *pinfo)
 }
 
 /****************************************************************************
- * Name: fbdev_try_init_fbmem2
+ * Name: fbdev_init_fbmem2_offset
  ****************************************************************************/
 
-static int fbdev_try_init_fbmem2(FAR struct fbdev_obj_s *state)
+static int fbdev_init_fbmem2_offset(FAR struct fbdev_obj_s *state)
 {
   uintptr_t buf_offset;
   struct fb_planeinfo_s pinfo;
@@ -432,10 +432,9 @@ static int fbdev_try_init_fbmem2(FAR struct fbdev_obj_s *state)
       return -1;
     }
 
-  /* check displey and match bpp */
+  /* Check bpp */
 
-  if (!(pinfo.display != state->pinfo.display
-     && pinfo.bpp == state->pinfo.bpp))
+  if (pinfo.bpp != state->pinfo.bpp)
     {
       LV_LOG_WARN("fbmem2 is incorrect");
       return -1;
@@ -458,11 +457,18 @@ static int fbdev_try_init_fbmem2(FAR struct fbdev_obj_s *state)
 
   /* Enable double buffer mode */
 
-  state->double_buffer = true;
-  state->fbmem2_yoffset = buf_offset / state->pinfo.stride;
-
-  LV_LOG_INFO("Use non-consecutive fbmem2 = %p, yoffset = %" PRIu32,
-              pinfo.fbmem, state->fbmem2_yoffset);
+  if (buf_offset == 0)
+    {
+      state->fbmem2_yoffset = state->vinfo.yres;
+      LV_LOG_INFO("Use consecutive fbmem2 = %p, yoffset = %" PRIu32,
+                  pinfo.fbmem, state->fbmem2_yoffset);
+    }
+  else
+    {
+      state->fbmem2_yoffset = buf_offset / state->pinfo.stride;
+      LV_LOG_INFO("Use non-consecutive fbmem2 = %p, yoffset = %" PRIu32,
+                  pinfo.fbmem, state->fbmem2_yoffset);
+    }
 
   return 0;
 }
@@ -674,11 +680,7 @@ FAR lv_disp_t *lv_fbdev_interface_init(FAR const char *dev_path,
 
   if (state.double_buffer)
     {
-      state.fbmem2_yoffset = state.vinfo.yres;
-    }
-  else
-    {
-      fbdev_try_init_fbmem2(&state);
+      fbdev_init_fbmem2_offset(&state);
     }
 
 #if CONFIG_LV_FBDEV_VSYNCOFFSET > 0
