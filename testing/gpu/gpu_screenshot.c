@@ -107,7 +107,7 @@ static int save_img_file(FAR struct gpu_test_context_s *ctx,
 
   close(fd);
 
-  return OK;
+  return retval;
 }
 
 #endif /* CONFIG_LIB_PNG */
