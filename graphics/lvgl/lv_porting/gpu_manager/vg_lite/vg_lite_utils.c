@@ -538,11 +538,20 @@ vg_lite_buffer_format_t vg_lite_img_cf_to_vg_fmt(lv_img_cf_t cf)
         case LV_IMG_CF_INDEXED_8BIT:
             vg_fmt = VG_LITE_INDEX_8;
             break;
+        /** The BLEND_SRC_OVER of vg-lite will not premultiply the ALPHA image,
+         *  resulting in pure white drawing, so here we use the INDEX8 format instead.
+         */
+        case LV_IMG_CF_ALPHA_1BIT:
+            vg_fmt = VG_LITE_INDEX_1;
+            break;
+        case LV_IMG_CF_ALPHA_2BIT:
+            vg_fmt = VG_LITE_INDEX_2;
+            break;
         case LV_IMG_CF_ALPHA_4BIT:
-            vg_fmt = VG_LITE_A4;
+            vg_fmt = VG_LITE_INDEX_4;
             break;
         case LV_IMG_CF_ALPHA_8BIT:
-            vg_fmt = VG_LITE_A8;
+            vg_fmt = VG_LITE_INDEX_8;
             break;
         case LV_IMG_CF_RGB888:
             vg_fmt = VG_LITE_RGB888;
