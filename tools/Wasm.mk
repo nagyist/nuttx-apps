@@ -33,7 +33,7 @@ WAR ?= $(WASI_SDK_PATH)/bin/llvm-ar rcs
 
 ifeq ($(WSYSROOT),)
 	WSYSROOT := $(TOPDIR)
-	
+
 	# Force disable wasm build when WASM_SYSROOT is not defined and on specific
 	# targets that do not support wasm build.
 	# Since some architecture level inline assembly instructions can not be
@@ -107,9 +107,11 @@ WASM_BUILD ?= n
 
 ifneq ($(WASM_BUILD),n)
 
-WASM_INITIAL_MEMORY ?= 65536
 STACKSIZE           ?= $(CONFIG_DEFAULT_TASK_STACKSIZE)
 PRIORITY            ?= SCHED_PRIORITY_DEFAULT
+
+# Alignup the initial memory to multiple of 64KB
+WASM_INITIAL_MEMORY ?= $(shell expr \( $(STACKSIZE) / 65536 + 1 \) \* 65536)
 
 # Wamr mode:
 # INT: Interpreter (Default)
