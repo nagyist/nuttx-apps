@@ -309,7 +309,7 @@ draw_pattern:
     lv_area_move(&draw_area, disp_area->x1, disp_area->y1);
 
     if(masked) {
-        vg_lite_draw_mask_clean_path(vpath.path);
+        vg_lite_draw_mask_clean_path(&vpath);
     }
 
     gpu->draw_ok = true;
