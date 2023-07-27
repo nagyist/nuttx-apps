@@ -61,6 +61,12 @@ extern "C" {
                          vg_lite_get_buffer_format_string((buffer)->format));                              \
     } while (0)
 
+#define VG_LITE_ASSERT_BUFFER(buffer)                                                 \
+    do {                                                                              \
+        LV_ASSERT((buffer)->address == (lv_uintptr_t)(buffer)->memory);               \
+        LV_ASSERT(VG_LITE_IS_ALIGNED((buffer)->address, VG_LITE_IMG_SRC_ADDR_ALIGN)); \
+    } while(0)
+
 #define VG_LITE_DUMP_MATRIX_INFO(matrix)                                  \
     do {                                                                  \
         LV_GPU_LOG_TRACE("name: %s", #matrix);                            \

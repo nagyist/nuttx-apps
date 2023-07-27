@@ -56,6 +56,7 @@ void vg_lite_draw_polygon(lv_draw_ctx_t * draw_ctx, const lv_draw_rect_dsc_t * d
         return;
     }
     VG_LITE_DUMP_BUFFER_INFO(&dest_vg_buf);
+    VG_LITE_ASSERT_BUFFER(&dest_vg_buf);
 
     /* Convert to vglite path */
     uint32_t path_size = (point_cnt * 3 + 1) * sizeof(int16_t);

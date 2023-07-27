@@ -245,6 +245,9 @@ void vg_lite_draw_img_decoded(
         return;
     }
 
+    VG_LITE_ASSERT_BUFFER(&dest_vg_buf);
+    VG_LITE_ASSERT_BUFFER(&src_vg_buf);
+
     if(masked) {
         LV_GPU_LOG_TRACE("masked, have to use draw_pattern");
         /* masked, have to use draw_pattern */

@@ -179,6 +179,8 @@ bool vg_lite_draw_path(
         return false;
     }
 
+    VG_LITE_ASSERT_BUFFER(&dest_vg_buf);
+
     lv_area_t clip_area;
     if(!_lv_area_intersect(&clip_area, buf_area, dest->clip_area)) {
         LV_GPU_LOG_TRACE("not in clip_area");
@@ -822,7 +824,7 @@ static uint16_t curve_fill_round_rect_path(float * path, const lv_area_t * rect,
     if(!radius) {
         *(uint32_t *)path = VLC_OP_MOVE;
         *(uint32_t *)(path + 3) = *(uint32_t *)(path + 6) = *(uint32_t *)(path + 9)
-                                                          = VLC_OP_LINE;
+                                                            = VLC_OP_LINE;
         *(uint32_t *)(path + 12) = VLC_OP_CLOSE;
         path[1] = path[4] = rect->x1;
         path[7] = path[10] = rect->x2 + 1;
