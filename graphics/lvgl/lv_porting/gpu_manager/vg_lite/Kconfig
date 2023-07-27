@@ -49,10 +49,6 @@ config LV_GPU_VG_LITE_TRANSFORM_MIN_SIZE
 	int "VGLite transform min size"
 	default 0
 
-config LV_GPU_VG_LITE_IMG_EXPAND_SIZE
-	int "VGLite image decoder expand size"
-	default 0
-
 config LV_GPU_VG_LITE_IMG_SRC_PX_ALIGN
 	int "VGLite image source align pixel"
 	default 16

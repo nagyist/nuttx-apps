@@ -163,10 +163,6 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
 static lv_res_t decoder_info_post_processing(vg_lite_draw_ctx_t * draw_ctx, lv_img_decoder_t * decoder,
                                              const void * src, lv_img_header_t * header)
 {
-#if (CONFIG_LV_GPU_VG_LITE_IMG_EXPAND_SIZE > 0)
-    header->w += CONFIG_LV_GPU_VG_LITE_IMG_EXPAND_SIZE * 2;
-    header->h += CONFIG_LV_GPU_VG_LITE_IMG_EXPAND_SIZE * 2;
-#endif
     return LV_RES_OK;
 }
 
@@ -180,8 +176,6 @@ static void decoder_close(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc
 static lv_res_t decoder_open_post_processing(vg_lite_draw_ctx_t * draw_ctx, lv_img_decoder_t * decoder,
                                              lv_img_decoder_dsc_t * dsc)
 {
-    lv_img_decoder_dsc_t ori_dsc = *dsc;
-    bool is_ori_decoder_closed = false;
     int pixel_size;
     LV_UNUSED(pixel_size);
 
@@ -197,80 +191,34 @@ static lv_res_t decoder_open_post_processing(vg_lite_draw_ctx_t * draw_ctx, lv_i
         return LV_RES_INV;
     }
 
-#if (CONFIG_LV_GPU_VG_LITE_IMG_EXPAND_SIZE > 0)
-    lv_coord_t expand_width = dsc->header.w;
-    lv_coord_t expand_height = dsc->header.h;
-    lv_coord_t ori_width = expand_width - CONFIG_LV_GPU_VG_LITE_IMG_EXPAND_SIZE * 2;
-    lv_coord_t ori_height = expand_height - CONFIG_LV_GPU_VG_LITE_IMG_EXPAND_SIZE * 2;
-
-    size_t expand_img_size = expand_width * expand_height * pixel_size;
-
-    /* create expand image */
-    uint8_t * expand_img_data = lv_gpu_malloc(expand_img_size);
-    if(expand_img_data) {
-        /* clear image */
-        lv_memset_00(expand_img_data, expand_img_size);
-
-        const uint8_t * src = dsc->img_data;
-        int src_stride = ori_width * pixel_size;
-
-        uint8_t * dest = expand_img_data + ((CONFIG_LV_GPU_VG_LITE_IMG_EXPAND_SIZE * expand_width) +
-                                            CONFIG_LV_GPU_VG_LITE_IMG_EXPAND_SIZE) * pixel_size;
-        int dest_stride = expand_width * pixel_size;
-
-        /* copy to center */
-        for(lv_coord_t y = 0; y < ori_height; y++) {
-            lv_memcpy(dest, src, src_stride);
-            dest += dest_stride;
-            src += src_stride;
-        }
-    }
-
-    /* close origin image */
-    lv_img_decoder_close(&ori_dsc);
-    is_ori_decoder_closed = true;
-
-    /* change to expand image */
-    dsc->img_data = (uint8_t *)expand_img_data;
-
-    if(expand_img_data == NULL) {
-        dsc->error_msg = "malloc failed for expend image";
-        LV_GPU_LOG_WARN("%s", dsc->error_msg);
-        return LV_RES_INV;
-    }
-#endif
-
     /* create a temporary raw image */
     lv_img_dsc_t img_dsc;
     lv_memset_00(&img_dsc, sizeof(img_dsc));
     img_dsc.header = dsc->header;
     img_dsc.data = dsc->img_data;
 
-    lv_img_decoder_dsc_t raw_dsc;
-    lv_memcpy(&raw_dsc, dsc, sizeof(raw_dsc));
-    raw_dsc.decoder = draw_ctx->raw_decoder;
-    raw_dsc.img_data = NULL;
-    raw_dsc.src = &img_dsc;
-    raw_dsc.src_type = LV_IMG_SRC_VARIABLE;
+    lv_img_decoder_dsc_t new_dsc;
+    lv_memcpy(&new_dsc, dsc, sizeof(new_dsc));
+    new_dsc.decoder = draw_ctx->raw_decoder;
+    new_dsc.img_data = NULL;
+    new_dsc.src = &img_dsc;
+    new_dsc.src_type = LV_IMG_SRC_VARIABLE;
 
     /* decode raw image */
     LV_ASSERT_NULL(draw_ctx->raw_decoder->open_cb);
-    lv_res_t res = draw_ctx->raw_decoder->open_cb(draw_ctx->raw_decoder, &raw_dsc);
+    lv_res_t res = draw_ctx->raw_decoder->open_cb(draw_ctx->raw_decoder, &new_dsc);
     LV_ASSERT(res == LV_RES_OK);
 
-    if(!is_ori_decoder_closed) {
-        /* FIXME: prevent dsc->src be free'd */
-        ori_dsc.src_type = LV_IMG_SRC_VARIABLE;
-        lv_img_decoder_close(&ori_dsc);
-        ori_dsc.src_type = dsc->src_type;
-        dsc->img_data = NULL;
-        is_ori_decoder_closed = true;
-    }
+    /* Copy source info */
+    new_dsc.src_type = dsc->src_type;
+    new_dsc.src = dsc->src;
 
-    raw_dsc.src_type = dsc->src_type;
+    /* FIXME: prevent dsc->src be free'd */
+    dsc->src_type = LV_IMG_SRC_VARIABLE;
+    lv_img_decoder_close(dsc);
 
     /* change to raw_decoder image data */
-    lv_memcpy(dsc, &raw_dsc, sizeof(raw_dsc));
+    lv_memcpy(dsc, &new_dsc, sizeof(new_dsc));
 
     return LV_RES_OK;
 }
