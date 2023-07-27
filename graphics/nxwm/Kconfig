@@ -124,7 +124,8 @@ comment "Background Image"
 
 config NXWM_DISABLE_BACKGROUND_IMAGE
 	bool "Disable Background Image"
-	default NXWM_DISABLE_MINIMIZE
+	default n if !NXWM_DISABLE_MINIMIZE
+	default y if NXWM_DISABLE_MINIMIZE
 	---help---
 		Disable support for the "Desktop" background image.
 
@@ -464,7 +465,8 @@ menu "NxWM Touchscreen Configuration"
 
 config NXWM_TOUCHSCREEN
 	bool "Touchscreen Support"
-	default INPUT
+	default y if INPUT
+	default n if !INPUT
 	---help---
 		Define to build in touchscreen support.
 
@@ -920,7 +922,7 @@ config NXWM_MEDIAPLAYER_CUSTOM_COLORS
 
 if NXWM_MEDIAPLAYER_CUSTOM_COLORS
 
-config NXWM_MEDIAPLAYER_VOLUMECOLOR
+	config NXWM_MEDIAPLAYER_VOLUMECOLOR
 	hex "Media Volume Slide Color"
 	default 0x0
 
