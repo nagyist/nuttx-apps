@@ -328,6 +328,11 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_draw_img_decoded_gpu(
     GPU_WARN("draw img unsupported mask found");
     return LV_RES_INV;
   }
+
+  /* check vg-lite buffer */
+  GPU_ASSERT_BUF(&dst_vgbuf);
+  GPU_ASSERT_BUF(&src_vgbuf);
+
   if (masked) {
     /* masked, have to use draw_pattern */
     vpath.format = VG_LITE_FP32;

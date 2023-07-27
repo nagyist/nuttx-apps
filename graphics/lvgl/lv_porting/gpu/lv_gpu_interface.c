@@ -435,6 +435,11 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_gpu_color_fmt_convert(
           != LV_RES_OK) {
     return LV_RES_INV;
   }
+
+  /* check vg-lite buffer */
+  GPU_ASSERT_BUF(&dst);
+  GPU_ASSERT_BUF(&src);
+
   CHECK_ERROR(vg_lite_blit(&dst, &src, NULL, 0, 0, 0));
   CHECK_ERROR(vg_lite_finish());
   if (vgerr != VG_LITE_SUCCESS) {
