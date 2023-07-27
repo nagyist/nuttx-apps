@@ -256,22 +256,17 @@ static lv_res_t decoder_open_post_processing(vg_lite_draw_ctx_t * draw_ctx, lv_i
     /* decode raw image */
     LV_ASSERT_NULL(draw_ctx->raw_decoder->open_cb);
     lv_res_t res = draw_ctx->raw_decoder->open_cb(draw_ctx->raw_decoder, &raw_dsc);
+    LV_ASSERT(res == LV_RES_OK);
 
     if(!is_ori_decoder_closed) {
-        /* close origin image */
+        /* FIXME: prevent dsc->src be free'd */
+        ori_dsc.src_type = LV_IMG_SRC_VARIABLE;
         lv_img_decoder_close(&ori_dsc);
+        ori_dsc.src_type = dsc->src_type;
         dsc->img_data = NULL;
         is_ori_decoder_closed = true;
     }
 
-    if(res != LV_RES_OK) {
-        dsc->error_msg = "raw decoder failed";
-        LV_GPU_LOG_WARN("%s", dsc->error_msg);
-        return LV_RES_INV;
-    }
-
-    /* copy origin src and src_type info */
-    raw_dsc.src = dsc->src;
     raw_dsc.src_type = dsc->src_type;
 
     /* change to raw_decoder image data */
