@@ -13,6 +13,7 @@
 
 #include <lv_porting/decoder/jpeg_turbo/lv_jpeg_turbo.h>
 #include <lv_porting/decoder/lodepng/lv_lodepng.h>
+#include "../ext/rle/lvx_rle_decoder.h"
 
 /*********************
  *      DEFINES
@@ -91,6 +92,10 @@ void vg_lite_decoder_init(vg_lite_draw_ctx_t * draw_ctx)
 
 #ifdef CONFIG_LV_USE_DECODER_LODEPNG
     lv_lodepng_custom_init(vg_lite_decoder_create(draw_ctx));
+#endif
+
+#ifdef CONFIG_LVX_USE_RLE
+    lvx_rle_decoder_custom_init(vg_lite_decoder_create(draw_ctx));
 #endif
 }
 
@@ -176,21 +181,6 @@ static void decoder_close(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc
 static lv_res_t decoder_open_post_processing(vg_lite_draw_ctx_t * draw_ctx, lv_img_decoder_t * decoder,
                                              lv_img_decoder_dsc_t * dsc)
 {
-    int pixel_size;
-    LV_UNUSED(pixel_size);
-
-    if(dsc->header.cf == LV_IMG_CF_TRUE_COLOR) {
-        pixel_size = sizeof(lv_color_t);
-    }
-    else if(dsc->header.cf == LV_IMG_CF_TRUE_COLOR_ALPHA) {
-        pixel_size = LV_IMG_PX_SIZE_ALPHA_BYTE;
-    }
-    else {
-        LV_GPU_LOG_WARN("unsupport color format: %d", dsc->header.cf);
-        lv_img_decoder_close(dsc);
-        return LV_RES_INV;
-    }
-
     /* create a temporary raw image */
     lv_img_dsc_t img_dsc;
     lv_memset_00(&img_dsc, sizeof(img_dsc));
@@ -215,6 +205,7 @@ static lv_res_t decoder_open_post_processing(vg_lite_draw_ctx_t * draw_ctx, lv_i
 
     /* FIXME: prevent dsc->src be free'd */
     dsc->src_type = LV_IMG_SRC_VARIABLE;
+    dsc->decoder = decoder;
     lv_img_decoder_close(dsc);
 
     /* change to raw_decoder image data */
