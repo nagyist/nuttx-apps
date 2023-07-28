@@ -223,7 +223,7 @@ static int i2c_execute(FAR struct i2ctool_s *i2ctool, int argc,
  ****************************************************************************/
 
 static FAR char *i2c_argument(FAR struct i2ctool_s *i2ctool,
-                              int argc, char *argv[], int *pindex)
+                              int argc, FAR char *argv[], FAR int *pindex)
 {
   FAR char *arg;
   int  index = *pindex;
@@ -268,7 +268,8 @@ static FAR char *i2c_argument(FAR struct i2ctool_s *i2ctool,
  * Name: i2c_parse
  ****************************************************************************/
 
-static int i2c_parse(FAR struct i2ctool_s *i2ctool, int argc, char *argv[])
+static int i2c_parse(FAR struct i2ctool_s *i2ctool,
+                     int argc, FAR char *argv[])
 {
   FAR char *newargs[MAX_ARGUMENTS + 2];
   FAR char *cmd;
