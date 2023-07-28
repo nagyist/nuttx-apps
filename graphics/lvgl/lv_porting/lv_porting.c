@@ -62,6 +62,10 @@ void lv_porting_init(void)
   lv_gpu_interface_init();
 #endif
 
+#if defined(CONFIG_LV_USE_MOUSE_INTERFACE)
+  lv_mouse_interface_init(NULL);
+#endif
+
 #if defined(CONFIG_LV_USE_BUTTON_INTERFACE)
   lv_button_interface_init(NULL);
 

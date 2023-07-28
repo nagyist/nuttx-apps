@@ -52,6 +52,10 @@ ifneq ($(CONFIG_LV_USE_BUTTON_INTERFACE),)
 CSRCS += lv_porting/lv_button_interface.c
 endif
 
+ifneq ($(CONFIG_LV_USE_MOUSE_INTERFACE),)
+CSRCS += lv_porting/lv_mouse_interface.c
+endif
+
 ifneq ($(CONFIG_LV_USE_KEYPAD_INTERFACE),)
 CSRCS += lv_porting/lv_keypad_interface.c
 endif
