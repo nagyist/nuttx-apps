@@ -16,33 +16,35 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 #
-import sys
-import os
-import io
 import argparse
-import termios
 import binascii
-import signal
 import datetime
+import io
+import os
+import signal
+import sys
+import termios
 
-SOH = b'\x01' # Start of 128-byte data packet
-STX = b'\x02' # Start of 1024-byte data packet
-STC = b'\x03' # Start of a customsize data packet
-EOT = b'\x04' # End of transmission
-ACK = b'\x06' # Acknowledge
-NAK = b'\x15' # Negative acknowledge
-CAN = b'\x18' # Two of these in succession aborts transfer
-CRC = b'\x43' # 'C' == 0x43, request 16-bit CRC
+import serial
+
+SOH = b"\x01"  # Start of 128-byte data packet
+STX = b"\x02"  # Start of 1024-byte data packet
+STC = b"\x03"  # Start of a customsize data packet
+EOT = b"\x04"  # End of transmission
+ACK = b"\x06"  # Acknowledge
+NAK = b"\x15"  # Negative acknowledge
+CAN = b"\x18"  # Two of these in succession aborts transfer
+CRC = b"\x43"  # "C" == 0x43, request 16-bit CRC
 
 PACKET_SIZE = 128
 PACKET_1K_SIZE = 1024
 EAGAIN = 1
 EINVAL = 2
-EEOT   = 3
+EEOT = 3
 RETRIESMAX = 200
 
-def format_time(seconds):
 
+def format_time(seconds):
     hours = seconds / 3600
     seconds %= 3600
     minutes = seconds / 60
@@ -51,26 +53,28 @@ def format_time(seconds):
     time = "%02dh%02dm%02ds" % (int(hours), int(minutes), int(seconds))
     return time
 
+
 class Timeout(Exception):
     pass
+
 
 def timeout_handle(signum, frame):
     sys.stderr.write("timeout!\n")
     sys.stderr.flush()
     raise Timeout("Timeout")
 
+
 def ymodem_stdread(size):
     fd = sys.stdin.fileno()
     old_settings = termios.tcgetattr(fd)
-
     signal.signal(signal.SIGALRM, timeout_handle)
     signal.alarm(3)
     try:
         new_settings = termios.tcgetattr(fd)
         new_settings[3] &= ~(termios.ICANON | termios.ECHO)
         termios.tcsetattr(fd, termios.TCSADRAIN, new_settings)
-        sys.stdin.flush()
         data = sys.stdin.buffer.read(size)
+        sys.stdin.flush()
         return data
     except Timeout:
         return
@@ -78,10 +82,10 @@ def ymodem_stdread(size):
         signal.alarm(0)
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
+
 def ymodem_stdwrite(data):
     fd = sys.stdout.fileno()
     old_settings = termios.tcgetattr(fd)
-
     try:
         new_settings = termios.tcgetattr(fd)
         new_settings[3] &= ~(termios.ICANON | termios.ECHO)
@@ -92,64 +96,309 @@ def ymodem_stdwrite(data):
     finally:
         termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
 
+
 def ymodem_stdprogress(data):
     sys.stderr.write(data)
     sys.stderr.flush()
 
-def calc_crc16(data, crc = 0):
 
+def ymodem_ser_read(size):
+    global fd_serial
+
+    data = fd_serial.read(size)
+    return data
+
+
+def ymodem_ser_write(data):
+    global fd_serial
+    fd_serial.write(data)
+    fd_serial.flush()
+
+
+def calc_crc16(data, crc=0):
     crctable = [
-        0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
-        0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
-        0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
-        0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,
-        0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,
-        0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
-        0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4,
-        0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,
-        0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,
-        0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,
-        0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12,
-        0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,
-        0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41,
-        0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,
-        0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,
-        0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,
-        0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,
-        0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
-        0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,
-        0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,
-        0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
-        0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,
-        0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,
-        0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
-        0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
-        0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3,
-        0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
-        0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92,
-        0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
-        0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,
-        0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
-        0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0,
+        0x0000,
+        0x1021,
+        0x2042,
+        0x3063,
+        0x4084,
+        0x50A5,
+        0x60C6,
+        0x70E7,
+        0x8108,
+        0x9129,
+        0xA14A,
+        0xB16B,
+        0xC18C,
+        0xD1AD,
+        0xE1CE,
+        0xF1EF,
+        0x1231,
+        0x0210,
+        0x3273,
+        0x2252,
+        0x52B5,
+        0x4294,
+        0x72F7,
+        0x62D6,
+        0x9339,
+        0x8318,
+        0xB37B,
+        0xA35A,
+        0xD3BD,
+        0xC39C,
+        0xF3FF,
+        0xE3DE,
+        0x2462,
+        0x3443,
+        0x0420,
+        0x1401,
+        0x64E6,
+        0x74C7,
+        0x44A4,
+        0x5485,
+        0xA56A,
+        0xB54B,
+        0x8528,
+        0x9509,
+        0xE5EE,
+        0xF5CF,
+        0xC5AC,
+        0xD58D,
+        0x3653,
+        0x2672,
+        0x1611,
+        0x0630,
+        0x76D7,
+        0x66F6,
+        0x5695,
+        0x46B4,
+        0xB75B,
+        0xA77A,
+        0x9719,
+        0x8738,
+        0xF7DF,
+        0xE7FE,
+        0xD79D,
+        0xC7BC,
+        0x48C4,
+        0x58E5,
+        0x6886,
+        0x78A7,
+        0x0840,
+        0x1861,
+        0x2802,
+        0x3823,
+        0xC9CC,
+        0xD9ED,
+        0xE98E,
+        0xF9AF,
+        0x8948,
+        0x9969,
+        0xA90A,
+        0xB92B,
+        0x5AF5,
+        0x4AD4,
+        0x7AB7,
+        0x6A96,
+        0x1A71,
+        0x0A50,
+        0x3A33,
+        0x2A12,
+        0xDBFD,
+        0xCBDC,
+        0xFBBF,
+        0xEB9E,
+        0x9B79,
+        0x8B58,
+        0xBB3B,
+        0xAB1A,
+        0x6CA6,
+        0x7C87,
+        0x4CE4,
+        0x5CC5,
+        0x2C22,
+        0x3C03,
+        0x0C60,
+        0x1C41,
+        0xEDAE,
+        0xFD8F,
+        0xCDEC,
+        0xDDCD,
+        0xAD2A,
+        0xBD0B,
+        0x8D68,
+        0x9D49,
+        0x7E97,
+        0x6EB6,
+        0x5ED5,
+        0x4EF4,
+        0x3E13,
+        0x2E32,
+        0x1E51,
+        0x0E70,
+        0xFF9F,
+        0xEFBE,
+        0xDFDD,
+        0xCFFC,
+        0xBF1B,
+        0xAF3A,
+        0x9F59,
+        0x8F78,
+        0x9188,
+        0x81A9,
+        0xB1CA,
+        0xA1EB,
+        0xD10C,
+        0xC12D,
+        0xF14E,
+        0xE16F,
+        0x1080,
+        0x00A1,
+        0x30C2,
+        0x20E3,
+        0x5004,
+        0x4025,
+        0x7046,
+        0x6067,
+        0x83B9,
+        0x9398,
+        0xA3FB,
+        0xB3DA,
+        0xC33D,
+        0xD31C,
+        0xE37F,
+        0xF35E,
+        0x02B1,
+        0x1290,
+        0x22F3,
+        0x32D2,
+        0x4235,
+        0x5214,
+        0x6277,
+        0x7256,
+        0xB5EA,
+        0xA5CB,
+        0x95A8,
+        0x8589,
+        0xF56E,
+        0xE54F,
+        0xD52C,
+        0xC50D,
+        0x34E2,
+        0x24C3,
+        0x14A0,
+        0x0481,
+        0x7466,
+        0x6447,
+        0x5424,
+        0x4405,
+        0xA7DB,
+        0xB7FA,
+        0x8799,
+        0x97B8,
+        0xE75F,
+        0xF77E,
+        0xC71D,
+        0xD73C,
+        0x26D3,
+        0x36F2,
+        0x0691,
+        0x16B0,
+        0x6657,
+        0x7676,
+        0x4615,
+        0x5634,
+        0xD94C,
+        0xC96D,
+        0xF90E,
+        0xE92F,
+        0x99C8,
+        0x89E9,
+        0xB98A,
+        0xA9AB,
+        0x5844,
+        0x4865,
+        0x7806,
+        0x6827,
+        0x18C0,
+        0x08E1,
+        0x3882,
+        0x28A3,
+        0xCB7D,
+        0xDB5C,
+        0xEB3F,
+        0xFB1E,
+        0x8BF9,
+        0x9BD8,
+        0xABBB,
+        0xBB9A,
+        0x4A75,
+        0x5A54,
+        0x6A37,
+        0x7A16,
+        0x0AF1,
+        0x1AD0,
+        0x2AB3,
+        0x3A92,
+        0xFD2E,
+        0xED0F,
+        0xDD6C,
+        0xCD4D,
+        0xBDAA,
+        0xAD8B,
+        0x9DE8,
+        0x8DC9,
+        0x7C26,
+        0x6C07,
+        0x5C64,
+        0x4C45,
+        0x3CA2,
+        0x2C83,
+        0x1CE0,
+        0x0CC1,
+        0xEF1F,
+        0xFF3E,
+        0xCF5D,
+        0xDF7C,
+        0xAF9B,
+        0xBFBA,
+        0x8FD9,
+        0x9FF8,
+        0x6E17,
+        0x7E36,
+        0x4E55,
+        0x5E74,
+        0x2E93,
+        0x3EB2,
+        0x0ED1,
+        0x1EF0,
     ]
 
     crc = 0x0
     for char in bytearray(data):
-        crctbl_idx = ((crc >> 8) ^ char) & 0xff
-        crc = ((crc << 8) ^ crctable[crctbl_idx]) & 0xffff
-    return crc & 0xffff
+        crctbl_idx = ((crc >> 8) ^ char) & 0xFF
+        crc = ((crc << 8) ^ crctable[crctbl_idx]) & 0xFFFF
+    return crc & 0xFFFF
+
 
 class ymodem:
-    def __init__(self, read = ymodem_stdread, write = ymodem_stdwrite,
-                 progress = ymodem_stdprogress, timeout = 100, debug = '',
-                 customsize = 0):
-        self.read = read;
-        self.write = write;
+    def __init__(
+        self,
+        read=ymodem_stdread,
+        write=ymodem_stdwrite,
+        progress=ymodem_stdprogress,
+        timeout=100,
+        debug="",
+        customsize=0,
+    ):
+        self.read = read
+        self.write = write
         self.timeout = timeout
         self.progress = progress
         self.customsize = customsize
-        if debug != '':
-            self.debugfd = open(debug,"w+")
+        if debug != "":
+            self.debugfd = open(debug, "w+")
         else:
             self.debugfd = 0
 
@@ -160,30 +409,30 @@ class ymodem:
 
     def init_pkt(self):
         self.head = SOH
-        self.seq0 = b'\x00'
-        self.seq1 = b'\xff'
-        self.data = b''
-        self.crch = b''
-        self.crcl = b''
+        self.seq0 = b"\x00"
+        self.seq1 = b"\xff"
+        self.data = b""
+        self.crch = b""
+        self.crcl = b""
 
     def send_pkt(self):
         crc16 = calc_crc16(self.data)
-        self.crch = bytes([(crc16 >> 8) & 0xff])
-        self.crcl = bytes([crc16 & 0xff])
+        self.crch = bytes([(crc16 >> 8) & 0xFF])
+        self.crcl = bytes([crc16 & 0xFF])
         pkt = self.head + self.seq0 + self.seq1 + self.data + self.crch + self.crcl
 
         self.write(pkt)
 
     def add_seq(self):
         seq0 = bytearray(self.seq0)
-        if (seq0[0] == 0xff):
+        if seq0[0] == 0xFF:
             seq0[0] = 0x00
         else:
             seq0[0] += 1
 
         seq1 = bytearray(self.seq1)
-        if (seq1[0] == 0x00):
-            seq1[0] = 0xff
+        if seq1[0] == 0x00:
+            seq1[0] = 0xFF
         else:
             seq1[0] -= 1
 
@@ -205,8 +454,8 @@ class ymodem:
         if chunk == NAK:
             return -EAGAIN
         if chunk != cmd:
-            self.debug("should be " + binascii.hexlify(cmd).decode('utf-8'))
-            self.debug("but receive " + binascii.hexlify(chunk).decode('utf-8') + "\n")
+            self.debug("should be " + binascii.hexlify(cmd).decode("utf-8"))
+            self.debug("but receive " + binascii.hexlify(chunk).decode("utf-8") + "\n")
             return -EINVAL
 
         return 0
@@ -219,33 +468,32 @@ class ymodem:
         base = float(int(now.timestamp() * 1000)) / 1000
         totolbytes = 0
 
-        while need_sendfile_num != 0:
+        while retries < 10:
+            self.write(CRC)
+            chunk = self.read(1)
+            if chunk == CRC:
+                break
+            else:
+                retries += 1
 
+        if retries == 10:
+            return False
+
+        while need_sendfile_num != 0:
             now = datetime.datetime.now()
             start = float(int(now.timestamp() * 1000)) / 1000
-            while retries < 10:
-                self.write(CRC)
-                chunk = self.read(1)
-                if chunk == CRC:
-                    break
-                else:
-                    retries+= 1
-
-            if retries == 10:
-                return False;
-
             self.init_pkt()
             self.head = SOH
             filename = os.path.basename(filelist[cnt])
 
             self.progress("name:" + filename)
             self.data = filename.encode("utf-8")
-            self.data = self.data + bytes([0x00] * 1);
+            self.data = self.data + bytes([0x00] * 1)
             filesize = os.path.getsize(filelist[cnt])
             sendfilesize = 0
             self.progress(" filesize:%d\n" % (filesize))
             self.data = self.data + str(filesize).encode("utf-8")
-            self.data = self.data.ljust(self.get_pkt_size(), b'\x00')
+            self.data = self.data.ljust(self.get_pkt_size(), b"\x00")
             self.send_pkt()
 
             ret = self.recv_cmd(ACK)
@@ -264,7 +512,6 @@ class ymodem:
             readfd = open(filelist[cnt], "rb")
             self.progress("     ")
             while sendfilesize < filesize:
-
                 if sendfilesize + 128 >= filesize:
                     self.head = SOH
                 elif self.customsize != 0:
@@ -274,13 +521,18 @@ class ymodem:
 
                 self.data = readfd.read(self.get_pkt_size())
                 sendbytes = len(self.data)
-                self.data = self.data.ljust(self.get_pkt_size(), b'\x00')
+                self.data = self.data.ljust(self.get_pkt_size(), b"\x00")
 
-                self.send_pkt()
-                ret = self.recv_cmd(ACK)
-                if ret == -EAGAIN:
-                    continue
-                elif ret == -EINVAL:
+                retry = 0
+                while retry < 10:
+                    self.send_pkt()
+                    ret = self.recv_cmd(ACK)
+                    if ret < 0:
+                        retry += 1
+                    else:
+                        break
+
+                if retry >= 10:
                     return ret
 
                 self.add_seq()
@@ -291,8 +543,8 @@ class ymodem:
                 self.progress(" %d:%d" % (sendfilesize, filesize))
                 now = datetime.datetime.now()
                 usedtime = float(int(now.timestamp() * 1000) / 1000) - start
-                realspeed = (sendfilesize / 1024 / usedtime)
-                left = (filesize - sendfilesize)/ 1024 / (realspeed)
+                realspeed = sendfilesize / 1024 / usedtime
+                left = (filesize - sendfilesize) / 1024 / (realspeed)
                 self.progress(" left:" + format_time(left))
 
             retries = 0
@@ -331,8 +583,8 @@ class ymodem:
                     return -EINVAL
                 retries += 1
                 self.head = SOH
-                self.seq0 = b'\x00'
-                self.seq1 = b'\xff'
+                self.seq0 = b"\x00"
+                self.seq1 = b"\xff"
                 self.data = bytes([0x00] * self.get_pkt_size())
                 self.send_pkt()
 
@@ -347,7 +599,9 @@ class ymodem:
         time = float(int(now.timestamp() * 1000) / 1000)
         totaltime = time - base
         arvgspeed = float(totolbytes) / 1024 / totaltime
-        self.progress("\n all time:%.2fs average speed:%.2fkB/s" %(totaltime, arvgspeed))
+        self.progress(
+            "\n all time:%.2fs average speed:%.2fkB/s" % (totaltime, arvgspeed)
+        )
 
     def recv_packet(self):
         chunk = self.read(1)
@@ -374,60 +628,64 @@ class ymodem:
         crcl = self.read(1)
 
         if seq0 != self.seq0:
-            self.debug("recv bad seq0" + binascii.hexlify(seq0).decode('utf-8') + "\n")
+            self.debug("recv bad seq0" + binascii.hexlify(seq0).decode("utf-8") + "\n")
             return -EINVAL
         if seq1 != self.seq1:
-            self.debug("recv bad seq1" + binascii.hexlify(seq1).decode('utf-8') + "\n")
+            self.debug("recv bad seq1" + binascii.hexlify(seq1).decode("utf-8") + "\n")
             return -EINVAL
 
         crc16 = calc_crc16(self.data)
 
-        crch_b = (crc16 >> 8).to_bytes(1, byteorder='little')
+        crch_b = (crc16 >> 8).to_bytes(1, byteorder="little")
         if crch != crch_b:
-            self.debug("recv bad crch_b" + binascii.hexlify(crch_b).decode('utf-8') + "\n")
-            self.debug("recv bad crch" + binascii.hexlify(crch).decode('utf-8') + "\n")
+            self.debug(
+                "recv bad crch_b" + binascii.hexlify(crch_b).decode("utf-8") + "\n"
+            )
+            self.debug("recv bad crch" + binascii.hexlify(crch).decode("utf-8") + "\n")
             return -EINVAL
 
-        crcl_b = (crc16 & 0xff).to_bytes(1, byteorder='little')
+        crcl_b = (crc16 & 0xFF).to_bytes(1, byteorder="little")
         if crcl != crcl_b:
-            self.debug("recv bad crcl_b" + binascii.hexlify(crcl_b).decode('utf-8') + "\n")
-            self.debug("recv bad crcl" + binascii.hexlify(crcl).decode('utf-8') + "\n")
+            self.debug(
+                "recv bad crcl_b" + binascii.hexlify(crcl_b).decode("utf-8") + "\n"
+            )
+            self.debug("recv bad crcl" + binascii.hexlify(crcl).decode("utf-8") + "\n")
             return -EINVAL
 
         self.add_seq()
         return 0
 
     def recv(self):
-
         retries = 0
-        start_recv = False
         now = datetime.datetime.now()
         base = float(int(now.timestamp() * 1000)) / 1000
         totolbytes = 0
+        self.write(CRC)
         while True:
-            self.write(CRC)
             now = datetime.datetime.now()
             start = float(int(now.timestamp() * 1000)) / 1000
             self.init_pkt()
             ret = self.recv_packet()
-            if ret < 0:
+
+            if ret == -EEOT:
+                self.write(ACK)
+                self.write(CRC)
+                continue
+
+            elif ret < 0:
                 if retries > RETRIESMAX:
                     return -1
+
+                self.progress("recv ret %d\n" % ret)
+                self.debug("recv frist packet\n")
                 retries += 1
                 continue
 
-            self.debug("recv frist packet\n")
             filename = bytes.decode(self.data.split(b"\x00")[0], "utf-8")
             if not filename:
-                if start_recv:
-                    self.debug("recv last packet\n")
-                    break
-
                 self.debug("recv a none file\n")
-                retries += 1
-                continue
+                break
 
-            start_recv = True
             self.progress("name:" + filename + " ")
             size_str = bytes.decode(self.data.split(b"\x00")[1], "utf-8")
             filesize = int(size_str)
@@ -461,21 +719,12 @@ class ymodem:
                 self.progress(" %d:%d" % (writensize, filesize))
                 now = datetime.datetime.now()
                 usedtime = float(int(now.timestamp() * 1000) / 1000) - start
-                realspeed = (writensize / 1024 / usedtime)
-                left = (filesize - writensize)/ 1024 / (realspeed)
+                realspeed = writensize / 1024 / usedtime
+                left = (filesize - writensize) / 1024 / (realspeed)
                 self.progress(" left:" + format_time(left))
 
                 self.write(ACK)
 
-            ret = self.recv_packet()
-            if ret == -EEOT:
-                self.debug("recv EOT cmd\n")
-            elif ret < 0:
-                self.debug("recv error packet")
-                return -EINVAL
-
-            self.write(ACK)
-            self.write(CRC)
             now = datetime.datetime.now()
             time = float(now.timestamp() * 1000) / 1000
             time = time - start
@@ -489,31 +738,102 @@ class ymodem:
         time = float(int(now.timestamp() * 1000) / 1000)
         totaltime = time - base
         arvgspeed = float(totolbytes) / 1024 / totaltime
-        self.progress("\n all time:%.2fs average speed:%.2fkB/s" %(totaltime, arvgspeed))
+        self.progress(
+            "\n all time:%.2fs average speed:%.2fkB/s" % (totaltime, arvgspeed)
+        )
 
 
 if __name__ == "__main__":
-
+    global fd_serial
     parser = argparse.ArgumentParser()
-    parser.add_argument('filelist',
-                        help = "if filelist is valid, that is sb, else is rb",
-                        nargs = '*')
+    parser.add_argument(
+        "filelist", help="if filelist is valid, that is sb, else is rb", nargs="*"
+    )
 
-    parser.add_argument('-k', "--kblocksize",
-                        help = "This opthin can set a customsize block size to transfer",
-                        type = int,
-                        default = 0)
+    parser.add_argument(
+        "-k",
+        "--kblocksize",
+        help="This opthin can set a customsize block size to transfer",
+        type=int,
+        default=0,
+    )
 
-    parser.add_argument('--debug',
-                        help = "This opthin is save debug log on host",
-                        default='')
+    parser.add_argument("-t", "--tty", default=None, help="Serial path")
+
+    parser.add_argument(
+        "-b",
+        "--baudrate",
+        type=int,
+        default=921600,
+    )
+
+    parser.add_argument(
+        "-r",
+        "--recvfrom",
+        type=str,
+        nargs="*",
+        help="""
+            recvfile from board path
+            like this:
+                ./sbrb.py -r <file1 [file2 [file 3]...]> -t /dev/ttyUBS0
+            """,
+    )
+
+    parser.add_argument(
+        "-s",
+        "--sendto",
+        type=str,
+        nargs=1,
+        help="""
+            send file to board path
+            like this:
+                ./sbrb.py -s <path on board> -t /dev/ttyUBS0 <file1 [file2 [file3] ...]>
+            """,
+    )
+
+    parser.add_argument(
+        "--debug", help="This opthin is save debug log on host", default=""
+    )
 
     args = parser.parse_args()
 
-    sbrb = ymodem(debug = args.debug, customsize = args.kblocksize * 1024)
+    if args.tty:
+        fd_serial = serial.Serial(args.tty, baudrate=args.baudrate)
+        fd_serial.reset_input_buffer()
+        if args.recvfrom:
+            recvfile = ""
+            for i in args.recvfrom:
+                recvfile += i + " "
+
+            fd_serial.write(("sb %s\r\n" % (recvfile)).encode())
+            tmp = fd_serial.read(len(("sb %s\r\n" % (recvfile)).encode()))
+        else:
+            if args.sendto:
+                fd_serial.write("rb\r\n".encode())
+                fd_serial.read(len("rb\r\n".encode()))
+            else:
+                fd_serial.write(("rb\r\n").encode())
+                fd_serial.read(len(("rb\r\n").encode()))
+
+            fd_serial.reset_input_buffer()
+        sbrb = ymodem(
+            debug=args.debug,
+            customsize=args.kblocksize * 1024,
+            read=ymodem_ser_read,
+            write=ymodem_ser_write,
+        )
+    else:
+        sbrb = ymodem(debug=args.debug, customsize=args.kblocksize * 1024)
+
     if len(args.filelist) == 0:
         sbrb.progress("receiving\n")
         sbrb.recv()
+        sbrb.progress("\n")
     else:
         sbrb.progress("sending\n")
         sbrb.send(args.filelist)
+        sbrb.progress("\n")
+
+    if args.tty:
+        fd_serial.write("\n".encode())
+        fd_serial.close()
