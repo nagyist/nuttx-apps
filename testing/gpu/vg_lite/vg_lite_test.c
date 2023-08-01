@@ -39,11 +39,19 @@
 
 typedef CODE vg_lite_error_t (*vg_lite_test_func_t)(
   FAR struct gpu_test_context_s *ctx);
+
 struct vg_lite_test_item_s
-{
-  FAR const char *name;
-  vg_lite_test_func_t func;
-};
+  {
+    FAR const char      *name;
+    vg_lite_test_func_t func;
+  };
+
+enum test_case_e
+  {
+    TEST_CASE_DEFAULT      = 0,
+    TEST_CASE_ROTATION     = 1,
+    TEST_CASE_ROTATION_RGB = 2,
+  };
 
 /****************************************************************************
  * Private Function Prototypes
@@ -54,22 +62,22 @@ struct vg_lite_test_item_s
  ****************************************************************************/
 
 static const struct vg_lite_test_item_s g_vg_lite_test_group[] =
-{
-  ITEM_DEF(fill),
-  ITEM_DEF(blit),
-  ITEM_DEF(path_rect),
-  ITEM_DEF(path_round_rect),
-  ITEM_DEF(path_glyph),
-  ITEM_DEF(path_glyph_random),
-  ITEM_DEF(path_tiger),
-  ITEM_DEF(global_alpha),
-  ITEM_DEF(image_indexed8),
-  ITEM_DEF(image_bgra8888),
-  ITEM_DEF(image_bgra5658),
-  ITEM_DEF(image_indexed8_tiled),
-  ITEM_DEF(image_bgra8888_tiled),
-  ITEM_DEF(image_bgra5658_tiled),
-};
+  {
+    ITEM_DEF(fill),
+    ITEM_DEF(blit),
+    ITEM_DEF(path_rect),
+    ITEM_DEF(path_round_rect),
+    ITEM_DEF(path_glyph),
+    ITEM_DEF(path_glyph_random),
+    ITEM_DEF(path_tiger),
+    ITEM_DEF(global_alpha),
+    ITEM_DEF(image_indexed8),
+    ITEM_DEF(image_bgra8888),
+    ITEM_DEF(image_bgra5658),
+    ITEM_DEF(image_indexed8_tiled),
+    ITEM_DEF(image_bgra8888_tiled),
+    ITEM_DEF(image_bgra5658_tiled),
+  };
 
 /****************************************************************************
  * Private Functions
@@ -80,10 +88,11 @@ static const struct vg_lite_test_item_s g_vg_lite_test_group[] =
  ****************************************************************************/
 
 static bool vg_lite_test_run_item(FAR struct gpu_test_context_s *ctx,
-                                  FAR const struct vg_lite_test_item_s *item)
+                                  FAR
+                                  const struct vg_lite_test_item_s *item)
 {
   vg_lite_error_t error;
-  bool is_passed = false;
+  bool            is_passed = false;
 
   GPU_PERF_RESET();
   VG_LITE_CHECK_ERROR(vg_lite_clear(VG_LITE_DEST_BUF, NULL, 0));
@@ -93,12 +102,12 @@ static bool vg_lite_test_run_item(FAR struct gpu_test_context_s *ctx,
 
   GPU_LOG_WARN("Testcase [%s] Running...", item->name);
 
-  error = item->func(ctx);
+  error     = item->func(ctx);
   is_passed = (error == VG_LITE_SUCCESS);
 
   GPU_LOG_WARN("Testcase [%s] -> %s",
-                item->name,
-                is_passed ? "PASS" : "FAIL");
+               item->name,
+               is_passed ? "PASS" : "FAIL");
 
 error_handler:
   gpu_screenshot(ctx, item->name);
@@ -108,14 +117,16 @@ error_handler:
     item->name,
     NULL,
     is_passed ? NULL : vg_lite_get_error_type_string(error),
-    is_passed);
+    is_passed
+  );
 
   VG_LITE_FB_UPDATE();
 
   return is_passed;
 }
 
-static int stress_test_get_next(FAR struct gpu_test_context_s *ctx, int current)
+static int stress_test_get_next(FAR struct gpu_test_context_s *ctx,
+                                int current)
 {
   if (ctx->param.mode == GPU_TEST_MODE_STRESS_RANDOM)
     {
@@ -123,7 +134,7 @@ static int stress_test_get_next(FAR struct gpu_test_context_s *ctx, int current)
     }
   else
     {
-      current ++;
+      current++;
     }
 
   return current % GPU_ARRAY_SIZE(g_vg_lite_test_group);
@@ -135,13 +146,13 @@ static int stress_test_get_next(FAR struct gpu_test_context_s *ctx, int current)
 
 static void vg_lite_test_run_stress(FAR struct gpu_test_context_s *ctx)
 {
-  int i = 0;
   int loop_cnt = 0;
+  int index    = 0;
 
   while (1)
     {
-      i = stress_test_get_next(ctx, i);
-      const struct vg_lite_test_item_s *item = &g_vg_lite_test_group[i];
+      index = stress_test_get_next(ctx, index);
+      const struct vg_lite_test_item_s *item = &g_vg_lite_test_group[index];
       if (!vg_lite_test_run_item(ctx, item))
         {
           GPU_LOG_ERROR("Stress Test Loop %d FAILED", loop_cnt);
@@ -158,7 +169,7 @@ static void vg_lite_test_run_stress(FAR struct gpu_test_context_s *ctx)
 
 static void vg_lite_test_run(FAR struct gpu_test_context_s *ctx)
 {
-  int i;
+  int index;
 
   if (ctx->param.mode == GPU_TEST_MODE_STRESS ||
       ctx->param.mode == GPU_TEST_MODE_STRESS_RANDOM)
@@ -170,9 +181,9 @@ static void vg_lite_test_run(FAR struct gpu_test_context_s *ctx)
 
   vg_lite_test_report_start(ctx);
 
-  for (i = 0; i < GPU_ARRAY_SIZE(g_vg_lite_test_group); i++)
+  for (index = 0; index < GPU_ARRAY_SIZE(g_vg_lite_test_group); index++)
     {
-      const struct vg_lite_test_item_s *item = &g_vg_lite_test_group[i];
+      const struct vg_lite_test_item_s *item = &g_vg_lite_test_group[index];
       vg_lite_test_run_item(ctx, item);
     }
 
@@ -187,10 +198,11 @@ static void vg_lite_test_run(FAR struct gpu_test_context_s *ctx)
 
 static void vg_lite_dump_info(void)
 {
-  char name[64];
+  char     name[64];
   uint32_t chip_id;
   uint32_t chip_rev;
   uint32_t cid;
+
   vg_lite_get_product_info(name, &chip_id, &chip_rev);
   vg_lite_get_register(0x30, &cid);
   GPU_LOG_INFO("Product Info: %s"
@@ -202,14 +214,16 @@ static void vg_lite_dump_info(void)
   vg_lite_info_t info;
   vg_lite_get_info(&info);
   GPU_LOG_INFO("VGLite API version: 0x%" PRIx32, info.api_version);
-  GPU_LOG_INFO("VGLite API header version: 0x%" PRIx32, info.header_version);
+  GPU_LOG_INFO("VGLite API header version: 0x%" PRIx32,
+               info.header_version);
   GPU_LOG_INFO("VGLite release version: 0x%" PRIx32, info.release_version);
 
   for (int feature = 0; feature < gcFEATURE_COUNT; feature++)
     {
-      const char *feature_string = vg_lite_get_feature_string(feature);
+      const char *feature_string  = vg_lite_get_feature_string(feature);
       const char *feature_support = vg_lite_query_feature(
-        (vg_lite_feature_t)feature) ? "YES" : "NO";
+        (vg_lite_feature_t)feature
+      ) ? "YES" : "NO";
 
       if (feature_string)
         {
@@ -242,17 +256,21 @@ int vg_lite_test(FAR struct gpu_test_context_s *ctx)
 
 #ifdef CONFIG_TESTING_GPU_VG_LITE_CUSTOM_INIT
   extern void gpu_init(void);
+
   static bool is_init = false;
+
   if (!is_init)
     {
       gpu_init();
       is_init = true;
     }
+
 #endif
 
   vg_lite_dump_info();
 
   struct vg_lite_test_ctx_s vg_ctx;
+
   memset(&vg_ctx, 0, sizeof(vg_ctx));
   ctx->user_data = &vg_ctx;
 
@@ -264,7 +282,8 @@ int vg_lite_test(FAR struct gpu_test_context_s *ctx)
     ctx->fbmem,
     ctx->xres,
     ctx->yres,
-    VG_LITE_BGRX8888));
+    VG_LITE_BGRX8888
+  ));
 #else
   vg_lite_buffer_init(buffer);
   buffer->width = ctx->xres;
@@ -272,23 +291,29 @@ int vg_lite_test(FAR struct gpu_test_context_s *ctx)
   buffer->format = VG_LITE_BGRX8888;
   VG_LITE_CHECK_ERROR(vg_lite_allocate(buffer));
 #endif
+
   vg_lite_dump_buffer_info(__func__, buffer);
 
   vg_lite_enable_scissor();
   vg_lite_set_scissor(0, 0, buffer->width, buffer->height);
 
-  if (ctx->param.test_case == 0)
-    vg_lite_test_run(ctx);
-  else if (ctx->param.test_case == 1){
-    vg_lite_test_rotation(ctx);
-  }
-  else if (ctx->param.test_case == 2){
-    vg_lite_test_rotation_rgb(ctx);
-  }
-
-
+  switch (ctx->param.test_case)
+    {
+      case TEST_CASE_DEFAULT:
+        vg_lite_test_run(ctx);
+        break;
+      case TEST_CASE_ROTATION:
+        vg_lite_test_rotation(ctx);
+        break;
+      case TEST_CASE_ROTATION_RGB:
+        vg_lite_test_rotation_rgb(ctx);
+        break;
+      default:
+        break;
+    }
 
 error_handler:
+
   if (buffer->handle)
     {
       vg_lite_free(buffer);
@@ -296,5 +321,6 @@ error_handler:
 
   ctx->user_data = NULL;
   GPU_LOG_INFO("GPU test finish");
+
   return error == VG_LITE_SUCCESS ? 0 : -1;
 }

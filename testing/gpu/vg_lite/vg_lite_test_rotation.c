@@ -23,8 +23,8 @@
  ****************************************************************************/
 
 #include "vg_lite_test_utils.h"
-#include "image_yuyv_tiled.h"
-#include "image_rgb.h"
+#include "resource/image_yuyv_tiled.h"
+#include "resource/image_rgb.h"
 
 /****************************************************************************
  * Pre-processor Definitions
