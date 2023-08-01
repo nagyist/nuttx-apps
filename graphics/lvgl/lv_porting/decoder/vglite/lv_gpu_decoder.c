@@ -188,7 +188,7 @@ LV_ATTRIBUTE_FAST_MEM static lv_res_t decode_rgb(lv_img_decoder_t* decoder,
     lv_fs_res_t res = lv_fs_read(&f, gpu_data_buf, data_size, NULL);
     lv_fs_close(&f);
     if (res != LV_FS_RES_OK) {
-      lv_mem_free(gpu_data);
+      gpu_img_free(gpu_data);
       GPU_ERROR("file read failed");
       return LV_RES_INV;
     }
@@ -275,7 +275,7 @@ LV_ATTRIBUTE_FAST_MEM static lv_res_t decode_indexed(lv_img_decoder_t* decoder,
       if (res != LV_FS_RES_OK) {
         GPU_ERROR("file read failed");
         lv_fs_close(&f);
-        lv_mem_free(gpu_data);
+        gpu_img_free(gpu_data);
         return LV_RES_INV;
       }
       palette_p = (lv_color32_t*)palette;
@@ -304,7 +304,7 @@ LV_ATTRIBUTE_FAST_MEM static lv_res_t decode_indexed(lv_img_decoder_t* decoder,
       lv_fs_res_t res = lv_fs_read(&f, px_buf, data_size, NULL);
       lv_fs_close(&f);
       if (res != LV_FS_RES_OK) {
-        lv_mem_free(gpu_data);
+        gpu_img_free(gpu_data);
         GPU_ERROR("file read failed");
         return LV_RES_INV;
       }
@@ -319,13 +319,13 @@ LV_ATTRIBUTE_FAST_MEM static lv_res_t decode_indexed(lv_img_decoder_t* decoder,
       if (fs_buf == NULL) {
         GPU_ERROR("out of memory");
         lv_fs_close(&f);
-        lv_mem_free(gpu_data);
+        gpu_img_free(gpu_data);
         return LV_RES_INV;
       }
       lv_fs_res_t res = lv_fs_read(&f, fs_buf, data_size, NULL);
       lv_fs_close(&f);
       if (res != LV_FS_RES_OK) {
-        lv_mem_free(gpu_data);
+        gpu_img_free(gpu_data);
         lv_mem_free(fs_buf);
         GPU_ERROR("file read failed");
         return LV_RES_INV;

@@ -896,7 +896,7 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t gpu_draw_path(float* path, lv_coord_t length,
 
     if (allocated_src) {
       CHECK_ERROR(gpu_finish());
-      lv_mem_free(vgbuf->memory);
+      gpu_img_free(vgbuf->memory);
     } else {
       CHECK_ERROR(gpu_flush());
     }
