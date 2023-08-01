@@ -100,7 +100,7 @@ int setvbuf_test(void);
 /* dev_null.c ***************************************************************/
 
 #ifdef CONFIG_DEV_NULL
-int dev_null_test(void);
+int dev_null(void);
 #endif
 
 /* fpu.c ********************************************************************/

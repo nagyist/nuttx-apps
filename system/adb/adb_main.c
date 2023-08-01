@@ -39,7 +39,8 @@
  * Public Functions
  ****************************************************************************/
 
-void adb_log_impl(FAR const char *func, int line, FAR const char *fmt, ...)
+void adb_log_impl(int priority, FAR const char *func, int line,
+                  FAR const char *fmt, ...)
 {
   struct va_format vaf;
   va_list ap;
@@ -47,7 +48,24 @@ void adb_log_impl(FAR const char *func, int line, FAR const char *fmt, ...)
   va_start(ap, fmt);
   vaf.fmt = fmt;
   vaf.va  = &ap;
-  syslog(LOG_ERR, "%s (%d): %pV", func, line, &vaf);
+
+  switch (priority)
+    {
+      case ADB_INFO:
+        priority = LOG_INFO;
+        break;
+      case ADB_ERR:
+        priority = LOG_ERR;
+        break;
+      case ADB_WARN:
+        priority = LOG_WARNING;
+        break;
+      default:
+        priority = LOG_INFO;
+        break;
+    }
+
+  syslog(priority, "%s (%d): %pV", func, line, &vaf);
   va_end(ap);
 }
 
