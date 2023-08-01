@@ -222,7 +222,12 @@ int vg_lite_test(FAR struct gpu_test_context_s *ctx)
 
 #ifdef CONFIG_TESTING_GPU_VG_LITE_CUSTOM_INIT
   extern void gpu_init(void);
-  gpu_init();
+  static bool is_init = false;
+  if (!is_init)
+    {
+      gpu_init();
+      is_init = true;
+    }
 #endif
 
   vg_lite_dump_info();
@@ -260,8 +265,7 @@ error_handler:
       vg_lite_free(buffer);
     }
 
-  vg_lite_close();
   ctx->user_data = NULL;
-  GPU_LOG_INFO("GPU close");
+  GPU_LOG_INFO("GPU test finish");
   return error == VG_LITE_SUCCESS ? 0 : -1;
 }
