@@ -51,6 +51,7 @@ enum test_case_e
     TEST_CASE_DEFAULT      = 0,
     TEST_CASE_ROTATION     = 1,
     TEST_CASE_ROTATION_RGB = 2,
+    TEST_CASE_ALIGN_BUF_NOTALIGN_STRIDE = 3,
   };
 
 /****************************************************************************
@@ -308,7 +309,11 @@ int vg_lite_test(FAR struct gpu_test_context_s *ctx)
       case TEST_CASE_ROTATION_RGB:
         vg_lite_test_rotation_rgb(ctx);
         break;
+      case TEST_CASE_ALIGN_BUF_NOTALIGN_STRIDE:
+        vg_lite_test_align_buf_notalign_stride(ctx);
+        break;
       default:
+        GPU_LOG_ERROR("Invalid test case: %d", ctx->param.test_case);
         break;
     }
 
