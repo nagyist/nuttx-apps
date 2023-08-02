@@ -23,21 +23,20 @@ if(CONFIG_TINYCRYPT)
   # ############################################################################
   # Config and Fetch tinycrypt
   # ############################################################################
+
+  set(TINYCRYPT_VERSION ${CONFIG_TINYCRYPT_VERSION})
+
+  set(TINYCRYPT_URL
+      https://github.com/intel/tinycrypt/archive/refs/tags/v${TINYCRYPT_VERSION}.zip
+  )
+
   set(TINYCRYPT_DIR ${CMAKE_CURRENT_LIST_DIR}/tinycrypt)
 
-  if(NOT EXISTS ${TINYCRYPT_DIR})
-    set(TINYCRYPT_VERSION ${CONFIG_TINYCRYPT_VERSION})
-
-    set(TINYCRYPT_URL
-        https://github.com/intel/tinycrypt/archive/refs/tags/v${TINYCRYPT_VERSION}.zip
-    )
+  if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/tinycrypt)
     FetchContent_Declare(
       tinycrypt_fetch
       URL ${TINYCRYPT_URL} SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/tinycrypt
           BINARY_DIR ${CMAKE_BINARY_DIR}/apps/crypto/tinycrypt/tinycrypt
-      PATCH_COMMAND
-        patch -p0 -d ${CMAKE_CURRENT_LIST_DIR}/tinycrypt <
-        ${CMAKE_CURRENT_LIST_DIR}/0001-TinyCrypt-test-resolve-compile-error.patch
       DOWNLOAD_NO_PROGRESS true
       TIMEOUT 30)
 
@@ -46,6 +45,20 @@ if(CONFIG_TINYCRYPT)
     if(NOT tinycrypt_fetch_POPULATED)
       FetchContent_Populate(tinycrypt_fetch)
     endif()
+    set(TINYCRYPT_DIR ${tinycrypt_fetch_SOURCE_DIR})
+
+    if(NOT EXISTS ${TINYCRYPT_DIR}/.tinycrypt_patch)
+      add_custom_command(
+        OUTPUT ${TINYCRYPT_DIR}/.tinycrypt_patch
+        COMMAND touch ${TINYCRYPT_DIR}/.tinycrypt_patch
+        COMMAND
+          patch -p0 -d ${TINYCRYPT_DIR} <
+          ${CMAKE_CURRENT_LIST_DIR}/0001-TinyCrypt-test-resolve-compile-error.patch
+          > /dev/null || (exit 0))
+      add_custom_target(tinycrypt_patch
+                        DEPENDS ${TINYCRYPT_DIR}/.tinycrypt_patch)
+    endif()
+
   endif()
 
   nuttx_add_library(tinycrypt STATIC)
@@ -64,48 +77,48 @@ if(CONFIG_TINYCRYPT)
       ${TINYCRYPT_DIR}/lib/source/utils.c ${TINYCRYPT_DIR}/lib/source/ecc.c
       ${TINYCRYPT_DIR}/lib/source/ecc_platform_specific.c)
 
-  if(CONFIG_TINYCRYPT_ECC_DH)
+  if(CONFIG_TINYCRYPT_ECC_DH STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/ecc_dh.c)
   endif()
 
-  if(CONFIG_TINYCRYPT_ECC_DSA)
+  if(CONFIG_TINYCRYPT_ECC_DSA STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/ecc_dsa.c)
   endif()
 
-  if(CONFIG_TINYCRYPT_AES)
+  if(CONFIG_TINYCRYPT_AES STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/aes_encrypt.c
          ${TINYCRYPT_DIR}/lib/source/aes_decrypt.c)
   endif()
 
-  if(CONFIG_TINYCRYPT_AES_CBC)
+  if(CONFIG_TINYCRYPT_AES_CBC STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/cbc_mode.c)
   endif()
 
-  if(CONFIG_TINYCRYPT_AES_CTR)
+  if(CONFIG_TINYCRYPT_AES_CTR STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/ctr_mode.c)
   endif()
 
-  if(CONFIG_TINYCRYPT_AES_CCM)
+  if(CONFIG_TINYCRYPT_AES_CCM STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/ccm_mode.c)
   endif()
 
-  if(CONFIG_TINYCRYPT_AES_CMAC)
+  if(CONFIG_TINYCRYPT_AES_CMAC STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/cmac_mode.c)
   endif()
 
-  if(CONFIG_TINYCRYPT_SHA256)
+  if(CONFIG_TINYCRYPT_SHA256 STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/sha256.c)
   endif()
 
-  if(CONFIG_TINYCRYPT_SHA256_HMAC)
+  if(CONFIG_TINYCRYPT_SHA256_HMAC STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/hmac.c)
   endif()
 
-  if(CONFIG_TINYCRYPT_SHA256_HMAC_PRNG)
+  if(CONFIG_TINYCRYPT_SHA256_HMAC_PRNG STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/hmac_prng.c)
   endif()
 
-  if(CONFIG_TINYCRYPT_CTR_PRNG)
+  if(CONFIG_TINYCRYPT_CTR_PRNG STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/lib/source/ctr_prng.c)
   endif()
 
@@ -113,7 +126,7 @@ if(CONFIG_TINYCRYPT)
   # Applications Configuration
   # ############################################################################
 
-  if(CONFIG_TINYCRYPT_TEST)
+  if(CONFIG_TINYCRYPT_TEST STREQUAL y)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/tests/test_ecc_utils.c)
     list(APPEND INCDIR ${TINYCRYPT_DIR}/tests/include)
     set(CFLAGS -Dhex2bin=ltp_hex2bin -DENABLE_TESTS)
@@ -303,5 +316,8 @@ if(CONFIG_TINYCRYPT)
   target_include_directories(tinycrypt PRIVATE ${INCDIR})
   if(CFLAGS)
     target_compile_options(tinycrypt PRIVATE ${CFLAGS})
+  endif()
+  if(TARGET tinycrypt_patch)
+    add_dependencies(tinycrypt tinycrypt_patch)
   endif()
 endif()

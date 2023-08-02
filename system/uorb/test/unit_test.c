@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/param.h>
 
 #include "utility.h"
 
@@ -90,7 +89,7 @@ static int pubsubtest_thread_entry(int argc, FAR char *argv[])
 
       /* wait for up to 500ms for data */
 
-      pret = poll(&fds[0], nitems(fds), 500);
+      pret = poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 500);
       if (fds[0].revents & POLLIN)
         {
           unsigned elt;

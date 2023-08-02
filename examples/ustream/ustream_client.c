@@ -78,7 +78,7 @@ int main(int argc, FAR char *argv[])
 
   /* Connect the socket to the server */
 
-  addrlen = sizeof(CONFIG_EXAMPLES_USTREAM_ADDR);
+  addrlen = strlen(CONFIG_EXAMPLES_USTREAM_ADDR) + 1;
   if (addrlen > UNIX_PATH_MAX)
     {
       addrlen = UNIX_PATH_MAX;

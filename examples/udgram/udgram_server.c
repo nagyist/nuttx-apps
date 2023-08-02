@@ -91,7 +91,7 @@ int main(int argc, FAR char *argv[])
 
   /* Bind the socket to a local address */
 
-  addrlen = sizeof(CONFIG_EXAMPLES_UDGRAM_ADDR);
+  addrlen = strlen(CONFIG_EXAMPLES_UDGRAM_ADDR) + 1;
   if (addrlen > UNIX_PATH_MAX)
     {
       addrlen = UNIX_PATH_MAX;
