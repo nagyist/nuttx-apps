@@ -28,7 +28,7 @@
 #include "lv_porting/lv_gpu_interface.h"
 #include "vg_lite.h"
 #include <stdlib.h>
-#ifdef CONFIG_ARM_HAVE_MVE
+#if defined(CONFIG_GPU_USE_MVE_BLEND)
 #include "arm_mve.h"
 #endif
 
@@ -187,7 +187,7 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_draw_img_decoded_gpu(
         + vgbuf->stride * vgbuf->height);
     preprocessed = true;
   }
-#if defined(CONFIG_ARM_HAVE_MVE) && LV_COLOR_DEPTH == 32
+#if defined(CONFIG_GPU_USE_MVE_BLEND)
   if (!transformed && vgbuf && vgbuf->format == VG_LITE_A8 && !masked) {
     lv_draw_sw_blend_dsc_t blend_dsc = {
       .blend_area = &draw_area,

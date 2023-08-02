@@ -40,6 +40,8 @@ extern "C" {
 #define EXTERN extern
 #endif
 
+#if defined(CONFIG_GPU_USE_MVE_BLEND)
+
 /****************************************************************************
  * Name: lv_gpu_draw_blend
  *
@@ -56,6 +58,8 @@ extern "C" {
  ****************************************************************************/
 LV_ATTRIBUTE_FAST_MEM lv_res_t lv_gpu_draw_blend(lv_draw_ctx_t* draw_ctx,
     const lv_draw_sw_blend_dsc_t* dsc);
+
+#endif /* CONFIG_GPU_USE_MVE_BLEND */
 
 #undef EXTERN
 #ifdef __cplusplus

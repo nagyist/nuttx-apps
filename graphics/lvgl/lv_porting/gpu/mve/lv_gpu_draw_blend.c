@@ -22,9 +22,12 @@
  * Included Files
  ****************************************************************************/
 
+#include "lv_porting/lv_gpu_interface.h"
+
+#if defined(CONFIG_GPU_USE_MVE_BLEND)
+
 #include "arm_mve.h"
 #include "../lv_gpu_draw_utils.h"
-#include "lv_porting/lv_gpu_interface.h"
 
 /****************************************************************************
  * Preprocessor Definitions
@@ -687,3 +690,5 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_gpu_draw_blend(lv_draw_ctx_t* draw_ctx,
 
   return LV_RES_OK;
 }
+
+#endif /* CONFIG_GPU_USE_MVE_BLEND */

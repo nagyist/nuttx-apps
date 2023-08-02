@@ -139,6 +139,11 @@ config GPU_FLUSH_COUNT
 	int "Batch flush count for gpu draw operation"
 	default 1
 
+config GPU_USE_MVE_BLEND
+	bool "Accelerating BLEND with MVE assembly instructions"
+	depends on ARM_HAVE_MVE && LV_COLOR_DEPTH = 32
+	default n
+
 choice
 	prompt "Default power mode"
 	default GPU_MODE_PERFORMANCE

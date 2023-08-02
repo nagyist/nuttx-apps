@@ -201,6 +201,8 @@ LV_ATTRIBUTE_FAST_MEM static void gpu_wait(struct _lv_draw_ctx_t* draw)
 #endif
 }
 
+#if defined(CONFIG_GPU_USE_MVE_BLEND)
+
 LV_ATTRIBUTE_FAST_MEM static void gpu_draw_blend(lv_draw_ctx_t* draw_ctx,
     const lv_draw_sw_blend_dsc_t* dsc)
 {
@@ -208,6 +210,8 @@ LV_ATTRIBUTE_FAST_MEM static void gpu_draw_blend(lv_draw_ctx_t* draw_ctx,
     return lv_draw_sw_blend_basic(draw_ctx, dsc);
   }
 }
+
+#endif /* CONFIG_GPU_USE_MVE_BLEND */
 
 /****************************************************************************
  * Global Functions
@@ -302,10 +306,8 @@ void lv_gpu_draw_ctx_init(lv_disp_drv_t* drv, lv_draw_ctx_t* draw_ctx)
   lv_draw_letter_gpu_init(draw_ctx);
   gpu_draw_ctx->base_draw.draw_letter = gpu_draw_letter;
 #endif
-#if defined(CONFIG_ARM_HAVE_MVE) && LV_COLOR_DEPTH == 32
+#if defined(CONFIG_GPU_USE_MVE_BLEND)
   gpu_draw_ctx->blend = gpu_draw_blend;
-#else
-  LV_UNUSED(gpu_draw_blend);
 #endif
   gpu_draw_ctx->base_draw.layer_init = lv_gpu_draw_layer_create;
   gpu_draw_ctx->base_draw.layer_adjust = lv_gpu_draw_layer_adjust;
