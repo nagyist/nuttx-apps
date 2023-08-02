@@ -364,6 +364,11 @@ config LV_IMG_CACHE_USE_STATIC_MEM
 	depends on LV_IMG_CACHE_DEF_SIZE > 0
 	default y
 
+config LV_IMG_CACHE_PAD_SIZE
+	int "Image cache padding size for memory corruption checking"
+	depends on LV_IMG_CACHE_DEF_SIZE > 0
+	default 0
+
 endmenu # "Image Decoder"
 
 menu "Memory configuration"

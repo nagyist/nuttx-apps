@@ -27,6 +27,7 @@
 #include <nuttx/mm/mm.h>
 #include <malloc.h>
 #include <stdlib.h>
+#include <debug.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -34,6 +35,23 @@
 
 #define IMG_CACHE_HEAP_NAME "img_cache"
 #define IMG_CACHE_DONT_ALIGN 0
+
+#ifdef CONFIG_LV_IMG_CACHE_PAD_SIZE
+#define IMG_CACHE_PAD_SIZE CONFIG_LV_IMG_CACHE_PAD_SIZE
+#else
+#define IMG_CACHE_PAD_SIZE 0
+#endif
+
+#if IMG_CACHE_PAD_SIZE
+#define IMG_CACHE_PAD_FRONT 0xaa
+#define IMG_CACHE_PAD_BACK 0xbb
+#define IMG_CACHE_ADD_PAD(ptr, size) img_cache_add_pad(ptr, size)
+#define IMG_CACHE_CHECK_PAD(ptr) img_cache_check_pad(ptr)
+#define IMG_CACHE_CHECK_ASSERT 0
+#else
+#define IMG_CACHE_ADD_PAD(ptr, size) (ptr)
+#define IMG_CACHE_CHECK_PAD(ptr) (ptr)
+#endif
 
 /****************************************************************************
  * Private Type Declarations
@@ -68,6 +86,14 @@ static bool remove_cache_tail_entry(void);
 
 static FAR void *img_cache_alloc(size_t align, size_t size,
                                  bool re, FAR void *ptr);
+
+#if IMG_CACHE_PAD_SIZE > 0
+
+static FAR void *img_cache_add_pad(FAR void *ptr, size_t size);
+
+static FAR void *img_cache_check_pad(FAR void *ptr);
+
+#endif
 
 /****************************************************************************
  * Private Data
@@ -158,7 +184,7 @@ FAR void *lv_img_cache_realloc(FAR void *data_p, size_t new_size)
 
 void lv_img_cache_free(FAR void *ptr)
 {
-  mm_free(cache_manager.heap, ptr);
+  mm_free(cache_manager.heap, IMG_CACHE_CHECK_PAD(ptr));
 }
 
 /****************************************************************************
@@ -433,11 +459,10 @@ static void img_cache_invalidate_src(FAR const void *src)
 }
 
 /****************************************************************************
- * Name: img_cache_alloc
+ * Name: img_cache_memdump
  ****************************************************************************/
 
-static FAR void *img_cache_alloc(size_t align, size_t size, bool re, FAR
-                                 void *ptr)
+static void img_cache_memdump(void)
 {
   struct mm_memdump_s dump =
   {
@@ -447,6 +472,18 @@ static FAR void *img_cache_alloc(size_t align, size_t size, bool re, FAR
     ULONG_MAX
 #endif
   };
+
+  mm_memdump(cache_manager.heap, &dump);
+}
+
+/****************************************************************************
+ * Name: img_cache_alloc
+ ****************************************************************************/
+
+static FAR void *img_cache_alloc(size_t align, size_t size, bool re, FAR
+                                 void *ptr)
+{
+  size += IMG_CACHE_PAD_SIZE * 2;
 
   LV_LOG_INFO("img_cache_alloc (align: %zu, size: %zu, re: %d, ptr: %p)",
               align, size, (int)re, ptr);
@@ -481,7 +518,7 @@ static FAR void *img_cache_alloc(size_t align, size_t size, bool re, FAR
       if (mem)
         {
           LV_LOG_INFO("Image malloc addr: %p success", mem);
-          return mem;
+          return IMG_CACHE_ADD_PAD(mem, size);
         }
 
       LV_LOG_INFO(
@@ -501,7 +538,96 @@ static FAR void *img_cache_alloc(size_t align, size_t size, bool re, FAR
 
   LV_LOG_WARN("Image cache memory is not enough for size %zu", size);
 
-  mm_memdump(cache_manager.heap, &dump);
+  img_cache_memdump();
 
   return NULL;
 }
+
+#if IMG_CACHE_PAD_SIZE > 0
+
+/****************************************************************************
+ * Name: img_cache_add_pad
+ ****************************************************************************/
+
+static FAR void *img_cache_add_pad(FAR void *ptr, size_t size)
+{
+  /* user alloc size */
+
+  size -= IMG_CACHE_PAD_SIZE * 2;
+
+  /* front pad */
+
+  lv_memset(ptr, IMG_CACHE_PAD_FRONT, IMG_CACHE_PAD_SIZE);
+
+  /* back pad */
+
+  lv_memset(ptr + IMG_CACHE_PAD_SIZE + size,
+            IMG_CACHE_PAD_BACK,
+            IMG_CACHE_PAD_SIZE);
+
+  /* record size */
+
+  *(FAR size_t *)ptr = size;
+
+  return ptr + IMG_CACHE_PAD_SIZE;
+}
+
+/****************************************************************************
+ * Name: img_cache_checkcorruption
+ ****************************************************************************/
+
+static void img_cache_checkcorruption(FAR const uint8_t *ptr, size_t size,
+                                      uint8_t value)
+{
+  int i;
+
+  for (i = 0; i < size; i++)
+    {
+      if (ptr[i] == value)
+        {
+          continue;
+        }
+
+      LV_LOG_ERROR("ptr = %p, offset %d", ptr, i);
+      LV_LOG_ERROR("value: 0x%x != 0x%x,", ptr[i], value);
+      lib_dumpbuffer("image buffer padding", ptr, size);
+      img_cache_memdump();
+
+#if IMG_CACHE_CHECK_ASSERT
+      LV_ASSERT_MSG(false, "img cache heap detect memory corruption");
+#endif
+
+      break;
+    }
+}
+
+/****************************************************************************
+ * Name: img_cache_check_pad
+ ****************************************************************************/
+
+static FAR void *img_cache_check_pad(FAR void *ptr)
+{
+  if (!ptr)
+    {
+      return NULL;
+    }
+
+  FAR void *real_ptr = ptr - IMG_CACHE_PAD_SIZE;
+  size_t size = *(FAR size_t *)real_ptr;
+
+  /* front pad, skip 'size' */
+
+  img_cache_checkcorruption(real_ptr + sizeof(size_t),
+                            IMG_CACHE_PAD_SIZE - sizeof(size_t),
+                            IMG_CACHE_PAD_FRONT);
+
+  /* back pad */
+
+  img_cache_checkcorruption(real_ptr + IMG_CACHE_PAD_SIZE + size,
+                            IMG_CACHE_PAD_SIZE,
+                            IMG_CACHE_PAD_BACK);
+
+  return real_ptr;
+}
+
+#endif /* IMG_CACHE_PAD_SIZE > 0 */
