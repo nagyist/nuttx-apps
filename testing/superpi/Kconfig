@@ -22,7 +22,7 @@ if SUPERPI
 
 config SUPERPI_PROGNAME
     string "Program Name"
-    default "superpi"
+    default "pi_css5"
 
 config SUPERPI_STACKSIZE
     int "SuperPI stack size"

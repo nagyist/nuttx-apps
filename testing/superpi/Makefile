@@ -22,8 +22,6 @@ SUPERPI_ZIP      = $(SUPERPI_VERSION).zip
 UNPACK          ?= unzip -q -o
 
 CSRCS    += superpi/fftsg_h.c
-CFLAGS   += ${INCDIR_PREFIX}$(APPDIR)/testing/superpi/superpi/include
-CFLAGS   += ${DEFINE_PREFIX}PI_TXT_DIR=\"/data\"
 PROGNAME  = $(CONFIG_SUPERPI_PROGNAME)
 PRIORITY  = $(CONFIG_SUPERPI_PRIORITY)
 STACKSIZE = $(CONFIG_SUPERPI_STACKSIZE)
