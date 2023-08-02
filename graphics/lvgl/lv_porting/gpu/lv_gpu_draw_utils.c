@@ -1222,6 +1222,25 @@ LV_ATTRIBUTE_FAST_MEM uint16_t gpu_calc_path_len(gpu_fill_path_type_t type,
     }
     len = circle ? 65
                  : 11 + arc_dsc->dsc.rounded * 22 + right_angles * 14;
+  } else if (type == GPU_LINE_PATH) {
+    lv_draw_line_dsc_t* line_dsc = (lv_draw_line_dsc_t*)dsc;
+    len += 1 + 2; /* VLC_OP_MOVE + value */
+
+    if (line_dsc->round_start) {
+      len += 2 * (1 + 6); /* VLC_OP_CUBIC + value */
+    } else {
+      len += 1 + 2; /* VLC_OP_LINE + value */
+    }
+
+    len += 1 + 2; /* VLC_OP_LINE + value */
+
+    if (line_dsc->round_end) {
+      len += 2 * (1 + 6); /* VLC_OP_CUBIC + value */
+    } else {
+      len += 1 + 2; /* VLC_OP_LINE + value */
+    }
+
+    len += 1; /* VLC_OP_CLOSE */
   } else {
     /* TODO: add other path type calculation as needed */
   }
