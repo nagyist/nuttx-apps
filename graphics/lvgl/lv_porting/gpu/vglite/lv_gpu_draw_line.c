@@ -80,10 +80,6 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_draw_line_gpu(
     const lv_point_t* point1,
     const lv_point_t* point2)
 {
-  if (point1->x == point2->x || point1->y == point2->y) {
-    GPU_INFO("horizontal/vertical line skipped");
-    return LV_RES_INV;
-  }
   lv_coord_t w = dsc->width;
   lv_coord_t dash_width = dsc->dash_width;
   lv_coord_t dash_gap = dsc->dash_gap;
