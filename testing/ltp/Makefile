@@ -1,29 +1,26 @@
-############################################################################
-# apps/testing/ltp/Makefile
+
+# apps/testing/ltp/ltp/Makefile
 #
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.  The
-# ASF licenses this file to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance with the
-# License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-# License for the specific language governing permissions and limitations
-# under the License.
-#
-############################################################################
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 include $(APPDIR)/Make.defs
 
-LTP_UNPACK   = ltp
-LTP_URL      = https://github.com/linux-test-project/ltp.git
+LTPS_VERSION     = 20230516
+LTP_DOWNLOAD_URL = https://github.com/linux-test-project/ltp/archive/refs/tags/
+LTP_UNPACK       = ltp
+LTP_URL          = https://github.com/linux-test-project/ltp.git
 
-TESTDIR      = $(LTP_UNPACK)/testcases/open_posix_testsuite
+TESTDIR          = $(LTP_UNPACK)/testcases/open_posix_testsuite
 
 ifneq ($(wildcard $(TESTDIR)),)
 ifeq ($(CONFIG_FS_AIO),)
@@ -218,53 +215,49 @@ BLACKWORDS += shmget
 BLACKWORDS += shmat
 endif
 
-MAINWORDS    += "main("
+MAINWORDS += "main("
 
-LTP_ORIGS_1  := $(shell find $(TESTDIR) -name *.c | head -n 500)
-LTP_ORIGS_2  := $(shell find $(TESTDIR) -name *.c | head -n 1000|tail -n +501)
-LTP_ORIGS_3  := $(shell find $(TESTDIR) -name *.c | head -n 1500|tail -n +1001)
-LTP_ORIGS_4  := $(shell find $(TESTDIR) -name *.c | head -n 2000|tail -n +1501)
+LTP_ORIGS := $(shell find $(TESTDIR) -name *.c)
+ifneq ($(LTP_ORIGS),)
+$(call SPLITVARIABLE,ORIGS_SPILT,$(LTP_ORIGS),200)
+$(foreach BATCH, $(ORIGS_SPILT_TOTAL), \
+	$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(ORIGS_SPILT_$(BATCH))))) \
+)
+endif
 
-$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(LTP_ORIGS_1))))
-$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGS_1))))
+$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGS))))
 
-$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(LTP_ORIGS_2))))
-$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGS_2))))
+LTP_ORIGS := $(filter-out $(BLACKLIST), $(LTP_ORIGS))
+ifneq ($(LTP_ORIGS),)
+$(call SPLITVARIABLE,ORIGS_SPILT,$(LTP_ORIGS),200)
+$(foreach BATCH, $(ORIGS_SPILT_TOTAL), \
+	$(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS+=$(shell grep -lr $(word) $(ORIGS_SPILT_$(BATCH))))) \
+)
+endif
 
-$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(LTP_ORIGS_3))))
-$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGS_3))))
+LTP_CSRCS := $(filter-out $(LTP_MAINCSRCS), $(LTP_ORIGS))
+ifneq ($(LTP_MAINCSRCS),)
+$(call SPLITVARIABLE,MAINCSRC_SPILT,$(LTP_MAINCSRCS),50)
+$(foreach BATCH, $(MAINCSRC_SPILT_TOTAL), \
+	$(eval PROGNAME+=$(basename $(shell echo $(MAINCSRC_SPILT_$(BATCH)) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))) \
+)
+endif
 
-$(foreach word, $(BLACKWORDS), $(eval BLACKLIST+=$(shell grep -lr $(word) $(LTP_ORIGS_4))))
-$(foreach src, $(BLACKSRCS), $(eval BLACKLIST+=$(filter %$(src),$(LTP_ORIGS_4))))
-
-LTP_ORIGS_1  := $(filter-out $(BLACKLIST), $(LTP_ORIGS_1))
-LTP_ORIGS_2  := $(filter-out $(BLACKLIST), $(LTP_ORIGS_2))
-LTP_ORIGS_3  := $(filter-out $(BLACKLIST), $(LTP_ORIGS_3))
-LTP_ORIGS_4  := $(filter-out $(BLACKLIST), $(LTP_ORIGS_4))
-
-$(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS_1+=$(shell grep -lr $(word) $(LTP_ORIGS_1))))
-$(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS_2+=$(shell grep -lr $(word) $(LTP_ORIGS_2))))
-$(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS_3+=$(shell grep -lr $(word) $(LTP_ORIGS_3))))
-$(foreach word, $(MAINWORDS), $(eval LTP_MAINCSRCS_4+=$(shell grep -lr $(word) $(LTP_ORIGS_4))))
-
-LTP_CSRCS_1  := $(filter-out $(LTP_MAINCSRCS_1), $(LTP_ORIGS_1))
-LTP_CSRCS_2  := $(filter-out $(LTP_MAINCSRCS_2), $(LTP_ORIGS_2))
-LTP_CSRCS_3  := $(filter-out $(LTP_MAINCSRCS_3), $(LTP_ORIGS_3))
-LTP_CSRCS_4  := $(filter-out $(LTP_MAINCSRCS_4), $(LTP_ORIGS_4))
-
-
-PROGNAME     := $(basename $(shell echo $(LTP_MAINCSRCS_1) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))
-PROGNAME     += $(basename $(shell echo $(LTP_MAINCSRCS_2) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))
-PROGNAME     += $(basename $(shell echo $(LTP_MAINCSRCS_3) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))
-PROGNAME     += $(basename $(shell echo $(LTP_MAINCSRCS_4) | xargs -n 1 | awk -F "[/]" '{print "ltp_"$$(NF-2)"_"$$(NF-1)"_"$$(NF)}' | sed s/-/_/g))
-MAINSRC       = $(LTP_MAINCSRCS_1) $(LTP_MAINCSRCS_2) $(LTP_MAINCSRCS_3) $(LTP_MAINCSRCS_4)
+MAINSRC       = $(LTP_MAINCSRCS)
+ifneq ($(CONFIG_NET_CAN),)
+PROGNAME     += can_rcv_own_msgs
+PROGNAME     += can_filter
+MAINSRC      += $(TESTDIR)/../network/can/filter-tests/can_filter.c
+MAINSRC      += $(TESTDIR)/../network/can/filter-tests/can_rcv_own_msgs.c
+endif
 PRIORITY      = SCHED_PRIORITY_DEFAULT
 STACKSIZE     = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE        = $(CONFIG_TESTING_LTP)
 
-CSRCS        := $(LTP_CSRCS_1) $(LTP_CSRCS_2) $(LTP_CSRCS_3) $(LTP_CSRCS_4)
+CSRCS        := $(LTP_CSRCS)
 CFLAGS       += -I$(CURDIR)
 CFLAGS       += -I$(TESTDIR)/include
+CFLAGS       += -I$(TESTDIR)/../../include
 endif
 
 # Relax warning checks to avoid expected compile errors:
@@ -274,11 +267,15 @@ CFLAGS += -Wno-unused-variable -Wno-unused-function -Wno-unused-but-set-variable
 # Should be removed if possible in the future
 CFLAGS += -Wno-incompatible-pointer-types -Wno-overflow -Wno-int-to-pointer-cast
 
-$(LTP_UNPACK):
-	$(Q) echo "git clone $(LTP_URL)"
-	$(Q) git clone $(LTP_URL)
-	$(Q) git -C $(LTP_UNPACK) am < 0001-Fix-static-struct-warning.patch
-	$(Q) git -C $(LTP_UNPACK) am < 0002-Use-ifdef-instead-of-if-for-__linux__.patch
+ltp-$(LTPS_VERSION).zip:
+	$(call DOWNLOAD,$(LTP_DOWNLOAD_URL),$(LTPS_VERSION).zip, ltp.zip)
+
+$(LTP_UNPACK): ltp-$(LTPS_VERSION).zip
+	$(Q) echo "dowload $(LTP_DOWNLOAD_URL)$(LTPS_VERSION).zip"
+	$(Q) unzip -o ltp.zip
+	$(Q) mv ltp-$(LTPS_VERSION) $(LTP_UNPACK)
+	$(Q) patch -p1 < 0001-pthread_rwlock_unlock-follow-linux.patch
+	$(Q) patch -p1 < 0002-Use-ifdef-instead-of-if-for-__linux__.patch
 
 # Download and unpack tarball if no git repo found
 ifeq ($(wildcard $(LTP_UNPACK)/.git),)
