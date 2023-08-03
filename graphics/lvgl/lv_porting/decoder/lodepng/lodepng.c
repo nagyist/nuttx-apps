@@ -75,10 +75,6 @@ static void* lodepng_malloc(size_t size) {
 #ifdef LODEPNG_MAX_ALLOC
   if(size > LODEPNG_MAX_ALLOC) return 0;
 #endif
-  return lv_mem_alloc(size);
-}
-
-static void *lodepng_img_malloc(size_t size) {
   return lv_mem_aligned_alloc_draw_buf(LV_ATTRIBUTE_MEM_ALIGN_SIZE, size);
 }
 
@@ -87,11 +83,11 @@ static void* lodepng_realloc(void* ptr, size_t new_size) {
 #ifdef LODEPNG_MAX_ALLOC
   if(new_size > LODEPNG_MAX_ALLOC) return 0;
 #endif
-  return lv_mem_realloc(ptr, new_size);
+  return lv_mem_realloc_draw_buf(ptr, new_size);
 }
 
 static void lodepng_free(void* ptr) {
-  lv_mem_free(ptr);
+  lv_mem_free_draw_buf(ptr);
 }
 #else /*LODEPNG_COMPILE_ALLOCATORS*/
 /* TODO: support giving additional void* payload to the custom allocators */
@@ -4945,7 +4941,7 @@ static void decodeGeneric(unsigned char** out, unsigned* w, unsigned* h,
 
   if(!state->error) {
     outsize = lodepng_get_raw_size(*w, *h, &state->info_png.color);
-    *out = (unsigned char*)lodepng_img_malloc(outsize);
+    *out = (unsigned char*)lodepng_malloc(outsize);
     if(!*out) state->error = 83; /*alloc fail*/
   }
   if(!state->error) {
@@ -4981,7 +4977,7 @@ unsigned lodepng_decode(unsigned char** out, unsigned* w, unsigned* h,
     }
 
     outsize = lodepng_get_raw_size(*w, *h, &state->info_raw);
-    *out = (unsigned char*)lodepng_img_malloc(outsize);
+    *out = (unsigned char*)lodepng_malloc(outsize);
     if(!(*out)) {
       state->error = 83; /*alloc fail*/
     }

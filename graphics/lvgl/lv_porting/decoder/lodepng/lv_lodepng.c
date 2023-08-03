@@ -138,7 +138,7 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
 
         /*Decode the loaded image in ARGB8888 */
         error = lodepng_decode32(&img_data, &png_width, &png_height, png_data, png_data_size);
-        lv_mem_free(png_data); /*Free the loaded file*/
+        lv_mem_free_draw_buf(png_data); /*Free the loaded file*/
         if(error) {
             if(img_data != NULL) {
                 lv_mem_free_draw_buf(img_data);
@@ -156,7 +156,6 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
         size_t tmp_buffer_size = LV_IMG_BUF_SIZE_TRUE_COLOR_ALPHA(expand_width, expand_height);
 
         lv_color_t * tmp_buffer = lv_mem_aligned_alloc_draw_buf(LV_ATTRIBUTE_MEM_ALIGN_SIZE, tmp_buffer_size);
-        LV_ASSERT_MALLOC(tmp_buffer);
         if(tmp_buffer) {
             lv_memset_00(tmp_buffer, tmp_buffer_size);
             lv_color_t * dest = tmp_buffer + (CONFIG_LV_DECODER_IMG_SIZE_EXPAND * expand_width)
