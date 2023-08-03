@@ -57,6 +57,7 @@ struct fbdev_obj_s
 
   int fd;
   FAR void *fbmem;
+  FAR void *fbmem2;
   uint32_t fbmem2_yoffset;
   struct fb_videoinfo_s vinfo;
   struct fb_planeinfo_s pinfo;
@@ -178,8 +179,7 @@ static void fbdev_switch_buffer(FAR struct fbdev_obj_s *fbdev_obj)
   if (fbdev_obj->act_buffer == fbdev_obj->fbmem)
     {
       fbdev_obj->pinfo.yoffset = 0;
-      fbdev_obj->act_buffer = fbdev_obj->fbmem
-        + fbdev_obj->fbmem2_yoffset * fbdev_obj->pinfo.stride;
+      fbdev_obj->act_buffer = fbdev_obj->fbmem2;
     }
   else
     {
@@ -448,26 +448,27 @@ static int fbdev_init_fbmem2_offset(FAR struct fbdev_obj_s *state)
 
   if ((buf_offset % state->pinfo.stride) != 0)
     {
-      LV_LOG_ERROR("The buf_offset(%" PRIuPTR ") is incorrect,"
-                   " it needs to be divisible"
-                   " by pinfo.stride(%d)",
-                   buf_offset, state->pinfo.stride);
-      return -1;
+      LV_LOG_WARN("It is detected that buf_offset(%" PRIuPTR ") "
+                  "and stride(%d) are not divisible, please ensure "
+                  "that the driver handles the address offset by itself.",
+                  buf_offset, state->pinfo.stride);
     }
 
-  /* Enable double buffer mode */
+  /* Calculate the address and yoffset of fbmem2 */
 
   if (buf_offset == 0)
     {
       state->fbmem2_yoffset = state->vinfo.yres;
+      state->fbmem2 = pinfo.fbmem + state->fbmem2_yoffset * pinfo.stride;
       LV_LOG_INFO("Use consecutive fbmem2 = %p, yoffset = %" PRIu32,
-                  pinfo.fbmem, state->fbmem2_yoffset);
+                  state->fbmem2, state->fbmem2_yoffset);
     }
   else
     {
       state->fbmem2_yoffset = buf_offset / state->pinfo.stride;
+      state->fbmem2 = pinfo.fbmem;
       LV_LOG_INFO("Use non-consecutive fbmem2 = %p, yoffset = %" PRIu32,
-                  pinfo.fbmem, state->fbmem2_yoffset);
+                  state->fbmem2, state->fbmem2_yoffset);
     }
 
   return 0;
@@ -544,8 +545,7 @@ static FAR lv_disp_t *fbdev_init(FAR struct fbdev_obj_s *state)
   if (fbdev_obj->double_buffer)
     {
       LV_LOG_INFO("Double buffer mode");
-      buf2 = fbdev_obj->fbmem
-        + fbdev_obj->fbmem2_yoffset * fbdev_obj->pinfo.stride;
+      buf2 = fbdev_obj->fbmem2;
       disp_drv->render_start_cb = fbdev_render_start;
     }
   else
