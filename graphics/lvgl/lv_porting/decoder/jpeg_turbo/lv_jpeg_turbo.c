@@ -34,7 +34,7 @@ typedef struct error_mgr_s {
 static lv_res_t decoder_info(lv_img_decoder_t * decoder, const void * src, lv_img_header_t * header);
 static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc);
 static void decoder_close(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc);
-static lv_color_t * open_jpeg_file(const char * filename);
+static lv_color_t * open_jpeg_file(const char * filename, lv_img_decoder_dsc_t * dsc);
 static bool get_jpeg_size(const char * filename, uint32_t * width, uint32_t * height);
 static void error_exit(j_common_ptr cinfo);
 
@@ -133,7 +133,7 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
     if(dsc->src_type == LV_IMG_SRC_FILE) {
         const char * fn = dsc->src;
 
-        lv_color_t * img_data = open_jpeg_file(fn);
+        lv_color_t * img_data = open_jpeg_file(fn, dsc);
 
         if(img_data == NULL) {
             return LV_RES_INV;
@@ -230,7 +230,7 @@ failed:
     return data;
 }
 
-static lv_color_t * open_jpeg_file(const char * filename)
+static lv_color_t * open_jpeg_file(const char * filename, lv_img_decoder_dsc_t * dsc)
 {
     /* This struct contains the JPEG decompression parameters and pointers to
      * working space (which is allocated as needed by the JPEG library).
@@ -326,6 +326,7 @@ static lv_color_t * open_jpeg_file(const char * filename)
      */
     /* JSAMPLEs per row in output buffer */
     row_stride = cinfo.output_width * cinfo.output_components;
+    dsc->stride = row_stride;
     /* Make a one-row-high sample array that will go away when done with image */
     buffer = (*cinfo.mem->alloc_sarray)
              ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);

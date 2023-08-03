@@ -194,6 +194,8 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
 #else
         dsc->img_data = (const uint8_t *)img_data;
 #endif
+        dsc->stride = png_width;
+
         return LV_RES_OK;     /*The image is fully decoded. Return with its pointer*/
     }
 
