@@ -27,8 +27,7 @@
 #include <stdio.h>
 #include <syslog.h>
 
-#if defined(CONFIG_ADBD_BOARD_INIT) || defined (CONFIG_BOARDCTL_RESET) || \
-    defined(CONFIG_ADBD_USB_BOARDCTL)
+#if defined(CONFIG_ADBD_BOARD_INIT) || defined (CONFIG_BOARDCTL_RESET)
 #  include <sys/boardctl.h>
 #endif
 
@@ -40,8 +39,7 @@
  * Public Functions
  ****************************************************************************/
 
-void adb_log_impl(int priority, FAR const char *func, int line,
-                  FAR const char *fmt, ...)
+void adb_log_impl(FAR const char *func, int line, FAR const char *fmt, ...)
 {
   struct va_format vaf;
   va_list ap;
@@ -49,24 +47,7 @@ void adb_log_impl(int priority, FAR const char *func, int line,
   va_start(ap, fmt);
   vaf.fmt = fmt;
   vaf.va  = &ap;
-
-  switch (priority)
-    {
-      case ADB_INFO:
-        priority = LOG_INFO;
-        break;
-      case ADB_ERR:
-        priority = LOG_ERR;
-        break;
-      case ADB_WARN:
-        priority = LOG_WARNING;
-        break;
-      default:
-        priority = LOG_INFO;
-        break;
-    }
-
-  syslog(priority, "%s (%d): %pV", func, line, &vaf);
+  syslog(LOG_ERR, "%s (%d): %pV", func, line, &vaf);
   va_end(ap);
 }
 
@@ -96,24 +77,20 @@ int main(int argc, FAR char **argv)
 
 #ifdef CONFIG_ADBD_BOARD_INIT
   boardctl(BOARDIOC_INIT, 0);
-#endif /* CONFIG_ADBD_BOARD_INIT */
 
-#ifdef CONFIG_ADBD_USB_BOARDCTL
+#if defined(CONFIG_ADBD_USB_SERVER) && \
+    defined(CONFIG_USBDEV_COMPOSITE) && \
+    defined (CONFIG_BOARDCTL_USBDEVCTRL)
 
-  /* Setup USBADB device */
+  /* Setup composite USB device */
 
   struct boardioc_usbdev_ctrl_s ctrl;
-#ifdef CONFIG_USBDEV_COMPOSITE
-  uint8_t usbdev = BOARDIOC_USBDEV_COMPOSITE;
-#else
-  uint8_t usbdev = BOARDIOC_USBDEV_ADB;
-#endif
-  FAR void *handle;
   int ret;
+  FAR void *handle;
 
   /* Perform architecture-specific initialization */
 
-  ctrl.usbdev   = usbdev;
+  ctrl.usbdev   = BOARDIOC_USBDEV_COMPOSITE;
   ctrl.action   = BOARDIOC_USBDEV_INITIALIZE;
   ctrl.instance = 0;
   ctrl.config   = 0;
@@ -126,9 +103,9 @@ int main(int argc, FAR char **argv)
       return 1;
     }
 
-  /* Connect the USB composite device device */
+  /* Initialize the USB composite device device */
 
-  ctrl.usbdev   = usbdev;
+  ctrl.usbdev   = BOARDIOC_USBDEV_COMPOSITE;
   ctrl.action   = BOARDIOC_USBDEV_CONNECT;
   ctrl.instance = 0;
   ctrl.config   = 0;
@@ -140,7 +117,8 @@ int main(int argc, FAR char **argv)
       printf("boardctl(BOARDIOC_USBDEV_CONTROL) failed: %d\n", ret);
       return 1;
     }
-#endif /* ADBD_USB_BOARDCTL */
+#endif /* ADBD_USB_SERVER && USBDEV_COMPOSITE && BOARDCTL_USBDEVCTRL */
+#endif /* CONFIG_ADBD_BOARD_INIT */
 
 #ifdef CONFIG_ADBD_NET_INIT
   /* Bring up the network */
