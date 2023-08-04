@@ -13,204 +13,345 @@ if GRAPHICS_LVGL
 
 config LVGL_VERSION
 	string "LVGL Version"
-	default "8.3.3"
+	default "8.0.0"
 
-source "$APPSDIR/graphics/lvgl/lv_conf/Kconfig"
+source "$APPSDIR/graphics/lvgl/lvgl/Kconfig"
+source "$APPSDIR/graphics/lvgl/ext/Kconfig"
+source "$APPSDIR/graphics/lvgl/lv_porting/gpu_manager/Kconfig"
 
-config LV_PORT_USE_LCDDEV
-	bool "Enable LCD device port"
+config LV_USE_SYSLOG_INTERFACE
+	bool "Syslog interface"
+	depends on LV_USE_LOG
+	default y
+
+config LV_USE_LCDDEV_INTERFACE
+	bool "LCD device interface"
 	default n
 
-if LV_PORT_USE_LCDDEV
+if LV_USE_LCDDEV_INTERFACE
 
-config LV_PORT_LCDDEV_DEFAULT_DEVICEPATH
+config LV_LCDDEV_INTERFACE_DEFAULT_DEVICEPATH
 	string "LCD default device path"
 	default "/dev/lcd0"
 
-config LV_PORT_LCDDEV_FULL_SCREEN_BUFFER
+config LV_USE_FULL_SCREEN_BUFFER
 	bool "Use full screen buffer"
 	default n
 
-if !LV_PORT_LCDDEV_FULL_SCREEN_BUFFER
+if !LV_USE_FULL_SCREEN_BUFFER
 
-config LV_PORT_LCDDEV_LINE_BUFFER_DEFAULT
+config LV_DEFAULT_LINE_BUFFER
 	int "Default buffer size (in line)"
 	default 10
 
-endif # LV_PORT_LCDDEV_FULL_SCREEN_BUFFER
+endif # LV_USE_FULL_SCREEN_BUFFER
 
-config LV_PORT_LCDDEV_DOUBLE_BUFFER
+config LV_USE_DOUBLE_BUFFER
 	bool "Use double buffer"
 	default n
 
-endif # LV_PORT_USE_LCDDEV
+endif # LV_USE_LCDDEV_INTERFACE
 
-config LV_PORT_USE_FBDEV
-	bool "Enable framebuffer port"
+config LV_USE_FBDEV_INTERFACE
+	bool "Framebuffer device interface"
 	default n
 
-config LV_PORT_FBDEV_DEFAULT_DEVICEPATH
+config LV_FBDEV_INTERFACE_DEFAULT_DEVICEPATH
 	string "Framebuffer default device path"
 	default "/dev/fb0"
-	depends on LV_PORT_USE_FBDEV
+	depends on LV_USE_FBDEV_INTERFACE
 
-config LV_PORT_UV_POLL_DEVICEPATH
+config LV_FBDEV_ENABLE_WAITFORVSYNC
+	bool "Enable wait for vsync support"
+	default y
+	depends on LV_USE_FBDEV_INTERFACE
+	depends on FB_SYNC
+
+config LV_FBDEV_VSYNCOFFSET
+	int "VSync offset time[us]"
+	default 0
+	depends on LV_USE_FBDEV_INTERFACE
+
+config LV_FBDEV_FPS_COUNTER
+	bool "Enable frame counter printing"
+	default n
+	depends on LV_USE_FBDEV_INTERFACE
+
+config LV_UV_POLL_DEVICEPATH
 	string "Display poll device path"
 	depends on LIBUV
 	default "/dev/fb0"
 
-config LV_PORT_USE_TOUCHPAD
-	bool "Enable touchpad port"
+menuconfig LV_USE_GPU_INTERFACE
+	bool "GPU acceleration interface"
 	default n
 
-config LV_PORT_TOUCHPAD_DEFAULT_DEVICEPATH
-	depends on LV_PORT_USE_TOUCHPAD
-	string "Touchpad default device path"
-	default "/dev/input0"
+if LV_USE_GPU_INTERFACE
 
-config LV_PORT_TOUCHPAD_CURSOR_SIZE
-	depends on LV_PORT_USE_TOUCHPAD
-	int "Touchpad cursor size"
+config LV_GPU_USE_LOG
+	bool "Output GPU warnings and errors"
+	default y
+	depends on LV_USE_LOG
+
+config LV_GPU_USE_PERF
+	bool "Enable GPU performance measurement outputs"
+	default n
+
+config LV_GPU_DRAW_LINE
+	bool "Use GPU accelerated draw_line"
+	default n
+
+config LV_GPU_DRAW_ARC
+	bool "Use GPU accelerated draw_arc"
+	default y
+
+config LV_GPU_DRAW_POLYGON
+	bool "Use GPU accelerated draw_polygon"
+	default y
+
+config LV_GPU_DRAW_RECT
+	bool "Use GPU accelerated draw_rect"
+	default n
+
+config LV_GPU_DRAW_IMG
+	bool "Use GPU accelerated draw_img"
+	default y
+
+config LV_GPU_DRAW_LETTER
+	bool "Use GPU accelerated draw_letter"
+	depends on LV_USE_FREETYPE
+	depends on LV_FREETYPE_OUTLINE_CACHE_SIZE > 0
+	default n
+
+config GPU_IMG_CACHE_PATH
+	string "GPU image cache path"
+	default "/data/cache/"
+
+config GPU_SIZE_LIMIT
+	int "Draw with GPU in bg/rect/image if draw size is over this value"
+	default 5000
+
+config GPU_TRANSFORM_SIZE_LIMIT
+	int "Draw with GPU in image transform if draw size is over this value"
 	default 0
 
-config LV_USE_ENCODER
-	depends on INPUT_MOUSE_WHEEL
-	bool "Encoder interface"
+config GPU_FLUSH_COUNT
+	int "Batch flush count for gpu draw operation"
+	default 1
+
+config GPU_USE_MVE_BLEND
+	bool "Accelerating BLEND with MVE assembly instructions"
+	depends on ARM_HAVE_MVE && LV_COLOR_DEPTH = 32
 	default n
 
-menuconfig LV_PORT_USE_BUTTON
-	bool "Enable button port"
+choice
+	prompt "Default power mode"
+	default GPU_MODE_PERFORMANCE
+
+config GPU_MODE_POWERSAVE
+	bool "Low power mode"
+
+config GPU_MODE_BALANCED
+	bool "Balanced mode"
+
+config GPU_MODE_PERFORMANCE
+	bool "High performance mode"
+
+endchoice
+
+endif # LV_USE_GPU_INTERFACE
+
+menuconfig LV_USE_ACTS_DMA2D_INTERFACE
+	bool "Actions DMA2D acceleration interface"
 	default n
 
-if LV_PORT_USE_BUTTON
+if LV_USE_ACTS_DMA2D_INTERFACE
 
-config LV_PORT_BUTTON_DEFAULT_DEVICEPATH
+config LV_ACTS_DMA2D_SIZE_LIMIT
+	int "Minimum area (in pixels) for DMA2D processing."
+	default 32
+
+config LV_ACTS_DMA2D_INTERFACE_DEFAULT_DEVICEPATH
+	string "Actions DMA2D default device path"
+	default "/dev/dma2d0"
+
+endif # LV_USE_ACTS_DMA2D_INTERFACE
+
+menuconfig LV_USE_BUTTON_INTERFACE
+	bool "Button input interface"
+	default n
+
+if LV_USE_BUTTON_INTERFACE
+
+config LV_BUTTON_INTERFACE_DEFAULT_DEVICEPATH
 	string "Button default device path"
 	default "/dev/buttons"
 
-config LV_PORT_BUTTON_BUTTON_0_MAP_X
+config LV_BUTTON_INTERFACE_BUTTON_0_MAP_X
 	int "Button 0 mapping coordinate x"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_0_MAP_Y
+config LV_BUTTON_INTERFACE_BUTTON_0_MAP_Y
 	int "Button 0 mapping coordinate y"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_1_MAP_X
+config LV_BUTTON_INTERFACE_BUTTON_1_MAP_X
 	int "Button 1 mapping coordinate x"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_1_MAP_Y
+config LV_BUTTON_INTERFACE_BUTTON_1_MAP_Y
 	int "Button 1 mapping coordinate y"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_2_MAP_X
+config LV_BUTTON_INTERFACE_BUTTON_2_MAP_X
 	int "Button 2 mapping coordinate x"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_2_MAP_Y
+config LV_BUTTON_INTERFACE_BUTTON_2_MAP_Y
 	int "Button 2 mapping coordinate y"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_3_MAP_X
+config LV_BUTTON_INTERFACE_BUTTON_3_MAP_X
 	int "Button 3 mapping coordinate x"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_3_MAP_Y
+config LV_BUTTON_INTERFACE_BUTTON_3_MAP_Y
 	int "Button 3 mapping coordinate y"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_4_MAP_X
+config LV_BUTTON_INTERFACE_BUTTON_4_MAP_X
 	int "Button 4 mapping coordinate x"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_4_MAP_Y
+config LV_BUTTON_INTERFACE_BUTTON_4_MAP_Y
 	int "Button 4 mapping coordinate y"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_5_MAP_X
+config LV_BUTTON_INTERFACE_BUTTON_5_MAP_X
 	int "Button 5 mapping coordinate x"
 	default 0
 
-config LV_PORT_BUTTON_BUTTON_5_MAP_Y
+config LV_BUTTON_INTERFACE_BUTTON_5_MAP_Y
 	int "Button 5 mapping coordinate y"
 	default 0
 
-endif # LV_PORT_USE_BUTTON
+endif # LV_USE_BUTTON_INTERFACE
 
-menuconfig LV_PORT_USE_KEYPAD
-	bool "Enable keypad port"
+menuconfig LV_USE_KEYPAD_INTERFACE
+	bool "Keypad input interface"
 	default n
 	---help---
 	button bit map < 0 is no binding, must >= 0 and < 31 to binding button device.
 
-if LV_PORT_USE_KEYPAD
+if LV_USE_KEYPAD_INTERFACE
 
-config LV_PORT_KEYPAD_DEFAULT_DEVICEPATH
+config LV_KEYPAD_INTERFACE_DEFAULT_DEVICEPATH
 	string "Button default device path"
 	default "/dev/buttons"
 
-config LV_PORT_KEYPAD_KEY_UP_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_UP_MAP_BIT
 	int "LV_KEY_UP button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_DOWN_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_DOWN_MAP_BIT
 	int "LV_KEY_DOWN button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_RIGHT_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_RIGHT_MAP_BIT
 	int "LV_KEY_RIGHT button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_LEFT_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_LEFT_MAP_BIT
 	int "LV_KEY_LEFT button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_ESC_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_ESC_MAP_BIT
 	int "LV_KEY_ESC button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_DEL_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_DEL_MAP_BIT
 	int "LV_KEY_DEL button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_BACKSPACE_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_BACKSPACE_MAP_BIT
 	int "LV_KEY_BACKSPACE button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_ENTER_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_ENTER_MAP_BIT
 	int "LV_KEY_ENTER button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_NEXT_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_NEXT_MAP_BIT
 	int "LV_KEY_NEXT button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_PREV_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_PREV_MAP_BIT
 	int "LV_KEY_PREV button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_HOME_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_HOME_MAP_BIT
 	int "LV_KEY_HOME button bit map"
 	default -1
 
-config LV_PORT_KEYPAD_KEY_END_MAP_BIT
+config LV_KEYPAD_INTERFACE_KEY_END_MAP_BIT
 	int "LV_KEY_END button bit map"
 	default -1
 
-endif # LV_PORT_USE_KEYPAD
+endif # LV_USE_KEYPAD_INTERFACE
 
-if LV_PORT_USE_ENCODER
+config LV_USE_TOUCHPAD_INTERFACE
+	depends on INPUT_TOUCHSCREEN
+	bool "Touchpad input interface"
+	default n
 
-config LV_PORT_ENCODER_DEFAULT_DEVICEPATH
+config LV_TOUCHPAD_INTERFACE_DEFAULT_DEVICEPATH
+	depends on LV_USE_TOUCHPAD_INTERFACE
+	string "Touchpad default device path"
+	default "/dev/input0"
+
+config LV_USE_ENCODER_INTERFACE
+	depends on INPUT_MOUSE_WHEEL
+	bool "Encoder input interface"
+	default n
+
+if LV_USE_ENCODER_INTERFACE
+
+config LV_ENCODER_INTERFACE_DEFAULT_DEVICEPATH
 	string "Encoder default device path"
 	default "/dev/input0"
 
-endif # LV_USE_ENCODER
+endif # LV_USE_ENCODER_INTERFACE
+
+menu "Image Decoder"
+
+config LV_USE_DECODER_JPEG_TURBO
+	bool "Enable JPEG decoder"
+	depends on LIB_JPEG_TURBO
+	default n
+
+config LV_USE_DECODER_LODEPNG
+	bool "Enable PNG decoder"
+	default n
+
+config LV_DECODER_IMG_SIZE_EXPAND
+	int "Image size expand pixel"
+	default 0
+
+config LV_IMG_CACHE_DEF_MEM_TOTAL_SIZE
+	int "Image cache independent heap size in kilobytes"
+	depends on LV_IMG_CACHE_DEF_SIZE > 0
+	default 5242880
+
+config LV_IMG_CACHE_USE_STATIC_MEM
+	bool "Use static memory for image cache"
+	depends on LV_IMG_CACHE_DEF_SIZE > 0
+	default y
+
+endmenu # "Image Decoder"
 
 menu "Memory configuration"
 
-config LV_PORT_MEM_ATTRIBUTE_FAST_MEM_SECTION_NAME
+config LV_ATTRIBUTE_FAST_MEM_CUSTOM_SECTION_NAME
 	string "LV_ATTRIBUTE_FAST_MEM Section Name"
 	default ""
 	---help---
@@ -218,20 +359,24 @@ config LV_PORT_MEM_ATTRIBUTE_FAST_MEM_SECTION_NAME
 
 if LV_MEM_CUSTOM
 
-config LV_PORT_MEM_CUSTOM_SIZE
+config LV_MEM_INTERFACE_CUSTOM_SIZE
 	int "Size of the custom memory used by `lv_mem_alloc` in kilobytes (>= 2kB)"
 	default 0
 
-if LV_PORT_MEM_CUSTOM_SIZE != 0
+if LV_MEM_INTERFACE_CUSTOM_SIZE != 0
 
-config LV_PORT_MEM_CUSTOM_NAME
+config LV_MEM_INTERFACE_CUSTOM_NAME
 	string "Name of the custom HEAP memory"
 	default "lvgl"
 
-endif # LV_PORT_MEM_CUSTOM_SIZE
+endif # LV_MEM_INTERFACE_CUSTOM_SIZE
 
 endif # LV_MEM_CUSTOM
 
 endmenu # "Memory configuration"
+
+config LV_USE_SCHED_NOTE
+	bool "Enable Sched Note"
+	default n
 
 endif # GRAPHICS_LVGL
