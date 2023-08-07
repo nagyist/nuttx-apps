@@ -91,6 +91,11 @@ static void vg_lite_draw_ctx_init(lv_disp_drv_t * disp_drv, lv_draw_ctx_t * draw
     ctx->base.draw_img_decoded = vg_lite_draw_img_decoded;
 #endif
 
+#ifdef CONFIG_LV_GPU_VG_LITE_LETTER
+    vg_lite_draw_letter_init(draw_ctx);
+    ctx->base.draw_letter = vg_lite_draw_letter;
+#endif
+
 #ifdef CONFIG_LV_GPU_VG_LITE_LINE
     ctx->base.draw_line = vg_lite_draw_line;
 #endif
