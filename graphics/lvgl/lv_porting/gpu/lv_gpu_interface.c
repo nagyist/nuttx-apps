@@ -71,7 +71,7 @@ LV_ATTRIBUTE_FAST_MEM static void gpu_draw_line(
     const lv_point_t* point2)
 {
   if (lv_draw_line_gpu(draw_ctx, dsc, point1, point2) != LV_RES_OK) {
-#ifdef GPU_ENABLE_FALLBACK_SW
+#ifdef CONFIG_GPU_ENABLE_FALLBACK_SW
     lv_draw_sw_line(draw_ctx, dsc, point1, point2);
 #else
     LV_LOG_ERROR("Should not fallback sw to draw line");
@@ -91,7 +91,7 @@ LV_ATTRIBUTE_FAST_MEM static void gpu_draw_arc(
 {
   if (lv_draw_arc_gpu(draw_ctx, dsc, center, radius, start_angle, end_angle)
       != LV_RES_OK) {
-#ifdef GPU_ENABLE_FALLBACK_SW
+#ifdef CONFIG_GPU_ENABLE_FALLBACK_SW
     lv_draw_sw_arc(draw_ctx, dsc, center, radius, start_angle, end_angle);
 #else
     LV_LOG_ERROR("Should not fallback sw to draw arc");
@@ -110,7 +110,7 @@ LV_ATTRIBUTE_FAST_MEM static void gpu_draw_polygon(
   if (lv_draw_polygon_gpu(draw_ctx, dsc, points,
           point_cnt)
       != LV_RES_OK) {
-#ifdef GPU_ENABLE_FALLBACK_SW
+#ifdef CONFIG_GPU_ENABLE_FALLBACK_SW
     lv_draw_sw_polygon(draw_ctx, dsc, points, point_cnt);
 #else
     LV_LOG_ERROR("Should not fallback sw to draw polygon");
@@ -126,7 +126,7 @@ LV_ATTRIBUTE_FAST_MEM static void gpu_draw_rect(
     const lv_area_t* coords)
 {
   if (lv_draw_rect_gpu(draw_ctx, dsc, coords) != LV_RES_OK) {
-#ifdef GPU_ENABLE_FALLBACK_SW
+#ifdef CONFIG_GPU_ENABLE_FALLBACK_SW
     lv_draw_sw_rect(draw_ctx, dsc, coords);
 #else
     LV_LOG_ERROR("Should not fallback sw to draw rect");
@@ -142,7 +142,7 @@ LV_ATTRIBUTE_FAST_MEM static void gpu_draw_bg(
     const lv_area_t* coords)
 {
   if (lv_draw_bg_gpu(draw_ctx, dsc, coords) != LV_RES_OK) {
-#ifdef GPU_ENABLE_FALLBACK_SW
+#ifdef CONFIG_GPU_ENABLE_FALLBACK_SW
     lv_draw_sw_bg(draw_ctx, dsc, coords);
 #else
     LV_LOG_ERROR("Should not fallback sw to draw bg");
@@ -162,7 +162,7 @@ LV_ATTRIBUTE_FAST_MEM static void gpu_draw_img_decoded(
   if (lv_draw_img_decoded_gpu(draw_ctx, dsc, coords, map_p,
           color_format)
       != LV_RES_OK) {
-#ifdef GPU_ENABLE_FALLBACK_SW
+#ifdef CONFIG_GPU_ENABLE_FALLBACK_SW
     lv_area_t coords_aligned16 = *coords;
     const lv_area_t* clip_area_ori = draw_ctx->clip_area;
     lv_area_t clip_area;
@@ -210,7 +210,7 @@ LV_ATTRIBUTE_FAST_MEM static void gpu_draw_letter(
 {
   if (lv_draw_letter_gpu(draw_ctx, dsc, pos_p, letter)
       != LV_RES_OK) {
-#ifdef GPU_ENABLE_FALLBACK_SW
+#ifdef CONFIG_GPU_ENABLE_FALLBACK_SW
     lv_draw_sw_letter(draw_ctx, dsc, pos_p, letter);
 #else
     LV_LOG_ERROR("Should not fallback sw to draw letter");
@@ -235,7 +235,7 @@ LV_ATTRIBUTE_FAST_MEM static void gpu_draw_blend(lv_draw_ctx_t* draw_ctx,
     const lv_draw_sw_blend_dsc_t* dsc)
 {
   if (lv_gpu_draw_blend(draw_ctx, dsc) != LV_RES_OK) {
-#ifdef GPU_ENABLE_FALLBACK_SW
+#ifdef CONFIG_GPU_ENABLE_FALLBACK_SW
     return lv_draw_sw_blend_basic(draw_ctx, dsc);
 #else
     LV_LOG_ERROR("Should not fallback sw to draw blend");
