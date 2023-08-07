@@ -57,11 +57,6 @@ void vg_lite_draw_line(
     LV_GPU_LOG_TRACE("point: P1(%d, %d) -> P2(%d, %d)",
                      point1->x, point1->y, point2->x, point2->y);
 
-    if(point1->x == point2->x || point1->y == point2->y) {
-        LV_GPU_LOG_TRACE("horizontal/vertical line skipped");
-        return;
-    }
-
     lv_coord_t w = dsc->width;
     lv_coord_t dash_width = dsc->dash_width;
     lv_coord_t dash_gap = dsc->dash_gap;
