@@ -100,7 +100,7 @@ int setvbuf_test(void);
 /* dev_null.c ***************************************************************/
 
 #ifdef CONFIG_DEV_NULL
-int dev_null_test(void);
+int dev_null(void);
 #endif
 
 /* fpu.c ********************************************************************/
@@ -249,10 +249,6 @@ void barrier_test(void);
 /* prioinherit.c ************************************************************/
 
 void priority_inheritance(void);
-
-/* schedlock.c **************************************************************/
-
-void sched_lock_test(void);
 
 /* vfork.c ******************************************************************/
 
