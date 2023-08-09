@@ -20,11 +20,11 @@
 
 include $(APPDIR)/Make.defs
 
-# Relays Example
+# relays Example
 
 MAINSRC = relays_main.c
 
-# Relays built-in application info
+# Buttons built-in application info
 
 PROGNAME = relays
 PRIORITY = SCHED_PRIORITY_DEFAULT
