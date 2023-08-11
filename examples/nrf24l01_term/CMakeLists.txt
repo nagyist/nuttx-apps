@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_NRF24L01TERM)
-  nuttx_add_application(
-    NAME
-    nrf24l01_term
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_NRF24L01TERM}
-    SRCS
-    nrf24l01_term.c)
+  nuttx_add_application(NAME nrf24l01_term)
 endif()

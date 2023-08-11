@@ -435,6 +435,10 @@ static const struct cmdmap_s g_cmdmap[] =
 #  endif
 #endif
 
+#if defined(CONFIG_FS_PROCFS) && !defined(CONFIG_NSH_DISABLE_PIDOF)
+  CMD_MAP("pidof",   cmd_pidof, 2, 2, "<name>"),
+#endif
+
 #if defined(CONFIG_PM) && !defined(CONFIG_NSH_DISABLE_PMCONFIG)
   CMD_MAP("pmconfig", cmd_pmconfig, 1, 4,
     "[stay|relax] [normal|idle|standby|sleep] [domain]"),
@@ -659,8 +663,6 @@ static inline void help_cmdlist(FAR struct nsh_vtbl_s *vtbl)
   unsigned int j;
   unsigned int k;
   unsigned int offset;
-
-  /* Extra 5 bytes for tab before newline and '\0' */
 
   char line[HELP_LINELEN + HELP_TABSIZE + 1];
 

@@ -19,16 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_NETLOOP)
-  nuttx_add_application(
-    NAME
-    netloop
-    PRIORITY
-    ${CONFIG_EXAMPLES_NETLOOP_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_NETLOOP_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_NETLOOP}
-    SRCS
-    lo_main.c)
-  target_sources(apps PRIVATE lo_listener.c)
+  nuttx_add_application(NAME netloop)
 endif()

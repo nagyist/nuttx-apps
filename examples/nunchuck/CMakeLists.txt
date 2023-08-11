@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_NUNCHUCK)
-  nuttx_add_application(
-    NAME
-    nunchuck
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_NUNCHUCK}
-    SRCS
-    nunchuck_main.c)
+  nuttx_add_application(NAME nunchuck)
 endif()

@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_SYSTEM)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_SYSTEM_PROGNAME}
-    PRIORITY
-    ${CONFIG_EXAMPLES_SYSTEM_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_SYSTEM_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_SYSTEM}
-    SRCS
-    system_main.c)
+  nuttx_add_application(NAME system)
 endif()

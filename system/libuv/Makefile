@@ -19,6 +19,7 @@
 ############################################################################
 
 include $(APPDIR)/Make.defs
+-include ./ext/Makefile
 
 LIBUV_PATCHS ?= $(sort $(wildcard 000*.patch))
 
@@ -52,11 +53,8 @@ CFLAGS += -Wno-shadow
 CFLAGS += -DDEF_THREADPOOL_SIZE=CONFIG_LIBUV_THREADPOOL_SIZE
 CFLAGS += -DDEF_THREADPOOL_STACKSIZE=CONFIG_LIBUV_THREAD_STACKSIZE
 
-ifeq ($(GCCVER),)
-  export GCCVER = $(shell $(CC) --version | grep gcc | sed -r 's/.* ([0-9]+\.[0-9]+).*/\1/' | cut -d'.' -f1)
-endif
-
-ifeq ($(GCCVER),12)
+GCCVER = $(shell $(CC) --version | grep gcc | sed -r 's/.* ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+ifeq ($(GCCVER),12.2.1)
   CFLAGS += -Wno-dangling-pointer
 endif
 

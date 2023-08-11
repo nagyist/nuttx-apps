@@ -300,7 +300,7 @@ static int user_main(int argc, char *argv[])
   check_test_memory_usage();
 #endif
 
-#if defined(CONFIG_TLS_NELEM) && CONFIG_TLS_NELEM > 0
+#if CONFIG_TLS_NELEM > 0
   /* Test TLS */
 
   tls_test();
@@ -323,13 +323,14 @@ static int user_main(int argc, char *argv[])
       check_test_memory_usage();
 #endif
 
+#ifdef CONFIG_DEV_NULL
       /* Checkout /dev/null */
 
-#ifdef CONFIG_DEV_NULL
       printf("\nuser_main: /dev/null test\n");
-      dev_null_test();
-      check_test_memory_usage();
+      dev_null();
 #endif
+
+      check_test_memory_usage();
 
 #ifdef CONFIG_TESTING_OSTEST_AIO
       /* Check asynchronous I/O */
@@ -573,12 +574,6 @@ static int user_main(int argc, char *argv[])
       priority_inheritance();
       check_test_memory_usage();
 #endif /* CONFIG_PRIORITY_INHERITANCE && !CONFIG_DISABLE_PTHREAD */
-
-#ifndef CONFIG_DISABLE_PTHREAD
-      printf("\nuser_main: scheduler lock test\n");
-      sched_lock_test();
-      check_test_memory_usage();
-#endif
 
 #if defined(CONFIG_ARCH_HAVE_VFORK) && defined(CONFIG_SCHED_WAITPID)
       printf("\nuser_main: vfork() test\n");

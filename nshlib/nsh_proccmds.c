@@ -34,6 +34,7 @@
 #include <errno.h>
 #include <signal.h>
 #include <sys/sysinfo.h>
+#include <sys/param.h>
 #include <time.h>
 
 #include "nsh.h"
@@ -48,9 +49,9 @@
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_UPTIME
-#  ifndef FSHIFT
-#    define FSHIFT SI_LOAD_SHIFT
-#  endif
+  #ifndef FSHIFT
+    #  define FSHIFT SI_LOAD_SHIFT
+  #endif
 #  define FIXED_1      (1 << FSHIFT)     /* 1.0 as fixed-point */
 #  define LOAD_INT(x)  ((x) >> FSHIFT)
 #  define LOAD_FRAC(x) (LOAD_INT(((x) & (FIXED_1 - 1)) * 100))
@@ -352,6 +353,7 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
   /* Finally, print the status information */
 
+#ifndef _MSC_VER
   nsh_output(vtbl,
              "%5s %5s "
 #ifdef CONFIG_SMP
@@ -366,6 +368,7 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
              status.td_priority, status.td_policy, status.td_type,
              status.td_flags, status.td_state, status.td_event,
              status.td_sigmask);
+#endif
 
 #if CONFIG_MM_BACKTRACE >= 0 && !defined(CONFIG_NSH_DISABLE_PSHEAPUSAGE)
   /* Get the Heap AllocSize */
@@ -526,6 +529,8 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
     }
 #endif
 
+#ifndef _MSC_VER
+
 #if defined(PS_SHOW_HEAPSIZE) || defined (PS_SHOW_STACKSIZE) || \
     defined (PS_SHOW_STACKUSAGE) || defined (NSH_HAVE_CPULOAD)
     nsh_output(vtbl,
@@ -558,6 +563,8 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
                , nsh_trimspaces(vtbl->iobuffer)
 #endif
              );
+#endif
+
 #endif
 
   /* Read the task/thread command line */
@@ -622,6 +629,8 @@ int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   UNUSED(argc);
   UNUSED(argv);
 
+#ifndef _MSC_VER
+
   nsh_output(vtbl, "%5s %5s "
 #ifdef CONFIG_SMP
                    "%3s "
@@ -663,9 +672,38 @@ int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #endif
                     "COMMAND"
                     );
+#endif
 
   return nsh_foreach_direntry(vtbl, "ps", CONFIG_NSH_PROC_MOUNTPOINT,
                               ps_callback, NULL);
+}
+#endif
+
+/****************************************************************************
+ * Name: cmd_pidof
+ ****************************************************************************/
+
+#if defined(CONFIG_FS_PROCFS) && !defined(CONFIG_NSH_DISABLE_PIDOF)
+int cmd_pidof(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+{
+  FAR const char *name = argv[argc - 1];
+  pid_t pids[8];
+  ssize_t ret;
+  int i;
+
+  ret = nsh_getpid(vtbl, name, pids, nitems(pids));
+  if (ret <= 0)
+    {
+      nsh_error(vtbl, g_fmtnosuch, argv[0], "task",  name);
+      return ERROR;
+    }
+
+  for (i = 0; i < ret; i++)
+    {
+      nsh_output(vtbl, "%d ", pids[i]);
+    }
+
+  return OK;
 }
 #endif
 

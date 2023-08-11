@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_WGETJSON)
-  nuttx_add_application(
-    NAME
-    wgetjson
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_WGETJSON}
-    SRCS
-    wgetjson_main.c)
+  nuttx_add_application(NAME wgetjson)
 endif()

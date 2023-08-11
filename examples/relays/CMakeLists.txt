@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_RELAYS)
-  nuttx_add_application(
-    NAME
-    relays
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_RELAYS}
-    SRCS
-    relays_main.c)
+  nuttx_add_application(NAME relays)
 endif()
