@@ -38,7 +38,18 @@ MBEDTLS_UNPACKPROGDIR = $(MBEDTLS_UNPACKNAME)$(DELIM)programs
 # This lets Mbed TLS better use some of the POSIX features we have
 CFLAGS += ${DEFINE_PREFIX}__unix__
 
-library/bignum.c_CFLAGS += -fno-lto
+mbedtls/library/bignum.c_CFLAGS += -fno-lto
+
+# Build break on Assemble compiler if -fno-omit-frame-pointer and -O3 enabled at same time
+# {standard input}: Assembler messages:
+# {standard input}:2560: Error: branch out of range
+# make[2]: *** [apps/Application.mk:170: mbedtls/library/sha256.o] Error 1
+
+ifeq ($(CONFIG_FRAME_POINTER),y)
+  ifeq ($(CONFIG_DEBUG_OPTLEVEL),"-O3")
+    mbedtls/library/sha256.c_CFLAGS += -O2
+  endif
+endif
 
 ifeq ($(CONFIG_ARCH_SIM),y)
   CFLAGS += -O0
@@ -87,6 +98,30 @@ PRIORITY  += $(CONFIG_MBEDTLS_APP_SELFTEST_PRIORITY)
 STACKSIZE += $(CONFIG_MBEDTLS_APP_SELFTEST_STACKSIZE)
 
 MAINSRC += $(MBEDTLS_UNPACKPROGDIR)/test/selftest.c
+endif
+
+endif
+
+# Configuration alternative implementation
+
+ifeq ($(CONFIG_MBEDTLS_ENTROPY_HARDWARE_ALT),y)
+CSRCS += $(APPDIR)/crypto/mbedtls/source/entropy_alt.c
+endif
+
+ifeq ($(CONFIG_MBEDTLS_ALT),y)
+
+CSRCS += $(APPDIR)/crypto/mbedtls/source/dev_alt.c
+
+ifeq ($(CONFIG_MBEDTLS_SHA1_ALT),y)
+CSRCS += $(APPDIR)/crypto/mbedtls/source/sha1_alt.c
+endif
+
+ifeq ($(CONFIG_MBEDTLS_SHA256_ALT),y)
+CSRCS += $(APPDIR)/crypto/mbedtls/source/sha256_alt.c
+endif
+
+ifeq ($(CONFIG_MBEDTLS_SHA512_ALT),y)
+CSRCS += $(APPDIR)/crypto/mbedtls/source/sha512_alt.c
 endif
 
 endif
