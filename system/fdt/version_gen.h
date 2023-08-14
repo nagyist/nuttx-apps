@@ -23,6 +23,6 @@
 
 /* DTC Version should be same as that in nuttx/libs/libc/dtc/ */
 
-#define DTC_VERSION ("DTC "CONFIG_LIBFDT_DTC_VERSION)
+#define DTC_VERSION ("DTC "CONFIG_DTC_VERSION)
 
 #endif /* __SYSTEM_FDT_VERSION_GEN_H */
