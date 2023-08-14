@@ -19,6 +19,7 @@
  *********************/
 
 #define IS_BUILT_IN_CF(cf) ((cf) >= LV_IMG_CF_TRUE_COLOR && (cf) <= LV_IMG_CF_ALPHA_8BIT)
+#define IS_COMPRESSED_CF(cf) ((cf) == VG_LITE_DEC_COLOR_FORMAT || (cf) == VG_LITE_YUV_COLOR_FORMAT)
 
 /**********************
  *      TYPEDEFS
@@ -68,7 +69,7 @@ static lv_res_t decoder_info(lv_img_decoder_t * decoder, const void * src, lv_im
         const lv_img_dsc_t * img_dsc = src;
         lv_img_cf_t cf = img_dsc->header.cf;
 
-        if(!IS_BUILT_IN_CF(cf)) {
+        if(!IS_BUILT_IN_CF(cf) && !IS_COMPRESSED_CF(cf)) {
             return LV_RES_INV;
         }
 
@@ -128,7 +129,7 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
     /* check if it's already decoded, if so, return directly */
     if(dsc->src_type == LV_IMG_SRC_VARIABLE) {
         vg_lite_img_header_t * header = (vg_lite_img_header_t *)img_dsc->data;
-        if(header->magic == VG_LITE_IMAGE_MAGIC_NUM) {
+        if(header->magic == VG_LITE_IMAGE_MAGIC_NUM || IS_COMPRESSED_CF(cf)) {
             /* already decoded, just pass the pointer */
             LV_GPU_LOG_INFO("%" LV_PRIx32 " already decoded %p @ %p", header->magic,
                             header->vg_buf.memory, header);

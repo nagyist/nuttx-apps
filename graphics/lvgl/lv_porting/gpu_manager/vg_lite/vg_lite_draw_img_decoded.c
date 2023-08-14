@@ -9,6 +9,7 @@
 
 #include "../lv_gpu_conv.h"
 #include "vg_lite_internal.h"
+#include "vg_lite_decoder.h"
 
 #ifdef CONFIG_LV_GPU_USE_VG_LITE
 
@@ -138,19 +139,32 @@ void vg_lite_draw_img_decoded(
         header.h = map_h;
         header.cf = color_format;
 
-        if(!vg_lite_create_vg_buf_from_img_data(
-               &src_vg_buf,
-               map_p,
-               &header,
-               NULL,
-               recolor,
-               preprocessed)) {
-            LV_GPU_LOG_ERROR("load failed");
-            goto error_handler;
+        if(color_format == VG_LITE_YUV_COLOR_FORMAT) {
+            if(!vg_lite_custom_buffer_init(
+                    &src_vg_buf,
+                    map_p,
+                    map_w,
+                    map_h,
+                    VG_LITE_NV12)) {
+                LV_GPU_LOG_ERROR("vg buffer init for NV12 failed");
+                goto error_handler;
+            }
         }
+        else {
+            if(!vg_lite_create_vg_buf_from_img_data(
+                    &src_vg_buf,
+                    map_p,
+                    &header,
+                    NULL,
+                    recolor,
+                    preprocessed)) {
+                LV_GPU_LOG_ERROR("load failed");
+                goto error_handler;
+            }
 
-        allocated_src = true;
-        pre_recolor.full = ((vg_lite_img_header_t *)map_p)->recolor;
+            allocated_src = true;
+            pre_recolor.full = ((vg_lite_img_header_t *)map_p)->recolor;
+        }
     }
 
     vg_lite_matrix_t matrix;
