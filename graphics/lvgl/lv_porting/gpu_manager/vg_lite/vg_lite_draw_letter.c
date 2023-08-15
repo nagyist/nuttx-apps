@@ -15,17 +15,18 @@
 
 #define PATH_QUALITY VG_LITE_MEDIUM
 #define PATH_DATA_COORD_FORMAT VG_LITE_S16
-#define FT_F26Dot6_SHIFT 6
+#define PATH_REF_SIZE 128
+#define FT_F26DOT6_SHIFT 6
 
 /** Keep the original 26dot6 data to ensure accuracy, and the reference size of the font is 128,
  * so it can be guaranteed that it will not exceed the upper limit of int16
  */
-#define FT_F26Dot6_TO_PATH_DATA(x) ((path_data_t)(x))
+#define FT_F26DOT6_TO_PATH_DATA(x) ((path_data_t)(x))
 
 /** After converting the font reference size, it is also necessary to scale the 26dot6 data
  * in the path to the real physical size
  */
-#define FT_F26Dot6_TO_PATH_SCALE(x) (LV_FREETYPE_F26Dot6_TO_FLOAT(x) / (1 << FT_F26Dot6_SHIFT))
+#define FT_F26DOT6_TO_PATH_SCALE(x) (LV_FREETYPE_F26DOT6_TO_FLOAT(x) / (1 << FT_F26DOT6_SHIFT))
 
 /*********************
  *      DEFINES
@@ -38,7 +39,6 @@
 typedef int16_t path_data_t;
 
 typedef struct {
-    lv_freetype_outline_t base;
     path_data_t * cur_ptr;
     vg_lite_path_t path;
 } vg_lite_outline_t;
@@ -55,7 +55,7 @@ typedef struct {
 static lv_res_t draw_letter_normal(lv_draw_ctx_t * draw_ctx, const lv_draw_label_dsc_t * dsc,
                                    const lv_point_t * pos_p, lv_font_glyph_dsc_t * g, uint32_t letter);
 
-static void * freetype_outline_event_cb(lv_freetype_event_dsc_t * event_dsc);
+static void freetype_outline_event_cb(lv_event_t * e);
 
 /**********************
  *  STATIC VARIABLES
@@ -71,7 +71,8 @@ static void * freetype_outline_event_cb(lv_freetype_event_dsc_t * event_dsc);
 
 void vg_lite_draw_letter_init(lv_draw_ctx_t * draw_ctx)
 {
-    lv_freetype_outline_add_generator(freetype_outline_event_cb, draw_ctx);
+    lv_freetype_outline_set_ref_size(PATH_REF_SIZE);
+    lv_freetype_outline_add_event(freetype_outline_event_cb, LV_EVENT_ALL, draw_ctx);
 }
 
 void vg_lite_draw_letter(
@@ -247,7 +248,7 @@ static lv_res_t draw_letter_normal(lv_draw_ctx_t * draw_ctx, const lv_draw_label
         return LV_RES_INV;
     }
 
-    outline = (vg_lite_outline_t *)lv_freetype_outline_lookup((lv_font_t *)font_p, letter);
+    outline = (vg_lite_outline_t *)lv_font_get_glyph_bitmap(font_p, letter);
 
     if(!outline) {
         LV_GPU_LOG_WARN("get outline failed");
@@ -255,7 +256,7 @@ static lv_res_t draw_letter_normal(lv_draw_ctx_t * draw_ctx, const lv_draw_label
     }
 
     /* calc convert matrix */
-    float scale = FT_F26Dot6_TO_PATH_SCALE(lv_freetype_outline_get_scale(font_p));
+    float scale = FT_F26DOT6_TO_PATH_SCALE(lv_freetype_outline_get_scale(font_p));
     vg_lite_matrix_t matrix;
     vg_lite_identity(&matrix);
 
@@ -328,12 +329,12 @@ error_handler:
     return LV_RES_OK;
 }
 
-static lv_freetype_outline_t * vg_lite_outline_create(lv_freetype_event_dsc_t * event_dsc)
+static lv_freetype_outline_t vg_lite_outline_create(const lv_freetype_outline_event_param_t * param)
 {
     vg_lite_error_t error;
 
-    int path_data_len = event_dsc->param.outline_create.counter.cmd
-                        + event_dsc->param.outline_create.counter.vector * 2;
+    int path_data_len = param->counter.cmd
+                        + param->counter.vector * 2;
     if(path_data_len <= 0) {
         LV_GPU_LOG_ERROR("path_data_len = %d", path_data_len);
         return NULL;
@@ -368,15 +369,15 @@ static lv_freetype_outline_t * vg_lite_outline_create(lv_freetype_event_dsc_t * 
                             path_data,
                             0, 0, 0, 0));
 
-    return &outline->base;
+    return outline;
 
 error_handler:
     return NULL;
 }
 
-static void vg_lite_outline_delete(lv_freetype_event_dsc_t * event_dsc)
+static void vg_lite_outline_delete(const lv_freetype_outline_event_param_t * param)
 {
-    vg_lite_outline_t * outline = (vg_lite_outline_t *)event_dsc->param.outline_delete.outline;
+    vg_lite_outline_t * outline = param->outline;
     LV_ASSERT_NULL(outline);
     LV_ASSERT_NULL(outline->path.path);
     if(outline) {
@@ -385,9 +386,9 @@ static void vg_lite_outline_delete(lv_freetype_event_dsc_t * event_dsc)
     }
 }
 
-static void vg_lite_outline_push(lv_freetype_event_dsc_t * event_dsc)
+static void vg_lite_outline_push(const lv_freetype_outline_event_param_t * param)
 {
-    vg_lite_outline_t * outline = (vg_lite_outline_t *)event_dsc->param.outline_push.outline;
+    vg_lite_outline_t * outline = param->outline;
     LV_ASSERT_NULL(outline);
     LV_ASSERT_NULL(outline->path.path);
 
@@ -400,36 +401,36 @@ static void vg_lite_outline_push(lv_freetype_event_dsc_t * event_dsc)
         return;
     }
 
-    lv_freetype_outline_type_t type = event_dsc->param.outline_push.type;
+    lv_freetype_outline_type_t type = param->type;
     switch(type) {
         case LV_FREETYPE_OUTLINE_END:
             VLC_SET_OP_CODE(*outline->cur_ptr++, VLC_OP_END);
             break;
         case LV_FREETYPE_OUTLINE_MOVE_TO:
             VLC_SET_OP_CODE(*outline->cur_ptr++, VLC_OP_MOVE);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.x);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.y);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->to.x);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->to.y);
             break;
         case LV_FREETYPE_OUTLINE_LINE_TO:
             VLC_SET_OP_CODE(*outline->cur_ptr++, VLC_OP_LINE);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.x);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.y);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->to.x);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->to.y);
             break;
         case LV_FREETYPE_OUTLINE_CUBIC_TO:
             VLC_SET_OP_CODE(*outline->cur_ptr++, VLC_OP_CUBIC);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.control1.x);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.control1.y);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.control2.x);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.control2.y);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.x);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.y);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->control1.x);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->control1.y);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->control2.x);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->control2.y);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->to.x);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->to.y);
             break;
         case LV_FREETYPE_OUTLINE_CONIC_TO:
             VLC_SET_OP_CODE(*outline->cur_ptr++, VLC_OP_QUAD);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.control1.x);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.control1.y);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.x);
-            *outline->cur_ptr++ = FT_F26Dot6_TO_PATH_DATA(event_dsc->param.outline_push.to.y);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->control1.x);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->control1.y);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->to.x);
+            *outline->cur_ptr++ = FT_F26DOT6_TO_PATH_DATA(param->to.y);
             break;
         default:
             LV_GPU_LOG_WARN("unknown point type: %d", type);
@@ -440,24 +441,24 @@ static void vg_lite_outline_push(lv_freetype_event_dsc_t * event_dsc)
     LV_ASSERT(offset <= path_data_len);
 }
 
-static void * freetype_outline_event_cb(lv_freetype_event_dsc_t * event_dsc)
+static void freetype_outline_event_cb(lv_event_t * e)
 {
-    void * retval = NULL;
-    switch(event_dsc->code) {
-        case LV_FREETYPE_EVENT_OUTLINE_CREATE:
-            retval = vg_lite_outline_create(event_dsc);
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_freetype_outline_event_param_t * param = lv_event_get_param(e);
+    switch(code) {
+        case LV_EVENT_CREATE:
+            param->outline = vg_lite_outline_create(param);
             break;
-        case LV_FREETYPE_EVENT_OUTLINE_DELETE:
-            vg_lite_outline_delete(event_dsc);
+        case LV_EVENT_DELETE:
+            vg_lite_outline_delete(param);
             break;
-        case LV_FREETYPE_EVENT_OUTLINE_PUSH:
-            vg_lite_outline_push(event_dsc);
+        case LV_EVENT_INSERT:
+            vg_lite_outline_push(param);
             break;
         default:
-            LV_GPU_LOG_WARN("unknown event code: %d", event_dsc->code);
+            LV_GPU_LOG_WARN("unknown event code: %d", code);
             break;
     }
-    return retval;
 }
 
 #endif /* CONFIG_LV_GPU_DRAW_LETTER */

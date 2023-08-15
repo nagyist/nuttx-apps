@@ -28,7 +28,7 @@ config LV_GPU_VG_LITE_IMG_DECODED
 config LV_GPU_VG_LITE_LETTER
 	bool "VGLite draw letter"
 	depends on LV_USE_FREETYPE
-	depends on LV_FREETYPE_OUTLINE_CACHE_SIZE > 0
+	depends on LV_FREETYPE_OUTLINE_CACHE
 	default y
 
 config LV_GPU_VG_LITE_LINE
