@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_TOUCHSCREEN)
-  nuttx_add_application(
-    NAME
-    tc
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_TOUCHSCREEN}
-    SRCS
-    tc_main.c)
+  nuttx_add_application(NAME touchscreen)
 endif()

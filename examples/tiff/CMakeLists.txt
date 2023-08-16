@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_TIFF)
-  nuttx_add_application(
-    NAME
-    tiff
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_TIFF}
-    SRCS
-    tiff_main.c)
+  nuttx_add_application(NAME tiff)
 endif()
