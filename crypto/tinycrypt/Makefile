@@ -37,6 +37,7 @@ $(TINYCRYPT_UNPACKNAME): $(TINYCRYPT_ZIP)
 	$(Q) $(UNPACK) $(TINYCRYPT_ZIP)
 	$(Q) mv	tinycrypt-$(TINYCRYPT_VERSION) $(TINYCRYPT_UNPACKNAME)
 	$(Q) touch $(TINYCRYPT_UNPACKNAME)
+	$(Q) patch -p0 -d $(TINYCRYPT_UNPACKNAME) < 0001-TinyCrypt-test-resolve-compile-error.patch
 
 ifeq ($(wildcard $(TINYCRYPT_UNPACKNAME)/.git),)
 context:: $(TINYCRYPT_UNPACKNAME)
@@ -46,11 +47,8 @@ distclean::
 endif
 
 CSRCS += tinycrypt/lib/source/utils.c
-
-ifeq ($(CONFIG_TINYCRYPT_ECC),y)
 CSRCS += tinycrypt/lib/source/ecc.c
 CSRCS += tinycrypt/lib/source/ecc_platform_specific.c
-endif
 
 ifeq ($(CONFIG_TINYCRYPT_ECC_DH),y)
 	CSRCS += tinycrypt/lib/source/ecc_dh.c
