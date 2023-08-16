@@ -123,8 +123,8 @@ config LV_GPU_DRAW_IMG
 config LV_GPU_DRAW_LETTER
 	bool "Use GPU accelerated draw_letter"
 	depends on LV_USE_FREETYPE
-	depends on LV_FREETYPE_OUTLINE_CACHE_SIZE > 0
-	default n
+	depends on LV_FREETYPE_OUTLINE_CACHE
+	default y
 
 config GPU_IMG_CACHE_PATH
 	string "GPU image cache path"
