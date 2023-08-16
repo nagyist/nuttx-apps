@@ -39,6 +39,7 @@ static void decoder_close(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc
 
 static lv_res_t decode_rgb(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc);
 static lv_res_t decode_indexed(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc);
+static lv_res_t decode_gpu(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc);
 
 /**********************
  *      MACROS
@@ -117,65 +118,20 @@ static lv_res_t decoder_info(lv_img_decoder_t * decoder, const void * src, lv_im
         return LV_RES_OK;
     }
 
-    LV_GPU_LOG_WARN("Image get info found unknown src type");
+    LV_GPU_LOG_WARN("Image get info found unknown src_type: %d", src_type);
     return LV_RES_INV;
 }
 
 static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc)
 {
     lv_img_cf_t cf = dsc->header.cf;
-    const lv_img_dsc_t * img_dsc = dsc->src;
+    lv_res_t res;
 
-    /* check if it's already decoded, if so, return directly */
-    if(dsc->src_type == LV_IMG_SRC_VARIABLE) {
-        vg_lite_img_header_t * header = (vg_lite_img_header_t *)img_dsc->data;
-        if(header->magic == VG_LITE_IMAGE_MAGIC_NUM || IS_COMPRESSED_CF(cf)) {
-            /* already decoded, just pass the pointer */
-            LV_GPU_LOG_INFO("%" LV_PRIx32 " already decoded %p @ %p", header->magic,
-                            header->vg_buf.memory, header);
-            dsc->img_data = img_dsc->data;
-            dsc->user_data = NULL;
-            return LV_RES_OK;
-        }
-    }
-    else if(dsc->src_type == LV_IMG_SRC_FILE) {
-        /* let's process "gpu" file firstly. */
-        if(strcmp(lv_fs_get_ext(dsc->src), "gpu") == 0) {
-            /* No need to decode gpu file, simply load it to ram */
-            lv_fs_file_t f;
-            lv_fs_res_t res = lv_fs_open(&f, dsc->src, LV_FS_MODE_RD);
-            if(res != LV_FS_RES_OK) {
-                LV_GPU_LOG_WARN("gpu_decoder can't open the file");
-                return LV_RES_INV;
-            }
-
-            /* alloc new buffer that meets GPU requirements(width, alignment) */
-            lv_img_dsc_t * gpu_dsc = vg_lite_img_dsc_create(dsc->header.w, dsc->header.h, dsc->header.cf);
-            if(gpu_dsc == NULL) {
-                LV_GPU_LOG_ERROR("out of memory");
-                lv_fs_close(&f);
-                return LV_RES_INV;
-            }
-            uint8_t * gpu_data = (uint8_t *)gpu_dsc->data;
-
-            lv_fs_seek(&f, 4, LV_FS_SEEK_SET); /* skip file header. */
-            res = lv_fs_read(&f, gpu_data, gpu_dsc->data_size, NULL);
-            lv_fs_close(&f);
-            if(res != LV_FS_RES_OK) {
-                vg_lite_img_dsc_del(gpu_dsc);
-                LV_GPU_LOG_ERROR("file read failed");
-                return LV_RES_INV;
-            }
-            dsc->img_data = gpu_data;
-            dsc->user_data = (void *)VG_LITE_IMAGE_MAGIC_NUM;
-
-            vg_lite_img_dsc_update_header(gpu_dsc);
-
-            /* gpu_dsc has no effect after getting img_data */
-            lv_mem_free(gpu_dsc);
-
-            return LV_RES_OK;
-        }
+    /* Try GPU private format */
+    res = decode_gpu(decoder, dsc);
+    if(res == LV_RES_OK) {
+        lv_disp_flush_dcache(NULL);
+        return res;
     }
 
     /*GPU hasn't processed, decode now. */
@@ -183,23 +139,25 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
     /*Process true color formats*/
     if(cf == LV_IMG_CF_TRUE_COLOR || cf == LV_IMG_CF_TRUE_COLOR_ALPHA
        || cf == LV_IMG_CF_TRUE_COLOR_CHROMA_KEYED) {
-        lv_res_t ret = decode_rgb(decoder, dsc);
-        LV_GPU_LOG_TRACE("decode_rgb: img_data = %p, size %d x %d, cf = %d, ret = %d",
-                         dsc->img_data, (int)dsc->header.w, (int)dsc->header.h, (int)dsc->header.cf, ret);
-        return ret;
+        res = decode_rgb(decoder, dsc);
+        LV_GPU_LOG_TRACE("decode_rgb: img_data = %p, size %d x %d, cf = %d, res = %d",
+                         dsc->img_data, (int)dsc->header.w, (int)dsc->header.h, (int)dsc->header.cf, res);
+    }
+    else if((cf >= LV_IMG_CF_INDEXED_1BIT && cf <= LV_IMG_CF_INDEXED_8BIT)
+            || cf == LV_IMG_CF_ALPHA_8BIT || cf == LV_IMG_CF_ALPHA_4BIT) {
+        res = decode_indexed(decoder, dsc);
+        LV_GPU_LOG_TRACE("decode_indexed: img_data = %p, size %d x %d, cf = %d, res = %d",
+                         dsc->img_data, (int)dsc->header.w, (int)dsc->header.h, (int)dsc->header.cf, res);
     }
 
-    if((cf >= LV_IMG_CF_INDEXED_1BIT && cf <= LV_IMG_CF_INDEXED_8BIT)
-       || cf == LV_IMG_CF_ALPHA_8BIT || cf == LV_IMG_CF_ALPHA_4BIT) {
-        lv_res_t ret = decode_indexed(decoder, dsc);
-        LV_GPU_LOG_TRACE("decode_indexed: img_data = %p, size %d x %d, cf = %d, ret = %d",
-                         dsc->img_data, (int)dsc->header.w, (int)dsc->header.h, (int)dsc->header.cf, ret);
-        return ret;
+    if(res == LV_RES_OK) {
+        lv_disp_flush_dcache(NULL);
+    }
+    else {
+        LV_GPU_LOG_WARN("decode failed, res = %d, format = %d", res, cf);
     }
 
-    /*Unknown format. Can't decode it.*/
-    LV_GPU_LOG_WARN("unsupported color format %d", cf);
-    return LV_RES_INV;
+    return res;
 }
 
 static void decoder_close(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc)
@@ -270,7 +228,7 @@ static lv_res_t decode_rgb(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * ds
                          && VG_LITE_IS_ALIGNED(dsc->header.w, VG_LITE_IMG_SRC_PX_ALIGN);
     /*Open the file if it's a file*/
     if(dsc->src_type == LV_IMG_SRC_FILE) {
-        LV_GPU_LOG_WARN("opening %s", (const char *)dsc->src);
+        LV_GPU_LOG_INFO("opening %s", (const char *)dsc->src);
         const char * ext = lv_fs_get_ext(dsc->src);
         /*Support only "*.bin" files*/
         if(strcmp(ext, "bin") != 0) {
@@ -538,6 +496,63 @@ static lv_res_t decode_indexed(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t 
         }
     }
     return LV_RES_OK;
+}
+
+static lv_res_t decode_gpu(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * dsc)
+{
+    /* check if it's already decoded, if so, return directly */
+    if(dsc->src_type == LV_IMG_SRC_VARIABLE) {
+        const lv_img_dsc_t * img_dsc = dsc->src;
+        vg_lite_img_header_t * header = (vg_lite_img_header_t *)img_dsc->data;
+        if(header->magic == VG_LITE_IMAGE_MAGIC_NUM || IS_COMPRESSED_CF(dsc->header.cf)) {
+            /* already decoded, just pass the pointer */
+            LV_GPU_LOG_INFO("%" LV_PRIx32 " already decoded %p @ %p", header->magic,
+                            header->vg_buf.memory, header);
+            dsc->img_data = img_dsc->data;
+            dsc->user_data = NULL;
+            return LV_RES_OK;
+        }
+    }
+    else if(dsc->src_type == LV_IMG_SRC_FILE) {
+        /* let's process "gpu" file firstly. */
+        if(strcmp(lv_fs_get_ext(dsc->src), "gpu") == 0) {
+            /* No need to decode gpu file, simply load it to ram */
+            lv_fs_file_t f;
+            lv_fs_res_t res = lv_fs_open(&f, dsc->src, LV_FS_MODE_RD);
+            if(res != LV_FS_RES_OK) {
+                LV_GPU_LOG_WARN("gpu_decoder can't open the file");
+                return LV_RES_INV;
+            }
+
+            /* alloc new buffer that meets GPU requirements(width, alignment) */
+            lv_img_dsc_t * gpu_dsc = vg_lite_img_dsc_create(dsc->header.w, dsc->header.h, dsc->header.cf);
+            if(gpu_dsc == NULL) {
+                LV_GPU_LOG_ERROR("out of memory");
+                lv_fs_close(&f);
+                return LV_RES_INV;
+            }
+            uint8_t * gpu_data = (uint8_t *)gpu_dsc->data;
+
+            lv_fs_seek(&f, 4, LV_FS_SEEK_SET); /* skip file header. */
+            res = lv_fs_read(&f, gpu_data, gpu_dsc->data_size, NULL);
+            lv_fs_close(&f);
+            if(res != LV_FS_RES_OK) {
+                vg_lite_img_dsc_del(gpu_dsc);
+                LV_GPU_LOG_ERROR("file read failed");
+                return LV_RES_INV;
+            }
+            dsc->img_data = gpu_data;
+            dsc->user_data = (void *)VG_LITE_IMAGE_MAGIC_NUM;
+
+            vg_lite_img_dsc_update_header(gpu_dsc);
+
+            /* gpu_dsc has no effect after getting img_data */
+            lv_mem_free(gpu_dsc);
+            return LV_RES_OK;
+        }
+    }
+
+    return LV_RES_INV;
 }
 
 #endif

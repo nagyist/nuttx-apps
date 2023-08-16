@@ -152,6 +152,8 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
             dsc->header.h,
             VG_LITE_RGBA8888_ETC2_EAC);
 
+        lv_disp_flush_dcache(NULL);
+
         return LV_RES_OK;
     }
 
