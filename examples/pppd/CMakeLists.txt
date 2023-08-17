@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_PPPD)
-  nuttx_add_application(
-    NAME
-    pppd
-    STACKSIZE
-    ${CONFIG_EXAMPLES_PPPD_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_PPPD}
-    SRCS
-    pppd_main.c)
+  nuttx_add_application(NAME pppd)
 endif()

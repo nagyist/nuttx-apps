@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_ADC)
-  nuttx_add_application(
-    NAME
-    adc
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_ADC}
-    SRCS
-    adc_main.c)
+  nuttx_add_application(NAME adc)
 endif()

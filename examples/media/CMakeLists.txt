@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_MEDIA)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_MEDIA_PROGNAME}
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_MEDIA}
-    SRCS
-    media_main.c)
+  nuttx_add_application(NAME media)
 endif()

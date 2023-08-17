@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_CONFIGDATA)
-  nuttx_add_application(
-    NAME
-    configdata
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_CONFIGDATA}
-    SRCS
-    configdata_main.c)
+  nuttx_add_application(NAME configdata)
 endif()
