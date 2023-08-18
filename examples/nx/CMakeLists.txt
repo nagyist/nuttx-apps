@@ -19,14 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_NX)
-  nuttx_add_application(
-    NAME
-    nx
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_NX}
-    SRCS
-    nx_main.c)
-  target_sources(apps PRIVATE nx_events.c nx_kbdin.c)
+  nuttx_add_application(NAME nx)
 endif()

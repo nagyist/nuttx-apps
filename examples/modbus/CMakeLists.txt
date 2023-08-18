@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_MODBUS)
-  nuttx_add_application(
-    NAME
-    modbus
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_MODBUS}
-    SRCS
-    modbus_main.c)
+  nuttx_add_application(NAME modbus)
 endif()

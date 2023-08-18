@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_LSM330SPI_TEST)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_LSM330SPI_TEST_PROGNAME}
-    PRIORITY
-    ${CONFIG_EXAMPLES_LSM330SPI_TEST_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_LSM330SPI_TEST_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_LSM330SPI_TEST}
-    SRCS
-    lsm330spi_test_main.c)
+  nuttx_add_application(NAME lsm330spi_test)
 endif()
