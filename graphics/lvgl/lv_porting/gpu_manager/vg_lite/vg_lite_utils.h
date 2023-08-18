@@ -159,7 +159,7 @@ void vg_lite_buffer_init(vg_lite_buffer_t * buffer);
 
 bool vg_lite_custom_buffer_init(
     vg_lite_buffer_t * buffer,
-    void * ptr,
+    const void * ptr,
     int32_t width,
     int32_t height,
     vg_lite_buffer_format_t format);

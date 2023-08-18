@@ -467,7 +467,7 @@ void vg_lite_buffer_init(vg_lite_buffer_t * buffer)
 
 bool vg_lite_custom_buffer_init(
     vg_lite_buffer_t * buffer,
-    void * ptr,
+    const void * ptr,
     int32_t width,
     int32_t height,
     vg_lite_buffer_format_t format)
@@ -499,7 +499,7 @@ bool vg_lite_custom_buffer_init(
     buffer->height = height;
     vg_lite_get_buffer_format_bytes(buffer->format, &mul, &div, &align);
     buffer->stride = VG_LITE_ALIGN((buffer->width * mul / div), align);
-    buffer->memory = ptr;
+    buffer->memory = (void*)ptr;
     buffer->address = (uint32_t)(uintptr_t)ptr;
 
     if(format == VG_LITE_NV12) {
@@ -507,7 +507,7 @@ bool vg_lite_custom_buffer_init(
         buffer->yuv.uv_stride = buffer->stride;
         buffer->yuv.alpha_stride = buffer->stride;
         buffer->yuv.uv_height = buffer->height / 2;
-        buffer->yuv.uv_memory = ptr + (buffer->stride * buffer->height);
+        buffer->yuv.uv_memory = (void*)ptr + (buffer->stride * buffer->height);
         buffer->yuv.uv_planar = (uint32_t)(uintptr_t)buffer->yuv.uv_memory;
     }
 
