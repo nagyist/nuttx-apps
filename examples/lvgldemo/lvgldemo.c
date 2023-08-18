@@ -122,6 +122,10 @@ static const struct func_key_pair_s func_key_pair[] =
   { "music",          lv_demo_music          },
 #endif
 
+#ifdef CONFIG_LV_USE_DEMO_BANDX
+  { "bandx",          lv_demo_bandx          },
+#endif
+
 #ifdef CONFIG_ANIM_ENGINE_API_DEMO
   { "animengine",     anim_api_demo          },
 #endif
