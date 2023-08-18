@@ -19,6 +19,8 @@
  *      DEFINES
  *********************/
 #define JPEG_DEC_PIXEL_SIZE 3 /* RGB888 */
+#define JPEG_SIGNATURE 0xFFD8FF
+#define IS_JPEG_SIGNATURE(x) (((x) & 0x00FFFFFF) == JPEG_SIGNATURE)
 
 /**********************
  *      TYPEDEFS
@@ -85,18 +87,28 @@ static lv_res_t decoder_info(lv_img_decoder_t * decoder, const void * src, lv_im
 
         lv_fs_file_t f;
         lv_fs_res_t res = lv_fs_open(&f, fn, LV_FS_MODE_RD);
-        if(res != LV_FS_RES_OK) return LV_RES_INV;
+        if(res != LV_FS_RES_OK) {
+            LV_LOG_WARN("Can't open file: %s", fn);
+            return LV_RES_INV;
+        }
 
-        uint32_t jpg_signature;
+        uint32_t jpg_signature = 0;
         uint32_t rn;
         lv_fs_read(&f, &jpg_signature, sizeof(jpg_signature), &rn);
         lv_fs_close(&f);
 
-        if(rn != sizeof(jpg_signature)) return LV_RES_INV;
+        if(rn != sizeof(jpg_signature)) {
+            LV_LOG_WARN("file: %s signature len = %" LV_PRIu32 " error", fn, rn);
+            return LV_RES_INV;
+        }
 
-        const uint32_t jpg_signature_JFIF = 0xE0FFD8FF;
-        const uint32_t jpg_signature_EXIF = 0xE1FFD8FF;
-        if(!(jpg_signature == jpg_signature_JFIF || jpg_signature == jpg_signature_EXIF)) {
+        bool is_jpeg_ext = (strcmp(lv_fs_get_ext(fn), "jpg") == 0)
+                        || (strcmp(lv_fs_get_ext(fn), "jpeg") == 0);
+
+        if(!IS_JPEG_SIGNATURE(jpg_signature)) {
+            if(is_jpeg_ext) {
+                LV_LOG_WARN("file: %s signature = 0X%" LV_PRIX32 " error", fn, jpg_signature);
+            }
             return LV_RES_INV;
         }
 
@@ -136,6 +148,7 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
         lv_color_t * img_data = open_jpeg_file(fn, dsc);
 
         if(img_data == NULL) {
+            LV_LOG_WARN("JPEG open: %s failed", fn);
             return LV_RES_INV;
         }
 
@@ -257,6 +270,7 @@ static lv_color_t * open_jpeg_file(const char * filename, lv_img_decoder_dsc_t *
     uint32_t data_size;
     uint8_t *data = alloc_file(filename, &data_size);
     if(data == NULL) {
+        LV_LOG_WARN("can't load file %s", filename);
         return NULL;
     }
 
