@@ -22,7 +22,7 @@
  * Included Files
  ****************************************************************************/
 
-#include "vg_lite_test_case.h"
+#include "vg_lite_test_utils.h"
 
 /****************************************************************************
  * Pre-processor Definitions

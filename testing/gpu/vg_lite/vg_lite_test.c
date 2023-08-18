@@ -22,7 +22,6 @@
  * Included Files
  ****************************************************************************/
 
-#include "vg_lite_test_case.h"
 #include "vg_lite_test_utils.h"
 
 #include <stdlib.h>
@@ -31,8 +30,8 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define ITEM_DEF(name) {#name, vg_lite_test_##name}
 #define GC(X) gc##X
+#define gcFEATURE_BIT_VG_NONE -1
 
 /****************************************************************************
  * Private Types
@@ -43,8 +42,9 @@ typedef CODE vg_lite_error_t (*vg_lite_test_func_t)(
 
 struct vg_lite_test_item_s
   {
-    FAR const char      *name;
+    FAR const char *name;
     vg_lite_test_func_t func;
+    int feature;
   };
 
 enum test_case_e
@@ -63,23 +63,22 @@ enum test_case_e
  * Private Data
  ****************************************************************************/
 
+/* Import testcase entry function */
+
+#define ITEM_DEF(NAME, FEATURE) \
+  vg_lite_error_t vg_lite_test_##NAME(FAR struct gpu_test_context_s *ctx);
+#include "vg_lite_test_case.inc"
+#undef ITEM_DEF
+
+/* Generate testcase group */
+
+#define ITEM_DEF(NAME, FEATURE) \
+  {#NAME, vg_lite_test_##NAME, gcFEATURE_BIT_VG_##FEATURE},
 static const struct vg_lite_test_item_s g_vg_lite_test_group[] =
-  {
-    ITEM_DEF(fill),
-    ITEM_DEF(blit),
-    ITEM_DEF(path_rect),
-    ITEM_DEF(path_round_rect),
-    ITEM_DEF(path_glyph),
-    ITEM_DEF(path_glyph_random),
-    ITEM_DEF(path_tiger),
-    ITEM_DEF(global_alpha),
-    ITEM_DEF(image_indexed8),
-    ITEM_DEF(image_bgra8888),
-    ITEM_DEF(image_bgra5658),
-    ITEM_DEF(image_indexed8_tiled),
-    ITEM_DEF(image_bgra8888_tiled),
-    ITEM_DEF(image_bgra5658_tiled),
-  };
+{
+#include "vg_lite_test_case.inc"
+};
+#undef ITEM_DEF
 
 /****************************************************************************
  * Private Functions
@@ -95,6 +94,16 @@ static bool vg_lite_test_run_item(FAR struct gpu_test_context_s *ctx,
 {
   vg_lite_error_t error;
   bool            is_passed = false;
+
+  if (item->feature != gcFEATURE_BIT_VG_NONE &&
+     !vg_lite_query_feature(item->feature))
+    {
+      GPU_LOG_INFO("Testcase [%s] -> SKIP: Require feature: %d (%s)",
+                   item->name,
+                   item->feature,
+                   vg_lite_get_feature_string(item->feature));
+      return true;
+    }
 
   GPU_PERF_RESET();
   VG_LITE_CHECK_ERROR(vg_lite_clear(VG_LITE_DEST_BUF, NULL, 0));
@@ -296,8 +305,12 @@ int vg_lite_test(FAR struct gpu_test_context_s *ctx)
 
   vg_lite_dump_buffer_info(__func__, buffer);
 
-  vg_lite_enable_scissor();
-  vg_lite_set_scissor(0, 0, buffer->width, buffer->height);
+  if (vg_lite_query_feature(gcFEATURE_BIT_VG_SCISSOR))
+    {
+      vg_lite_enable_scissor();
+      vg_lite_set_scissor(0, 0, buffer->width, buffer->height);
+      GPU_LOG_INFO("Scissor enabled");
+    }
 
   switch (ctx->param.test_case)
     {
