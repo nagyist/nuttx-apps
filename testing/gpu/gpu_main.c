@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <poll.h>
 
 #include <nuttx/video/fb.h>
 #include "gpu_test.h"
@@ -301,6 +302,31 @@ static void gpu_fb_deinit(FAR struct fb_state_s *state)
  ****************************************************************************/
 
 /****************************************************************************
+ * Name: gpu_fb_poll
+ ****************************************************************************/
+
+bool gpu_fb_poll(FAR struct gpu_test_context_s *ctx)
+{
+  FAR struct fb_state_s *state = ctx->state;
+  int ret;
+
+  struct pollfd fds[1];
+  fds[0].fd = state->fd;
+  fds[0].events = POLLOUT;
+  fds[0].revents = 0;
+
+  ret = poll(fds, 1, -1);
+
+  if (ret < 0)
+    {
+      fprintf(stderr, "ERROR: poll() failed: %d\n", errno);
+      return false;
+    }
+
+  return true;
+}
+
+/****************************************************************************
  * Name: gpu_fb_update
  ****************************************************************************/
 
@@ -312,6 +338,8 @@ void gpu_fb_update(FAR struct gpu_test_context_s *ctx)
 #ifdef CONFIG_FB_UPDATE
   struct fb_area_s area;
 #endif
+
+  gpu_fb_poll(ctx);
 
   ret = ioctl(state->fd, FBIOPAN_DISPLAY,
               (unsigned long)((uintptr_t)&(state->pinfo)));
