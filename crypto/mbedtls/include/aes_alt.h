@@ -30,16 +30,12 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define ECB_BLOCK_SIZE    16
 #define MAX_KEY_SIZE      36
-#define MAX_IV_SIZE       16
-#define NONCE_LENGTH      4
 
 typedef struct mbedtls_aes_context
 {
   cryptodev_context_t dev;
   unsigned char key[MAX_KEY_SIZE];
-  unsigned char iv[MAX_IV_SIZE];
 }
 mbedtls_aes_context;
 
