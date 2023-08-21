@@ -114,7 +114,7 @@ static FAR const char * const g_resetflag[] =
 {
   "reboot",
   "assert",
-  "panic",
+  "painc",
   "bootloader",
   "recovery",
   "factory",
@@ -471,6 +471,8 @@ int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #if defined(CONFIG_BOARDCTL_RESET_CAUSE) && !defined(CONFIG_NSH_DISABLE_RESET_CAUSE)
 int cmd_reset_cause(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
+  UNUSED(argc);
+
   int ret;
   struct boardioc_reset_cause_s cause;
 
@@ -536,6 +538,7 @@ static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl,
       if (argv[3] == 0 || argv[4] == 0 ||
           argv[5] == 0 || argv[6] == 0)
         {
+          nsh_error(vtbl, g_fmtargrequired, argv[0]);
           return ERROR;
         }
 
@@ -708,13 +711,8 @@ int cmd_uname(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   /* Process each option */
 
   first = true;
-#ifndef _MSC_VER
-  lib_memoutstream(&stream, (FAR char *)alloca(sizeof(struct utsname)),
+  lib_memoutstream(&stream, alloca(sizeof(struct utsname)),
                    sizeof(struct utsname));
-#else
-  lib_memoutstream(&stream, (FAR char *)_alloca(sizeof(struct utsname)),
-                   sizeof(struct utsname));
-#endif
   for (i = 0; set != 0; i++)
     {
       unsigned int mask = (1 << i);

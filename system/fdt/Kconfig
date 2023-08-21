@@ -9,7 +9,7 @@ config SYSTEM_FDT
 	---help---
 		Enable support for fdt utility tools.
 
-if LIBC_FDT
+if LIBFDT
 
 config SYSTEM_FDTDUMP
 	bool "system fdtdump command"
@@ -103,4 +103,4 @@ config SYSTEM_FDTOVERLAY_PRIORITY
 
 endif # SYSTEM_FDTOVERLAY
 
-endif # LIBC_FDT
+endif # LIBFDT
