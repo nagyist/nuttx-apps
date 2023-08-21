@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_MAX31855)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_MAX31855_PROGNAME}
-    PRIORITY
-    ${CONFIG_EXAMPLES_MAX31855_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_MAX31855_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_MAX31855}
-    SRCS
-    max31855_main.c)
+  nuttx_add_application(NAME max31855)
 endif()

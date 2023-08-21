@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_CALIB_UDELAY)
-  nuttx_add_application(
-    NAME
-    calib_udelay
-    PRIORITY
-    100
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_CALIB_UDELAY}
-    SRCS
-    calib_udelay_main.c)
+  nuttx_add_application(NAME calib_udelay)
 endif()

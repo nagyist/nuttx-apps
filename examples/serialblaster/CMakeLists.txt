@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_SERIALBLASTER)
-  nuttx_add_application(
-    NAME
-    serialblaster
-    PRIORITY
-    ${CONFIG_EXAMPLES_SERIALBLASTER_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_SERIALBLASTER_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_SERIALBLASTER}
-    SRCS
-    serialblaster_main.c)
+  nuttx_add_application(NAME serialblaster)
 endif()

@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_CPUHOG)
-  nuttx_add_application(
-    NAME
-    cpuhog
-    PRIORITY
-    ${CONFIG_EXAMPLES_CPUHOG_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_CPUHOG_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_CPUHOG}
-    SRCS
-    cpuhog_main.c)
+  nuttx_add_application(NAME cpuhog)
 endif()
