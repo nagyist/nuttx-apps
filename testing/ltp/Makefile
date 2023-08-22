@@ -1,22 +1,17 @@
-############################################################################
-# apps/testing/ltp/Makefile
+
+# apps/testing/ltp/ltp/Makefile
 #
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.  The
-# ASF licenses this file to you under the Apache License, Version 2.0 (the
-# "License"); you may not use this file except in compliance with the
-# License.  You may obtain a copy of the License at
-#
-#   http://www.apache.org/licenses/LICENSE-2.0
-#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
-# License for the specific language governing permissions and limitations
-# under the License.
-#
-############################################################################
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 include $(APPDIR)/Make.defs
 
@@ -104,26 +99,18 @@ BLACKWORDS  += "SA_ONSTACK"
 BLACKWORDS  += "MINSIGSTKSZ"
 BLACKWORDS  += "FPE_FLTINV"
 
-BLACKSRCS += testfrmw.c
-BLACKSRCS += 7-3-buildonly.c
-BLACKSRCS += 7-4-buildonly.c
-BLACKSRCS += 7-5-buildonly.c
-BLACKSRCS += 11-1-buildonly.c
-BLACKSRCS += 17-1-buildonly.c
 BLACKSRCS += 19-1-buildonly.c
 BLACKSRCS += 21-1-buildonly.c
-BLACKSRCS += 22-31-buildonly.c
-BLACKSRCS += 22-32-buildonly.c
-BLACKSRCS += 25-1-buildonly.c
 BLACKSRCS += 27-1-buildonly.c
+ifeq ($(CONFIG_LIBC_LOCALTIME),)
 BLACKSRCS += 34-1-buildonly.c
+BLACKSRCS += 35-3-buildonly.c
+endif
 BLACKSRCS += 35-1-buildonly.c
 BLACKSRCS += 35-2-buildonly.c
-BLACKSRCS += 27-2.c
 ifeq ($(CONFIG_PTHREAD_SPINLOCKS),)
 BLACKSRCS += 3-12-buildonly.c
 endif
-BLACKSRCS += 35-3-buildonly.c
 ifeq ($(CONFIG_SCHED_CHILD_STATUS),)
 BLACKSRCS += $(TESTDIR)/conformance/interfaces/pthread_exit/6-1.c
 BLACKSRCS += $(TESTDIR)/conformance/behavior/WIFEXITED/1-1.c
@@ -196,6 +183,12 @@ BLACKWORDS += setegid
 BLACKWORDS += geteuid
 BLACKWORDS += getegid
 endif
+ifeq ($(CONFIG_TLS_NELEM),0)
+BLACKWORDS += pthread_key_create
+BLACKWORDS += pthread_key_delete
+BLACKWORDS += pthread_setspecific
+BLACKWORDS += pthread_getspecific
+endif
 ifeq ($(CONFIG_PTHREAD_CLEANUP_STACKSIZE),0)
 BLACKWORDS += pthread_cleanup_push
 BLACKWORDS += pthread_cleanup_pop
@@ -249,6 +242,12 @@ $(foreach BATCH, $(MAINCSRC_SPILT_TOTAL), \
 endif
 
 MAINSRC       = $(LTP_MAINCSRCS)
+ifneq ($(CONFIG_NET_CAN),)
+PROGNAME     += can_rcv_own_msgs
+PROGNAME     += can_filter
+MAINSRC      += $(TESTDIR)/../network/can/filter-tests/can_filter.c
+MAINSRC      += $(TESTDIR)/../network/can/filter-tests/can_rcv_own_msgs.c
+endif
 PRIORITY      = SCHED_PRIORITY_DEFAULT
 STACKSIZE     = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE        = $(CONFIG_TESTING_LTP)
@@ -256,6 +255,7 @@ MODULE        = $(CONFIG_TESTING_LTP)
 CSRCS        := $(LTP_CSRCS)
 CFLAGS       += -I$(CURDIR)
 CFLAGS       += -I$(TESTDIR)/include
+CFLAGS       += -I$(TESTDIR)/../../include
 endif
 
 # Relax warning checks to avoid expected compile errors:

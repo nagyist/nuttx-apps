@@ -20,11 +20,11 @@
 
 include $(APPDIR)/Make.defs
 
-# Can example.
+# NuttX NX Graphics Example.
 
 MAINSRC = can_main.c
 
-# Can built-in application info
+# Touchscreen built-in application info
 
 PROGNAME = can
 PRIORITY = SCHED_PRIORITY_DEFAULT

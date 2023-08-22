@@ -83,7 +83,6 @@ FAR const char *g_wapi_essid_flags[] =
 {
   "WAPI_ESSID_OFF",
   "WAPI_ESSID_ON",
-  "WAPI_ESSID_DELAY_ON",
   NULL
 };
 
@@ -129,17 +128,6 @@ FAR const char *g_wapi_alg_flags[] =
   "WPA_ALG_WEP",
   "WPA_ALG_TKIP",
   "WPA_ALG_CCMP",
-  NULL
-};
-
-/* Passphrase WPA Version */
-
-FAR const char *g_wapi_wpa_ver_flags[] =
-{
-  "WPA_VER_NONE",
-  "WPA_VER_1",
-  "WPA_VER_2",
-  "WPA_VER_3",
   NULL
 };
 

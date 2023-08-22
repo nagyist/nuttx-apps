@@ -26,7 +26,6 @@
 #include <nuttx/note/noteram_driver.h>
 
 #include <fcntl.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
