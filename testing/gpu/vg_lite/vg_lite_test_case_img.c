@@ -399,3 +399,77 @@ error_handler:
   vg_lite_delete_image(image);
   return error;
 }
+
+/****************************************************************************
+ * Name: vg_lite_test_image_draw_pattern
+ ****************************************************************************/
+vg_lite_error_t vg_lite_test_image_draw_pattern(
+  FAR struct gpu_test_context_s *ctx)
+{
+  vg_lite_error_t error = VG_LITE_SUCCESS;
+  vg_lite_buffer_t *image = VG_LITE_SRC_BUF;
+  VG_LITE_CHECK_ERROR(vg_lite_create_image(
+    image, ctx->xres, 40, VG_LITE_INDEX_8));
+  /* Prepare image */
+  for (int y = 0; y < image->height; y++)
+    {
+      uint8_t alpha = y * 0xff / image->height;
+      gpu_color32_t *dst = image->memory + y * image->stride;
+      for (int x = 0; x < image->width; x++)
+        {
+          dst->ch.alpha = alpha;
+          dst->ch.red = 0xff;
+          dst->ch.red = dst->ch.red * alpha / 0xff;
+          dst->ch.green = dst->ch.green * alpha / 0xff;
+          dst->ch.blue = dst->ch.blue * alpha / 0xff;
+          dst++;
+        }
+    }
+  /* Prepare clip path */
+  int32_t path_data[VG_LITE_RECT_PATH_LEN_MAX];
+  struct vg_lite_area_s area =
+    {
+      0, 0, ctx->xres - 1, ctx->yres - 1
+    };
+  vg_lite_path_t path;
+  int path_len = vg_lite_fill_round_rect_path(path_data, &area, 0);
+  vg_lite_init_path(
+    &path,
+    VG_LITE_S32,
+    VG_LITE_HIGH,
+    path_len * sizeof(int32_t),
+    path_data,
+    0, 0,
+    VG_LITE_FB_WIDTH, VG_LITE_FB_HEIGHT);
+  vg_lite_matrix_t src_matrix;
+  vg_lite_identity(&src_matrix);
+  vg_lite_matrix_t matrix;
+  vg_lite_identity(&matrix);
+  vg_lite_translate(ctx->xres / 2, ctx->yres / 2, &matrix);
+  for(int i = 0; i < 360 * 2; i++)
+    {
+      vg_lite_rotate(1, &matrix);
+      /* clear fb */
+      VG_LITE_CHECK_ERROR(vg_lite_clear(VG_LITE_DEST_BUF, NULL, 0xFFFFFFFF));
+      /* Draw iamge */
+      vg_lite_set_multiply_color(0x7f7f7f7f);
+      VG_LITE_CHECK_ERROR(
+        vg_lite_draw_pattern(
+        VG_LITE_DEST_BUF,
+        &path,
+        VG_LITE_FILL_EVEN_ODD,
+        &src_matrix,
+        image,
+        &matrix,
+        VG_LITE_BLEND_SRC_OVER,
+        VG_LITE_PATTERN_COLOR,
+        0,
+        VG_LITE_FILTER_BI_LINEAR));
+      VG_LITE_CHECK_ERROR(vg_lite_finish());
+      gpu_fb_update(ctx);
+      gpu_delay(10);
+    }
+error_handler:
+  vg_lite_delete_image(image);
+  return error;
+}
