@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_SERLOOP)
-  nuttx_add_application(
-    NAME
-    serloop
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_SERLOOP}
-    SRCS
-    serloop_main.c)
+  nuttx_add_application(NAME serloop)
 endif()

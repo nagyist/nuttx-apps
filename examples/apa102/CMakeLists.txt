@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_APA102)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_APA102_PROGNAME}
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_APA102}
-    SRCS
-    apa102_main.c)
+  nuttx_add_application(NAME apa102)
 endif()

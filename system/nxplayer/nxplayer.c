@@ -24,28 +24,28 @@
 
 #include <nuttx/config.h>
 
-#include <assert.h>
-#include <debug.h>
-#include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sched.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <sys/ioctl.h>
 #include <sys/types.h>
-#include <sys/param.h>
-#include <unistd.h>
+#include <sys/ioctl.h>
+
 #ifdef CONFIG_NXPLAYER_HTTP_STREAMING_SUPPORT
 #  include <sys/time.h>
 #  include <sys/socket.h>
 #  include <arpa/inet.h>
 #  include <netdb.h>
 #endif
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <assert.h>
+#include <errno.h>
+#include <dirent.h>
+#include <debug.h>
+#include <unistd.h>
 
 #include <netutils/netlib.h>
 #include <nuttx/audio/audio.h>
@@ -1901,7 +1901,7 @@ static int nxplayer_playinternal(FAR struct nxplayer_s *pplayer,
       goto err_out_nodev;
     }
 
-  for (c = 0; c < nitems(g_dec_ops); c++)
+  for (c = 0; c < sizeof(g_dec_ops) / sizeof(g_dec_ops[0]); c++)
     {
       if (g_dec_ops[c].format == filefmt)
         {
