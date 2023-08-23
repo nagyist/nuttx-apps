@@ -340,7 +340,7 @@ static lv_color_t * open_jpeg_file(const char * filename, lv_img_decoder_dsc_t *
      */
     /* JSAMPLEs per row in output buffer */
     row_stride = cinfo.output_width * cinfo.output_components;
-    dsc->stride = row_stride;
+    dsc->stride = cinfo.output_width;
     /* Make a one-row-high sample array that will go away when done with image */
     buffer = (*cinfo.mem->alloc_sarray)
              ((j_common_ptr) &cinfo, JPOOL_IMAGE, row_stride, 1);
