@@ -137,6 +137,10 @@ config MBEDTLS_NET_C
 	default y if LIBC_NETDB
 	default n if !LIBC_NETDB
 
+config MBEDTLS_X509_CRT_POOL
+	bool "Enable the X509 Certificate Pool"
+	default n
+
 if CRYPTO_CRYPTODEV
 
 config MBEDTLS_ALT
