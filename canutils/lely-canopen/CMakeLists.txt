@@ -29,12 +29,23 @@ if(CONFIG_CANUTILS_LELYCANOPEN)
     FetchContent_Declare(
       lelycanopen
       URL ${CONFIG_CANUTILS_LELYCANOPEN_URL}/lely-core-${CONFIG_CANUTILS_LELYCANOPEN_VERSION}.tar.gz
-    )
-    FetchContent_MakeAvailable(lelycanopen)
+          SOURCE_DIR
+          ${CMAKE_CURRENT_LIST_DIR}/lely-canopen
+          BINARY_DIR
+          ${CMAKE_BINARY_DIR}/apps/canutils/lely-canopen/lely-canopen
+      PATCH_COMMAND patch -p1 -d ${CMAKE_CURRENT_LIST_DIR}/lely-canopen <
+                    ${CMAKE_CURRENT_LIST_DIR}/0001-NuttX-port.patch
+      DOWNLOAD_NO_PROGRESS true
+      TIMEOUT 30)
 
-    execute_process(COMMAND cat ${CMAKE_CURRENT_LIST_DIR}/0001-NuttX-port.patch
-                    COMMAND patch -s -N -d ${lelycanopen_SOURCE_DIR} -p1)
-    set(LELYCANOPEN_DIR ${lelycanopen_SOURCE_DIR})
+    FetchContent_GetProperties(lelycanopen_fetch)
+
+    if(NOT lelycanopen_fetch_POPULATED)
+      FetchContent_Populate(lelycanopen_fetch)
+    endif()
+
+    set(LELYCANOPEN_DIR ${lelycanopen_fetch_SOURCE_DIR})
+
   endif()
 
   # ############################################################################
