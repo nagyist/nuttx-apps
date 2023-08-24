@@ -26,6 +26,7 @@
 
 #include <arpa/inet.h>
 #include <net/if.h>
+#include <netpacket/vm_sockets.h>
 #include <strings.h>
 #include <sys/time.h>
 
@@ -58,6 +59,7 @@ struct wifi_iperf_t
   FAR struct arg_lit *udp;
   FAR struct arg_str *local;
   FAR struct arg_str *rpmsg;
+  FAR struct arg_str *vsock;
   FAR struct arg_str *bind;
   FAR struct arg_int *port;
   FAR struct arg_int *interval;
@@ -82,7 +84,8 @@ static void iperf_showusage(FAR const char *progname,
                             FAR struct wifi_iperf_t *args, int exitcode)
 {
   printf("USAGE: %s [-sua] [-c <ip|cpu>] [-p <port>] [-i <interval>] "
-         "[-t <time>] [--local <path>] [--rpmsg <name>]\n", progname);
+         "[-t <time>] [--local <path>] [--rpmsg <name>] "
+         "[--vsock <host/guest>]\n", progname);
   printf("iperf command:\n");
   arg_print_glossary(stdout, (FAR void **)args, NULL);
 
@@ -102,7 +105,8 @@ static void iperf_printcfg(FAR struct iperf_cfg_t *cfg)
 {
   printf("\n mode=%s%s-%s ",
          cfg->flag & IPERF_FLAG_LOCAL ? "local-":
-           cfg->flag & IPERF_FLAG_RPMSG ? "rpmsg-":"",
+         cfg->flag & IPERF_FLAG_RPMSG ? "rpmsg-":
+         cfg->flag & IPERF_FLAG_VSOCK ? "vsock-":"",
          cfg->flag & IPERF_FLAG_TCP ? "tcp":"udp",
          cfg->flag & IPERF_FLAG_SERVER ? "server":"client");
 
@@ -113,6 +117,10 @@ static void iperf_printcfg(FAR struct iperf_cfg_t *cfg)
   else if (cfg->flag & IPERF_FLAG_RPMSG)
     {
       printf("cpu=%s, name=%s, ", cfg->host, cfg->path);
+    }
+  else if (cfg->flag & IPERF_FLAG_VSOCK)
+    {
+      printf("cid=%" PRIu32 ", ", cfg->cid);
     }
   else
     {
@@ -149,6 +157,7 @@ int main(int argc, FAR char *argv[])
   iperf_args.udp = arg_lit0("u", "udp", "use UDP rather than TCP");
   iperf_args.local = arg_str0(NULL, "local", "<path>", "use local socket");
   iperf_args.rpmsg = arg_str0(NULL, "rpmsg", "<name>", "use RPMsg socket");
+  iperf_args.vsock = arg_str0(NULL, "vsock", "<host/guest>", "use Vsocket");
   iperf_args.bind = arg_str0("B", "bind", "<ip>", "ip to bind");
   iperf_args.port = arg_int0("p", "port", "<port>",
                              "server port to listen on/connect to");
@@ -221,6 +230,24 @@ int main(int argc, FAR char *argv[])
     {
       cfg.flag |= IPERF_FLAG_RPMSG;
       cfg.path  = iperf_args.rpmsg->sval[0];
+    }
+  else if (iperf_args.vsock->count > 0)
+    {
+      cfg.flag |= IPERF_FLAG_VSOCK;
+      if (strlen(iperf_args.vsock->sval[0]) > 0 &&
+          strncmp(iperf_args.vsock->sval[0], "guest", 5) == 0)
+        {
+          cfg.flag |= IPERF_FLAG_VGUEST;
+        }
+
+      if (iperf_args.ip->count > 0)
+        {
+          cfg.cid = atoi(iperf_args.ip->sval[0]);
+        }
+      else
+        {
+          cfg.cid = VMADDR_CID_ANY;
+        }
     }
   else
     {

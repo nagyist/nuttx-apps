@@ -27,6 +27,7 @@
 #include <net/if.h>
 #include <netinet/in.h>
 #include <netpacket/rpmsg.h>
+#include <netpacket/vm_sockets.h>
 #include <pthread.h>
 #include <sched.h>
 #include <stdbool.h>
@@ -242,6 +243,14 @@ static void iperf_print_addr(FAR const char *str, FAR struct sockaddr *addr)
           return;
         }
 
+      case AF_VSOCK:
+        {
+          FAR struct sockaddr_vm *vmaddr = (FAR struct sockaddr_vm *)addr;
+          printf("%s: cid=%u,port=%u,flags=%x\n", str, vmaddr->svm_cid,
+                 vmaddr->svm_port, vmaddr->svm_flags);
+          return;
+        }
+
       default:
         assert(false); /* shouldn't happen */
     }
@@ -416,6 +425,20 @@ static int iperf_run_server(FAR struct iperf_ctrl_t *ctrl,
       return server_func(ctrl, (FAR struct sockaddr *)&addr, sizeof(addr),
                                (FAR struct sockaddr *)&remote_addr);
     }
+  else if (ctrl->cfg.flag & IPERF_FLAG_VSOCK)
+    {
+      struct sockaddr_vm addr;
+      struct sockaddr_vm remote_addr;
+
+      addr.svm_family = AF_VSOCK;
+      addr.svm_cid    = ctrl->cfg.cid;
+      addr.svm_port   = ctrl->cfg.sport;
+      addr.svm_flags  = ctrl->cfg.flag & IPERF_FLAG_VGUEST ?
+                        VMADDR_FLAG_TO_HOST : 0;
+
+      return server_func(ctrl, (FAR struct sockaddr *)&addr, sizeof(addr),
+                               (FAR struct sockaddr *)&remote_addr);
+    }
   else
     {
       struct sockaddr_in addr;
@@ -457,6 +480,18 @@ static int iperf_run_client(FAR struct iperf_ctrl_t *ctrl,
       addr.rp_family = AF_RPMSG;
       strlcpy(addr.rp_cpu, ctrl->cfg.host, sizeof(addr.rp_cpu));
       strlcpy(addr.rp_name, ctrl->cfg.path, sizeof(addr.rp_name));
+
+      return client_func(ctrl, (FAR struct sockaddr *)&addr, sizeof(addr));
+    }
+  else if (ctrl->cfg.flag & IPERF_FLAG_VSOCK)
+    {
+      struct sockaddr_vm addr;
+
+      addr.svm_family = AF_VSOCK;
+      addr.svm_cid    = ctrl->cfg.cid;
+      addr.svm_port   = ctrl->cfg.dport;
+      addr.svm_flags  = ctrl->cfg.flag & IPERF_FLAG_VGUEST ?
+                        VMADDR_FLAG_TO_HOST : 0;
 
       return client_func(ctrl, (FAR struct sockaddr *)&addr, sizeof(addr));
     }
