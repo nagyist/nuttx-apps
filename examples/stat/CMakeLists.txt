@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_STAT)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_STAT_PROGNAME}
-    PRIORITY
-    ${CONFIG_EXAMPLES_STAT_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_STAT_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_STAT}
-    SRCS
-    stat_main.c)
+  nuttx_add_application(NAME stat)
 endif()

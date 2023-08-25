@@ -32,7 +32,6 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <assert.h>
-#include <sys/param.h>
 
 #include "bas_statement.h"
 
@@ -1182,7 +1181,7 @@ struct Value *stmt_EDIT(struct Value *value)
       String_new(&cmd);
       String_appendChars(&cmd, visual);
       String_appendChar(&cmd, ' ');
-      for (i = 0; i < nitems(gotoLine); ++i)
+      for (i = 0; i < sizeof(gotoLine) / sizeof(gotoLine[0]); ++i)
         {
           if (strcmp(basename, gotoLine[i].editor) == 0)
             {

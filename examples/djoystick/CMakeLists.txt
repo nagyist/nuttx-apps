@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_DJOYSTICK)
-  nuttx_add_application(
-    NAME
-    djoy
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_DJOYSTICK}
-    SRCS
-    djoy_main.c)
+  nuttx_add_application(NAME djoystick)
 endif()

@@ -19,23 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_USTREAM)
-  nuttx_add_application(
-    NAME
-    client
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_USTREAM}
-    SRCS
-    ustream_client.c)
-
-  nuttx_add_application(
-    NAME
-    server
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_AJOYSTICK}
-    SRCS
-    ustream_server.c)
+  nuttx_add_application(NAME ustream)
 endif()

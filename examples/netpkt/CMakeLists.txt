@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_NETPKT)
-  nuttx_add_application(
-    NAME
-    netpkt
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_NETPKT}
-    SRCS
-    netpkt_main.c)
+  nuttx_add_application(NAME netpkt)
 endif()

@@ -92,11 +92,10 @@ struct ramspeed_s
 
 static void show_usage(FAR const char *progname, int exitcode)
 {
-  printf("\nUsage: %s -a -r <hex-address> -w <hex-address> -s <decimal-size>"
+  printf("\nUsage: %s -r <hex-address> -w <hex-address> -s <decimal-size>"
          " -v <hex-value>[0x00] -n <decimal-repeat number>[100] -i\n",
          progname);
   printf("\nWhere:\n");
-  printf("  -a allocate RW buffers on heap. Overwrites -r and -w option.\n");
   printf("  -r <hex-address> read address.\n");
   printf("  -w <hex-address> write address.\n");
   printf("  -s <decimal-size> number of memory locations (in bytes).\n");
@@ -117,24 +116,20 @@ static void parse_commandline(int argc, FAR char **argv,
                               FAR struct ramspeed_s *info)
 {
   int ch;
-  bool allocate_rw_address = false;
 
   memset(info, 0, sizeof(struct ramspeed_s));
   info->repeat_num = 100;
 
-  if (argc < 4)
+  if (argc < 7)
     {
       printf(RAMSPEED_PREFIX "Missing required arguments\n");
       show_usage(argv[0], EXIT_FAILURE);
     }
 
-  while ((ch = getopt(argc, argv, "r:w:s:v:n:i:a")) != ERROR)
+  while ((ch = getopt(argc, argv, "r:w:s:v:n:i")) != ERROR)
     {
       switch (ch)
         {
-          case 'a':
-            allocate_rw_address = true;
-            break;
           case 'r':
             OPTARG_TO_VALUE(info->src, const void *, 16);
             break;
@@ -170,12 +165,6 @@ static void parse_commandline(int argc, FAR char **argv,
             show_usage(argv[0], EXIT_FAILURE);
             break;
         }
-    }
-
-  if (allocate_rw_address)
-    {
-      info->dest = malloc(info->size);
-      info->src = malloc(info->size);
     }
 
   if (info->dest == NULL || info->src == NULL || info->size == 0)
