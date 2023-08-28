@@ -19,5 +19,15 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_GPS)
-  nuttx_add_application(NAME gps)
+  nuttx_add_application(
+    NAME
+    ${CONFIG_EXAMPLES_GPS_PROGNAME}
+    PRIORITY
+    ${CONFIG_EXAMPLES_GPS_PRIORITY}
+    STACKSIZE
+    ${CONFIG_EXAMPLES_GPS_STACKSIZE}
+    MODULE
+    ${CONFIG_EXAMPLES_GPS}
+    SRCS
+    gps_main.c)
 endif()
