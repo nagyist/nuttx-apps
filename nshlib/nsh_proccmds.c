@@ -353,7 +353,6 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
   /* Finally, print the status information */
 
-#ifndef _MSC_VER
   nsh_output(vtbl,
              "%5s %5s "
 #ifdef CONFIG_SMP
@@ -368,7 +367,6 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
              status.td_priority, status.td_policy, status.td_type,
              status.td_flags, status.td_state, status.td_event,
              status.td_sigmask);
-#endif
 
 #if CONFIG_MM_BACKTRACE >= 0 && !defined(CONFIG_NSH_DISABLE_PSHEAPUSAGE)
   /* Get the Heap AllocSize */
@@ -529,8 +527,6 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
     }
 #endif
 
-#ifndef _MSC_VER
-
 #if defined(PS_SHOW_HEAPSIZE) || defined (PS_SHOW_STACKSIZE) || \
     defined (PS_SHOW_STACKUSAGE) || defined (NSH_HAVE_CPULOAD)
     nsh_output(vtbl,
@@ -563,8 +559,6 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
                , nsh_trimspaces(vtbl->iobuffer)
 #endif
              );
-#endif
-
 #endif
 
   /* Read the task/thread command line */
@@ -629,8 +623,6 @@ int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   UNUSED(argc);
   UNUSED(argv);
 
-#ifndef _MSC_VER
-
   nsh_output(vtbl, "%5s %5s "
 #ifdef CONFIG_SMP
                    "%3s "
@@ -672,7 +664,6 @@ int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #endif
                     "COMMAND"
                     );
-#endif
 
   return nsh_foreach_direntry(vtbl, "ps", CONFIG_NSH_PROC_MOUNTPOINT,
                               ps_callback, NULL);
