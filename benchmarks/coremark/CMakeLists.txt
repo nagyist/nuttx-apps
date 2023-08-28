@@ -26,10 +26,20 @@ if(CONFIG_BENCHMARK_COREMARK)
 
   set(COREMARKAPP_DIR ${CMAKE_CURRENT_LIST_DIR}/coremark)
   if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/coremark)
-    FetchContent_Declare(coremark
-                         URL https://github.com/eembc/coremark/archive/main.zip)
-    FetchContent_MakeAvailable(coremark)
-    set(COREMARKAPP_DIR ${coremark_SOURCE_DIR})
+    FetchContent_Declare(
+      coremark_fetch
+      URL https://github.com/eembc/coremark/archive/main.zip SOURCE_DIR
+          ${CMAKE_CURRENT_LIST_DIR}/coremark BINARY_DIR
+          ${CMAKE_BINARY_DIR}/apps/benchmarks/coremark/coremark
+      DOWNLOAD_NO_PROGRESS true
+      TIMEOUT 30)
+
+    FetchContent_GetProperties(coremark_fetch)
+    if(NOT coremark_fetch_POPULATED)
+      FetchContent_Populate(coremark_fetch)
+    endif()
+
+    set(COREMARKAPP_DIR ${coremark_fetch_SOURCE_DIR})
   endif()
 
   if(CONFIG_COREMARK_MULTITHREAD_OVERRIDE)
@@ -42,16 +52,22 @@ if(CONFIG_BENCHMARK_COREMARK)
     set(COREMARK_NTHREADS 1)
   endif()
 
-  set(FLAGS_STR "Using NuttX compilation options")
+  if(CONFIG_COREMARK_PRINT_ARGS)
+    set(COREMARK_PRINT_ARGS 1)
+  else()
+    set(COREMARK_PRINT_ARGS 0)
+  endif()
 
   # ############################################################################
   # Flags
   # ############################################################################
 
+  get_target_property(FLAGS_STR_LIST nuttx COMPILE_OPTIONS)
+  list(JOIN FLAGS_STR_LIST " " FLAGS_STR)
   set(CFLAGS
       -Wno-undef -DUSE_PTHREAD -DPERFORMANCE_RUN=1
-      -DMULTITHREAD=${COREMARK_NTHREADS} -DFLAGS_STR=\"${FLAGS_STR}\"
-      -DMEM_LOCATION=\"${CONFIG_COREMARK_MEM_LOCATION}\")
+      -DMULTITHREAD=${COREMARK_NTHREADS} -DFLAGS_STR="${FLAGS_STR}"
+      -DMEM_LOCATION="Stack")
 
   if(CONFIG_COREMARK_ITERATIONS_OVERRIDE)
     list(APPEND CFLAGS -DITERATIONS=${CONFIG_COREMARK_ITERATIONS_COUNT})
