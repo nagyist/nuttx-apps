@@ -22,7 +22,7 @@
 #define RECT_PATH_LEN 13 /* 3(MOVE) + 3(LINE) * 3 + 1(CLOSE/END) */
 #define POINT_PATH_LEN 41 /* 3(MOVE) + 3(LINE) * 3 + 7(CUBIC) * 4 + 1(CLOSE/END) */
 
-#define ARC_MAX_POINTS 25
+#define ARC_MAX_POINTS 36
 #define PI_DEG (M_PI / 180.0f)
 
 #define __PF(x, y) ((vg_lite_fpoint_t) { (x), (y) }) /* float */
