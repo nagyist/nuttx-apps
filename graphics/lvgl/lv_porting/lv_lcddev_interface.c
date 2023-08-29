@@ -191,7 +191,7 @@ static lv_disp_t *lcddev_init(int fd, int hor_res, int ver_res, int line_buf)
     }
 #endif
 
-  LV_LOG_INFO("display buffer malloc success, buf size = %lu", buf_size);
+  LV_LOG_USER("display buffer malloc success, buf size = %zu", buf_size);
 
   lcddev_obj->fd = fd;
   ioctl(fd, LCDDEVIO_GETAREAALIGN, &lcddev_obj->align_info);
@@ -269,7 +269,7 @@ lv_disp_t *lv_lcddev_interface_init(const char *dev_path, int line_buf)
       device_path = CONFIG_LV_LCDDEV_INTERFACE_DEFAULT_DEVICEPATH;
     }
 
-  LV_LOG_INFO("lcddev %s opening", device_path);
+  LV_LOG_USER("lcddev %s opening", device_path);
   fd = open(device_path, 0);
   if (fd < 0)
     {
@@ -277,7 +277,7 @@ lv_disp_t *lv_lcddev_interface_init(const char *dev_path, int line_buf)
       return NULL;
     }
 
-  LV_LOG_INFO("lcddev %s open success", device_path);
+  LV_LOG_USER("lcddev %s open success", device_path);
 
   ret = ioctl(fd, LCDDEVIO_GETVIDEOINFO,
               (unsigned long)((uintptr_t)&vinfo));
@@ -288,11 +288,11 @@ lv_disp_t *lv_lcddev_interface_init(const char *dev_path, int line_buf)
       return NULL;
     }
 
-  LV_LOG_INFO("VideoInfo:");
-  LV_LOG_INFO("      fmt: %u", vinfo.fmt);
-  LV_LOG_INFO("     xres: %u", vinfo.xres);
-  LV_LOG_INFO("     yres: %u", vinfo.yres);
-  LV_LOG_INFO("  nplanes: %u", vinfo.nplanes);
+  LV_LOG_USER("VideoInfo:");
+  LV_LOG_USER("      fmt: %u", vinfo.fmt);
+  LV_LOG_USER("     xres: %u", vinfo.xres);
+  LV_LOG_USER("     yres: %u", vinfo.yres);
+  LV_LOG_USER("  nplanes: %u", vinfo.nplanes);
 
   ret = ioctl(fd, LCDDEVIO_GETPLANEINFO,
               (unsigned long)((uintptr_t)&pinfo));
@@ -304,8 +304,8 @@ lv_disp_t *lv_lcddev_interface_init(const char *dev_path, int line_buf)
       return NULL;
     }
 
-  LV_LOG_INFO("PlaneInfo:");
-  LV_LOG_INFO("      bpp: %u", pinfo.bpp);
+  LV_LOG_USER("PlaneInfo:");
+  LV_LOG_USER("      bpp: %u", pinfo.bpp);
 
 #ifdef LV_COLOR_DEPTH
   if (pinfo.bpp != LV_COLOR_DEPTH)

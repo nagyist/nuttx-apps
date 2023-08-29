@@ -391,12 +391,12 @@ static int fbdev_get_pinfo(int fd, FAR struct fb_planeinfo_s *pinfo)
       return ret;
     }
 
-  LV_LOG_INFO("PlaneInfo (plane %d):", pinfo->display);
-  LV_LOG_INFO("    fbmem: %p", pinfo->fbmem);
-  LV_LOG_INFO("    fblen: %lu", (unsigned long)pinfo->fblen);
-  LV_LOG_INFO("   stride: %u", pinfo->stride);
-  LV_LOG_INFO("  display: %u", pinfo->display);
-  LV_LOG_INFO("      bpp: %u", pinfo->bpp);
+  LV_LOG_USER("PlaneInfo (plane %d):", pinfo->display);
+  LV_LOG_USER("    fbmem: %p", pinfo->fbmem);
+  LV_LOG_USER("    fblen: %lu", (unsigned long)pinfo->fblen);
+  LV_LOG_USER("   stride: %u", pinfo->stride);
+  LV_LOG_USER("  display: %u", pinfo->display);
+  LV_LOG_USER("      bpp: %u", pinfo->bpp);
 
   /* Only these pixel depths are supported.  viinfo.fmt is ignored, only
    * certain color formats are supported.
@@ -460,14 +460,14 @@ static int fbdev_init_fbmem2_offset(FAR struct fbdev_obj_s *state)
     {
       state->fbmem2_yoffset = state->vinfo.yres;
       state->fbmem2 = pinfo.fbmem + state->fbmem2_yoffset * pinfo.stride;
-      LV_LOG_INFO("Use consecutive fbmem2 = %p, yoffset = %" PRIu32,
+      LV_LOG_USER("Use consecutive fbmem2 = %p, yoffset = %" PRIu32,
                   state->fbmem2, state->fbmem2_yoffset);
     }
   else
     {
       state->fbmem2_yoffset = buf_offset / state->pinfo.stride;
       state->fbmem2 = pinfo.fbmem;
-      LV_LOG_INFO("Use non-consecutive fbmem2 = %p, yoffset = %" PRIu32,
+      LV_LOG_USER("Use non-consecutive fbmem2 = %p, yoffset = %" PRIu32,
                   state->fbmem2, state->fbmem2_yoffset);
     }
 
@@ -544,13 +544,13 @@ static FAR lv_disp_t *fbdev_init(FAR struct fbdev_obj_s *state)
 
   if (fbdev_obj->double_buffer)
     {
-      LV_LOG_INFO("Double buffer mode");
+      LV_LOG_USER("Double buffer mode");
       buf2 = fbdev_obj->fbmem2;
       disp_drv->render_start_cb = fbdev_render_start;
     }
   else
     {
-      LV_LOG_INFO("Single buffer mode");
+      LV_LOG_USER("Single buffer mode");
     }
 
   lv_disp_draw_buf_init(&(fbdev_obj->disp_draw_buf), buf1, buf2, fb_size);
@@ -611,7 +611,7 @@ FAR lv_disp_t *lv_fbdev_interface_init(FAR const char *dev_path,
       device_path = CONFIG_LV_FBDEV_INTERFACE_DEFAULT_DEVICEPATH;
     }
 
-  LV_LOG_INFO("fbdev %s opening", device_path);
+  LV_LOG_USER("fbdev %s opening", device_path);
 
   state.fd = open(device_path, O_RDWR);
   if (state.fd < 0)
@@ -631,11 +631,11 @@ FAR lv_disp_t *lv_fbdev_interface_init(FAR const char *dev_path,
       return NULL;
     }
 
-  LV_LOG_INFO("VideoInfo:");
-  LV_LOG_INFO("      fmt: %u", state.vinfo.fmt);
-  LV_LOG_INFO("     xres: %u", state.vinfo.xres);
-  LV_LOG_INFO("     yres: %u", state.vinfo.yres);
-  LV_LOG_INFO("  nplanes: %u", state.vinfo.nplanes);
+  LV_LOG_USER("VideoInfo:");
+  LV_LOG_USER("      fmt: %u", state.vinfo.fmt);
+  LV_LOG_USER("     xres: %u", state.vinfo.xres);
+  LV_LOG_USER("     yres: %u", state.vinfo.yres);
+  LV_LOG_USER("  nplanes: %u", state.vinfo.nplanes);
 
   ret = fbdev_get_pinfo(state.fd, &state.pinfo);
 
@@ -676,7 +676,7 @@ FAR lv_disp_t *lv_fbdev_interface_init(FAR const char *dev_path,
       return NULL;
     }
 
-  LV_LOG_INFO("Mapped FB: %p", state.fbmem);
+  LV_LOG_USER("Mapped FB: %p", state.fbmem);
 
   if (state.double_buffer)
     {

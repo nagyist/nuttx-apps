@@ -371,16 +371,16 @@ static bool img_cache_set_size(uint16_t entry_size, size_t mem_size)
   info = mm_mallinfo(cache_manager.heap);
   cache_manager.heap_size = info.arena;
 
-  LV_LOG_WARN("heap info:");
-  LV_LOG_WARN("  heap: %p", cache_manager.heap);
-  LV_LOG_WARN("  mem: %p", mem);
-  LV_LOG_WARN("  mem_size: %zu", mem_size);
-  LV_LOG_WARN("  arena: %d", info.arena);
-  LV_LOG_WARN("  ordblks: %d", info.ordblks);
-  LV_LOG_WARN("  aordblks: %d", info.aordblks);
-  LV_LOG_WARN("  mxordblk: %d", info.mxordblk);
-  LV_LOG_WARN("  uordblks: %d", info.uordblks);
-  LV_LOG_WARN("  fordblks: %d", info.fordblks);
+  LV_LOG_USER("heap info:");
+  LV_LOG_USER("  heap: %p", cache_manager.heap);
+  LV_LOG_USER("  mem: %p", mem);
+  LV_LOG_USER("  mem_size: %zu", mem_size);
+  LV_LOG_USER("  arena: %d", info.arena);
+  LV_LOG_USER("  ordblks: %d", info.ordblks);
+  LV_LOG_USER("  aordblks: %d", info.aordblks);
+  LV_LOG_USER("  mxordblk: %d", info.mxordblk);
+  LV_LOG_USER("  uordblks: %d", info.uordblks);
+  LV_LOG_USER("  fordblks: %d", info.fordblks);
   return true;
 }
 

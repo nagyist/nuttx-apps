@@ -153,7 +153,7 @@ lv_indev_t *lv_touchpad_interface_init(const char *dev_path)
       device_path = CONFIG_LV_TOUCHPAD_INTERFACE_DEFAULT_DEVICEPATH;
     }
 
-  LV_LOG_INFO("touchpad %s opening", device_path);
+  LV_LOG_USER("touchpad %s opening", device_path);
   fd = open(device_path, O_RDONLY | O_NONBLOCK);
   if (fd < 0)
     {
@@ -161,7 +161,7 @@ lv_indev_t *lv_touchpad_interface_init(const char *dev_path)
       return NULL;
     }
 
-  LV_LOG_INFO("touchpad %s open success", device_path);
+  LV_LOG_USER("touchpad %s open success", device_path);
 
   indev = touchpad_init(fd);
 
