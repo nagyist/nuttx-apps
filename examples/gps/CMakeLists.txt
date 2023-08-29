@@ -29,5 +29,7 @@ if(CONFIG_EXAMPLES_GPS)
     MODULE
     ${CONFIG_EXAMPLES_GPS}
     SRCS
-    gps_main.c)
+    gps_main.c
+    INCLUDE_DIRECTORIES
+    ${NUTTX_APPS_DIR}/gpsutils/minmea)
 endif()
