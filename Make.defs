@@ -125,10 +125,6 @@ endef
 endif
 endif
 
-define ARLOCK
-	flock $1.lock $(call ARCHIVE, $1, $(2))
-endef
-
 # Standard include path
 
 CFLAGS   += ${INCDIR_PREFIX}"$(APPDIR)$(DELIM)include"

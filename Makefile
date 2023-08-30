@@ -42,7 +42,12 @@ SYMTABOBJ = $(SYMTABSRC:.c=$(OBJEXT))
 # We first remove libapps.a before letting the other rules add objects to it
 # so that we ensure libapps.a does not contain objects from prior build
 
-all: $(BIN)
+# We first remove libapps.a before letting the other rules add objects to it
+# so that we ensure libapps.a does not contain objects from prior build
+
+all:
+	$(RM) $(BIN)
+	$(MAKE) $(BIN)
 
 .PHONY: import install dirlinks export .depdirs preconfig depend clean distclean
 .PHONY: context clean_context context_all register register_all
@@ -89,11 +94,17 @@ else
 ifeq ($(CONFIG_BUILD_LOADABLE),)
 
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) for app in ${CONFIGURED_APPS}; do \
+	  $(MAKE) -C "$${app}" archive TOPDIR="${TOPDIR}" APPDIR="${APPDIR}" ; \
+	done
 	$(call LINK_WASM)
 
 else
 
 $(SYMTABSRC): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(Q) for app in ${CONFIGURED_APPS}; do \
+	  $(MAKE) -C "$${app}" archive TOPDIR="${TOPDIR}" APPDIR="${APPDIR}" ; \
+	done
 	$(Q) $(MAKE) install
 	$(Q) $(APPDIR)$(DELIM)tools$(DELIM)mksymtab.sh $(BINDIR) >$@.tmp
 	$(Q) $(call TESTANDREPLACEFILE, $@.tmp, $@)
@@ -102,7 +113,7 @@ $(SYMTABOBJ): %$(OBJEXT): %.c
 	$(call COMPILE, $<, $@, -fno-lto -fno-builtin)
 
 $(BIN): $(SYMTABOBJ)
-	$(call ARLOCK, $(call CONVERT_PATH,$(BIN)), $^)
+	$(call ARCHIVE_ADD, $(call CONVERT_PATH,$(BIN)), $^)
 	$(call LINK_WASM)
 
 endif # !CONFIG_BUILD_LOADABLE
@@ -191,7 +202,6 @@ clean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_clean)
 	$(call CLEAN)
 
 distclean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_distclean)
-	$(call DELFILE, *.lock)
 	$(call DELFILE, .depend)
 	$(call DELFILE, $(SYMTABSRC))
 	$(call DELFILE, $(SYMTABOBJ))

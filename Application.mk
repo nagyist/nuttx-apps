@@ -126,7 +126,7 @@ VPATH += :.
 
 # Targets follow
 
-all:: .built
+all:: $(OBJS)
 .PHONY: clean depend distclean
 .PRECIOUS: $(BIN)
 
@@ -216,11 +216,11 @@ define TESTANDCOPYFILE
 	fi
 endef
 
-.built: $(OBJS)
-	$(if $(wildcard $<), \
-	  $(call SPLITVARIABLE,ALL_DEP_OBJS,$^,100) \
+archive::
+	$(if $(wildcard $(OBJS)), \
+	  $(call SPLITVARIABLE,ALL_DEP_OBJS,$(OBJS),100) \
 	  $(foreach BATCH, $(ALL_DEP_OBJS_TOTAL), \
-	  	$(shell $(call ARLOCK, $(call CONVERT_PATH, $(BIN)), $(ALL_DEP_OBJS_$(BATCH)))) \
+	  	$(shell $(call ARCHIVE_ADD, $(call CONVERT_PATH, $(BIN)), $(ALL_DEP_OBJS_$(BATCH)))) \
 	  ) \
 	  $(if $(ORIG_BIN), \
 	    $(shell mkdir -p $(dir $(ORIG_BIN))) \
@@ -230,7 +230,6 @@ endef
 	     $(shell $(call TESTANDCOPYFILE,$(ORIG_BIN),$(call CONVERT_PATH,$(BIN)))) \
 	    ) \
 	  )
-	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
 
@@ -330,7 +329,6 @@ ifneq ($(ORIG_BIN),)
 endif
 
 clean::
-	$(call DELFILE, .built)
 	$(call DELDIR, $(APPDIR)$(DELIM)staging)
 	$(call CLEAN)
 
