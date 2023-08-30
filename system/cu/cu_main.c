@@ -87,6 +87,11 @@ static struct cu_globals_s g_cu;
  * Private Functions
  ****************************************************************************/
 
+static void listener_sigusr1(int sig)
+{
+  /* Nothing */
+}
+
 /****************************************************************************
  * Name: cu_listener
  *
@@ -98,8 +103,13 @@ static struct cu_globals_s g_cu;
 static FAR void *cu_listener(FAR void *parameter)
 {
   FAR struct cu_globals_s *cu = (FAR struct cu_globals_s *)parameter;
+  struct sigaction sa;
 
-  for (; ; )
+  memset(&sa, 0, sizeof(sa));
+  sa.sa_handler = listener_sigusr1;
+  sigaction(SIGUSR1, &sa, NULL);
+
+  while (!cu->force_exit)
     {
       char buf[CONFIG_LINE_MAX];
       int rc;
@@ -512,7 +522,8 @@ int main(int argc, FAR char *argv[])
         }
     }
 
-  pthread_cancel(cu->listener);
+  pthread_kill(cu->listener, SIGUSR1);
+  pthread_join(cu->listener, NULL);
   exitval = EXIT_SUCCESS;
 
   /* Error exits */
