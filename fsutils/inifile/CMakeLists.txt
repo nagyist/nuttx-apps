@@ -19,5 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_FSUTILS_INIFILE)
-  nuttx_add_application(NAME inifile SRCS inifile.c)
+  target_sources(apps PRIVATE inifile.c)
 endif()
