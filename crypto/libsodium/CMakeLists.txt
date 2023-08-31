@@ -23,16 +23,21 @@ if(CONFIG_LIBSODIUM)
   # ############################################################################
   # Config and Fetch libsodium lib
   # ############################################################################
-  set(LIBSODIUM_URL https://github.com/jedisct1/libsodium/archive)
-
   set(LIBSODIUM_DIR ${CMAKE_CURRENT_LIST_DIR}/libsodium)
 
-  if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/libsodium)
+  if(NOT EXISTS ${LIBSODIUM_DIR})
+    set(LIBSODIUM_URL https://github.com/jedisct1/libsodium/archive)
+
     FetchContent_Declare(
       libsodium_fetch
       URL ${LIBSODIUM_URL}/${CONFIG_LIBSODIUM_VERSION}.zip SOURCE_DIR
           ${CMAKE_CURRENT_LIST_DIR}/libsodium BINARY_DIR
           ${CMAKE_BINARY_DIR}/apps/crypto/libsodium/libsodium
+      PATCH_COMMAND
+        patch -p1 -d ${CMAKE_CURRENT_LIST_DIR}/libsodium <
+        ${CMAKE_CURRENT_LIST_DIR}/0001-fix-multiple-definition-bug-in-libsodium-test.patch
+        && patch -p1 -d ${CMAKE_CURRENT_LIST_DIR}/libsodium <
+        ${CMAKE_CURRENT_LIST_DIR}/0002-fix-cannot-find-file-sodium-version.h.patch
       DOWNLOAD_NO_PROGRESS true
       TIMEOUT 30)
 
@@ -40,23 +45,6 @@ if(CONFIG_LIBSODIUM)
 
     if(NOT libsodium_fetch_POPULATED)
       FetchContent_Populate(libsodium_fetch)
-    endif()
-    set(LIBSODIUM_DIR ${libsodium_fetch_SOURCE_DIR})
-
-    if(NOT EXISTS ${LIBSODIUM_DIR}/.libsodium_patch)
-      add_custom_command(
-        OUTPUT ${LIBSODIUM_DIR}/.libsodium_patch
-        COMMAND touch ${LIBSODIUM_DIR}/.libsodium_patch
-        COMMAND
-          patch -p1 -d ${LIBSODIUM_DIR} <
-          ${CMAKE_CURRENT_LIST_DIR}/0001-fix-multiple-definition-bug-in-libsodium-test.patch
-          > /dev/null || (exit 0)
-        COMMAND
-          patch -p1 -d ${LIBSODIUM_DIR} <
-          ${CMAKE_CURRENT_LIST_DIR}/0002-fix-cannot-find-file-sodium-version.h.patch
-          > /dev/null || (exit 0))
-      add_custom_target(libsodium_patch
-                        DEPENDS ${LIBSODIUM_DIR}/.libsodium_patch)
     endif()
   endif()
 
@@ -89,10 +77,6 @@ if(CONFIG_LIBSODIUM)
   target_sources(libsodium PRIVATE ${CSRCS})
   target_include_directories(libsodium PRIVATE ${INCDIR})
   target_compile_options(libsodium PRIVATE ${CFLAGS})
-
-  if(TARGET libsodium_patch)
-    add_dependencies(libsodium libsodium_patch)
-  endif()
 
   # ############################################################################
   # Applications Configuration
