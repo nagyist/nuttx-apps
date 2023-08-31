@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_ONESHOT)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_ONESHOT_PROGNAME}
-    PRIORITY
-    ${CONFIG_EXAMPLES_ONESHOT_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_ONESHOT_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_ONESHOT}
-    SRCS
-    oneshot_main.c)
+  nuttx_add_application(NAME oneshot)
 endif()

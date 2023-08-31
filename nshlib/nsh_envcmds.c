@@ -323,9 +323,7 @@ int cmd_echo(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
         }
 
       if (i == 0)
-        {
-          goto do_echo;
-        }
+        goto do_echo;
 
       while (*temp)
         {

@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_LIS3DSH_READER)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_LIS3DSH_READER_PROGNAME}
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_LIS3DSH_READER}
-    SRCS
-    lis3dsh_reader_main.c)
+  nuttx_add_application(NAME lis3dsh_reader)
 endif()

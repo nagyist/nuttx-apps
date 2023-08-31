@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_TELNETD)
-  nuttx_add_application(
-    NAME
-    telnetd
-    PRIORITY
-    ${CONFIG_EXAMPLES_TELNETD_DAEMONPRIO}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_TELNETD_DAEMONSTACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_TELNETD}
-    SRCS
-    telnetd.c)
+  nuttx_add_application(NAME telnetd SRCS telnetd.c)
 endif()

@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_AJOYSTICK)
-  nuttx_add_application(
-    NAME
-    ajoy
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_AJOYSTICK}
-    SRCS
-    ajoy_main.c)
+  nuttx_add_application(NAME ajoystick)
 endif()
