@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_QENCODER)
-  nuttx_add_application(
-    NAME
-    qe
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_QENCODER}
-    SRCS
-    qe_main.c)
+  nuttx_add_application(NAME qencoder)
 endif()

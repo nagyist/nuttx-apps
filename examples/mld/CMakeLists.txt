@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_MLD)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_MLD_PROGNAME}
-    PRIORITY
-    ${CONFIG_EXAMPLES_MLD_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_MLD_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_MLD}
-    SRCS
-    mld_main.c)
+  nuttx_add_application(NAME mld)
 endif()

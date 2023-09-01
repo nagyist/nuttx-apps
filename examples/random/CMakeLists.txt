@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_RANDOM)
-  nuttx_add_application(
-    NAME
-    rand
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_RANDOM}
-    SRCS
-    random_main.c)
+  nuttx_add_application(NAME random)
 endif()

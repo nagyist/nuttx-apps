@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_APDS9960)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_EXAMPLES_APDS9960_PROGNAME}
-    PRIORITY
-    ${CONFIG_EXAMPLES_APDS9960_PRIORITY}
-    STACKSIZE
-    ${CONFIG_EXAMPLES_APDS9960_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_APDS9960}
-    SRCS
-    apds9960_main.c)
+  nuttx_add_application(NAME apds9960)
 endif()

@@ -1,7 +1,7 @@
 From 530b8e0d0f9ea68f1dd977caddc76fbe4a2c66b8 Mon Sep 17 00:00:00 2001
 From: makejian <makejian@xiaomi.com>
 Date: Wed, 19 Apr 2023 22:57:44 +0800
-Subject: [PATCH 1/2] Solve the memory out of bounds problem in sts
+Subject: [PATCH 2/2] Solve the memory out of bounds problem in sts
 
 Signed-off-by: makejian <makejian@xiaomi.com>
 Change-Id: I28a132a793603205e25e5925de3e51ff2c44873b
@@ -9,10 +9,10 @@ Change-Id: I28a132a793603205e25e5925de3e51ff2c44873b
  sts/src/discreteFourierTransform.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git nist-sts/sts/src/discreteFourierTransform.c nist-sts/sts/src/discreteFourierTransform.c
+diff --git a/sts/src/discreteFourierTransform.c b/sts/src/discreteFourierTransform.c
 index 61b52c2..96b4bb7 100644
---- nist-sts/sts/src/discreteFourierTransform.c
-+++ nist-sts/sts/src/discreteFourierTransform.c
+--- a/sts/src/discreteFourierTransform.c
++++ b/sts/src/discreteFourierTransform.c
 @@ -38,7 +38,7 @@ DiscreteFourierTransform(int n)
  	
  	m[0] = sqrt(X[0]*X[0]);	    /* COMPUTE MAGNITUDE */

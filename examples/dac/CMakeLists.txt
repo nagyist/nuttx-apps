@@ -19,13 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_EXAMPLES_DAC)
-  nuttx_add_application(
-    NAME
-    dac
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_EXAMPLES_DAC}
-    SRCS
-    dac_main.c)
+  nuttx_add_application(NAME dac)
 endif()

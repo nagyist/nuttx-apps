@@ -446,15 +446,12 @@ int main(int argc, FAR char *argv[])
 
   while (!cu->force_exit)
     {
-      char ch;
-      int c = getc(stdin);
+      int ch = getc(stdin);
 
-      if (c < 0)
+      if (ch < 0)
         {
           continue;
         }
-
-      ch = c;
 
       if (nobreak == 1)
         {

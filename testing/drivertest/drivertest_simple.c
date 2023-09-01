@@ -21,6 +21,7 @@
 /****************************************************************************
  * Included Files
  ****************************************************************************/
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
@@ -31,15 +32,15 @@
  * Private Functions
  ****************************************************************************/
 
-static void test_case_01(FAR void **state)
+static void test_case_01(void **state)
 {
-  UNUSED(state);
+  (void) state;
   assert_int_equal(0, 0);
 }
 
-static void test_case_02(FAR void **state)
+static void test_case_02(void **state)
 {
-  UNUSED(state);
+  (void)state;
   assert_string_not_equal("hello", "world");
 }
 
