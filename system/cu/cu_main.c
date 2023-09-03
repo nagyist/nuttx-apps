@@ -131,57 +131,58 @@ static int set_termios(FAR struct cu_globals_s *cu, int rate,
 static int set_termios(FAR struct cu_globals_s *cu, int nocrlf)
 #endif
 {
-  int rc = 0;
   int ret;
   struct termios tio;
 
-  tio = cu->devtio;
+  if (isatty(cu->devfd))
+    {
+      tio = cu->devtio;
 
 #ifdef CONFIG_SERIAL_TERMIOS
-  tio.c_cflag &= ~(PARENB | PARODD | CRTSCTS);
+      tio.c_cflag &= ~(PARENB | PARODD | CRTSCTS);
 
-  switch (parity)
-    {
-      case PARITY_EVEN:
-        tio.c_cflag |= PARENB;
-        break;
+      switch (parity)
+        {
+          case PARITY_EVEN:
+            tio.c_cflag |= PARENB;
+            break;
 
-      case PARITY_ODD:
-        tio.c_cflag |= PARENB | PARODD;
-        break;
+          case PARITY_ODD:
+            tio.c_cflag |= PARENB | PARODD;
+            break;
 
-      case PARITY_NONE:
-        break;
-    }
+          case PARITY_NONE:
+            break;
+        }
 
-  /* set baudrate */
+      /* Set baudrate */
 
-  if (rate != 0)
-    {
-      cfsetspeed(&tio, rate);
-    }
+      if (rate != 0)
+        {
+          cfsetspeed(&tio, rate);
+        }
 
-  if (rtscts)
-    {
-      tio.c_cflag |= CRTS_IFLOW | CCTS_OFLOW;
-    }
+      if (rtscts)
+        {
+          tio.c_cflag |= CRTS_IFLOW | CCTS_OFLOW;
+        }
 #endif
 
-  tio.c_oflag = OPOST;
+      tio.c_oflag = OPOST;
 
-  /* enable or disable \n -> \r\n conversion during write */
+      /* Enable or disable \n -> \r\n conversion during write */
 
-  if (nocrlf == 0)
-    {
-      tio.c_oflag |= ONLCR;
-    }
+      if (nocrlf == 0)
+        {
+          tio.c_oflag |= ONLCR;
+        }
 
-  ret = tcsetattr(cu->devfd, TCSANOW, &tio);
-  if (ret)
-    {
-      cu_error("set_termios: ERROR during tcsetattr(): %d\n", errno);
-      rc = -1;
-      goto errout;
+      ret = tcsetattr(cu->devfd, TCSANOW, &tio);
+      if (ret)
+        {
+          cu_error("set_termios: ERROR during tcsetattr(): %d\n", errno);
+          return ret;
+        }
     }
 
   /* Let the remote machine to handle all crlf/echo except Ctrl-C */
@@ -197,19 +198,21 @@ static int set_termios(FAR struct cu_globals_s *cu, int nocrlf)
     ret = tcsetattr(cu->stdfd, TCSANOW, &tio);
     if (ret)
       {
-        cu_error("set_termios: ERROR during tcsetattr(): %d\n",
-                errno);
-        rc = -1;
+        cu_error("set_termios: ERROR during tcsetattr(): %d\n", errno);
+        return ret;
       }
   }
 
-errout:
-  return rc;
+  return 0;
 }
 
 static void retrieve_termios(FAR struct cu_globals_s *cu)
 {
-  tcsetattr(cu->devfd, TCSANOW, &cu->devtio);
+  if (isatty(cu->devfd))
+    {
+      tcsetattr(cu->devfd, TCSANOW, &cu->devtio);
+    }
+
   if (cu->stdfd >= 0)
     {
       tcsetattr(cu->stdfd, TCSANOW, &cu->stdtio);
@@ -361,17 +364,20 @@ int main(int argc, FAR char *argv[])
   if (cu->devfd < 0)
     {
       cu_error("cu_main: ERROR: Failed to open %s for writing: %d\n",
-              devname, errno);
+               devname, errno);
       goto errout_with_devinit;
     }
 
   /* Remember serial device termios attributes */
 
-  ret = tcgetattr(cu->devfd, &cu->devtio);
-  if (ret)
+  if (isatty(cu->devfd))
     {
-      cu_error("cu_main: ERROR during tcgetattr(): %d\n", errno);
-      goto errout_with_outfd;
+      ret = tcgetattr(cu->devfd, &cu->devtio);
+      if (ret)
+        {
+          cu_error("cu_main: ERROR during tcgetattr(): %d\n", errno);
+          goto errout_with_devfd;
+        }
     }
 
   /* Remember std termios attributes if it is a tty. Try to select
@@ -406,7 +412,7 @@ int main(int argc, FAR char *argv[])
   if (set_termios(cu, nocrlf) != 0)
 #endif
     {
-      goto errout_with_outfd_retrieve;
+      goto errout_with_devfd_retrieve;
     }
 
   /* Start the serial receiver thread */
@@ -415,7 +421,7 @@ int main(int argc, FAR char *argv[])
   if (ret != OK)
     {
       cu_error("cu_main: pthread_attr_init failed: %d\n", ret);
-      goto errout_with_outfd_retrieve;
+      goto errout_with_devfd_retrieve;
     }
 
   /* Set priority of listener to configured value */
@@ -427,7 +433,7 @@ int main(int argc, FAR char *argv[])
   if (ret != 0)
     {
       cu_error("cu_main: Error in thread creation: %d\n", ret);
-      goto errout_with_outfd_retrieve;
+      goto errout_with_devfd_retrieve;
     }
 
   /* Send messages and get responses -- forever */
@@ -492,9 +498,9 @@ int main(int argc, FAR char *argv[])
 
   /* Error exits */
 
-errout_with_outfd_retrieve:
+errout_with_devfd_retrieve:
   retrieve_termios(cu);
-errout_with_outfd:
+errout_with_devfd:
   close(cu->devfd);
 errout_with_devinit:
   return exitval;
