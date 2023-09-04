@@ -23,40 +23,28 @@ if(CONFIG_CRYPTO_LIBTOMCRYPT)
   # ############################################################################
   # Config and Fetch libtomcrypt
   # ############################################################################
-
-  set(CONFIG_LIBTOMCRYPT_URL https://github.com/libtom/libtomcrypt/archive)
-
   set(LIBTOMCRYPT_DIR ${CMAKE_CURRENT_LIST_DIR}/libtomcrypt)
 
-  if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/libtomcrypt)
+  if(NOT EXISTS ${LIBTOMCRYPT_DIR})
+    set(CONFIG_LIBTOMCRYPT_URL https://github.com/libtom/libtomcrypt/archive)
+
     FetchContent_Declare(
       libtomcrypt_fetch
       URL ${CONFIG_LIBTOMCRYPT_URL}/v${CONFIG_LIBTOMCRYPT_VERSION}.zip
           SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/libtomcrypt BINARY_DIR
           ${CMAKE_BINARY_DIR}/apps/crypto/libtomcrypt/libtomcrypt
+      PATCH_COMMAND
+        patch -p0 -d ${CMAKE_CURRENT_LIST_DIR} <
+        ${CMAKE_CURRENT_LIST_DIR}/digit-bit.patch && patch -p0 -d
+        ${CMAKE_CURRENT_LIST_DIR} <
+        ${CMAKE_CURRENT_LIST_DIR}/ltcrypt-flush.patch
       DOWNLOAD_NO_PROGRESS true
       TIMEOUT 30)
 
     FetchContent_GetProperties(libtomcrypt_fetch)
 
-    if(NOT libtomcrypt_POPULATED)
+    if(NOT libtomcrypt_fetch_POPULATED)
       FetchContent_Populate(libtomcrypt_fetch)
-    endif()
-
-    set(LIBTOMCRYPT_DIR ${libtomcrypt_fetch_SOURCE_DIR})
-
-    if(NOT EXISTS ${LIBTOMCRYPT_DIR}/.libtomcrypt_patch)
-      add_custom_command(
-        OUTPUT ${LIBTOMCRYPT_DIR}/.libtomcrypt_patch
-        COMMAND touch ${LIBTOMCRYPT_DIR}/.libtomcrypt_patch
-        COMMAND patch -p1 -d ${LIBTOMCRYPT_DIR} <
-                ${CMAKE_CURRENT_LIST_DIR}/digit-bit.patch > /dev/null || (exit 0
-                                                                         )
-        COMMAND
-          patch -p1 -d ${LIBTOMCRYPT_DIR} <
-          ${CMAKE_CURRENT_LIST_DIR}/ltcrypt-flush.patch > /dev/null || (exit 0))
-      add_custom_target(libtomcrypt_patch
-                        DEPENDS ${LIBTOMCRYPT_DIR}/.libtomcrypt_patch)
     endif()
   endif()
 
@@ -504,7 +492,7 @@ if(CONFIG_CRYPTO_LIBTOMCRYPT)
         DEPENDS
         libtomcrypt)
 
-    endif(CONFIG_LIBTOMCRYPT_LTCRYPT)
+    endif()
 
     if(CONFIG_LIBTOMCRYPT_HASHSUM)
 
@@ -522,37 +510,9 @@ if(CONFIG_CRYPTO_LIBTOMCRYPT)
         DEPENDS
         libtomcrypt)
 
-    endif(CONFIG_LIBTOMCRYPT_HASHSUM)
+    endif()
 
-  endif(CONFIG_LIBTOMCRYPT_DEMOS)
-
-  if(CONFIG_LIBTOMCRYPT_TEST)
-
-    file(GLOB TEST_CSRCS ${LIBTOMCRYPT_DIR}/tests/*.c)
-    list(REMOVE_ITEM TEST_CSRCS ${LIBTOMCRYPT_DIR}/tests/test.c)
-    list(APPEND CSRCS ${TEST_CSRCS})
-    target_compile_definitions(
-      libtomcrypt
-      PRIVATE KEY_DIR="/resource/libtomcrypt"
-              base64_decode=libtomcrypt_base64_decode
-              base64_encode=libtomcrypt_encode)
-    list(APPEND INCDIR ${LIBTOMCRYPT_DIR}/tests)
-
-    nuttx_add_application(
-      NAME
-      ${CONFIG_LIBTOMCRYPT_TEST_PROGNAME}
-      STACKSIZE
-      ${CONFIG_LIBTOMCRYPT_TEST_STACKSIZE}
-      PRIORITY
-      ${CONFIG_LIBTOMCRYPT_TEST_PRIORITY}
-      SRCS
-      ${LIBTOMCRYPT_DIR}/tests/test.c
-      INCLUDE_DIRECTORIES
-      ${INCDIR}
-      DEPENDS
-      libtomcrypt)
-
-  endif(CONFIG_LIBTOMCRYPT_TEST)
+  endif()
 
   # ############################################################################
   # Library Configuration
@@ -563,12 +523,7 @@ if(CONFIG_CRYPTO_LIBTOMCRYPT)
   target_include_directories(
     libtomcrypt
     PRIVATE $<GENEX_EVAL:$<TARGET_PROPERTY:libtommath,INCLUDE_DIRECTORIES>>)
-  target_compile_definitions(
-    libtomcrypt
-    PRIVATE LTC_SOURCE LTM_DESC blake2s_init=libtomcrypt_blake2s_init
-            md5_init=libtomcrypt_md5_init)
+  target_compile_definitions(libtomcrypt PRIVATE LTC_SOURCE LTM_DESC)
   target_compile_options(libtomcrypt PRIVATE -Wno-deprecated-declarations)
-  if(TARGET libtomcrypt_patch)
-    add_dependencies(libtomcrypt libtomcrypt_patch)
-  endif()
+
 endif()
