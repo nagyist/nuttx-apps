@@ -51,16 +51,22 @@ if(CONFIG_BENCHMARK_COREMARK)
     set(COREMARK_NTHREADS 1)
   endif()
 
-  set(FLAGS_STR "Using NuttX compilation options")
+  if(CONFIG_COREMARK_PRINT_ARGS)
+    set(COREMARK_PRINT_ARGS 1)
+  else()
+    set(COREMARK_PRINT_ARGS 0)
+  endif()
 
   # ############################################################################
   # Flags
   # ############################################################################
 
+  get_target_property(FLAGS_STR_LIST nuttx COMPILE_OPTIONS)
+  list(JOIN FLAGS_STR_LIST " " FLAGS_STR)
   set(CFLAGS
       -Wno-undef -DUSE_PTHREAD -DPERFORMANCE_RUN=1
-      -DMULTITHREAD=${COREMARK_NTHREADS} -DFLAGS_STR=\"${FLAGS_STR}\"
-      -DMEM_LOCATION=\"${CONFIG_COREMARK_MEM_LOCATION}\")
+      -DMULTITHREAD=${COREMARK_NTHREADS} -DFLAGS_STR="${FLAGS_STR}"
+      -DMEM_LOCATION="Stack")
 
   if(CONFIG_COREMARK_ITERATIONS_OVERRIDE)
     list(APPEND CFLAGS -DITERATIONS=${CONFIG_COREMARK_ITERATIONS_COUNT})
