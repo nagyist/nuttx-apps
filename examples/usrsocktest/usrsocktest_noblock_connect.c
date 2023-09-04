@@ -72,7 +72,7 @@ TEST_SETUP(no_block_connect)
 
 TEST_TEAR_DOWN(no_block_connect)
 {
-  int unused_data ret;
+  int ret;
 
   if (sd >= 0)
     {

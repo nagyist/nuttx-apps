@@ -67,21 +67,25 @@
 
 #  define SECTORSIZE   512
 #  define NSECTORS(b)  (((b) + SECTORSIZE - 1) / SECTORSIZE)
-#  define MOUNTPT      "/mnt/elf/romfs"
+#  define MOUNTPT      "/mnt/romfs"
 
 #  ifndef CONFIG_EXAMPLES_ELF_DEVMINOR
 #    define CONFIG_EXAMPLES_ELF_DEVMINOR 0
 #  endif
 
+#  ifndef CONFIG_EXAMPLES_ELF_DEVPATH
+#    define CONFIG_EXAMPLES_ELF_DEVPATH "/dev/ram0"
+#  endif
+
 #elif defined(CONFIG_EXAMPLES_ELF_CROMFS)
 /* Describe the CROMFS file system */
 
-#  define MOUNTPT      "/mnt/elf/cromfs"
+#  define MOUNTPT      "/mnt/cromfs"
 
 #elif defined(CONFIG_EXAMPLES_ELF_EXTERN) && defined(CONFIG_EXAMPLES_ELF_FSMOUNT)
 /* Describe the external file system */
 
-#  define MOUNTPT      "/mnt/elf/" CONFIG_EXAMPLES_ELF_FSTYPE
+#  define MOUNTPT      "/mnt/" CONFIG_EXAMPLES_ELF_FSTYPE
 
 #else
 #  undef MOUNTPT
@@ -101,8 +105,6 @@
 #else
 #  define errmsg                printf
 #endif
-
-#define ELF_DEVPATH_FMT "/dev/ram%d"
 
 /****************************************************************************
  * Private Data
@@ -124,8 +126,8 @@ static char fullpath[128];
  ****************************************************************************/
 
 #if defined(CONFIG_EXAMPLES_ELF_ROMFS) || defined(CONFIG_EXAMPLES_ELF_CROMFS)
-extern const unsigned char elf_romfs_img[];
-extern const unsigned int elf_romfs_img_len;
+extern const unsigned char romfs_img[];
+extern const unsigned int romfs_img_len;
 #elif !defined(CONFIG_EXAMPLES_ELF_EXTERN)
 #  error "No file system selected"
 #endif
@@ -198,7 +200,6 @@ static inline void testheader(FAR const char *progname)
 
 int main(int argc, FAR char *argv[])
 {
-  char devname[32];
 #ifdef CONFIG_EXAMPLES_ELF_FSREMOVEABLE
   struct stat buf;
 #endif
@@ -213,8 +214,6 @@ int main(int argc, FAR char *argv[])
 
   mm_initmonitor();
 
-  sprintf(devname, ELF_DEVPATH_FMT, CONFIG_EXAMPLES_ELF_DEVMINOR);
-
 #if defined(CONFIG_EXAMPLES_ELF_ROMFS)
 
   /* Create a ROM disk for the ROMFS filesystem */
@@ -223,9 +222,9 @@ int main(int argc, FAR char *argv[])
           CONFIG_EXAMPLES_ELF_DEVMINOR);
 
   desc.minor    = CONFIG_EXAMPLES_ELF_DEVMINOR;         /* Minor device number of the ROM disk. */
-  desc.nsectors = NSECTORS(elf_romfs_img_len);          /* The number of sectors in the ROM disk */
+  desc.nsectors = NSECTORS(romfs_img_len);              /* The number of sectors in the ROM disk */
   desc.sectsize = SECTORSIZE;                           /* The size of one sector in bytes */
-  desc.image    = (FAR uint8_t *)elf_romfs_img;         /* File system image */
+  desc.image    = (FAR uint8_t *)romfs_img;             /* File system image */
 
   ret = boardctl(BOARDIOC_ROMDISK, (uintptr_t)&desc);
   if (ret < 0)
@@ -239,13 +238,14 @@ int main(int argc, FAR char *argv[])
   /* Mount the ROMFS file system */
 
   message("Mounting ROMFS filesystem at target=%s with source=%s\n",
-          MOUNTPT, devname);
+         MOUNTPT, CONFIG_EXAMPLES_ELF_DEVPATH);
 
-  ret = mount(devname, MOUNTPT, "romfs", MS_RDONLY, NULL);
+  ret = mount(CONFIG_EXAMPLES_ELF_DEVPATH, MOUNTPT, "romfs",
+              MS_RDONLY, NULL);
   if (ret < 0)
     {
       errmsg("ERROR: mount(%s,%s,romfs) failed: %s\n",
-             devname, MOUNTPT, strerror(errno));
+             CONFIG_EXAMPLES_ELF_DEVPATH, MOUNTPT, strerror(errno));
     }
 
 #elif defined(CONFIG_EXAMPLES_ELF_CROMFS)
@@ -268,26 +268,27 @@ int main(int argc, FAR char *argv[])
 
   do
     {
-      ret = stat(devname, &buf);
+      ret = stat(CONFIG_EXAMPLES_ELF_DEVPATH, &buf);
       if (ret < 0)
         {
           int errcode = errno;
           if (errcode == ENOENT)
             {
-              printf("%s does not exist.  Waiting...\n", devname);
+              printf("%s does not exist.  Waiting...\n",
+                     CONFIG_EXAMPLES_ELF_DEVPATH);
               sleep(1);
             }
           else
             {
               printf("ERROR: stat(%s) failed: %s  Aborting...\n",
-                     devname, strerror(errcode));
+                     CONFIG_EXAMPLES_ELF_DEVPATH, strerror(errcode));
               exit(EXIT_FAILURE);
             }
         }
       else if (!S_ISBLK(buf.st_mode))
         {
           printf("ERROR: stat(%s) exists but is not a block driver: %04x\n",
-                 devname, buf.st_mode);
+                 CONFIG_EXAMPLES_ELF_DEVPATH, buf.st_mode);
           exit(EXIT_FAILURE);
         }
     }
@@ -299,11 +300,13 @@ int main(int argc, FAR char *argv[])
   message("Mounting %s filesystem at target=%s\n",
           CONFIG_EXAMPLES_ELF_FSTYPE, MOUNTPT);
 
-  ret = mount(devname, MOUNTPT, CONFIG_EXAMPLES_ELF_FSTYPE, MS_RDONLY, NULL);
+  ret = mount(CONFIG_EXAMPLES_ELF_DEVPATH, MOUNTPT,
+              CONFIG_EXAMPLES_ELF_FSTYPE, MS_RDONLY, NULL);
   if (ret < 0)
     {
-      errmsg("ERROR: mount(%s, %s, %s) failed: %s\n", devname,
-             CONFIG_EXAMPLES_ELF_FSTYPE, MOUNTPT, strerror(errno));
+      errmsg("ERROR: mount(%s, %s, %s) failed: %s\n",
+             CONFIG_EXAMPLES_ELF_DEVPATH, CONFIG_EXAMPLES_ELF_FSTYPE,
+             MOUNTPT, strerror(errno));
     }
 #endif
 #else

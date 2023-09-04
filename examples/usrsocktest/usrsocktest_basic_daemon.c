@@ -502,7 +502,7 @@ TEST_SETUP(basic_daemon)
 
 TEST_TEAR_DOWN(basic_daemon)
 {
-  int unused_data ret;
+  int ret;
   if (sd >= 0)
     {
       ret = close(sd);

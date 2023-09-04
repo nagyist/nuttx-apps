@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/usrsocktest/usrsocktest_remote_disconnect.c
+ * apps/examples/usrsocktest/usrsocktest_remote_disconnect.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -972,7 +972,7 @@ TEST_SETUP(remote_disconnect)
 
 TEST_TEAR_DOWN(remote_disconnect)
 {
-  int unused_data ret;
+  int ret;
 
   if (sd >= 0)
     {
