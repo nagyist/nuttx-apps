@@ -26,6 +26,7 @@
 #include "lv_porting/lv_gpu_interface.h"
 #include "../lv_gpu_draw_utils.h"
 #include "vg_lite.h"
+#include "vg_lite_utils.h"
 #include <nuttx/cache.h>
 
 /****************************************************************************
@@ -138,6 +139,9 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_draw_polygon_gpu(
     } else {
       vg_lite_scale(poly_w / 256.0f, 1.0f, &grad.matrix);
     }
+    VG_LITE_ASSERT_BUFFER(&dst_vgbuf);
+    VG_LITE_ASSERT_BUFFER(&grad.image);
+    VG_LITE_ASSERT_PATH(&vpath);
     vg_lite_draw_gradient(&dst_vgbuf, &vpath, fill, &matrix, &grad, blend);
   } else {
     /* Regular fill */
@@ -147,6 +151,8 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_draw_polygon_gpu(
       LV_COLOR_SET_A(bg_color, dsc->bg_opa);
     }
     vg_lite_color_t color = BGRA_TO_RGBA(lv_color_to32(bg_color));
+    VG_LITE_ASSERT_BUFFER(&dst_vgbuf);
+    VG_LITE_ASSERT_PATH(&vpath);
     vg_lite_draw(&dst_vgbuf, &vpath, fill, &matrix, blend, color);
   }
   CHECK_ERROR(vg_lite_finish());

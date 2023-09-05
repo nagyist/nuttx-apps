@@ -27,6 +27,7 @@
 #include "../lv_gpu_draw_utils.h"
 #include "lv_porting/lv_gpu_interface.h"
 #include "vg_lite.h"
+#include "vg_lite_utils.h"
 #include <stdlib.h>
 #if defined(CONFIG_GPU_USE_MVE_BLEND)
 #include "arm_mve.h"
@@ -331,8 +332,8 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_draw_img_decoded_gpu(
   }
 
   /* check vg-lite buffer */
-  GPU_ASSERT_BUF(&dst_vgbuf);
-  GPU_ASSERT_BUF(&src_vgbuf);
+  VG_LITE_ASSERT_BUFFER(&dst_vgbuf);
+  VG_LITE_ASSERT_BUFFER(&src_vgbuf);
 
   if (masked) {
     /* masked, have to use draw_pattern */

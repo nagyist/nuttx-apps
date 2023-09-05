@@ -28,6 +28,7 @@
 #include "lv_porting/decoder/vglite/lv_gpu_decoder.h"
 #include "src/misc/lv_gc.h"
 #include "vg_lite.h"
+#include "vglite/vg_lite_utils.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -830,6 +831,8 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t gpu_draw_path(float* path, lv_coord_t length,
               ((color & 0xFF) * opa)) /* R */
               >> 8;
     }
+    VG_LITE_ASSERT_BUFFER(&dst_vgbuf);
+    VG_LITE_ASSERT_PATH(&vpath);
     CHECK_ERROR(vg_lite_draw(&dst_vgbuf, &vpath, fill, &gmat, blend, color));
     CHECK_ERROR(gpu_flush());
 
@@ -891,6 +894,8 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t gpu_draw_path(float* path, lv_coord_t length,
       vgbuf->image_mode = VG_LITE_NORMAL_IMAGE_MODE;
     }
     color = BGRA_TO_RGBA(lv_color_to32(gpu_fill->color));
+    VG_LITE_ASSERT_BUFFER(&dst_vgbuf);
+    VG_LITE_ASSERT_PATH(&vpath);
     CHECK_ERROR(vg_lite_draw_pattern(&dst_vgbuf, &vpath, fill, &gmat, vgbuf,
         &matrix, blend, pattern, color, filter));
 
@@ -927,6 +932,8 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t gpu_draw_path(float* path, lv_coord_t length,
     } else {
       vg_lite_scale(lv_area_get_width(grad_area) / 256.0f, 1.0f, &grad.matrix);
     }
+    VG_LITE_ASSERT_BUFFER(&dst_vgbuf);
+    VG_LITE_ASSERT_PATH(&vpath);
     vg_lite_draw_gradient(&dst_vgbuf, &vpath, fill, &gmat, &grad, blend);
     CHECK_ERROR(gpu_flush());
 

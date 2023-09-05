@@ -14,6 +14,7 @@
 #ifdef CONFIG_LV_GPU_DRAW_LETTER
 
 #include "vg_lite.h"
+#include "vg_lite_utils.h"
 
 #define VLC_SET_OP_CODE(data, op_code) (*((uint16_t*)(&data)) = (op_code))
 
@@ -324,6 +325,8 @@ static lv_res_t draw_letter_normal(lv_draw_ctx_t* draw_ctx, const lv_draw_label_
         return LV_RES_INV;
     }
 
+    VG_LITE_ASSERT_BUFFER(&dest_vg_buf);
+    VG_LITE_ASSERT_PATH(&outline->path);
     CHECK_ERROR(vg_lite_draw(
         &dest_vg_buf, &outline->path, VG_LITE_FILL_EVEN_ODD,
         &matrix, VG_LITE_BLEND_SRC_OVER, vg_color_make(dsc->color, dsc->opa)));

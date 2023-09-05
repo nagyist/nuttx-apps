@@ -25,6 +25,7 @@
 #include "lv_porting/decoder/vglite/lv_gpu_decoder.h"
 #include "lv_gpu_draw_utils.h"
 #include "vglite/lv_gpu_draw_layer.h"
+#include "vglite/vg_lite_utils.h"
 #include "gpu_port.h"
 #include "vg_lite.h"
 #include <stdio.h>
@@ -471,8 +472,8 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_gpu_color_fmt_convert(
   }
 
   /* check vg-lite buffer */
-  GPU_ASSERT_BUF(&dst);
-  GPU_ASSERT_BUF(&src);
+  VG_LITE_ASSERT_BUFFER(&dst);
+  VG_LITE_ASSERT_BUFFER(&src);
 
   CHECK_ERROR(vg_lite_blit(&dst, &src, NULL, 0, 0, 0));
   CHECK_ERROR(vg_lite_finish());

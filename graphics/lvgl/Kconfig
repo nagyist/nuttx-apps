@@ -96,6 +96,10 @@ config LV_GPU_USE_PERF
 	bool "Enable GPU performance measurement outputs"
 	default n
 
+config LV_GPU_USE_ASSERT
+	bool "Enable GPU assert"
+	default n
+
 config LV_GPU_DRAW_LINE
 	bool "Use GPU accelerated draw_line"
 	default n

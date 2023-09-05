@@ -89,6 +89,7 @@ CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../vendor/bes/$(CONFIG_BES_DDK_DIR)/platform
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../vendor/bes/$(CONFIG_BES_DDK_DIR)/platform/drivers/graphic/gpu
 CSRCS += lv_porting/gpu/lv_gpu_interface.c
 CSRCS += lv_porting/gpu/lv_gpu_draw_utils.c
+CSRCS += lv_porting/gpu/vglite/vg_lite_utils.c
 CSRCS += lv_porting/gpu/vglite/lv_gpu_draw_layer.c
 CSRCS += lv_porting/decoder/vglite/lv_gpu_decoder.c
 CSRCS += lv_porting/decoder/vglite/lv_gpu_evoreader.c

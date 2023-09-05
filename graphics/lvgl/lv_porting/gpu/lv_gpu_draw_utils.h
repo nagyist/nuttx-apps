@@ -60,12 +60,6 @@
 #define GPU_POLYGON_PATH_SIZE(n) (((n)*3 + 1) * sizeof(float))
 #define ANGLE_RES 0.01f
 
-#define GPU_ASSERT_BUF(buf) \
-do { \
-  LV_ASSERT((buf)->address == (lv_uintptr_t)(buf)->memory); \
-  LV_ASSERT(IS_ALIGNED((buf)->address, 64)); \
-} while(0)
-
 /**********************
  *      TYPEDEFS
  **********************/
