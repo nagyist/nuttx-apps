@@ -501,6 +501,11 @@ static FAR void *img_cache_alloc(size_t align, size_t size, bool re, FAR
 
       if (re)
         {
+          if (ptr)
+            {
+              ptr -= IMG_CACHE_PAD_SIZE;
+            }
+
           mem = mm_realloc(cache_manager.heap, ptr, size);
         }
       else
