@@ -622,12 +622,6 @@ bool vg_lite_check_buffer(const vg_lite_buffer_t * buffer)
         return false;
     }
 
-    if(!VG_LITE_IS_ALIGNED(buffer->width, VG_LITE_IMG_SRC_PX_ALIGN)) {
-        LV_LOG_ERROR("buffer width(%d) is not aligned to %d",
-                     (int)buffer->width, VG_LITE_IMG_SRC_PX_ALIGN);
-        return false;
-    }
-
     if(buffer->height < 1) {
         LV_LOG_ERROR("buffer height(%d) < 1", (int)buffer->height);
         return false;
