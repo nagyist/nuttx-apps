@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/fstest/Makefile
+# apps/testing/crypto/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -23,27 +23,27 @@ include $(APPDIR)/Make.defs
 # Generic file system stress test application info
 ifeq ($(CONFIG_TESTING_CRYPTO_3DES_CBC),y)
 PROGNAME += des3cbc
-MAINSRC +=  3descbc.c
+MAINSRC  += 3descbc.c
 endif
 
 ifeq ($(CONFIG_TESTING_CRYPTO_AES_XTS),y)
 PROGNAME += aesxts
-MAINSRC +=  aesxts.c
+MAINSRC  += aesxts.c
 endif
 
 ifeq ($(CONFIG_TESTING_CRYPTO_AES_CTR),y)
 PROGNAME += aesctr
-MAINSRC +=  aesctr.c
+MAINSRC  += aesctr.c
 endif
 
 ifeq ($(CONFIG_TESTING_CRYPTO_AES_CBC),y)
 PROGNAME += aescbc
-MAINSRC +=  aescbc.c
+MAINSRC  += aescbc.c
 endif
 
 ifeq ($(CONFIG_TESTING_CRYPTO_HMAC),y)
 PROGNAME += hmac
-MAINSRC +=  hmac.c
+MAINSRC  += hmac.c
 endif
 
 ifeq ($(CONFIG_TESTING_CRYPTO_HASH),y)

@@ -67,7 +67,7 @@ if(CONFIG_CRYPTO_MBEDTLS)
   # Include Directory
   # ############################################################################
 
-  set(INCDIR ${NUTTX_APPS_DIR}/crypto ${MBEDTLS_DIR}/include)
+  set(INCDIR ${MBEDTLS_DIR}/include)
 
   # ############################################################################
   # Library Configuration
