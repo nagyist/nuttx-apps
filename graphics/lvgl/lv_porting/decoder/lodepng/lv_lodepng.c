@@ -172,11 +172,14 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
         }
         else {
             LV_LOG_WARN("malloc failed for expend size");
+            lv_mem_free_draw_buf(img_data);
+            return LV_RES_INV;
         }
 #endif
 
 #ifdef CONFIG_LV_USE_GPU_INTERFACE
         lv_img_dsc_t img_dsc;
+        lv_memset_00(&img_dsc, sizeof(img_dsc));
         img_dsc.header = dsc->header;
         img_dsc.data = (const uint8_t *)img_data;
         img_dsc.data_size = 0;
@@ -186,17 +189,13 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
         lv_res_t res = lv_gpu_decoder_open(decoder, dsc);
         dsc->src_type = LV_IMG_SRC_FILE;
         dsc->src = tmp;
-        if (res == LV_RES_OK) {
-            lv_mem_free_draw_buf(img_data);
-        } else {
-            dsc->img_data = (const uint8_t *)img_data;
-        }
+        lv_mem_free_draw_buf(img_data);
+        return res;
 #else
         dsc->img_data = (const uint8_t *)img_data;
-#endif
         dsc->stride = png_width;
-
         return LV_RES_OK;     /*The image is fully decoded. Return with its pointer*/
+#endif
     }
 
     return LV_RES_INV;    /*If not returned earlier then it failed*/

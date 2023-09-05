@@ -155,6 +155,7 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
         /*Convert the image to the system's color depth*/
 #ifdef CONFIG_LV_USE_GPU_INTERFACE
         lv_img_dsc_t img_dsc;
+        lv_memset_00(&img_dsc, sizeof(img_dsc));
         img_dsc.header = dsc->header;
         img_dsc.data = (const uint8_t *)img_data;
         img_dsc.data_size = 0;
@@ -164,15 +165,12 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
         lv_res_t res = lv_gpu_decoder_open(decoder, dsc);
         dsc->src_type = LV_IMG_SRC_FILE;
         dsc->src = tmp;
-        if (res == LV_RES_OK) {
-            lv_mem_free_draw_buf(img_data);
-        } else {
-            dsc->img_data = (const uint8_t *)img_data;
-        }
+        lv_mem_free_draw_buf(img_data);
+        return res;
 #else
         dsc->img_data = (const uint8_t *)img_data;
-#endif
         return LV_RES_OK;     /*The image is fully decoded. Return with its pointer*/
+#endif
     }
 
     return LV_RES_INV;    /*If not returned earlier then it failed*/
@@ -221,7 +219,6 @@ static uint8_t* alloc_file(const char * filename, uint32_t * size)
 
     /*Read file to buffer*/
     data = lv_mem_alloc_draw_buf(data_size);
-    LV_ASSERT_MALLOC(data);
     if (data == NULL) {
         LV_LOG_WARN("malloc failed for data");
         goto failed;
@@ -349,7 +346,6 @@ static lv_color_t * open_jpeg_file(const char * filename, lv_img_decoder_dsc_t *
     lv_coord_t expand_height = cinfo.output_height + CONFIG_LV_DECODER_IMG_SIZE_EXPAND * 2;
     size_t output_buffer_size = LV_IMG_BUF_SIZE_TRUE_COLOR(expand_width, expand_height);
     output_buffer = lv_mem_aligned_alloc_draw_buf(LV_ATTRIBUTE_MEM_ALIGN_SIZE, output_buffer_size);
-    LV_ASSERT_MALLOC(output_buffer);
     if(output_buffer) {
 
 #if (CONFIG_LV_DECODER_IMG_SIZE_EXPAND > 0)
