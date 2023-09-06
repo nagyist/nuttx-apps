@@ -179,7 +179,12 @@ LV_ATTRIBUTE_FAST_MEM lv_res_t lv_draw_img_decoded_gpu(
   uint32_t* palette = NULL;
 
   vg_lite_buffer_t* vgbuf = lv_gpu_get_vgbuf((void*)map_p);
-  LV_ASSERT_MSG(vgbuf != NULL, "Undecoded image detected");
+
+  if (!vgbuf) {
+    LV_LOG_ERROR("vgbuf is NULL, undecoded image detected");
+    return LV_RES_INV;
+  }
+
   if (vgbuf) {
     indexed = (vgbuf->format >= VG_LITE_INDEX_1)
         && (vgbuf->format <= VG_LITE_INDEX_8);
