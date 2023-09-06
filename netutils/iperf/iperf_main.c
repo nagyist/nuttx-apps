@@ -85,7 +85,7 @@ static void iperf_showusage(FAR const char *progname,
   printf("iperf command:\n");
   arg_print_glossary(stdout, (FAR void **)args, NULL);
 
-  arg_freetable((FAR void **)args, 1);
+  arg_freetable((FAR void **)args, sizeof(*args) / sizeof(FAR void *));
   exit(exitcode);
 }
 
@@ -301,7 +301,8 @@ int main(int argc, FAR char *argv[])
   iperf_start(&cfg);
 
 out:
-  arg_freetable((FAR void **)&iperf_args, 1);
+  arg_freetable((FAR void **)&iperf_args,
+                sizeof(iperf_args) / sizeof(FAR void *));
 
   return 0;
 }
