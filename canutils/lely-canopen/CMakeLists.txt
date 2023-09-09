@@ -28,7 +28,7 @@ if(CONFIG_CANUTILS_LELYCANOPEN)
 
   if(NOT EXISTS ${LELYCANOPEN_DIR})
     FetchContent_Declare(
-      lelycanopen_fetch
+      lelycanopen
       URL ${CONFIG_CANUTILS_LELYCANOPEN_URL}/lely-core-${CONFIG_CANUTILS_LELYCANOPEN_VERSION}.tar.gz
           SOURCE_DIR
           ${CMAKE_CURRENT_LIST_DIR}/lely-canopen
@@ -46,8 +46,6 @@ if(CONFIG_CANUTILS_LELYCANOPEN)
     endif()
   endif()
 
-  nuttx_add_library(lelycanopen STATIC)
-
   # ############################################################################
   # Flags
   # ############################################################################
@@ -60,14 +58,17 @@ if(CONFIG_CANUTILS_LELYCANOPEN)
 
   set(CSRCS)
 
-  # CAN network object
-  list(APPEND CSRCS ${LELYCANOPEN_DIR}/src/can/buf.c
-       ${LELYCANOPEN_DIR}/src/can/msg.c ${LELYCANOPEN_DIR}/src/can/vci.c
-       ${LELYCANOPEN_DIR}/src/can/net.c)
-  # CANopen library
+  if(CONFIG_CANUTILS_LELYCANOPEN_TOOLS_COCTL)
+    list(APPEND CSRCS ${LELYCANOPEN_DIR}/tools/coctl.c)
+  endif()
+
   list(
     APPEND
     CSRCS
+    ${LELYCANOPEN_DIR}/src/can/buf.c
+    ${LELYCANOPEN_DIR}/src/can/msg.c
+    ${LELYCANOPEN_DIR}/src/can/vci.c
+    ${LELYCANOPEN_DIR}/src/can/net.c
     ${LELYCANOPEN_DIR}/src/co/crc.c
     ${LELYCANOPEN_DIR}/src/co/dev.c
     ${LELYCANOPEN_DIR}/src/co/nmt.c
@@ -78,7 +79,25 @@ if(CONFIG_CANUTILS_LELYCANOPEN)
     ${LELYCANOPEN_DIR}/src/co/sdo.c
     ${LELYCANOPEN_DIR}/src/co/ssdo.c
     ${LELYCANOPEN_DIR}/src/co/type.c
-    ${LELYCANOPEN_DIR}/src/co/val.c)
+    ${LELYCANOPEN_DIR}/src/co/val.c
+    ${LELYCANOPEN_DIR}/src/util/bits.c
+    ${LELYCANOPEN_DIR}/src/util/bitset.c
+    ${LELYCANOPEN_DIR}/src/util/cmp.c
+    ${LELYCANOPEN_DIR}/src/util/config.c
+    ${LELYCANOPEN_DIR}/src/util/config_ini.c
+    ${LELYCANOPEN_DIR}/src/util/dllist.c
+    ${LELYCANOPEN_DIR}/src/util/endian.c
+    ${LELYCANOPEN_DIR}/src/util/errnum.c
+    ${LELYCANOPEN_DIR}/src/util/frbuf.c
+    ${LELYCANOPEN_DIR}/src/util/fwbuf.c
+    ${LELYCANOPEN_DIR}/src/util/lex.c
+    ${LELYCANOPEN_DIR}/src/util/membuf.c
+    ${LELYCANOPEN_DIR}/src/util/pheap.c
+    ${LELYCANOPEN_DIR}/src/util/print.c
+    ${LELYCANOPEN_DIR}/src/util/rbtree.c
+    ${LELYCANOPEN_DIR}/src/util/stop.c
+    ${LELYCANOPEN_DIR}/src/util/time.c
+    ${LELYCANOPEN_DIR}/src/util/ustring.c)
 
   if(CONFIG_CANUTILS_LELYCANOPEN_TIME)
     list(APPEND CSRCS ${LELYCANOPEN_DIR}/src/co/time.c)
@@ -136,35 +155,10 @@ if(CONFIG_CANUTILS_LELYCANOPEN)
     list(APPEND CSRCS ${LELYCANOPEN_DIR}/src/co/wtm.c)
   endif()
 
-  # utils
-
   if(CONFIG_CANUTILS_LELYCANOPEN_DIAG)
     list(APPEND CSRCS ${LELYCANOPEN_DIR}/src/util/diag.c)
   endif()
 
-  list(
-    APPEND
-    CSRCS
-    ${LELYCANOPEN_DIR}/src/util/bits.c
-    ${LELYCANOPEN_DIR}/src/util/bitset.c
-    ${LELYCANOPEN_DIR}/src/util/cmp.c
-    ${LELYCANOPEN_DIR}/src/util/config.c
-    ${LELYCANOPEN_DIR}/src/util/config_ini.c
-    ${LELYCANOPEN_DIR}/src/util/dllist.c
-    ${LELYCANOPEN_DIR}/src/util/endian.c
-    ${LELYCANOPEN_DIR}/src/util/errnum.c
-    ${LELYCANOPEN_DIR}/src/util/frbuf.c
-    ${LELYCANOPEN_DIR}/src/util/fwbuf.c
-    ${LELYCANOPEN_DIR}/src/util/lex.c
-    ${LELYCANOPEN_DIR}/src/util/membuf.c
-    ${LELYCANOPEN_DIR}/src/util/pheap.c
-    ${LELYCANOPEN_DIR}/src/util/print.c
-    ${LELYCANOPEN_DIR}/src/util/rbtree.c
-    ${LELYCANOPEN_DIR}/src/util/stop.c
-    ${LELYCANOPEN_DIR}/src/util/time.c
-    ${LELYCANOPEN_DIR}/src/util/ustring.c)
-
-  # Lely IO lib
   if(CONFIG_CANUTILS_LELYCANOPEN_IOLIB)
     list(
       APPEND
@@ -200,19 +194,18 @@ if(CONFIG_CANUTILS_LELYCANOPEN)
       COMPILE_FLAGS
       ${CFLAGS}
       SRCS
-      ${LELYCANOPEN_DIR}/tools/coctl.c
+      ${CSRCS}
       MODULE
       ${CONFIG_CANUTILS_LELYCANOPEN}
       INCLUDE_DIRECTORIES
-      ${INCDIR}
-      DEPENDS
-      lelycanopen)
+      ${INCDIR})
   endif()
 
   # ############################################################################
   # Library Configuration
   # ############################################################################
 
+  nuttx_add_user_library(lelycanopen)
   target_compile_options(lelycanopen PRIVATE ${CFLAGS})
   target_sources(lelycanopen PRIVATE ${CSRCS})
   target_include_directories(lelycanopen PRIVATE ${INCDIR})
