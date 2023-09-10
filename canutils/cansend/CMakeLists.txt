@@ -20,8 +20,6 @@
 
 if(CONFIG_CANUTILS_CANSEND)
 
-  set(LIBCANUTILS_DIR ${NUTTX_APPS_DIR}/canutils/libcanutils)
-
   nuttx_add_application(
     NAME
     cansend
@@ -30,8 +28,6 @@ if(CONFIG_CANUTILS_CANSEND)
     MODULE
     ${CONFIG_CANUTILS_CANSEND}
     SRCS
-    cansend.c
-    INCLUDE_DIRECTORIES
-    ${LIBCANUTILS_DIR})
+    cansend.c)
 
 endif()

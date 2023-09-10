@@ -481,8 +481,6 @@ int cmd_reboot(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #if defined(CONFIG_BOARDCTL_RESET_CAUSE) && !defined(CONFIG_NSH_DISABLE_RESET_CAUSE)
 int cmd_reset_cause(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
-  UNUSED(argc);
-
   int ret;
   struct boardioc_reset_cause_s cause;
 
@@ -548,7 +546,6 @@ static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl,
       if (argv[3] == 0 || argv[4] == 0 ||
           argv[5] == 0 || argv[6] == 0)
         {
-          nsh_error(vtbl, g_fmtargrequired, argv[0]);
           return ERROR;
         }
 
@@ -776,7 +773,7 @@ int cmd_uname(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
     }
 
   lib_stream_putc(&stream, '\n');
-  nsh_write(vtbl, stream.buffer, stream.common.nput);
+  nsh_write(vtbl, stream.buffer, stream.public.nput);
   return OK;
 }
 #endif
