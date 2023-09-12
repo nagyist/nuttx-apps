@@ -18,7 +18,7 @@
 
 #define VLC_SET_OP_CODE(data, op_code) (*((uint16_t*)(&data)) = (op_code))
 
-#define PATH_QUALITY VG_LITE_MEDIUM
+#define PATH_QUALITY VG_LITE_HIGH
 #define PATH_DATA_COORD_FORMAT VG_LITE_S16
 #define FT_F26Dot6_SHIFT 6
 
