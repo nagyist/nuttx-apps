@@ -656,6 +656,11 @@ config NSH_DISABLE_RESET_CAUSE
 	default DEFAULT_SMALL
 	depends on BOARDCTL_RESET_CAUSE
 
+config NSH_DISABLE_WAIT
+	bool "Disable wait"
+	default DEFAULT_SMALL
+	depends on SCHED_WAITPID
+
 endmenu
 
 if MMCSD
