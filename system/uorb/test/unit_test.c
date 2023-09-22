@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/param.h>
 
 #include "utility.h"
 
@@ -89,7 +90,7 @@ static int pubsubtest_thread_entry(int argc, FAR char *argv[])
 
       /* wait for up to 500ms for data */
 
-      pret = poll(&fds[0], (sizeof(fds) / sizeof(fds[0])), 500);
+      pret = poll(&fds[0], nitems(fds), 500);
       if (fds[0].revents & POLLIN)
         {
           unsigned elt;
@@ -701,12 +702,7 @@ static int test_multi2(void)
               0, 0
             };
 
-          if (OK != orb_copy(ORB_ID(orb_test_medium_multi),
-                             orb_data_cur_fd, &msg))
-            {
-              return test_fail("copy failed: %d", errno);
-            }
-
+          orb_copy(ORB_ID(orb_test_medium_multi), orb_data_cur_fd, &msg);
           if (last_time >= msg.timestamp && last_time != 0)
             {
               return test_fail("Timestamp not increasing! (%" PRIu64

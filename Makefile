@@ -71,6 +71,8 @@ ifeq ($(CONFIG_BUILD_KERNEL),y)
 
 install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
+$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+
 .import: $(BIN)
 	$(Q) install libapps.a $(APPDIR)$(DELIM)import$(DELIM)libs
 	$(Q) $(MAKE) install
@@ -87,9 +89,12 @@ else
 # symbol table is required.
 
 ifeq ($(CONFIG_BUILD_LOADABLE),)
-
+ifeq ($(CONFIG_WINDOWS_NATIVE),y)
+$(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+else
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
 	$(call LINK_WASM)
+endif
 
 else
 
