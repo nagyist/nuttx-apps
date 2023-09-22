@@ -32,6 +32,7 @@
  ****************************************************************************/
 
 #define ITEM_DEF(name) {#name, vg_lite_test_##name}
+#define GC(X) gc##X
 
 /****************************************************************************
  * Private Types
@@ -219,7 +220,7 @@ static void vg_lite_dump_info(void)
                info.header_version);
   GPU_LOG_INFO("VGLite release version: 0x%" PRIx32, info.release_version);
 
-  for (int feature = 0; feature < gcFEATURE_COUNT; feature++)
+  for (int feature = 0; feature < GC(FEATURE_COUNT); feature++)
     {
       const char *feature_string  = vg_lite_get_feature_string(feature);
       const char *feature_support = vg_lite_query_feature(

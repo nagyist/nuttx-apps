@@ -66,7 +66,6 @@ static vg_lite_error_t vg_lite_test_glyph_combination(
 
   for (int b = 0; b < GPU_ARRAY_SIZE(blend_arr); b++)
     {
-
     }
 
 error_handler:
@@ -140,18 +139,9 @@ vg_lite_error_t vg_lite_test_path_glyph_random(
   matrix.m[1][1] = -matrix.m[1][1];
 
   float offset = (float)(rand() % 100);
-  vg_lite_translate(offset/scale_val, -(offset + 200)/scale_val, &matrix);
-
-
-  VG_LITE_CHECK_ERROR(vg_lite_draw(
-    VG_LITE_DEST_BUF,
-    &path,
-    VG_LITE_FILL_EVEN_ODD,
-    &matrix,
-    VG_LITE_BLEND_SRC_OVER,
-    0xff0a59f7));
-
-  vg_lite_translate(80/scale_val, 0, &matrix);
+  vg_lite_translate(
+    offset / scale_val, -(offset + 200) / scale_val, &matrix
+  );
 
   VG_LITE_CHECK_ERROR(vg_lite_draw(
     VG_LITE_DEST_BUF,
@@ -159,9 +149,10 @@ vg_lite_error_t vg_lite_test_path_glyph_random(
     VG_LITE_FILL_EVEN_ODD,
     &matrix,
     VG_LITE_BLEND_SRC_OVER,
-    0xff0a00f7));
+    0xff0a59f7
+  ));
 
-  vg_lite_translate(80/scale_val, 0, &matrix);
+  vg_lite_translate(80 / scale_val, 0, &matrix);
 
   VG_LITE_CHECK_ERROR(vg_lite_draw(
     VG_LITE_DEST_BUF,
@@ -169,7 +160,19 @@ vg_lite_error_t vg_lite_test_path_glyph_random(
     VG_LITE_FILL_EVEN_ODD,
     &matrix,
     VG_LITE_BLEND_SRC_OVER,
-    0xffff00f7));
+    0xff0a00f7
+  ));
+
+  vg_lite_translate(80 / scale_val, 0, &matrix);
+
+  VG_LITE_CHECK_ERROR(vg_lite_draw(
+    VG_LITE_DEST_BUF,
+    &path,
+    VG_LITE_FILL_EVEN_ODD,
+    &matrix,
+    VG_LITE_BLEND_SRC_OVER,
+    0xffff00f7
+  ));
 
   GPU_PERF_RENDER_START();
   VG_LITE_CHECK_ERROR(vg_lite_finish());

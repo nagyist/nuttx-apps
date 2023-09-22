@@ -342,7 +342,6 @@ error_handler:
 vg_lite_error_t vg_lite_test_image_indexed8_tiled(
   FAR struct gpu_test_context_s *ctx)
 {
-
   vg_lite_error_t error = VG_LITE_SUCCESS;
   vg_lite_buffer_t *image = VG_LITE_SRC_BUF;
   VG_LITE_CHECK_ERROR(vg_lite_create_image(

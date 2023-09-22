@@ -1,11 +1,36 @@
+/****************************************************************************
+ * apps/testing/gpu/vg_lite/resource/glphy_paths.h
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.  The
+ * ASF licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ *
+ ****************************************************************************/
+
 #ifndef GLPHY_PATHS_H
 #define GLPHY_PATHS_H
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
 
 #include <stdint.h>
 
 /* '龍' */
 
-static const int16_t glphy_u9f8d_path_data[] = {
+static const int16_t glphy_u9f8d_path_data[] =
+  {
     VLC_OP_MOVE, 1839, 1694,
     VLC_OP_QUAD, 2185, 1647, 2381, 1444,
     VLC_OP_QUAD, 2577, 1242, 2577, 934,
@@ -36,10 +61,12 @@ static const int16_t glphy_u9f8d_path_data[] = {
     VLC_OP_LINE, 670, 316,
     VLC_OP_LINE, 1242, 316,
     VLC_OP_END
-};
+  };
 
 /* 'A' */
-static const int16_t glphy_u0041_path_data[] = {
+
+static const int16_t glphy_u0041_path_data[] =
+  {
     VLC_OP_MOVE, 2748, 4,
     VLC_OP_LINE, 2398, 4,
     VLC_OP_LINE, 2005, 1109,
@@ -55,11 +82,12 @@ static const int16_t glphy_u0041_path_data[] = {
     VLC_OP_LINE, 1417, 2756,
     VLC_OP_LINE, 1391, 2756,
     VLC_OP_END
-};
+  };
 
 /* '显' */
 
-static const int16_t glphy_u663e_path_data[] = {
+static const int16_t glphy_u663e_path_data[] =
+  {
     VLC_OP_MOVE, 5267, 3424,
     VLC_OP_LINE, 5267, 279,
     VLC_OP_LINE, 7700, 279,
@@ -103,6 +131,6 @@ static const int16_t glphy_u663e_path_data[] = {
     VLC_OP_QUAD, 1155, 2318, 909, 2630,
     VLC_OP_LINE, 1401, 2966,
     VLC_OP_END
-};
+  };
 
 #endif

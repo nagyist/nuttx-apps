@@ -53,12 +53,12 @@ gpu_color32_t gpu_sw_color32_mix(gpu_color32_t c1,
                                  uint8_t mix)
 {
   gpu_color32_t ret;
-  ret.ch.red = ((uint16_t)c1.ch.red * mix
-                        + c2.ch.red * (255 - mix)) / 255;
+  ret.ch.red   = ((uint16_t)c1.ch.red * mix
+                  + c2.ch.red * (255 - mix)) / 255;
   ret.ch.green = ((uint16_t)c1.ch.green * mix
-                          + c2.ch.green * (255 - mix)) / 255;
-  ret.ch.blue = ((uint16_t)c1.ch.blue * mix
-                         + c2.ch.blue * (255 - mix)) / 255;
+                  + c2.ch.green * (255 - mix)) / 255;
+  ret.ch.blue  = ((uint16_t)c1.ch.blue * mix
+                  + c2.ch.blue * (255 - mix)) / 255;
   ret.ch.alpha = 0xff;
   return ret;
 }
