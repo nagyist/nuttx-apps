@@ -118,9 +118,7 @@ static int foc_motor_align(FAR struct foc_motor_f32_s *motor, FAR bool *done)
         }
 
       PRINTF("Aling results:\n");
-#ifdef CONFIG_INDUSTRY_FOC_ALIGN_DIR
       PRINTF("  dir    = %.2f\n", final.dir);
-#endif
       PRINTF("  offset = %.2f\n", final.offset);
 
       *done = true;
@@ -584,9 +582,6 @@ static int foc_motor_state(FAR struct foc_motor_f32_s *motor, int state)
           motor->dir = DIR_NONE;
 
           /* DQ vector not zero - active brake */
-
-          motor->dq_ref.q = CONFIG_EXAMPLES_FOC_STOP_CURRENT / 1000.0f;
-          motor->dq_ref.d = 0.0f;
 
           break;
         }
