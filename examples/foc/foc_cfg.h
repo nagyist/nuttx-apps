@@ -132,17 +132,6 @@
 #  define FOC_MODEL_INDQ  (0.0002f)
 #endif
 
-/* Motor alignment configuration */
-
-#ifdef CONFIG_EXAMPLES_FOC_HAVE_ALIGN
-#  if CONFIG_EXAMPLES_FOC_ALIGN_VOLT == 0
-#    error
-#  endif
-#  if CONFIG_EXAMPLES_FOC_ALIGN_SEC == 0
-#    error
-#  endif
-#endif
-
 /* Qenco configuration */
 
 #ifdef CONFIG_EXAMPLES_FOC_HAVE_QENCO
@@ -165,13 +154,13 @@
 /* Setpoint ADC scale factor */
 
 #ifdef CONFIG_EXAMPLES_FOC_SETPOINT_ADC
-#  define SETPOINT_ADC_SCALE (1.0f / CONFIG_EXAMPLES_FOC_ADC_MAX)
+#  define SETPOINT_INTF_SCALE (1.0f / CONFIG_EXAMPLES_FOC_ADC_MAX)
 #endif
 
 /* If constant setpoint is selected, setpoint value must be provided */
 
 #ifdef CONFIG_EXAMPLES_FOC_SETPOINT_CONST
-#  define SETPOINT_ADC_SCALE   (1)
+#  define SETPOINT_INTF_SCALE   (1)
 #  if CONFIG_EXAMPLES_FOC_SETPOINT_CONST_VALUE == 0
 #    error
 #  endif
@@ -180,7 +169,7 @@
 /* CHARCTRL setpoint control */
 
 #ifdef CONFIG_EXAMPLES_FOC_SETPOINT_CHAR
-#  define SETPOINT_ADC_SCALE  (1 / 1000.0f)
+#  define SETPOINT_INTF_SCALE  (1.0f / (CONFIG_EXAMPLES_FOC_SETPOINT_MAX / 1000.0f))
 #endif
 
 /* VBUS source must be specified */
@@ -209,6 +198,11 @@
 #    error
 #  endif
 #endif
+
+/* Velocity controller prescaler */
+
+#define VEL_CONTROL_PRESCALER (CONFIG_EXAMPLES_FOC_NOTIFIER_FREQ /  \
+                               CONFIG_EXAMPLES_FOC_VELCTRL_FREQ)
 
 /****************************************************************************
  * Public Type Definition
@@ -243,6 +237,23 @@ struct foc_thr_cfg_s
   uint32_t ident_res_sec;       /* Ident res sec */
   uint32_t ident_ind_volt;      /* Ident res voltage (x1000) */
   uint32_t ident_ind_sec;       /* Ident ind sec */
+#endif
+
+#ifdef CONFIG_EXAMPLES_FOC_HAVE_VEL
+  uint32_t vel_filter;          /* Velocity filter (x1000) */
+#endif
+
+#ifdef CONFIG_EXAMPLES_FOC_VELOBS_PLL
+  uint32_t vel_pll_kp;          /* Vel PLL observer Kp (x1000) */
+  uint32_t vel_pll_ki;          /* Vel PLL observer Ki (x1000) */
+#endif
+#ifdef CONFIG_EXAMPLES_FOC_VELOBS_DIV
+  uint32_t vel_div_samples;     /* Vel DIV observer samples */
+  uint32_t vel_div_filter;      /* Vel DIV observer filter (x1000) */
+#endif
+#ifdef CONFIG_EXAMPLES_FOC_VELCTRL_PI
+  uint32_t vel_pi_kp;           /* Vel controller PI Kp (x1000000) */
+  uint32_t vel_pi_ki;           /* Vel controller PI Ki (x1000000) */
 #endif
 };
 

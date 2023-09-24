@@ -42,7 +42,7 @@
 #  error CONFIG_LOGGING_NXSCOPE_DISABLE_PUTLOCK must be set to proper operation.
 #endif
 
-#ifdef CONFIG_LOGGING_NXSCOPE_INTF_SERIAL
+#if defined(CONFIG_LOGGING_NXSCOPE_INTF_SERIAL) && !defined(CONFIG_SERIAL_RTT)
 #  ifndef CONFIG_SERIAL_TERMIOS
 #    error CONFIG_SERIAL_TERMIOS must be set to proper operation.
 #  endif
@@ -235,6 +235,12 @@ int foc_nxscope_init(FAR struct foc_nxscope_s *nxs)
 #endif
 #if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VDQCOMP)
       nxscope_chan_init(&nxs->nxs, i++, "vdqcomp", u.u8, 2, 0);
+#endif
+#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_SVM3)
+      nxscope_chan_init(&nxs->nxs, i++, "svm3", u.u8, 4, 0);
+#endif
+#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VOBS)
+      nxscope_chan_init(&nxs->nxs, i++, "vobs", u.u8, 1, 0);
 #endif
 
       if (i > CONFIG_EXAMPLES_FOC_NXSCOPE_CHANNELS)

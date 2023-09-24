@@ -80,10 +80,14 @@ struct foc_motor_b16_s
   /* FOC data ***************************************************************/
 
   struct foc_state_b16_s        foc_state;    /* FOC controller sate */
+#ifdef CONFIG_INDUSTRY_FOC_MODULATION_SVM3
+  struct svm3_state_b16_s       mod_state;    /* Modulation state */
+#endif
   foc_handler_b16_t             handler;      /* FOC controller */
   dq_frame_b16_t                dq_ref;       /* DQ reference */
   dq_frame_b16_t                vdq_comp;     /* DQ voltage compensation */
   int                           foc_mode;     /* FOC mode */
+  int                           time;         /* Helper counter */
   b16_t                         vbus;         /* Power bus voltage */
   b16_t                         per;          /* Controller period in seconds */
   b16_t                         iphase_adc;   /* Iphase ADC scaling factor */
@@ -92,12 +96,26 @@ struct foc_motor_b16_s
   /* Velocity controller data ***********************************************/
 
   struct foc_ramp_b16_s         ramp;         /* Velocity ramp data */
+#ifdef CONFIG_EXAMPLES_FOC_VELCTRL_PI
+  pid_controller_b16_t          vel_pi;       /* Velocity controller */
+#endif
 
   /* Motor state ************************************************************/
 
   b16_t                         angle_now;    /* Phase angle now */
   b16_t                         angle_m;      /* Motor mechanical angle */
   b16_t                         angle_el;     /* Motor electrical angle */
+
+  /* Velocity state *********************************************************/
+
+#ifdef CONFIG_EXAMPLES_FOC_HAVE_VEL
+  b16_t                         vel_el;       /* Velocity - electrical */
+  b16_t                         vel_mech;     /* Velocity - mechanical */
+  b16_t                         vel_filter;   /* Velocity low-pass filter */
+#endif
+#ifdef CONFIG_EXAMPLES_FOC_VELOBS
+  b16_t                         vel_obs;      /* Velocity observer output */
+#endif
 
   /* Motor setpoints ********************************************************/
 
@@ -130,7 +148,7 @@ struct foc_motor_b16_s
   struct foc_model_b16_s        model;        /* Model handler */
   struct foc_model_state_b16_s  model_state;  /* PMSM model state */
 #endif
-  uint8_t                       poles;        /* Motor poles */
+  struct motor_phy_params_b16_s phy;          /* Motor phy */
 
   /* Motor velocity and angle handlers **************************************/
 
@@ -146,6 +164,12 @@ struct foc_motor_b16_s
 #ifdef CONFIG_EXAMPLES_FOC_HAVE_QENCO
   foc_angle_b16_t               qenco;        /* Qenco angle handler */
   char                          qedpath[32];  /* Qenco devpath */
+#endif
+#ifdef CONFIG_EXAMPLES_FOC_VELOBS_DIV
+  foc_velocity_b16_t            vel_div;       /* DIV velocity observer */
+#endif
+#ifdef CONFIG_EXAMPLES_FOC_VELOBS_PLL
+  foc_velocity_b16_t            vel_pll;       /* PLL velocity observer */
 #endif
 };
 
