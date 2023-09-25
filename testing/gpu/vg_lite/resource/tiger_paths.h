@@ -5894,8 +5894,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data0),  ti
-      ger_path_data0, 1
+      sizeof(tiger_path_data0),
+      tiger_path_data0, 1
     },
 
     {
@@ -5910,8 +5910,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data1),  ti
-      ger_path_data1, 1
+      sizeof(tiger_path_data1),
+      tiger_path_data1, 1
     },
 
     {
@@ -5926,8 +5926,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data2),  ti
-      ger_path_data2, 1
+      sizeof(tiger_path_data2),
+      tiger_path_data2, 1
     },
 
     {
@@ -5942,8 +5942,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data3),  ti
-      ger_path_data3, 1
+      sizeof(tiger_path_data3),
+      tiger_path_data3, 1
     },
 
     {
@@ -5958,8 +5958,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data4),  ti
-      ger_path_data4, 1
+      sizeof(tiger_path_data4),
+      tiger_path_data4, 1
     },
 
     {
@@ -5974,8 +5974,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data5),  ti
-      ger_path_data5, 1
+      sizeof(tiger_path_data5),
+      tiger_path_data5, 1
     },
 
     {
@@ -5990,8 +5990,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data6),  ti
-      ger_path_data6, 1
+      sizeof(tiger_path_data6),
+      tiger_path_data6, 1
     },
 
     {
@@ -6006,8 +6006,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data7),  ti
-      ger_path_data7, 1
+      sizeof(tiger_path_data7),
+      tiger_path_data7, 1
     },
 
     {
@@ -6022,8 +6022,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data8),  ti
-      ger_path_data8, 1
+      sizeof(tiger_path_data8),
+      tiger_path_data8, 1
     },
 
     {
@@ -6038,8 +6038,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data9),  ti
-      ger_path_data9, 1
+      sizeof(tiger_path_data9),
+      tiger_path_data9, 1
     },
 
     {
@@ -6054,8 +6054,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data10), t
-      iger_path_data10, 1
+      sizeof(tiger_path_data10),
+      tiger_path_data10, 1
     },
 
     {
@@ -6070,8 +6070,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data11), t
-      iger_path_data11, 1
+      sizeof(tiger_path_data11),
+      tiger_path_data11, 1
     },
 
     {
@@ -6086,8 +6086,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data12), t
-      iger_path_data12, 1
+      sizeof(tiger_path_data12),
+      tiger_path_data12, 1
     },
 
     {
@@ -6102,8 +6102,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data13), t
-      iger_path_data13, 1
+      sizeof(tiger_path_data13),
+      tiger_path_data13, 1
     },
 
     {
@@ -6118,8 +6118,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data14), t
-      iger_path_data14, 1
+      sizeof(tiger_path_data14),
+      tiger_path_data14, 1
     },
 
     {
@@ -6134,8 +6134,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data15), t
-      iger_path_data15, 1
+      sizeof(tiger_path_data15),
+      tiger_path_data15, 1
     },
 
     {
@@ -6150,8 +6150,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data16), t
-      iger_path_data16, 1
+      sizeof(tiger_path_data16),
+      tiger_path_data16, 1
     },
 
     {
@@ -6166,8 +6166,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data17), t
-      iger_path_data17, 1
+      sizeof(tiger_path_data17),
+      tiger_path_data17, 1
     },
 
     {
@@ -6182,8 +6182,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data18), t
-      iger_path_data18, 1
+      sizeof(tiger_path_data18),
+      tiger_path_data18, 1
     },
 
     {
@@ -6198,8 +6198,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data19), t
-      iger_path_data19, 1
+      sizeof(tiger_path_data19),
+      tiger_path_data19, 1
     },
 
     {
@@ -6214,8 +6214,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data20), t
-      iger_path_data20, 1
+      sizeof(tiger_path_data20),
+      tiger_path_data20, 1
     },
 
     {
@@ -6230,8 +6230,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data21), t
-      iger_path_data21, 1
+      sizeof(tiger_path_data21),
+      tiger_path_data21, 1
     },
 
     {
@@ -6246,8 +6246,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data22), t
-      iger_path_data22, 1
+      sizeof(tiger_path_data22),
+      tiger_path_data22, 1
     },
 
     {
@@ -6262,8 +6262,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data23), t
-      iger_path_data23, 1
+      sizeof(tiger_path_data23),
+      tiger_path_data23, 1
     },
 
     {
@@ -6278,8 +6278,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data24), t
-      iger_path_data24, 1
+      sizeof(tiger_path_data24),
+      tiger_path_data24, 1
     },
 
     {
@@ -6294,8 +6294,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data25), t
-      iger_path_data25, 1
+      sizeof(tiger_path_data25),
+      tiger_path_data25, 1
     },
 
     {
@@ -6310,8 +6310,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data26), t
-      iger_path_data26, 1
+      sizeof(tiger_path_data26),
+      tiger_path_data26, 1
     },
 
     {
@@ -6326,8 +6326,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data27), t
-      iger_path_data27, 1
+      sizeof(tiger_path_data27),
+      tiger_path_data27, 1
     },
 
     {
@@ -6342,8 +6342,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data28), t
-      iger_path_data28, 1
+      sizeof(tiger_path_data28),
+      tiger_path_data28, 1
     },
 
     {
@@ -6358,8 +6358,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data29), t
-      iger_path_data29, 1
+      sizeof(tiger_path_data29),
+      tiger_path_data29, 1
     },
 
     {
@@ -6374,8 +6374,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data30), t
-      iger_path_data30, 1
+      sizeof(tiger_path_data30),
+      tiger_path_data30, 1
     },
 
     {
@@ -6390,8 +6390,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data31), t
-      iger_path_data31, 1
+      sizeof(tiger_path_data31),
+      tiger_path_data31, 1
     },
 
     {
@@ -6406,8 +6406,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data32), t
-      iger_path_data32, 1
+      sizeof(tiger_path_data32),
+      tiger_path_data32, 1
     },
 
     {
@@ -6422,8 +6422,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data33), t
-      iger_path_data33, 1
+      sizeof(tiger_path_data33),
+      tiger_path_data33, 1
     },
 
     {
@@ -6438,8 +6438,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data34), t
-      iger_path_data34, 1
+      sizeof(tiger_path_data34),
+      tiger_path_data34, 1
     },
 
     {
@@ -6454,8 +6454,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data35), t
-      iger_path_data35, 1
+      sizeof(tiger_path_data35),
+      tiger_path_data35, 1
     },
 
     {
@@ -6470,8 +6470,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data36), t
-      iger_path_data36, 1
+      sizeof(tiger_path_data36),
+      tiger_path_data36, 1
     },
 
     {
@@ -6486,8 +6486,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data37), t
-      iger_path_data37, 1
+      sizeof(tiger_path_data37),
+      tiger_path_data37, 1
     },
 
     {
@@ -6502,8 +6502,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data38), t
-      iger_path_data38, 1
+      sizeof(tiger_path_data38),
+      tiger_path_data38, 1
     },
 
     {
@@ -6518,8 +6518,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data39), t
-      iger_path_data39, 1
+      sizeof(tiger_path_data39),
+      tiger_path_data39, 1
     },
 
     {
@@ -6534,8 +6534,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data40), t
-      iger_path_data40, 1
+      sizeof(tiger_path_data40),
+      tiger_path_data40, 1
     },
 
     {
@@ -6550,8 +6550,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data41), t
-      iger_path_data41, 1
+      sizeof(tiger_path_data41),
+      tiger_path_data41, 1
     },
 
     {
@@ -6566,8 +6566,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data42), t
-      iger_path_data42, 1
+      sizeof(tiger_path_data42),
+      tiger_path_data42, 1
     },
 
     {
@@ -6582,8 +6582,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data43), t
-      iger_path_data43, 1
+      sizeof(tiger_path_data43),
+      tiger_path_data43, 1
     },
 
     {
@@ -6598,8 +6598,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data44), t
-      iger_path_data44, 1
+      sizeof(tiger_path_data44),
+      tiger_path_data44, 1
     },
 
     {
@@ -6614,8 +6614,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data45), t
-      iger_path_data45, 1
+      sizeof(tiger_path_data45),
+      tiger_path_data45, 1
     },
 
     {
@@ -6630,8 +6630,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data46), t
-      iger_path_data46, 1
+      sizeof(tiger_path_data46),
+      tiger_path_data46, 1
     },
 
     {
@@ -6646,8 +6646,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data47), t
-      iger_path_data47, 1
+      sizeof(tiger_path_data47),
+      tiger_path_data47, 1
     },
 
     {
@@ -6662,8 +6662,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data48), t
-      iger_path_data48, 1
+      sizeof(tiger_path_data48),
+      tiger_path_data48, 1
     },
 
     {
@@ -6678,8 +6678,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data49), t
-      iger_path_data49, 1
+      sizeof(tiger_path_data49),
+      tiger_path_data49, 1
     },
 
     {
@@ -6694,8 +6694,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data50), t
-      iger_path_data50, 1
+      sizeof(tiger_path_data50),
+      tiger_path_data50, 1
     },
 
     {
@@ -6710,8 +6710,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data51), t
-      iger_path_data51, 1
+      sizeof(tiger_path_data51),
+      tiger_path_data51, 1
     },
 
     {
@@ -6726,8 +6726,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data52), t
-      iger_path_data52, 1
+      sizeof(tiger_path_data52),
+      tiger_path_data52, 1
     },
 
     {
@@ -6742,8 +6742,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data53), t
-      iger_path_data53, 1
+      sizeof(tiger_path_data53),
+      tiger_path_data53, 1
     },
 
     {
@@ -6758,8 +6758,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data54), t
-      iger_path_data54, 1
+      sizeof(tiger_path_data54),
+      tiger_path_data54, 1
     },
 
     {
@@ -6774,8 +6774,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data55), t
-      iger_path_data55, 1
+      sizeof(tiger_path_data55),
+      tiger_path_data55, 1
     },
 
     {
@@ -6790,8 +6790,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data56), t
-      iger_path_data56, 1
+      sizeof(tiger_path_data56),
+      tiger_path_data56, 1
     },
 
     {
@@ -6806,8 +6806,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data57), t
-      iger_path_data57, 1
+      sizeof(tiger_path_data57),
+      tiger_path_data57, 1
     },
 
     {
@@ -6822,8 +6822,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data58), t
-      iger_path_data58, 1
+      sizeof(tiger_path_data58),
+      tiger_path_data58, 1
     },
 
     {
@@ -6838,8 +6838,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data59), t
-      iger_path_data59, 1
+      sizeof(tiger_path_data59),
+      tiger_path_data59, 1
     },
 
     {
@@ -6854,8 +6854,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data60), t
-      iger_path_data60, 1
+      sizeof(tiger_path_data60),
+      tiger_path_data60, 1
     },
 
     {
@@ -6870,8 +6870,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data61), t
-      iger_path_data61, 1
+      sizeof(tiger_path_data61),
+      tiger_path_data61, 1
     },
 
     {
@@ -6886,8 +6886,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data62), t
-      iger_path_data62, 1
+      sizeof(tiger_path_data62),
+      tiger_path_data62, 1
     },
 
     {
@@ -6902,8 +6902,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data63), t
-      iger_path_data63, 1
+      sizeof(tiger_path_data63),
+      tiger_path_data63, 1
     },
 
     {
@@ -6918,8 +6918,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data64), t
-      iger_path_data64, 1
+      sizeof(tiger_path_data64),
+      tiger_path_data64, 1
     },
 
     {
@@ -6934,8 +6934,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data65), t
-      iger_path_data65, 1
+      sizeof(tiger_path_data65),
+      tiger_path_data65, 1
     },
 
     {
@@ -6950,8 +6950,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data66), t
-      iger_path_data66, 1
+      sizeof(tiger_path_data66),
+      tiger_path_data66, 1
     },
 
     {
@@ -6966,8 +6966,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data67), t
-      iger_path_data67, 1
+      sizeof(tiger_path_data67),
+      tiger_path_data67, 1
     },
 
     {
@@ -6982,8 +6982,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data68), t
-      iger_path_data68, 1
+      sizeof(tiger_path_data68),
+      tiger_path_data68, 1
     },
 
     {
@@ -6998,8 +6998,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data69), t
-      iger_path_data69, 1
+      sizeof(tiger_path_data69),
+      tiger_path_data69, 1
     },
 
     {
@@ -7014,8 +7014,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data70), t
-      iger_path_data70, 1
+      sizeof(tiger_path_data70),
+      tiger_path_data70, 1
     },
 
     {
@@ -7030,8 +7030,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data71), t
-      iger_path_data71, 1
+      sizeof(tiger_path_data71),
+      tiger_path_data71, 1
     },
 
     {
@@ -7046,8 +7046,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data72), t
-      iger_path_data72, 1
+      sizeof(tiger_path_data72),
+      tiger_path_data72, 1
     },
 
     {
@@ -7062,8 +7062,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data73), t
-      iger_path_data73, 1
+      sizeof(tiger_path_data73),
+      tiger_path_data73, 1
     },
 
     {
@@ -7078,8 +7078,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data74), t
-      iger_path_data74, 1
+      sizeof(tiger_path_data74),
+      tiger_path_data74, 1
     },
 
     {
@@ -7094,8 +7094,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data75), t
-      iger_path_data75, 1
+      sizeof(tiger_path_data75),
+      tiger_path_data75, 1
     },
 
     {
@@ -7110,8 +7110,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data76), t
-      iger_path_data76, 1
+      sizeof(tiger_path_data76),
+      tiger_path_data76, 1
     },
 
     {
@@ -7126,8 +7126,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data77), t
-      iger_path_data77, 1
+      sizeof(tiger_path_data77),
+      tiger_path_data77, 1
     },
 
     {
@@ -7142,8 +7142,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data78), t
-      iger_path_data78, 1
+      sizeof(tiger_path_data78),
+      tiger_path_data78, 1
     },
 
     {
@@ -7158,8 +7158,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data79), t
-      iger_path_data79, 1
+      sizeof(tiger_path_data79),
+      tiger_path_data79, 1
     },
 
     {
@@ -7174,8 +7174,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data80), t
-      iger_path_data80, 1
+      sizeof(tiger_path_data80),
+      tiger_path_data80, 1
     },
 
     {
@@ -7190,8 +7190,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data81), t
-      iger_path_data81, 1
+      sizeof(tiger_path_data81),
+      tiger_path_data81, 1
     },
 
     {
@@ -7206,8 +7206,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data82), t
-      iger_path_data82, 1
+      sizeof(tiger_path_data82),
+      tiger_path_data82, 1
     },
 
     {
@@ -7222,8 +7222,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data83), t
-      iger_path_data83, 1
+      sizeof(tiger_path_data83),
+      tiger_path_data83, 1
     },
 
     {
@@ -7238,8 +7238,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data84), t
-      iger_path_data84, 1
+      sizeof(tiger_path_data84),
+      tiger_path_data84, 1
     },
 
     {
@@ -7254,8 +7254,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data85), t
-      iger_path_data85, 1
+      sizeof(tiger_path_data85),
+      tiger_path_data85, 1
     },
 
     {
@@ -7270,8 +7270,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data86), t
-      iger_path_data86, 1
+      sizeof(tiger_path_data86),
+      tiger_path_data86, 1
     },
 
     {
@@ -7286,8 +7286,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data87), t
-      iger_path_data87, 1
+      sizeof(tiger_path_data87),
+      tiger_path_data87, 1
     },
 
     {
@@ -7302,8 +7302,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data88), t
-      iger_path_data88, 1
+      sizeof(tiger_path_data88),
+      tiger_path_data88, 1
     },
 
     {
@@ -7318,8 +7318,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data89), t
-      iger_path_data89, 1
+      sizeof(tiger_path_data89),
+      tiger_path_data89, 1
     },
 
     {
@@ -7334,8 +7334,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data90), t
-      iger_path_data90, 1
+      sizeof(tiger_path_data90),
+      tiger_path_data90, 1
     },
 
     {
@@ -7350,8 +7350,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data91), t
-      iger_path_data91, 1
+      sizeof(tiger_path_data91),
+      tiger_path_data91, 1
     },
 
     {
@@ -7366,8 +7366,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data92), t
-      iger_path_data92, 1
+      sizeof(tiger_path_data92),
+      tiger_path_data92, 1
     },
 
     {
@@ -7382,8 +7382,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data93), t
-      iger_path_data93, 1
+      sizeof(tiger_path_data93),
+      tiger_path_data93, 1
     },
 
     {
@@ -7398,8 +7398,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data94), t
-      iger_path_data94, 1
+      sizeof(tiger_path_data94),
+      tiger_path_data94, 1
     },
 
     {
@@ -7414,8 +7414,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data95), t
-      iger_path_data95, 1
+      sizeof(tiger_path_data95),
+      tiger_path_data95, 1
     },
 
     {
@@ -7430,8 +7430,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data96), t
-      iger_path_data96, 1
+      sizeof(tiger_path_data96),
+      tiger_path_data96, 1
     },
 
     {
@@ -7446,8 +7446,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data97), t
-      iger_path_data97, 1
+      sizeof(tiger_path_data97),
+      tiger_path_data97, 1
     },
 
     {
@@ -7462,8 +7462,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data98), t
-      iger_path_data98, 1
+      sizeof(tiger_path_data98),
+      tiger_path_data98, 1
     },
 
     {
@@ -7478,8 +7478,8 @@ static vg_lite_path_t tiger_path[240] =
       {
         0
       },
-      sizeof(tiger_path_data99), t
-      iger_path_data99, 1
+      sizeof(tiger_path_data99),
+      tiger_path_data99, 1
     },
 
     {

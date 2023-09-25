@@ -23,19 +23,11 @@
  ****************************************************************************/
 
 #include "vg_lite_test_utils.h"
-
+#include "vg_lite_test_case.h"
 #include <stdlib.h>
-
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
 
 #define GC(X) gc##X
 #define gcFEATURE_BIT_VG_NONE -1
-
-/****************************************************************************
- * Private Types
- ****************************************************************************/
 
 typedef CODE vg_lite_error_t (*vg_lite_test_func_t)(
   FAR struct gpu_test_context_s *ctx);
@@ -46,22 +38,6 @@ struct vg_lite_test_item_s
     vg_lite_test_func_t func;
     int feature;
   };
-
-enum test_case_e
-  {
-    TEST_CASE_DEFAULT      = 0,
-    TEST_CASE_ROTATION     = 1,
-    TEST_CASE_ROTATION_RGB = 2,
-    TEST_CASE_ALIGN_BUF_NOTALIGN_STRIDE = 3,
-  };
-
-/****************************************************************************
- * Private Function Prototypes
- ****************************************************************************/
-
-/****************************************************************************
- * Private Data
- ****************************************************************************/
 
 /* Import testcase entry function */
 
@@ -81,6 +57,30 @@ static const struct vg_lite_test_item_s g_vg_lite_test_group[] =
 #undef ITEM_DEF
 
 /****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+enum test_case_e
+  {
+    TEST_CASE_DEFAULT      = 0,
+    TEST_CASE_ROTATION     = 1,
+    TEST_CASE_ROTATION_RGB = 2,
+    TEST_CASE_ALIGN_BUF_NOTALIGN_STRIDE = 3,
+  };
+
+/****************************************************************************
+ * Private Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+/****************************************************************************
  * Private Functions
  ****************************************************************************/
 
@@ -95,7 +95,7 @@ static bool vg_lite_test_run_item(FAR struct gpu_test_context_s *ctx,
   vg_lite_error_t error;
   bool            is_passed = false;
 
-  if (item->feature != gcFEATURE_BIT_VG_NONE &&
+  if (item->feature != GC(FEATURE_BIT_VG_NONE) &&
      !vg_lite_query_feature(item->feature))
     {
       GPU_LOG_INFO("Testcase [%s] -> SKIP: Require feature: %d (%s)",
@@ -135,6 +135,10 @@ error_handler:
 
   return is_passed;
 }
+
+/****************************************************************************
+ * Name: stress_test_get_next
+ ****************************************************************************/
 
 static int stress_test_get_next(FAR struct gpu_test_context_s *ctx,
                                 int current)
@@ -305,7 +309,7 @@ int vg_lite_test(FAR struct gpu_test_context_s *ctx)
 
   vg_lite_dump_buffer_info(__func__, buffer);
 
-  if (vg_lite_query_feature(gcFEATURE_BIT_VG_SCISSOR))
+  if (vg_lite_query_feature(GC(FEATURE_BIT_VG_SCISSOR)))
     {
       vg_lite_enable_scissor();
       vg_lite_set_scissor(0, 0, buffer->width, buffer->height);

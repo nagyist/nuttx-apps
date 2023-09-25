@@ -45,33 +45,6 @@
  * Private Functions
  ****************************************************************************/
 
-static vg_lite_path_t *vg_lite_convert_path(const vg_lite_path_t *src,
-                                            vg_lite_format_t format)
-{
-}
-
-/****************************************************************************
- * Name: vg_lite_test_glyph_combination
- ****************************************************************************/
-
-static vg_lite_error_t vg_lite_test_glyph_combination(
-  FAR struct gpu_test_context_s *ctx)
-{
-  vg_lite_error_t error = VG_LITE_SUCCESS;
-  static const vg_lite_blend_t blend_arr[] =
-  {
-    VG_LITE_BLEND_NONE,
-    VG_LITE_BLEND_SRC_OVER,
-  };
-
-  for (int b = 0; b < GPU_ARRAY_SIZE(blend_arr); b++)
-    {
-    }
-
-error_handler:
-  return error;
-}
-
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
