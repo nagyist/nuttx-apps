@@ -938,6 +938,17 @@ int wapi_set_pta_prio(int sock, FAR const char *ifname,
 int wapi_get_pta_prio(int sock, FAR const char *ifname,
                       enum wapi_pta_prio_e *pta_prio);
 
+/****************************************************************************
+ * Name: wapi_extend_params
+ *
+ * Description:
+ *   wapi extension interface for privatization method.
+ *   cmd should be definded in wireless_priv.h before use.
+ *
+ ****************************************************************************/
+
+int wapi_extend_params(int sock, int cmd, FAR struct iwreq *wrq);
+
 #undef EXTERN
 #ifdef __cplusplus
 }
