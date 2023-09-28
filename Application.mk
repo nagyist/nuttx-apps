@@ -76,7 +76,6 @@ COBJS = $(CSRCS:=$(SUFFIX)$(OBJEXT))
 CXXOBJS = $(CXXSRCS:=$(SUFFIX)$(OBJEXT))
 RUSTOBJS = $(RUSTSRCS:=$(SUFFIX)$(OBJEXT))
 ZIGOBJS = $(ZIGSRCS:=$(SUFFIX)$(OBJEXT))
-AIDLOBJS = $(patsubst %$(AIDLEXT),%$(CXXEXT),$(AIDLSRCS))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
@@ -97,7 +96,7 @@ endif
 ifneq ($(strip $(PROGNAME)),)
   PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
   ifneq ($(words $(PROGOBJ)), $(words $(PROGNAME)))
-    $(warning "program names $(PROGNAME) does not match mainsrcs $(PROGOBJ)")
+    $(error "program names $(PROGNAME) does not match mainsrcs $(PROGOBJ)")
   endif
   PROGLIST := $(addprefix $(BINDIR)$(DELIM),$(PROGNAME))
   REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
@@ -185,18 +184,6 @@ define ELFLD
 	$(ECHO_END)
 endef
 
-define COMPILEAIDL
-	$(ECHO_BEGIN)"AIDL: $1 "
-	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1
-	$(ECHO_END)
-endef
-
-define DELAIDLOUT
-	$(ECHO_BEGIN)"DELAIDLOUT: $1 "
-	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1 --delete
-	$(ECHO_END)
-endef
-
 $(RAOBJS): %.s$(SUFFIX)$(OBJEXT): %.s
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(AELFFLAGS)), \
 		$(call ELFASSEMBLE, $<, $@), $(call ASSEMBLE, $<, $@))
@@ -220,9 +207,6 @@ $(RUSTOBJS): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
 $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
-
-$(AIDLOBJS): %$(CXXEXT): %$(AIDLEXT)
-	$(call COMPILEAIDL, $<)
 
 .built: $(OBJS)
 	$(call SPLITVARIABLE,ALL_OBJS,$(OBJS),100)
@@ -279,12 +263,12 @@ install::
 
 endif # BUILD_MODULE
 
-context:: $(AIDLOBJS)
+context::
 	@:
 
 ifeq ($(DO_REGISTRATION),y)
 
-$(REGLIST): $(DEPCONFIG) $(firstword $(MAKEFILE_LIST))
+$(REGLIST): $(DEPCONFIG) Makefile
 	$(eval PROGNAME_$@ := $(basename $(notdir $@)))
 ifeq ($(CONFIG_SCHED_USER_IDENTITY),y)
 	$(call REGISTER,$(PROGNAME_$@),$(PRIORITY_$@),$(STACKSIZE_$@),$(if $(BUILD_MODULE),,$(PROGNAME_$@)_main),$(UID_$@),$(GID_$@),$(MODE_$@))
@@ -299,7 +283,7 @@ register::
 	@:
 endif
 
-.depend: $(firstword $(MAKEFILE_LIST)) $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
+.depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
 	$(call SPLITVARIABLE,ALL_DEP_OBJS,$^,100)
 	$(foreach BATCH, $(ALL_DEP_OBJS_TOTAL), \
 	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$(ALL_DEP_OBJS_$(BATCH))) >Make.dep) \
@@ -318,7 +302,6 @@ clean::
 distclean:: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
-	$(foreach AIDLSRC,$(AIDLSRCS),$(call DELAIDLOUT,$(AIDLSRC)))
 
 -include Make.dep
 

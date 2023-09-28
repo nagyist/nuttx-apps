@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/netlib/netlib_setipv6dnsaddr.c
+ * apps/graphics/lvgl/port/lv_port.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -22,58 +22,70 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-
-#include <sys/socket.h>
-
-#include <string.h>
-#include <errno.h>
-
-#include <netinet/in.h>
-
-#include <nuttx/net/dns.h>
-
-#include "netutils/netlib.h"
-
-#if defined(CONFIG_NET_IPv6) && defined(CONFIG_NETDB_DNSCLIENT)
+#include "lv_port.h"
+#include "lv_port_button.h"
+#include "lv_port_encoder.h"
+#include "lv_port_fbdev.h"
+#include "lv_port_lcddev.h"
+#include "lv_port_mem.h"
+#include "lv_port_keypad.h"
+#include "lv_port_syslog.h"
+#include "lv_port_touchpad.h"
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: netlib_set_ipv6dnsaddr
+ * Name: lv_port_init
  *
  * Description:
- *   Set the DNS server IPv6 address
- *
- * Parameters:
- *   inaddr   The address to set
- *
- * Return:
- *   Zero (OK) is returned on success; A negated errno value is returned
- *   on failure.
+ *   Initialize all porting.
  *
  ****************************************************************************/
 
-int netlib_set_ipv6dnsaddr(FAR const struct in6_addr *inaddr)
+void lv_port_init(void)
 {
-  struct sockaddr_in6 addr;
-  int ret = -EINVAL;
+#if defined(CONFIG_LV_USE_LOG)
+  lv_port_syslog_init();
+#endif
 
-  if (inaddr)
-    {
-      /* Set the IPv6 DNS server address */
+#if defined(CONFIG_LV_PORT_USE_LCDDEV)
+  lv_port_lcddev_init(NULL, 0);
+#endif
 
-      addr.sin6_family = AF_INET6;
-      addr.sin6_port   = 0;
-      memcpy(&addr.sin6_addr, inaddr, sizeof(struct in6_addr));
+#if defined(CONFIG_LV_PORT_USE_FBDEV)
+  lv_port_fbdev_init(NULL);
+#endif
 
-      ret = dns_add_nameserver((FAR const struct sockaddr *)&addr,
-                               sizeof(struct sockaddr_in6));
-    }
+#if defined(CONFIG_LV_PORT_USE_BUTTON)
+  lv_port_button_init(NULL);
 
-  return ret;
+#if defined(CONFIG_UINPUT_BUTTON)
+  lv_port_button_init("/dev/ubutton");
+#endif
+
+#endif
+
+#if defined(CONFIG_LV_PORT_USE_KEYPAD)
+  lv_port_keypad_init(NULL);
+
+#if defined(CONFIG_UINPUT_BUTTON)
+  lv_port_keypad_init("/dev/ubutton");
+#endif
+
+#endif
+
+#if defined(CONFIG_LV_PORT_USE_TOUCHPAD)
+  lv_port_touchpad_init(NULL);
+
+#if defined(CONFIG_UINPUT_TOUCH)
+  lv_port_touchpad_init("/dev/utouch");
+#endif
+
+#endif
+
+#if defined(CONFIG_LV_PORT_USE_ENCODER)
+  lv_port_encoder_init(NULL);
+#endif
 }
-
-#endif /* CONFIG_NET_IPv6 && CONFIG_NETDB_DNSCLIENT */

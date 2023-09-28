@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/tcp_ipc_server/protocol.h
+ * apps/graphics/lvgl/port/lv_port_syslog.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,24 +18,56 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_SERVER_TCP_PROTOCOL_H
-#define __APPS_EXAMPLES_SERVER_TCP_PROTOCOL_H
+#ifndef __APPS_GRAPHICS_LVGL_PORT_LV_PORT_SYSLOG_H
+#define __APPS_GRAPHICS_LVGL_PORT_LV_PORT_SYSLOG_H
 
 /****************************************************************************
- * Public Types
+ * Included Files
  ****************************************************************************/
 
-typedef struct
+#include <nuttx/config.h>
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#if defined(CONFIG_LV_USE_LOG)
+
+/****************************************************************************
+ * Type Definitions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Public Data
+ ****************************************************************************/
+
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
 {
-  unsigned char opcode;
-  unsigned char msg_size;
-  unsigned char msg[12];
-} protocolo_ipc;
+#else
+#define EXTERN extern
+#endif
 
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 
-void send_msg_to_lpwan (unsigned char *msg, protocolo_ipc *pt_protocol);
+/****************************************************************************
+ * Name: lv_port_syslog_init
+ *
+ * Description:
+ *   Syslog interface initialization.
+ *
+ ****************************************************************************/
 
-#endif /* __APPS_EXAMPLES_SERVER_TCP_PROTOCOL_H */
+void lv_port_syslog_init(void);
+
+#undef EXTERN
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* CONFIG_LV_USE_LOG */
+
+#endif /* __APPS_GRAPHICS_LVGL_PORT_LV_PORT_SYSLOG_H */

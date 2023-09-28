@@ -113,11 +113,6 @@ MAINSRC  += drivertest_audio.c
 PROGNAME += cmocka_driver_audio
 endif
 
-ifneq ($(CONFIG_CPUFREQ),)
-MAINSRC  += drivertest_cpufreq.c
-PROGNAME += cmocka_driver_cpufreq
-endif
-
 ifneq ($(CONFIG_VIDEO_FB),)
 MAINSRC  += drivertest_framebuffer.c
 PROGNAME += cmocka_driver_framebuffer

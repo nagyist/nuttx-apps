@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/netlib/netlib_setipv6dnsaddr.c
+ * apps/graphics/lvgl/port/lv_port_keypad.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,62 +18,59 @@
  *
  ****************************************************************************/
 
+#ifndef __APPS_GRAPHICS_LVGL_PORT_LV_PORT_KEYPAD_H
+#define __APPS_GRAPHICS_LVGL_PORT_LV_PORT_KEYPAD_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
-
-#include <sys/socket.h>
-
-#include <string.h>
-#include <errno.h>
-
-#include <netinet/in.h>
-
-#include <nuttx/net/dns.h>
-
-#include "netutils/netlib.h"
-
-#if defined(CONFIG_NET_IPv6) && defined(CONFIG_NETDB_DNSCLIENT)
+#include <lvgl/lvgl.h>
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#if defined(CONFIG_LV_PORT_USE_KEYPAD)
+
+/****************************************************************************
+ * Type Definitions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: netlib_set_ipv6dnsaddr
+ * Public Data
+ ****************************************************************************/
+
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
+/****************************************************************************
+ * Name: lv_port_keypad_init
  *
  * Description:
- *   Set the DNS server IPv6 address
+ *   Keypad interface initialization.
  *
- * Parameters:
- *   inaddr   The address to set
+ * Input Parameters:
+ *   dev_path - input device path, set to NULL to use the default path
  *
- * Return:
- *   Zero (OK) is returned on success; A negated errno value is returned
- *   on failure.
+ * Returned Value:
+ *   lv_indev object address on success; NULL on failure.
  *
  ****************************************************************************/
 
-int netlib_set_ipv6dnsaddr(FAR const struct in6_addr *inaddr)
-{
-  struct sockaddr_in6 addr;
-  int ret = -EINVAL;
+FAR lv_indev_t *lv_port_keypad_init(FAR const char *dev_path);
 
-  if (inaddr)
-    {
-      /* Set the IPv6 DNS server address */
-
-      addr.sin6_family = AF_INET6;
-      addr.sin6_port   = 0;
-      memcpy(&addr.sin6_addr, inaddr, sizeof(struct in6_addr));
-
-      ret = dns_add_nameserver((FAR const struct sockaddr *)&addr,
-                               sizeof(struct sockaddr_in6));
-    }
-
-  return ret;
+#undef EXTERN
+#ifdef __cplusplus
 }
+#endif
 
-#endif /* CONFIG_NET_IPv6 && CONFIG_NETDB_DNSCLIENT */
+#endif /* CONFIG_LV_PORT_USE_KEYPAD */
+
+#endif /* __APPS_GRAPHICS_LVGL_PORT_LV_PORT_KEYPAD_H */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/netutils/netlib/netlib_setipv6dnsaddr.c
+ * apps/graphics/lvgl/port/lv_port_libuv.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,62 +18,75 @@
  *
  ****************************************************************************/
 
+#ifndef __APPS_GRAPHICS_LVGL_PORT_LV_PORT_LIBUV_H
+#define __APPS_GRAPHICS_LVGL_PORT_LV_PORT_LIBUV_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
 #include <nuttx/config.h>
 
-#include <sys/socket.h>
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
 
-#include <string.h>
-#include <errno.h>
-
-#include <netinet/in.h>
-
-#include <nuttx/net/dns.h>
-
-#include "netutils/netlib.h"
-
-#if defined(CONFIG_NET_IPv6) && defined(CONFIG_NETDB_DNSCLIENT)
+#if defined(CONFIG_LIBUV)
 
 /****************************************************************************
- * Public Functions
+ * Type Definitions
  ****************************************************************************/
 
 /****************************************************************************
- * Name: netlib_set_ipv6dnsaddr
+ * Public Data
+ ****************************************************************************/
+
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
+{
+#else
+#define EXTERN extern
+#endif
+
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: lv_port_libuv_init
  *
  * Description:
- *   Set the DNS server IPv6 address
+ *   Add the UI event loop to the uv_loop.
  *
- * Parameters:
- *   inaddr   The address to set
+ * Input Parameters:
+ *   loop - Pointer to uv_loop.
  *
- * Return:
- *   Zero (OK) is returned on success; A negated errno value is returned
- *   on failure.
+ * Returned Value:
+ *   Pointer to UI event context.
  *
  ****************************************************************************/
 
-int netlib_set_ipv6dnsaddr(FAR const struct in6_addr *inaddr)
-{
-  struct sockaddr_in6 addr;
-  int ret = -EINVAL;
+FAR void *lv_port_libuv_init(FAR void *loop);
 
-  if (inaddr)
-    {
-      /* Set the IPv6 DNS server address */
+/****************************************************************************
+ * Name: lv_port_libuv_uninit
+ *
+ * Description:
+ *   Remove the UI event loop.
+ *
+ * Input Parameters:
+ *   Pointer to UI event context.
+ *
+ ****************************************************************************/
 
-      addr.sin6_family = AF_INET6;
-      addr.sin6_port   = 0;
-      memcpy(&addr.sin6_addr, inaddr, sizeof(struct in6_addr));
+void lv_port_libuv_uninit(FAR void *ctx);
 
-      ret = dns_add_nameserver((FAR const struct sockaddr *)&addr,
-                               sizeof(struct sockaddr_in6));
-    }
-
-  return ret;
+#undef EXTERN
+#ifdef __cplusplus
 }
+#endif
 
-#endif /* CONFIG_NET_IPv6 && CONFIG_NETDB_DNSCLIENT */
+#endif /* CONFIG_LIBUV */
+
+#endif /* __APPS_GRAPHICS_LVGL_PORT_LV_PORT_LIBUV_H */

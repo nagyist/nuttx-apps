@@ -50,7 +50,6 @@ distclean::
 
 endif
 
-
 MODULE = $(CONFIG_LIB_ZLIB)
 
 ifneq ($(CONFIG_FS_LARGEFILE),y)

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/tcp_ipc_server/protocol.h
+ * apps/graphics/lvgl/port/lv_port_syslog.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,24 +18,40 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_EXAMPLES_SERVER_TCP_PROTOCOL_H
-#define __APPS_EXAMPLES_SERVER_TCP_PROTOCOL_H
-
 /****************************************************************************
- * Public Types
+ * Included Files
  ****************************************************************************/
 
-typedef struct
+#include <lvgl/lvgl.h>
+#include <syslog.h>
+#include "lv_port_syslog.h"
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: syslog_print_cb
+ ****************************************************************************/
+
+static void syslog_print_cb(FAR const char *buf)
 {
-  unsigned char opcode;
-  unsigned char msg_size;
-  unsigned char msg[12];
-} protocolo_ipc;
+  syslog(LOG_INFO, "[LVGL] %s", buf);
+}
 
 /****************************************************************************
- * Public Function Prototypes
+ * Public Functions
  ****************************************************************************/
 
-void send_msg_to_lpwan (unsigned char *msg, protocolo_ipc *pt_protocol);
+/****************************************************************************
+ * Name: lv_port_syslog_init
+ *
+ * Description:
+ *   Syslog interface initialization.
+ *
+ ****************************************************************************/
 
-#endif /* __APPS_EXAMPLES_SERVER_TCP_PROTOCOL_H */
+void lv_port_syslog_init(void)
+{
+  lv_log_register_print_cb(syslog_print_cb);
+}
