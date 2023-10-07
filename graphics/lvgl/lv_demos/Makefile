@@ -1,5 +1,5 @@
 ############################################################################
-# apps/graphics/lvgl/Make.defs
+# graphics/lvgl/lv_demos/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,20 +18,15 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_GRAPHICS_LVGL),)
-CONFIGURED_APPS += $(APPDIR)/graphics/lvgl
+include $(APPDIR)/Make.defs
 
-# It allows `<lvgl/lvgl.h>` import.
+ifeq ($(CONFIG_LV_DEMOS),y)
+PRIORITY = $(CONFIG_LV_DEMOS_PRIORITY)
+STACKSIZE = $(CONFIG_LV_DEMOS_STACKSIZE)
+MODULE = $(CONFIG_LV_DEMOS)
 
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/graphics/lvgl
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/graphics/lvgl
-
-# It allows `<lvgl.h>` import.
-
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/graphics/lvgl/lvgl
-CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/graphics/lvgl/lvgl
-
--include $(APPDIR)/graphics/lvgl/ext/Make.defs
-include $(APPDIR)/graphics/lvgl/lv_demos/Make.defs
-
+PROGNAME = lv_demos
+MAINSRC  = lvgl_demos.c
 endif
+
+include $(APPDIR)/Application.mk
