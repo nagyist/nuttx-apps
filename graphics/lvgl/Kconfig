@@ -374,6 +374,11 @@ config LV_IMG_CACHE_PAD_SIZE
 	depends on LV_IMG_CACHE_DEF_SIZE > 0
 	default 0
 
+config LV_IMG_CACHE_MEM_CUSTOM_SECTION_NAME
+	string "Image cache default Section Name"
+	default ""
+	depends on LV_IMG_CACHE_USE_STATIC_MEM
+
 endmenu # "Image Decoder"
 
 menu "Memory configuration"

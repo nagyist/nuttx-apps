@@ -372,6 +372,9 @@ static bool img_cache_set_size(uint16_t entry_size, size_t mem_size)
   cache_manager.mem_size   = mem_size;
 
 #ifdef CONFIG_LV_IMG_CACHE_USE_STATIC_MEM
+#ifdef LV_IMG_CACHE_MEM_CUSTOM_SECTION_NAME
+    locate_data(LV_IMG_CACHE_MEM_CUSTOM_SECTION_NAME)
+#endif
   static uint8_t cache_mem[CONFIG_LV_IMG_CACHE_DEF_MEM_TOTAL_SIZE];
   LV_ASSERT(mem_size == CONFIG_LV_IMG_CACHE_DEF_MEM_TOTAL_SIZE);
   mem = cache_mem;
