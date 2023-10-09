@@ -70,7 +70,7 @@ static lv_res_t _lv_acts_dma2d_fill(
         lv_color_t * dest, int16_t dest_stride,
         int16_t fill_w, int16_t fill_h, lv_color_t color, lv_opa_t opa);
 
-static lv_res_t _lv_acts_dma2d_blit(
+lv_res_t _lv_acts_dma2d_blit(
         lv_color_t * dest, int16_t dest_stride,
         const lv_img_dsc_t * src, int16_t copy_w, int16_t copy_h,
         lv_color_t color, lv_opa_t opa);
@@ -102,6 +102,10 @@ static int dma2d_fd = -1;
  * Private Functions
  ****************************************************************************/
 
+/****************************************************************************
+ * Name: need_argb8565_support
+ ****************************************************************************/
+
 /**
  * During rendering, LVGL might initializes new draw_ctxs and start drawing
  * into a separate buffer (called layer). If the content to be rendered has
@@ -123,6 +127,91 @@ static inline bool need_argb8565_support(lv_draw_ctx_t * draw_ctx)
 #endif
 
   return false;
+}
+
+/****************************************************************************
+ * Name: is_cacheable
+ ****************************************************************************/
+
+static inline bool is_cacheable(const void * ptr)
+{
+  uintptr_t addr = (uintptr_t)ptr;
+  return (addr >= 0x18000000 && addr < 0x1c000000) ? true : false;
+}
+
+/****************************************************************************
+ * Name: blend_rgb565_over_rgb565
+ ****************************************************************************/
+
+static inline uint16_t mix_rgb565_over_rgb565(uint16_t dest_color,
+                            uint16_t src_color, uint8_t src_a)
+{
+  uint16_t dest_r = (dest_color >> 11) * (255 - src_a) +
+                    (src_color >> 11) * src_a;
+  uint16_t dest_b = (dest_color & 0x001f) * (255 - src_a) +
+                    (src_color & 0x001f) * src_a;
+  uint32_t dest_g = (dest_color & 0x07e0) * (255 - src_a) +
+                    (src_color & 0x07e0) * (uint32_t)src_a;
+
+  return ((dest_r >> 8) << 11) | ((dest_g >> 8) & 0x07e0) | (dest_b >> 8);
+}
+
+static inline uint16_t blend_rgb565_over_rgb565(uint16_t dest_color,
+                            uint16_t src_color, uint8_t src_a)
+{
+  if (src_a <= 0)
+    {
+      return dest_color;
+    }
+  else if (src_a >= 255)
+    {
+      return src_color;
+    }
+  else
+    {
+      return mix_rgb565_over_rgb565(dest_color, src_color, src_a);
+    }
+}
+
+/****************************************************************************
+ * Name: blend_argb8888_over_rgb565
+ ****************************************************************************/
+
+static inline uint16_t mix_argb8888_over_rgb565(uint16_t dest_color,
+                                                uint32_t src_color)
+{
+  uint32_t a = src_color >> 24;
+  uint32_t ra = 255 - a;
+
+  uint32_t dest32_rb = ((dest_color & 0xf800) << 8) |
+                        ((dest_color & 0x1f) << 3);
+  dest32_rb = (src_color & 0x00ff00ff) * a + dest32_rb * ra;
+
+  uint32_t dest32_g = (dest_color & 0x07e0) << 5;
+  dest32_g = (src_color & 0x0000ff00) * a + dest32_g * ra;
+
+  return ((dest32_rb >> 16) & 0xf800) | ((dest32_rb >> 11) & 0x1f) |
+          ((dest32_g >> 13) & 0x07e0);
+}
+
+static inline uint16_t blend_argb8888_over_rgb565(uint16_t dest_color,
+                                                  uint32_t src_color)
+{
+  uint8_t src_a = src_color >> 24;
+
+  if (src_a <= 0)
+    {
+      return dest_color;
+    }
+  else if (src_a >= 255)
+    {
+      return ((src_color & 0xf80000) >> 8) | ((src_color & 0x00fc00) >> 5) |
+          ((src_color & 0x0000f8) >> 3);
+    }
+  else
+    {
+      return mix_argb8888_over_rgb565(dest_color, src_color);
+    }
 }
 
 /****************************************************************************
@@ -155,7 +244,8 @@ static uint32_t _lv_color_format_to_dma2d(lv_img_cf_t cf)
 
 static void _lv_acts_dma2d_clean_img_src(const lv_img_dsc_t * src)
 {
-  up_clean_dcache((uintptr_t)src->data, (uintptr_t)src->data + src->data_size);
+  up_clean_dcache((uintptr_t)src->data,
+                  (uintptr_t)src->data + src->data_size);
 }
 
 /****************************************************************************
@@ -183,6 +273,11 @@ static void _lv_acts_dma2d_flush_drawbuf(lv_draw_ctx_t * draw_ctx)
 /****************************************************************************
  * Name: _lv_draw_acts_dma2d_wait_for_finish
  ****************************************************************************/
+
+void _lv_acts_dma2d_finish(void)
+{
+  ioctl(dma2d_fd, DMA2DDEVIO_WAITFINISH, 0);
+}
 
 static void _lv_draw_acts_dma2d_wait_for_finish(lv_draw_ctx_t * draw_ctx)
 {
@@ -219,7 +314,7 @@ static void _lv_draw_acts_dma2d_draw_img_decoded(lv_draw_ctx_t * draw_ctx,
   lv_img_dsc_t img_dsc;
   img_dsc.header.cf = cf;
   img_dsc.header.w = lv_area_get_width(coords);
-  img_dsc.header.h = lv_area_get_height(coords);
+  img_dsc.header.h = lv_area_get_height(draw_ctx->clip_area);
   img_dsc.data = map_p + px_bytes * ((draw_ctx->clip_area->y1 - coords->y1) *
           img_dsc.header.w + (draw_ctx->clip_area->x1 - coords->x1));
   img_dsc.data_size = img_dsc.header.w * img_dsc.header.h * px_bytes;
@@ -371,6 +466,27 @@ static lv_res_t _lv_acts_dma2d_fill(
       };
 
       res = ioctl(dma2d_fd, DMA2DDEVIO_FILLCOLOR, (unsigned long)&fillcolor);
+
+#if LV_COLOR_DEPTH == 16
+      if (res < 0 && !is_cacheable(dest_buf.memory) && dest_buf.width >= 4)
+        {
+          dest_buf.memory = (lv_color_t *)dest_buf.memory + 1;
+          dest_buf.width--;
+
+          ioctl(dma2d_fd, DMA2DDEVIO_WAITFINISH, 0);
+
+          res = ioctl(dma2d_fd, DMA2DDEVIO_FILLCOLOR,
+                      (unsigned long)&fillcolor);
+          if (res >= 0)
+            {
+              for (int i = dest_buf.height; i > 0; i--)
+                {
+                  *dest = color;
+                  dest += dest_stride;
+                }
+            }
+        }
+#endif /* LV_COLOR_DEPTH == 16 */
     }
   else
     {
@@ -395,6 +511,29 @@ static lv_res_t _lv_acts_dma2d_fill(
       };
 
       res = ioctl(dma2d_fd, DMA2DDEVIO_BLEND, (unsigned long)&blend);
+
+#if LV_COLOR_DEPTH == 16
+      if (res < 0 && !is_cacheable(dest_buf.memory) && dest_buf.width >= 4)
+        {
+          dest_buf.memory = (lv_color_t *)dest_buf.memory + 1;
+          dest_buf.width--;
+          src_ovl.area.w--;
+          bg_ovl.area.w--;
+
+          ioctl(dma2d_fd, DMA2DDEVIO_WAITFINISH, 0);
+
+          res = ioctl(dma2d_fd, DMA2DDEVIO_BLEND, (unsigned long)&blend);
+          if (res >= 0)
+            {
+              for (int i = dest_buf.height; i > 0; i--)
+                {
+                  dest->full = blend_argb8888_over_rgb565(
+                                      dest->full, src_ovl.color);
+                  dest += dest_stride;
+                }
+            }
+        }
+#endif /* LV_COLOR_DEPTH == 16 */
     }
 
   return (res >= 0) ? LV_RES_OK : LV_RES_INV;
@@ -404,7 +543,7 @@ static lv_res_t _lv_acts_dma2d_fill(
  * Name: _lv_acts_dma2d_blit
  ****************************************************************************/
 
-static lv_res_t _lv_acts_dma2d_blit(
+lv_res_t _lv_acts_dma2d_blit(
         lv_color_t * dest, int16_t dest_stride,
         const lv_img_dsc_t * src, int16_t copy_w, int16_t copy_h,
         lv_color_t color, lv_opa_t opa)
@@ -424,7 +563,8 @@ static lv_res_t _lv_acts_dma2d_blit(
   src_buf.memory = (void *)src->data;
   src_buf.width = copy_w;
   src_buf.height = copy_h;
-  src_buf.stride = src->header.w * lv_img_cf_get_px_size(src->header.cf) >> 3;
+  src_buf.stride = src->header.w *
+                   lv_img_cf_get_px_size(src->header.cf) >> 3;
 
   src_ovl.buffer = &src_buf;
   src_ovl.color = ((uint32_t)opa << 24) | (lv_color_to32(color) & 0xffffff);
@@ -457,6 +597,35 @@ static lv_res_t _lv_acts_dma2d_blit(
       };
 
       res = ioctl(dma2d_fd, DMA2DDEVIO_BLEND, (unsigned long)&blend);
+
+#if LV_COLOR_DEPTH == 16
+      if (res < 0 && !is_cacheable(dest_buf.memory) &&
+          dest_buf.width >= 4 && src_buf.format == DMA2D_PF_RGB565)
+        {
+          dest_buf.memory = (lv_color_t *)dest_buf.memory + 1;
+          dest_buf.width--;
+          src_buf.memory = (lv_color_t *)src_buf.memory + 1;
+          src_buf.width--;
+          src_ovl.area.w--;
+          bg_ovl.area.w--;
+
+          ioctl(dma2d_fd, DMA2DDEVIO_WAITFINISH, 0);
+
+          res = ioctl(dma2d_fd, DMA2DDEVIO_BLEND, (unsigned long)&blend);
+          if (res >= 0)
+            {
+              lv_color_t * src16 = (lv_color_t *)src->data;
+
+              for (int i = dest_buf.height; i > 0; i--)
+                {
+                  dest->full = blend_rgb565_over_rgb565(
+                                    dest->full, src16->full, opa);
+                  dest += dest_stride;
+                  src16 += src->header.w;
+                }
+            }
+        }
+#endif /* LV_COLOR_DEPTH == 16 */
     }
   else
     {
@@ -467,6 +636,32 @@ static lv_res_t _lv_acts_dma2d_blit(
       };
 
       res = ioctl(dma2d_fd, DMA2DDEVIO_BLIT, (unsigned long)&blit);
+
+#if LV_COLOR_DEPTH == 16
+      if (res < 0 && !is_cacheable(dest_buf.memory) && dest_buf.width >= 4)
+        {
+          dest_buf.memory = (lv_color_t *)dest_buf.memory + 1;
+          dest_buf.width--;
+          src_buf.memory = (lv_color_t *)src_buf.memory + 1;
+          src_buf.width--;
+          src_ovl.area.w--;
+
+          ioctl(dma2d_fd, DMA2DDEVIO_WAITFINISH, 0);
+
+          res = ioctl(dma2d_fd, DMA2DDEVIO_BLIT, (unsigned long)&blit);
+          if (res >= 0)
+            {
+              lv_color_t * src16 = (lv_color_t *)src->data;
+
+              for (int i = copy_h; i > 0; i--)
+                {
+                  *dest = *src16;
+                  dest += dest_stride;
+                  src16 += src->header.w;
+                }
+            }
+        }
+#endif /* LV_COLOR_DEPTH == 16 */
     }
 
   return (res >= 0) ? LV_RES_OK : LV_RES_INV;
