@@ -24,6 +24,7 @@
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
+#include <sys/param.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -77,7 +78,7 @@ struct keypad_obj_s
  * Private Data
  ****************************************************************************/
 
-static const struct keypad_map_s keypad_map[] =
+static const struct keypad_map_s g_keypad_map[] =
 {
   {.key = LV_KEY_UP,        .bit = LV_KEY_UP_MAP_BIT},
   {.key = LV_KEY_DOWN,      .bit = LV_KEY_DOWN_MAP_BIT},
@@ -114,16 +115,16 @@ static uint32_t keypad_get_key(int fd)
       return 0;
     }
 
-  for (i = 0; i < sizeof(keypad_map) / sizeof(struct keypad_map_s); i++)
+  for (i = 0; i < nitems(g_keypad_map); i++)
     {
-      int bit = keypad_map[i].bit;
+      int bit = g_keypad_map[i].bit;
 
       if (bit >= 0 && bit < buttonset_bits)
         {
           btn_buttonset_t mask = 1 << bit;
           if (buttonset & mask)
             {
-              act_key = keypad_map[i].key;
+              act_key = g_keypad_map[i].key;
               break;
             }
         }

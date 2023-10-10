@@ -196,7 +196,7 @@ static int test_regulator_resume(FAR struct regulator_dev_s *rdev)
 
 static void test_regulator_register(FAR void **state)
 {
-  FAR struct regulator_dev_s * test = NULL;
+  FAR struct regulator_dev_s *test = NULL;
 
   g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
                                              &g_fake_regulator_ops,
@@ -207,7 +207,6 @@ static void test_regulator_register(FAR void **state)
                             &g_fake_regulator);
   assert_true(NULL == test);
   regulator_unregister(g_fake_regulator.rdev);
-  return;
 }
 
 static void test_regulator_always_on(FAR void **state)

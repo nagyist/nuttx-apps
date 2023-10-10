@@ -6,6 +6,7 @@
 menuconfig LIBSODIUM
 	bool "Libsodium Cryptography Library"
 	default n
+	depends on ALLOW_ICS_COMPONENTS
 	---help---
 		Enable support for Libsodium.
 
@@ -18,7 +19,7 @@ config LIBSODIUM_VERSION
 config LIBSODIUM_TEST
 	tristate "Enable Libsodium test"
 	default n
-	help
+	---help---
 		Enable the Libsodium test.
 
 if LIBSODIUM_TEST
