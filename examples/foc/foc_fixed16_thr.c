@@ -24,12 +24,12 @@
 
 #include <nuttx/config.h>
 
-#include <assert.h>
-#include <dspb16.h>
-#include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
+#include <fcntl.h>
+#include <assert.h>
 #include <unistd.h>
+
+#include <dspb16.h>
 
 #include "foc_cfg.h"
 #include "foc_debug.h"
@@ -37,10 +37,6 @@
 
 #include "industry/foc/foc_utils.h"
 #include "industry/foc/foc_common.h"
-
-#ifdef CONFIG_EXAMPLES_FOC_NXSCOPE
-#  include "logging/nxscope/nxscope.h"
-#endif
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -127,9 +123,7 @@ static int foc_handler_run(FAR struct foc_motor_b16_s *motor,
 
   /* Get FOC handler state */
 
-  foc_handler_state_b16(&motor->handler,
-                        &motor->foc_state,
-                        &motor->mod_state);
+  foc_handler_state_b16(&motor->handler, &motor->foc_state);
 
   return ret;
 }
@@ -176,109 +170,6 @@ static int foc_state_print(FAR struct foc_motor_b16_s *motor)
   foc_handler_state_print_b16(&motor->foc_state);
 
   return OK;
-}
-#endif
-
-#ifdef CONFIG_EXAMPLES_FOC_NXSCOPE
-/****************************************************************************
- * Name: foc_fixed16_nxscope
- ****************************************************************************/
-
-static void foc_fixed16_nxscope(FAR struct foc_nxscope_s *nxs,
-                                FAR struct foc_motor_b16_s *motor,
-                                FAR struct foc_device_s *dev)
-{
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG != 0)
-  FAR b16_t *ptr = NULL;
-  int        i = nxs->ch_per_inst * motor->envp->id;
-#endif
-
-  nxscope_lock(&nxs->nxs);
-
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_IABC)
-  ptr = (FAR b16_t *)&motor->foc_state.curr;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, CONFIG_MOTOR_FOC_PHASES);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_IDQ)
-  ptr = (FAR b16_t *)&motor->foc_state.idq;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 2);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_IAB)
-  ptr = (FAR b16_t *)&motor->foc_state.iab;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 2);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VABC)
-  ptr = (FAR b16_t *)&motor->foc_state.volt;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, CONFIG_MOTOR_FOC_PHASES);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VDQ)
-  ptr = (FAR b16_t *)&motor->foc_state.vdq;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 2);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VAB)
-  ptr = (FAR b16_t *)&motor->foc_state.vab;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 2);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_AEL)
-  ptr = (FAR b16_t *)&motor->angle_el;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 1);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_AM)
-  ptr = (FAR b16_t *)&motor->angle_m;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 1);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VEL)
-#  warning not supported yet
-  i++;
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VM)
-#  warning not supported yet
-  i++;
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VBUS)
-  ptr = (FAR b16_t *)&motor->vbus;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 1);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_SPTORQ)
-  ptr = (FAR b16_t *)&motor->torq;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 3);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_SPVEL)
-  ptr = (FAR b16_t *)&motor->vel;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 3);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_SPPOS)
-  ptr = (FAR b16_t *)&motor->pos;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 3);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_DQREF)
-  ptr = (FAR b16_t *)&motor->dq_ref;
-  nxscope_put_vb16_t(&nxs->nxs, i++, ptr, 2);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VDQCOMP)
-  ptr = (FAR b16_t *)&motor->vdq_comp;
-  nxscope_put_vb16_t(&nxs->nxs, i++, ptr, 2);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_SVM3)
-  b16_t svm3_tmp[4];
-
-  /* Convert sector to b16_t.
-   * Normally, a sector value is an integer in the range 1-6 but we convert
-   * it to b16_t and range to 0.1-0.6. This is to send the entire SVM3 state
-   * as b16_t array and scale the sector value closer to PWM duty values
-   * (range 0.0 to 0.5) which makes it easier to visualize the data later.
-   */
-
-  svm3_tmp[0] = b16mulb16(itob16(motor->mod_state.sector), ftob16(0.1f));
-  svm3_tmp[1] = motor->mod_state.d_u;
-  svm3_tmp[2] = motor->mod_state.d_v;
-  svm3_tmp[3] = motor->mod_state.d_w;
-
-  ptr = svm3_tmp;
-  nxscope_put_vfloat(&nxs->nxs, i++, ptr, 4);
-#endif
-
-  nxscope_unlock(&nxs->nxs);
 }
 #endif
 
@@ -463,15 +354,6 @@ int foc_fixed16_thr(FAR struct foc_ctrl_env_s *envp)
               PRINTF("ERROR: foc_dev_params_set failed %d!\n", ret);
               goto errout;
             }
-
-#ifdef CONFIG_EXAMPLES_FOC_NXSCOPE
-          /* Capture nxscope samples */
-
-          if (time % CONFIG_EXAMPLES_FOC_NXSCOPE_PRESCALER == 0)
-            {
-              foc_fixed16_nxscope(envp->nxs, &motor, &dev);
-            }
-#endif
 
           /* Terminate control thread */
 

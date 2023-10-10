@@ -25,58 +25,146 @@ include $(APPDIR)/Make.defs
 LVGL_DIR = .
 LVGL_DIR_NAME = lvgl
 
-# Relax LVGL's format checking and unused variable checking to avoid errors
-
-CFLAGS += -Wno-format -Wno-format-security -Wno-unused-variable
+# Relax format check for LVGL to avoid errors on prinf() use
 
 -include ./lvgl/lvgl.mk
 
-CSRCS += port/lv_port.c
-CSRCS += port/lv_port_tick.c
+-include ./ext/Makefile
 
-ifeq ($(CONFIG_LIBUV),y)
-CSRCS += port/lv_port_libuv.c
+CSRCS += lv_porting/lv_tick_interface.c
+
+ifeq ($(CONFIG_LV_USE_V9),)
+CSRCS += lv_porting/lv_porting.c
+
+ifneq ($(CONFIG_LV_USE_SYSLOG_INTERFACE),)
+CSRCS += lv_porting/lv_syslog_interface.c
 endif
 
-ifeq ($(CONFIG_LV_PORT_USE_LCDDEV),y)
-CSRCS += port/lv_port_lcddev.c
+ifneq ($(CONFIG_ARCH_DCACHE),)
+CSRCS += lv_porting/lv_dcache_interface.c
 endif
 
-ifeq ($(CONFIG_LV_PORT_USE_FBDEV),y)
-CSRCS += port/lv_port_fbdev.c
+ifneq ($(CONFIG_LIBUV),)
+CSRCS += lv_porting/lv_uv_interface.c
 endif
 
-ifeq ($(CONFIG_LV_PORT_USE_TOUCHPAD),y)
-CSRCS += port/lv_port_touchpad.c
+ifneq ($(CONFIG_LV_USE_BUTTON_INTERFACE),)
+CSRCS += lv_porting/lv_button_interface.c
 endif
 
-ifeq ($(CONFIG_LV_PORT_USE_BUTTON),y)
-CSRCS += port/lv_port_button.c
+ifneq ($(CONFIG_LV_USE_MOUSE_INTERFACE),)
+CSRCS += lv_porting/lv_mouse_interface.c
 endif
 
-ifeq ($(CONFIG_LV_PORT_USE_KEYPAD),y)
-CSRCS += port/lv_port_keypad.c
+ifneq ($(CONFIG_LV_USE_KEYPAD_INTERFACE),)
+CSRCS += lv_porting/lv_keypad_interface.c
 endif
 
-ifeq ($(CONFIG_LV_PORT_USE_ENCODER),y)
-CSRCS += port/lv_port_encoder.c
+ifneq ($(CONFIG_LV_USE_TOUCHPAD_INTERFACE),)
+CSRCS += lv_porting/lv_touchpad_interface.c
 endif
 
-ifeq ($(CONFIG_LV_USE_LOG),y)
-CSRCS += port/lv_port_syslog.c
+ifneq ($(CONFIG_LV_USE_ENCODER_INTERFACE),)
+CSRCS += lv_porting/lv_encoder_interface.c
 endif
 
-ifneq ($(CONFIG_LV_PORT_MEM_ATTRIBUTE_FAST_MEM_SECTION_NAME), "")
-CFLAGS   += "-DLV_ATTRIBUTE_FAST_MEM=locate_data(CONFIG_LV_PORT_MEM_ATTRIBUTE_FAST_MEM_SECTION_NAME)"
-CXXFLAGS += "-DLV_ATTRIBUTE_FAST_MEM=locate_data(CONFIG_LV_PORT_MEM_ATTRIBUTE_FAST_MEM_SECTION_NAME)"
+ifneq ($(CONFIG_LV_USE_LCDDEV_INTERFACE),)
+CSRCS += lv_porting/lv_lcddev_interface.c
 endif
 
-ifeq ($(CONFIG_LV_MEM_CUSTOM),y)
-ifneq ($(CONFIG_LV_PORT_MEM_CUSTOM_SIZE), 0)
-CFLAGS += "-DLV_MEM_CUSTOM_ALLOC=lv_port_mem_alloc"
-CFLAGS += "-DLV_MEM_CUSTOM_FREE=lv_port_mem_free"
-CFLAGS += "-DLV_MEM_CUSTOM_REALLOC=lv_port_mem_realloc"
-CSRCS  += port/lv_port_mem.c
+ifneq ($(CONFIG_LV_USE_FBDEV_INTERFACE),)
+CSRCS += lv_porting/lv_fbdev_interface.c
+endif
+
+ifneq ($(CONFIG_LV_USE_GPU_MANAGER),)
+ifneq ($(CONFIG_LV_GPU_USE_VG_LITE),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../$(CONFIG_LV_GPU_VG_LITE_INCLUDE)
+endif
+CSRCS += $(wildcard lv_porting/gpu_manager/*.c)
+CSRCS += $(wildcard lv_porting/gpu_manager/*/*.c)
+endif
+
+ifneq ($(CONFIG_LV_USE_GPU_INTERFACE),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../vendor/bes/$(CONFIG_BES_DDK_DIR)/platform/drivers/graphic/gpu/drv/vglite/inc
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../vendor/bes/$(CONFIG_BES_DDK_DIR)/platform/drivers/graphic/gpu
+CSRCS += lv_porting/gpu/lv_gpu_interface.c
+CSRCS += lv_porting/gpu/lv_gpu_draw_utils.c
+CSRCS += lv_porting/gpu/vglite/vg_lite_utils.c
+CSRCS += lv_porting/gpu/vglite/lv_gpu_draw_layer.c
+CSRCS += lv_porting/decoder/vglite/lv_gpu_decoder.c
+CSRCS += lv_porting/decoder/vglite/lv_gpu_evoreader.c
+ifneq ($(CONFIG_LV_COLOR_DEPTH_32),)
+CSRCS += lv_porting/gpu/mve/fast_gaussian_blur.c
+lv_porting/gpu/mve/fast_gaussian_blur.c_CFLAGS += -fno-stack-protector
+endif
+ifneq ($(CONFIG_ARM_HAVE_MVE),)
+CSRCS += lv_porting/gpu/mve/lv_gpu_draw_blend.c
+endif
+
+ifneq ($(CONFIG_LV_GPU_DRAW_LINE),)
+CSRCS += lv_porting/gpu/vglite/lv_gpu_draw_line.c
+endif
+ifneq ($(CONFIG_LV_GPU_DRAW_ARC),)
+CSRCS += lv_porting/gpu/vglite/lv_gpu_draw_arc.c
+endif
+ifneq ($(CONFIG_LV_GPU_DRAW_POLYGON),)
+CSRCS += lv_porting/gpu/vglite/lv_gpu_draw_polygon.c
+endif
+ifneq ($(CONFIG_LV_GPU_DRAW_RECT),)
+CSRCS += lv_porting/gpu/vglite/lv_gpu_draw_rect.c
+endif
+ifneq ($(CONFIG_LV_GPU_DRAW_IMG),)
+CSRCS += lv_porting/gpu/vglite/lv_gpu_draw_img.c
+endif
+ifneq ($(CONFIG_LV_GPU_DRAW_LETTER),)
+CSRCS += lv_porting/gpu/vglite/lv_gpu_draw_letter.c
+endif
+
+endif
+
+ifneq ($(CONFIG_LV_USE_ACTS_DMA2D_INTERFACE),)
+CSRCS += lv_porting/lv_acts_dma2d_interface.c
+endif
+
+ifneq ($(CONFIG_LV_USE_DECODER_JPEG_TURBO),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/libjpeg-turbo/libjpeg-turbo
+CSRCS += lv_porting/decoder/jpeg_turbo/lv_jpeg_turbo.c
+endif
+
+ifneq ($(CONFIG_LV_USE_DECODER_LODEPNG),)
+CSRCS += lv_porting/decoder/lodepng/lodepng.c
+CSRCS += lv_porting/decoder/lodepng/lv_lodepng.c
+endif
+
+ifneq ($(CONFIG_LV_USE_LIBPNG),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/libpng
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/libpng/libpng
+endif
+
+ifneq ($(CONFIG_LV_USE_FFMPEG),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/ffmpeg/ffmpeg
+endif
+
+ifneq ($(CONFIG_LV_USE_RLOTTIE),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/rlottie/rlottie/inc
+endif
+
+ifneq ($(CONFIG_LV_USE_QRSCAN),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/quirc/quirc/lib
+endif
+endif
+
+ifneq ($(CONFIG_LV_ATTRIBUTE_FAST_MEM_CUSTOM_SECTION_NAME), "")
+CFLAGS   += "-DLV_ATTRIBUTE_FAST_MEM=__attribute__((section(CONFIG_LV_ATTRIBUTE_FAST_MEM_CUSTOM_SECTION_NAME)))"
+CXXFLAGS += "-DLV_ATTRIBUTE_FAST_MEM=__attribute__((section(CONFIG_LV_ATTRIBUTE_FAST_MEM_CUSTOM_SECTION_NAME)))"
+endif
+
+ifeq ($(CONFIG_LV_USE_V9),)
+ifneq ($(CONFIG_LV_MEM_INTERFACE_CUSTOM_SIZE), 0)
+CFLAGS += "-DLV_MEM_CUSTOM_ALLOC=lv_mem_custom_alloc"
+CFLAGS += "-DLV_MEM_CUSTOM_FREE=lv_mem_custom_free"
+CFLAGS += "-DLV_MEM_CUSTOM_REALLOC=lv_mem_custom_realloc"
+CSRCS  += lv_porting/lv_mem_interface.c
 endif
 endif
 
@@ -84,40 +172,25 @@ ifneq ($(CONFIG_LV_ASSERT_HANDLER_INCLUDE), "")
 CFLAGS += "-DLV_ASSERT_HANDLER=ASSERT(0);"
 endif
 
-# Set up build configuration and environment
+ifneq ($(CONFIG_LV_USE_PROFILER),)
+CFLAGS += "-DLV_PROFILER_BEGIN=sched_note_begin(NOTE_TAG_ALWAYS)"
+CFLAGS += "-DLV_PROFILER_END=sched_note_end(NOTE_TAG_ALWAYS)"
+endif
 
-WD := ${shell echo $(CURDIR) | sed -e 's/ /\\ /g'}
+ifeq ($(CONFIG_LV_USE_V9),)
+ifneq ($(LV_IMG_CACHE_DEF_SIZE),0)
+CSRCS += lv_porting/lv_img_cache_lru.c
+ifneq ($(CONFIG_LV_MEM_DRAW_BUF_CUSTOM),)
+CFLAGS += "-DLV_MEM_CUSTOM_ALLOC_DRAW_BUF=lv_img_cache_malloc"
+CFLAGS += "-DLV_MEM_CUSTOM_FREE_DRAW_BUF=lv_img_cache_free"
+CFLAGS += "-DLV_MEM_CUSTOM_REALLOC_DRAW_BUF=lv_img_cache_realloc"
+CFLAGS += "-DLV_MEM_CUSTOM_ALIGNED_ALLOC_DRAW_BUF=lv_img_cache_aligned_alloc"
+endif
+endif
+endif
 
-CONFIG_GRAPH_LVGL_URL ?= "https://github.com/lvgl/lvgl/archive/refs/tags"
-
-LVGL_VERSION = $(patsubst "%",%,$(strip $(CONFIG_LVGL_VERSION)))
-LVGL_TARBALL = v$(LVGL_VERSION).zip
-
-LVGL_UNPACKNAME = lvgl
-UNPACK ?= unzip -o $(if $(V),,-q)
-CURL ?= curl -L -O $(if $(V),,-Ss)
-
-LVGL_UNPACKDIR =  $(WD)/$(LVGL_UNPACKNAME)
-
-$(LVGL_TARBALL):
-	$(ECHO_BEGIN)"Downloading: $(LVGL_TARBALL)"
-	$(Q) $(CURL) $(CONFIG_GRAPH_LVGL_URL)/$(LVGL_TARBALL)
-	$(ECHO_END)
-
-$(LVGL_UNPACKNAME): $(LVGL_TARBALL)
-	$(ECHO_BEGIN)"Unpacking: $(LVGL_TARBALL) -> $(LVGL_UNPACKNAME)"
-	$(Q) $(UNPACK) $(LVGL_TARBALL)
-	$(Q) mv	lvgl-$(LVGL_VERSION) $(LVGL_UNPACKNAME)
-	$(Q) touch $(LVGL_UNPACKNAME)
-	$(ECHO_END)
-
-# Download and unpack tarball if no git repo found
-ifeq ($(wildcard $(LVGL_UNPACKNAME)/.git),)
-context:: $(LVGL_UNPACKNAME)
-
-distclean::
-	$(call DELDIR, $(LVGL_UNPACKNAME))
-	$(call DELFILE, $(LVGL_TARBALL))
+ifeq ($(CONFIG_DEBUG_CUSTOMOPT),y)
+  ./lvgl/src/misc/lv_mem.c_CFLAGS += -O2
 endif
 
 include $(APPDIR)/Application.mk

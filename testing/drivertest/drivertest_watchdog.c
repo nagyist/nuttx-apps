@@ -24,7 +24,6 @@
 
 #include <nuttx/config.h>
 
-#include <sys/boardctl.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -43,6 +42,7 @@
 #include <cmocka.h>
 #include <time.h>
 #include <nuttx/timers/watchdog.h>
+#include <nuttx/board.h>
 
 /****************************************************************************
  * Pre-processor Definitions

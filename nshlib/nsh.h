@@ -572,7 +572,7 @@
 #endif
 
 /* nsh_foreach_direntry used by the commands:
- * ls, ps, fdinfo, rptun, pmconfig
+ * ls, ps, rptun, pmconfig, fdinfo
  */
 
 #if defined(CONFIG_NSH_DISABLE_LS) && defined(CONFIG_NSH_DISABLE_PS) && \

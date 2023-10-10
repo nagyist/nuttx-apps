@@ -200,14 +200,13 @@ static FAR void *context_swtich_task(FAR void *arg)
 static size_t context_switch_performance(void)
 {
   struct performance_time_s time;
-  int tid;
 
-  tid = performance_thread_create(context_swtich_task, &time,
-                                  CONFIG_INIT_PRIORITY);
+  performance_thread_create(context_swtich_task,  &time,
+                            CONFIG_INIT_PRIORITY);
   sched_yield();
   performance_start(&time);
   sched_yield();
-  pthread_join(tid, NULL);
+
   return performance_gettime(&time);
 }
 
@@ -217,31 +216,21 @@ static size_t context_switch_performance(void)
 
 static void work_handle(void *arg)
 {
-  FAR struct performance_time_s *time = ((FAR void **)arg)[0];
-  FAR sem_t *sem = ((void **)arg)[1];
+  FAR struct performance_time_s *time = (FAR struct performance_time_s *)arg;
   performance_end(time);
-  sem_post(sem);
 }
 
 static size_t hpwork_performance(void)
 {
   struct performance_time_s result;
   struct work_s work;
-  sem_t sem = SEM_INITIALIZER(0);
   int ret;
-
-  FAR void *args = (void *[])
-  {
-    (FAR void *)&work,
-    (FAR void *)&sem
-  };
 
   memset(&work, 0, sizeof(work));
   performance_start(&result);
-  ret = work_queue(HPWORK, &work, work_handle, args, 0);
+  ret = work_queue(HPWORK, &work, work_handle, &result, 0);
   DEBUGASSERT(ret == 0);
 
-  sem_wait(&sem);
   return performance_gettime(&result);
 }
 
@@ -253,7 +242,7 @@ static FAR void *poll_task(FAR void *arg)
 {
   FAR void **argv = arg;
   FAR struct performance_time_s *time = argv[0];
-  int pipefd = (int)(uintptr_t)argv[1];
+  int pipefd = (int)argv[1];
 
   performance_start(time);
   write(pipefd, "a", 1);
@@ -275,14 +264,13 @@ static size_t poll_performance(void)
   argv[0] = (FAR char *)&result;
   argv[1] = (FAR char *)(uintptr_t)pipefd[1];
 
-  ret = performance_thread_create(poll_task, argv, CONFIG_INIT_PRIORITY);
+  performance_thread_create(poll_task, argv, CONFIG_INIT_PRIORITY);
 
   poll(&fds, 1, -1);
   performance_end(&result);
 
   close(pipefd[0]);
   close(pipefd[1]);
-  pthread_join(ret, NULL);
   return performance_gettime(&result);
 }
 
@@ -369,12 +357,12 @@ static void performance_run(const FAR struct performance_entry_s *item,
 
       if (detail)
         {
-          printf("\t%zu: %zu\n", i, time);
+          printf("\t%d: %zu\n", i, time);
         }
     }
 
   printf("%-*s %10zu %10zu %10zu\n", NAME_MAX, item->name, max, min,
-         total / count);
+          total / count);
 }
 
 /****************************************************************************
@@ -438,7 +426,7 @@ int main(int argc, FAR char *argv[])
           default:
             performance_help();
             return EXIT_FAILURE;
-        }
+          }
     }
 
   if (optind < argc)
@@ -451,7 +439,7 @@ int main(int argc, FAR char *argv[])
         }
     }
 
-  printf("OS performance args: count:%zu, detail:%s\n", count,
+  printf("OS performance args: count:%d, detail:%s\n", count,
          detail ? "true" : "false");
 
   printf("==============================================================\n");
