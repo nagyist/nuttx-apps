@@ -59,8 +59,7 @@
 int main(int argc, FAR char *argv[])
 {
   lv_nuttx_t info;
-  info.fb_path = CONFIG_LV_FBDEV_INTERFACE_DEFAULT_DEVICEPATH;
-  info.input_path = CONFIG_LV_TOUCHPAD_INTERFACE_DEFAULT_DEVICEPATH;
+  lv_nuttx_info_init(&info);
   info.need_wait_vsync = true;
 
   lv_init();
