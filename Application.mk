@@ -281,7 +281,7 @@ context:: $(AIDLOBJS)
 
 ifeq ($(DO_REGISTRATION),y)
 
-$(REGLIST): $(DEPCONFIG) $(firstword $(MAKEFILE_LIST))
+$(REGLIST): $(DEPCONFIG) Makefile
 	$(eval PROGNAME_$@ := $(basename $(notdir $@)))
 ifeq ($(CONFIG_SCHED_USER_IDENTITY),y)
 	$(call REGISTER,$(PROGNAME_$@),$(PRIORITY_$@),$(STACKSIZE_$@),$(if $(BUILD_MODULE),,$(PROGNAME_$@)_main),$(UID_$@),$(GID_$@),$(MODE_$@))
@@ -296,7 +296,7 @@ register::
 	@:
 endif
 
-.depend: $(firstword $(MAKEFILE_LIST)) $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
+.depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
 	$(call SPLITVARIABLE,ALL_DEP_OBJS,$^,100)
 	$(foreach BATCH, $(ALL_DEP_OBJS_TOTAL), \
 	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$(ALL_DEP_OBJS_$(BATCH))) >Make.dep) \
