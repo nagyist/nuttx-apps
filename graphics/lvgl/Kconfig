@@ -17,8 +17,6 @@ config LVGL_VERSION
 
 source "$APPSDIR/graphics/lvgl/lvgl/Kconfig"
 source "$APPSDIR/graphics/lvgl/ext/Kconfig"
-source "$APPSDIR/graphics/lvgl/lv_porting/gpu_manager/Kconfig"
-source "$APPSDIR/graphics/lvgl/lv_demos/Kconfig"
 
 config LV_USE_SYSLOG_INTERFACE
 	bool "Syslog interface"
@@ -409,10 +407,6 @@ endmenu # "Memory configuration"
 
 config LV_USE_SCHED_NOTE
 	bool "Enable Sched Note"
-	default n
-
-config LV_USE_V9
-	bool "Use LVGL V9"
 	default n
 
 endif # GRAPHICS_LVGL
