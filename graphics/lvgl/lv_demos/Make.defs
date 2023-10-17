@@ -1,0 +1,8 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+ifneq ($(CONFIG_LV_DEMOS),)
+CONFIGURED_APPS += $(APPDIR)/graphics/lvgl/lv_demos
+endif
