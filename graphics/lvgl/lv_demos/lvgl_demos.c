@@ -26,6 +26,9 @@
 
 #include <lvgl/lvgl.h>
 #include <lvgl/demos/lv_demos.h>
+#ifdef CONFIG_LV_USE_NUTTX_LIBUV
+#include <uv.h>
+#endif
 
 /****************************************************************************
  * Private Type Declarations
@@ -38,6 +41,23 @@
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+#ifdef CONFIG_LV_USE_NUTTX_LIBUV
+static void lv_nuttx_uv_loop(uv_loop_t *loop, lv_disp_t *disp,
+                             const char *fbpath)
+{
+  lv_nuttx_uv_t uv_info;
+  uv_loop_init(loop);
+
+  lv_memset(&uv_info, 0, sizeof(uv_info));
+  uv_info.loop = loop;
+  uv_info.disp = disp;
+  uv_info.fbpath = fbpath;
+
+  lv_nuttx_uv_init(&uv_info);
+  uv_run(loop, UV_RUN_DEFAULT);
+}
+#endif
 
 /****************************************************************************
  * Public Functions
@@ -59,6 +79,10 @@
 int main(int argc, FAR char *argv[])
 {
   lv_nuttx_t info;
+#ifdef CONFIG_LV_USE_NUTTX_LIBUV
+  uv_loop_t ui_loop;
+#endif
+
   lv_nuttx_info_init(&info);
   info.need_wait_vsync = true;
 
@@ -81,11 +105,15 @@ int main(int argc, FAR char *argv[])
       goto demo_end;
     }
 
+#ifdef CONFIG_LV_USE_NUTTX_LIBUV
+  lv_nuttx_uv_loop(&ui_loop, disp, "/dev/fb0");
+#else
   while (1)
     {
       lv_timer_handler();
       usleep(10 * 1000);
     }
+#endif
 
 demo_end:
   lv_disp_remove(disp);
