@@ -19,7 +19,6 @@
 ############################################################################
 
 include $(APPDIR)/Make.defs
--include ./ext/Makefile
 
 LIBUV_PATCHS ?= $(sort $(wildcard 000*.patch))
 
@@ -52,7 +51,6 @@ CFLAGS += -I$(LIBUV_UNPACK)/test
 CFLAGS += -Wno-shadow
 CFLAGS += -DDEF_THREADPOOL_SIZE=CONFIG_LIBUV_THREADPOOL_SIZE
 CFLAGS += -DDEF_THREADPOOL_STACKSIZE=CONFIG_LIBUV_THREAD_STACKSIZE
-CFLAGS += -DDEF_THREADPOOL_PRIORITY=CONFIG_LIBUV_THREADPOOL_PRIORITY
 
 ifeq ($(GCCVER),)
   export GCCVER = $(shell $(CC) --version | grep gcc | sed -r 's/.* ([0-9]+\.[0-9]+).*/\1/' | cut -d'.' -f1)
@@ -76,11 +74,7 @@ CSRCS += loop.c
 CSRCS += thread.c
 CSRCS += thread-common.c
 CSRCS += posix-hrtime.c
-ifneq ($(CONFIG_LIBUV_BACKEND_EPOLL),)
-CSRCS += linux.c
-else
 CSRCS += posix-poll.c
-endif
 CSRCS += uv-data-getter-setters.c
 CSRCS += version.c
 ifeq ($(CONFIG_LIBUV_UTILS_TEST),)
@@ -88,9 +82,7 @@ CSRCS += idna.c
 CSRCS += strscpy.c
 CSRCS += strtok.c
 endif
-ifeq ($(CONFIG_FS_NOTIFY),)
 CSRCS += no-fsevents.c
-endif
 CSRCS += uv-common.c
 CSRCS += random-devurandom.c
 CSRCS += random.c
@@ -105,7 +97,9 @@ CSRCS += pipe.c
 CSRCS += fs.c
 CSRCS += fs-poll.c
 CSRCS += timer.c
+ifneq ($(CONFIG_LIBC_EXECFUNCS),)
 CSRCS += process-spawn.c
+endif
 CSRCS += sysinfo-loadavg.c
 CSRCS += sysinfo-memory.c
 
