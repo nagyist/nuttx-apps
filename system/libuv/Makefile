@@ -19,6 +19,7 @@
 ############################################################################
 
 include $(APPDIR)/Make.defs
+-include ./ext/Makefile
 
 LIBUV_PATCHS ?= $(sort $(wildcard 000*.patch))
 
@@ -97,9 +98,7 @@ CSRCS += pipe.c
 CSRCS += fs.c
 CSRCS += fs-poll.c
 CSRCS += timer.c
-ifneq ($(CONFIG_LIBC_EXECFUNCS),)
 CSRCS += process-spawn.c
-endif
 CSRCS += sysinfo-loadavg.c
 CSRCS += sysinfo-memory.c
 
