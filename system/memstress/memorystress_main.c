@@ -38,6 +38,7 @@
 
 #define MEMSTRESS_PREFIX "MemoryStress:"
 #define DEBUG_MAGIC 0xaa
+#define SEEK_MAGIC  0xabcdef
 
 #define OPTARG_TO_VALUE(value, type) \
   do \
@@ -79,11 +80,9 @@ struct memorystress_config_s
 struct memorystress_error_s
 {
   FAR uint8_t *buf;
-  uintptr_t node;
   size_t size;
   size_t offset;
   size_t cnt;
-  size_t index;
   uint8_t readvalue;
   uint8_t writevalue;
   enum memorystress_rwerror_e rwerror;
@@ -155,38 +154,11 @@ static uint32_t genvalue(FAR uint32_t *seed, bool debug)
 }
 
 /****************************************************************************
- * Name: error_result
- ****************************************************************************/
-
-static void error_result(struct memorystress_error_s error)
-{
-  syslog(LOG_ERR, MEMSTRESS_PREFIX "%s ERROR!, "
-         "buf = %p, "
-         "node = %p, "
-         "size = %zu, "
-         "offset = %zu(addr = %p), "
-         "cnt = %zu, "
-         "index = %zu, "
-         "readValue = 0x%x, "
-         "writeValue = 0x%x\n",
-         error.rwerror == MEMORY_STRESS_READ_ERROR ? "READ" : "WRITE",
-         error.buf,
-         (uintptr_t *)error.node,
-         error.size,
-         error.offset, error.buf + error.offset,
-         error.cnt,
-         error.index,
-         error.readvalue,
-         error.writevalue);
-}
-
-/****************************************************************************
  * Name: checknode
  ****************************************************************************/
 
-static void checknode(FAR struct memorystress_context_s *context,
-                      FAR struct memorystress_node_s *node,
-                      enum memorystress_rwerror_e rwerror)
+static bool checknode(FAR struct memorystress_context_s *context,
+                      FAR struct memorystress_node_s *node)
 {
   size_t size = node->size;
   uint32_t seed = size;
@@ -206,16 +178,39 @@ static void checknode(FAR struct memorystress_context_s *context,
           context->error.offset = i;
           context->error.readvalue = read_value;
           context->error.writevalue = write_value;
-          context->error.rwerror = rwerror;
 
-          error_result(context->error);
-          lib_dumpbuffer("debuger", node->buf, size);
+          if (context->debug)
+            {
+              lib_dumpbuffer("debuger", node->buf, size);
+            }
 
-          /* Trigger the ASSET once it occurs, retaining the error site */
-
-          DEBUGASSERT(false);
+          return false;
         }
     }
+
+  return true;
+}
+
+/****************************************************************************
+ * Name: error_result
+ ****************************************************************************/
+
+static void error_result(struct memorystress_error_s error)
+{
+  printf(MEMSTRESS_PREFIX "%s ERROR!, "
+         "buf = %p, "
+         "size = %zu, "
+         "offset = %zu(addr = %p), "
+         "cnt = %zu, "
+         "readValue = 0x%x, "
+         "writeValue = 0x%x\n",
+         error.rwerror == MEMORY_STRESS_READ_ERROR ? "READ" : "WRITE",
+         error.buf,
+         error.size,
+         error.offset, error.buf + error.offset,
+         error.cnt,
+         error.readvalue,
+         error.writevalue);
 }
 
 /****************************************************************************
@@ -226,18 +221,13 @@ static bool memorystress_iter(FAR struct memorystress_context_s *context)
 {
   FAR struct memorystress_node_s *node;
   FAR struct memorystress_func_s *func;
-  uint32_t seed = rand() % UINT32_MAX;
+  uint32_t seed = SEEK_MAGIC;
   bool debug = context->debug;
   size_t index;
 
-  index = randnum(context->config->nodelen, &seed);
+  index = rand() % (context->config->nodelen - 1);
   node = &(context->node_array[index]);
   func = (FAR struct memorystress_func_s *)context->config->func;
-
-  /* Record the current index and node address */
-
-  context->error.index = index;
-  context->error.node = (uintptr_t)node;
 
   /* check state */
 
@@ -247,8 +237,8 @@ static bool memorystress_iter(FAR struct memorystress_context_s *context)
 
       FAR uint8_t *ptr;
       size_t size = randnum(context->config->max_allocsize, &seed);
-      int switch_func = randnum(3, &seed);
-      int align = 1 << (randnum(4, &seed) + 2);
+      int switch_func = rand() % 3;
+      int align = 1 << (rand() % 4 + 2);
 
       /* There are currently three types of tests:
        *  0.standard malloc
@@ -278,7 +268,7 @@ static bool memorystress_iter(FAR struct memorystress_context_s *context)
             ptr = func->realloc(ptr, size);
             break;
           default:
-            syslog(LOG_ERR, "Invalid switch_func number.\n");
+            printf("Invalid switch_func number.\n");
             break;
         }
 
@@ -304,18 +294,36 @@ static bool memorystress_iter(FAR struct memorystress_context_s *context)
 
       /* Check write success */
 
-      checknode(context, node, MEMORY_STRESS_WRITE_ERROR);
+      if (!checknode(context, node))
+        {
+          /* free node */
+
+          context->error.rwerror = MEMORY_STRESS_WRITE_ERROR;
+          func->freefunc(node->buf);
+          node->buf = NULL;
+          return false;
+        }
     }
   else
     {
       /* check read */
 
-      checknode(context, node, MEMORY_STRESS_READ_ERROR);
+      if (!checknode(context, node))
+        {
+          context->error.rwerror = MEMORY_STRESS_READ_ERROR;
+        }
 
       /* free node */
 
       func->freefunc(node->buf);
       node->buf = NULL;
+
+      if (context->error.buf)
+        {
+          /* stop test */
+
+          return false;
+        }
     }
 
   context->error.cnt++;
@@ -386,7 +394,7 @@ static void init(FAR struct memorystress_context_s *context, int argc,
     {
       free(config);
       free(func);
-      syslog(LOG_ERR, MEMSTRESS_PREFIX "Malloc struct Failed\n");
+      printf(MEMSTRESS_PREFIX "Malloc struct Failed\n");
       exit(EXIT_FAILURE);
     }
 
@@ -449,11 +457,28 @@ static void init(FAR struct memorystress_context_s *context, int argc,
       free(func);
       free(config);
       free(context->node_array);
-      syslog(LOG_ERR, MEMSTRESS_PREFIX "Malloc Node Array Failed\n");
+      printf(MEMSTRESS_PREFIX "Malloc Node Array Failed\n");
       exit(EXIT_FAILURE);
     }
 
   srand(time(NULL));
+}
+
+/****************************************************************************
+ * Name: init
+ ****************************************************************************/
+
+static void deinit(FAR struct memorystress_context_s*context)
+{
+  int i;
+  for (i = 0; i < context->config->nodelen; i++)
+    {
+      free(context->node_array[i].buf);
+    }
+
+  free(context->node_array);
+  free(context->config->func);
+  free(context->config);
 }
 
 /****************************************************************************
@@ -470,12 +495,16 @@ int main(int argc, FAR char *argv[])
 
   init(&context, argc, argv);
 
-  syslog(LOG_INFO, MEMSTRESS_PREFIX "testing...\n");
+  printf(MEMSTRESS_PREFIX "testing...\n");
 
   while (memorystress_iter(&context))
     {
       usleep(context.sleep_us);
     }
+
+  error_result(context.error);
+
+  deinit(&context);
 
   return 0;
 }
