@@ -566,7 +566,7 @@ static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl,
       return ERROR;
     }
 
-  fd = open(path, O_CLOEXEC);
+  fd = open(path, 0);
   if (fd < 0)
     {
       nsh_output(vtbl, g_fmtarginvalid, path);

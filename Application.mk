@@ -76,7 +76,6 @@ COBJS = $(CSRCS:=$(SUFFIX)$(OBJEXT))
 CXXOBJS = $(CXXSRCS:=$(SUFFIX)$(OBJEXT))
 RUSTOBJS = $(RUSTSRCS:=$(SUFFIX)$(OBJEXT))
 ZIGOBJS = $(ZIGSRCS:=$(SUFFIX)$(OBJEXT))
-AIDLOBJS = $(patsubst %$(AIDLEXT),%$(CXXEXT),$(AIDLSRCS))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
@@ -182,18 +181,6 @@ define ELFLD
 	$(ECHO_END)
 endef
 
-define COMPILEAIDL
-	$(ECHO_BEGIN)"AIDL: $1 "
-	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1
-	$(ECHO_END)
-endef
-
-define DELAIDLOUT
-	$(ECHO_BEGIN)"DELAIDLOUT: $1 "
-	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1 --delete
-	$(ECHO_END)
-endef
-
 $(RAOBJS): %.s$(SUFFIX)$(OBJEXT): %.s
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(AELFFLAGS)), \
 		$(call ELFASSEMBLE, $<, $@), $(call ASSEMBLE, $<, $@))
@@ -218,12 +205,10 @@ $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
 
-$(AIDLOBJS): %$(CXXEXT): %$(AIDLEXT)
-	$(call COMPILEAIDL, $<)
-
-AROBJS := 
+AROBJS :=
 ifneq ($(OBJS),)
-$(eval $(call SPLITVARIABLE,OBJS_SPILT,$(OBJS),100))
+SORTOBJS := $(sort $(OBJS))
+$(eval $(call SPLITVARIABLE,OBJS_SPILT,$(SORTOBJS),100))
 $(foreach BATCH, $(OBJS_SPILT_TOTAL), \
 	$(foreach obj, $(OBJS_SPILT_$(BATCH)), \
 		$(eval substitute := $(patsubst %$(OBJEXT),%_$(BATCH)$(OBJEXT),$(obj))) \
@@ -288,7 +273,7 @@ install::
 
 endif # BUILD_MODULE
 
-context:: $(AIDLOBJS)
+context::
 	@:
 
 ifeq ($(DO_REGISTRATION),y)
@@ -314,7 +299,7 @@ endif
 	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$(ALL_DEP_OBJS_$(BATCH))) >Make.dep) \
 	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix .S$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.S,$(ALL_DEP_OBJS_$(BATCH))) >>Make.dep) \
 	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix $(CXXEXT)$(SUFFIX)$(OBJEXT) "$(CXX)" -- $(CXXFLAGS) -- $(filter %$(CXXEXT),$(ALL_DEP_OBJS_$(BATCH))) >>Make.dep) \
-	) 
+	)
 	$(Q) touch $@
 
 depend:: .depend
@@ -322,12 +307,11 @@ depend:: .depend
 
 clean::
 	$(call DELFILE, .built)
+	$(call CLEANAROBJS)
 	$(call CLEAN)
-
 distclean:: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
-	$(foreach AIDLSRC,$(AIDLSRCS),$(call DELAIDLOUT,$(AIDLSRC)))
 
 -include Make.dep
 
