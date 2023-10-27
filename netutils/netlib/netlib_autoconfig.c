@@ -65,7 +65,8 @@ int netlib_icmpv6_autoconfiguration(FAR const char *ifname)
     {
       /* Get an IPv6 socket */
 
-      int sockfd = socket(NET_SOCK_FAMILY, NET_SOCK_TYPE, NET_SOCK_PROTOCOL);
+      int sockfd = socket(NET_SOCK_FAMILY, NET_SOCK_TYPE | SOCK_CLOEXEC,
+                          NET_SOCK_PROTOCOL);
       if (sockfd >= 0)
         {
           /* Create a request consisting only of the interface name */

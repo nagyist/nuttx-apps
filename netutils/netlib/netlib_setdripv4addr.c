@@ -85,7 +85,8 @@ int netlib_set_dripv4addr(FAR const char *ifname,
 
   if (ifname && addr)
     {
-      int sockfd = socket(NET_SOCK_FAMILY, NET_SOCK_TYPE, NET_SOCK_PROTOCOL);
+      int sockfd = socket(NET_SOCK_FAMILY, NET_SOCK_TYPE | SOCK_CLOEXEC,
+                          NET_SOCK_PROTOCOL);
       if (sockfd >= 0)
         {
           FAR struct sockaddr_in *inaddr;
