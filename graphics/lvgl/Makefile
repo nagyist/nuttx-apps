@@ -32,20 +32,24 @@ LVGL_DIR_NAME = lvgl
 -include ./ext/Makefile
 
 ifneq ($(CONFIG_LV_USE_LIBPNG),)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/libpng
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/libpng/libpng
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libpng
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libpng/libpng
+endif
+
+ifneq ($(CONFIG_LV_USE_LIBJPEG_TURBO),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libjpeg-turbo/libjpeg-turbo
 endif
 
 ifneq ($(CONFIG_LV_USE_FFMPEG),)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/ffmpeg/ffmpeg
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/ffmpeg/ffmpeg
 endif
 
 ifneq ($(CONFIG_LV_USE_RLOTTIE),)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/rlottie/rlottie/inc
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rlottie/rlottie/inc
 endif
 
 ifneq ($(CONFIG_LV_USE_QRSCAN),)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../external/quirc/quirc/lib
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/quirc/quirc/lib
 endif
 
 ifneq ($(CONFIG_LV_ATTRIBUTE_FAST_MEM_CUSTOM_SECTION_NAME), "")
