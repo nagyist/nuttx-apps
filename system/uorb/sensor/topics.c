@@ -22,6 +22,8 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/config.h>
+
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>

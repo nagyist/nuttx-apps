@@ -27,12 +27,12 @@ if(CONFIG_LIBUV)
   set(LIBUV_DIR ${CMAKE_CURRENT_LIST_DIR}/libuv)
 
   if(NOT EXISTS ${LIBUV_DIR})
-    set(LIBUV_URL https://github.com/libuv/libuv/archive/refs/tags/v1.46.0/zip)
+    set(LIBUV_URL https://github.com/libuv/libuv/archive/refs/tags/v1.46.0.zip)
     FetchContent_Declare(
       libuv_fetch
       URL ${LIBUV_URL} SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/libuv BINARY_DIR
           ${CMAKE_BINARY_DIR}/apps/system/libuv/libuv
-      PATCH_COMMAND patch -p0 -d ${CMAKE_CURRENT_LIST_DIR}/libuv <
+      PATCH_COMMAND patch -p1 -d ${CMAKE_CURRENT_LIST_DIR}/libuv <
                     ${CMAKE_CURRENT_LIST_DIR}/0001-libuv-port-for-nuttx.patch
       DOWNLOAD_NO_PROGRESS true
       TIMEOUT 30)
@@ -44,20 +44,23 @@ if(CONFIG_LIBUV)
     endif()
   endif()
 
+  if(NOT DEFINED GCCVER)
+    execute_process(COMMAND ${CMAKE_C_COMPILER} --version
+                    OUTPUT_VARIABLE GCC_VERSION_OUTPUT)
+    string(REGEX MATCH "\\+\\+.* ([0-9]+)\\.[0-9]+" GCC_VERSION_REGEX
+                 "${GCC_VERSION_OUTPUT}")
+    set(GCCVER ${CMAKE_MATCH_1})
+  endif()
   # ############################################################################
   # Flags
   # ############################################################################
 
-  set(CFLAGS
-      -Wno-shadow
-      -Wno-dangling-pointer
-      -DDEF_THREADPOOL_SIZE=CONFIG_LIBUV_THREADPOOL_SIZE
-      -DDEF_THREADPOOL_STACKSIZE=CONFIG_LIBUV_THREAD_STACKSIZE
-      -DDEF_THREADPOOL_PRIORITY=CONFIG_LIBUV_THREADPOOL_PRIORITY
-      -DMAX_EPOLL_EVENTS=CONFIG_LIBUV_MAX_EPOLL_EVENTS
-      -DPREP_EVENT_SIZE=CONFIG_LIBUV_PREP_EVENT_SIZE
-      -DDEF_STREAM_READ_BUF_SIZE=CONFIG_LIBUV_STREAM_READ_BUF_SIZE)
+  set(CFLAGS -Wno-shadow -DDEF_THREADPOOL_SIZE=CONFIG_LIBUV_THREADPOOL_SIZE
+             -DDEF_THREADPOOL_STACKSIZE=CONFIG_LIBUV_THREAD_STACKSIZE)
 
+  if(GCCVER EQUAL 12)
+    list(APPEND CFLAGS -Wno-dangling-pointer)
+  endif()
   # ############################################################################
   # Sources
   # ############################################################################
@@ -137,17 +140,6 @@ if(CONFIG_LIBUV)
   # Library Configuration
   # ############################################################################
 
-  # import libuv ext
-  if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/ext/CMakeLists.txt)
-    set(EXT_SRCS)
-    set(EXT_INCDIR)
-    set(EXT_EXPORT_INCDIR)
-    include(${CMAKE_CURRENT_LIST_DIR}/ext/CMakeLists.txt)
-    list(APPEND EXPORT_INCDIR ${EXT_EXPORT_INCDIR})
-    list(APPEND INTER_INCDIR ${EXT_INCDIR})
-    list(APPEND SRCS ${EXT_SRCS})
-  endif()
-
   set(INCDIR ${EXPORT_INCDIR} ${INTER_INCDIR})
 
   nuttx_add_library(libuv STATIC)
@@ -169,10 +161,6 @@ if(CONFIG_LIBUV)
   # ############################################################################
   # Applications Configuration
   # ############################################################################
-
-  if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/ext/tests/CMakeLists.txt)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ext/tests)
-  endif()
 
   if(CONFIG_LIBUV_UTILS_TEST)
     set(LIBUV_UTILS_TEST_SRCS
