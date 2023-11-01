@@ -654,20 +654,16 @@ enum nsh_npflags_e
 struct nsh_parser_s
 {
 #ifndef CONFIG_NSH_DISABLEBG
-  bool     np_bg;       /* true: The last command executed in background */
+  bool     np_bg;        /* true: The last command executed in background */
 #endif
-  bool     np_redirect; /* true: Output from the last command was re-directed */
-  bool     np_fail;     /* true: The last command failed */
-  pid_t    np_lastpid;  /* Pid of the last command executed */
-#ifdef NSH_HAVE_VARS
-  char     np_pids[32];  /* String representation of the last pid */
-#endif
-
+  bool     np_redir_out; /* true: Output from the last command was re-directed */
+  bool     np_redir_in;  /* true: Input from the last command was re-directed */
+  bool     np_fail;      /* true: The last command failed */
 #ifndef CONFIG_NSH_DISABLESCRIPT
-  uint8_t  np_flags;    /* See nsh_npflags_e above */
+  uint8_t  np_flags;     /* See nsh_npflags_e above */
 #endif
 #ifndef CONFIG_NSH_DISABLEBG
-  int      np_nice;     /* "nice" value applied to last background cmd */
+  int      np_nice;      /* "nice" value applied to last background cmd */
 #endif
 
 #ifndef CONFIG_NSH_DISABLESCRIPT
@@ -753,7 +749,6 @@ extern const char g_loginsuccess[];
 extern const char g_badcredentials[];
 extern const char g_loginfailure[];
 #endif
-extern const char g_nshprompt[];
 extern const char g_fmtsyntax[];
 extern const char g_fmtargrequired[];
 extern const char g_fmtnomatching[];
@@ -830,6 +825,11 @@ int nsh_session(FAR struct console_stdio_s *pstate,
                 int login, int argc, FAR char *argv[]);
 int nsh_parse(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline);
 
+/* Prompt string handling */
+
+FAR const char *nsh_prompt(void);
+void nsh_update_prompt(void);
+
 /****************************************************************************
  * Name: nsh_login
  *
@@ -853,12 +853,14 @@ int nsh_command(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char *argv[]);
 
 #ifdef CONFIG_NSH_BUILTIN_APPS
 int nsh_builtin(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
-                FAR char **argv, FAR const char *redirfile, int oflags);
+                FAR char **argv, FAR const char *redirfile_in,
+                FAR const char *redirfile_out, int oflags);
 #endif
 
 #ifdef CONFIG_NSH_FILE_APPS
 int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
-                FAR char **argv, FAR const char *redirfile, int oflags);
+                FAR char **argv, FAR const char *redirfile_in,
+                FAR const char *redirfile_out, int oflags);
 #endif
 
 #ifndef CONFIG_DISABLE_ENVIRON
@@ -921,9 +923,6 @@ void nsh_usbtrace(void);
 #endif
 #ifndef CONFIG_NSH_DISABLE_TIME
   int cmd_time(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
-#endif
-#if !defined(CONFIG_NSH_DISABLE_TOP) && defined(NSH_HAVE_CPULOAD)
-  int cmd_top(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 #endif
 #ifndef CONFIG_NSH_DISABLE_PS
   int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
@@ -1149,6 +1148,11 @@ int cmd_switchboot(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
                       FAR char **argv);
 #endif
 
+#if defined(CONFIG_BOARDCTL_IRQ_AFFINITY) && !defined(CONFIG_NSH_DISABLE_IRQ_AFFINITY)
+  int cmd_irq_affinity(FAR struct nsh_vtbl_s *vtbl, int argc,
+                       FAR char **argv);
+#endif
+
 #if defined(CONFIG_RPMSG) && !defined(CONFIG_NSH_DISABLE_RPMSG)
   int cmd_rpmsg(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 #endif
@@ -1217,14 +1221,6 @@ int cmd_switchboot(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 #ifdef CONFIG_NSH_ALIAS
 int cmd_alias(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 int cmd_unalias(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
-#endif
-
-#ifndef CONFIG_NSH_DISABLE_WATCH
-int cmd_watch(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
-#endif
-
-#if !defined(CONFIG_NSH_DISABLE_WAIT) && defined(CONFIG_SCHED_WAITPID)
-int cmd_wait(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 #endif
 
 /****************************************************************************
