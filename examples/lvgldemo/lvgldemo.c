@@ -48,6 +48,8 @@ static void lv_nuttx_uv_loop(uv_loop_t *loop, lv_disp_t *disp,
                              lv_indev_t *indev)
 {
   lv_nuttx_uv_t uv_info;
+  void *data;
+
   uv_loop_init(loop);
 
   lv_memset(&uv_info, 0, sizeof(uv_info));
@@ -55,8 +57,9 @@ static void lv_nuttx_uv_loop(uv_loop_t *loop, lv_disp_t *disp,
   uv_info.disp = disp;
   uv_info.indev = indev;
 
-  lv_nuttx_uv_init(&uv_info);
+  data = lv_nuttx_uv_init(&uv_info);
   uv_run(loop, UV_RUN_DEFAULT);
+  lv_nuttx_uv_deinit(&data);
 }
 #endif
 
