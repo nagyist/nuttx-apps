@@ -379,6 +379,7 @@ int main(int argc, FAR char *argv[])
   int ret;
 
   memset(&ctx, 0, sizeof(ctx));
+  memset(&state, 0, sizeof(state));
   parse_commandline(argc, argv, &ctx.param);
 
   gpu_dir_create(ctx.param.output_dir);
