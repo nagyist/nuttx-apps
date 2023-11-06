@@ -2711,7 +2711,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
         {
           redirect_save        = vtbl->np.np_redirect;
           vtbl->np.np_redirect = true;
-          oflags               = O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC;
+          oflags               = O_WRONLY | O_CREAT | O_TRUNC;
           redirfile            = nsh_getfullpath(vtbl, argv[argc - 1]);
           argc                -= 2;
         }
@@ -2722,7 +2722,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
         {
           redirect_save        = vtbl->np.np_redirect;
           vtbl->np.np_redirect = true;
-          oflags               = O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC;
+          oflags               = O_WRONLY | O_CREAT | O_APPEND;
           redirfile            = nsh_getfullpath(vtbl, argv[argc - 1]);
           argc                -= 2;
         }
