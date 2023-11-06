@@ -20,6 +20,15 @@ config LIBUV_THREAD_STACKSIZE
 	int "libuv worker thread stack size"
 	default PTHREAD_STACK_DEFAULT
 
+config LIBUV_THREADPOOL_PRIORITY
+	int "libuv default thread pool priority"
+	default 100
+
+config LIBUV_BACKEND_EPOLL
+	bool "Using epoll backend in libuv"
+	select FS_NOTIFY
+	default y
+
 choice
 	prompt "libuv utils"
 	default LIBUV_UTILS_NONE
@@ -45,5 +54,43 @@ config LIBUV_UTILS_STACKSIZE
 	int "libuv utils stack size"
 	default 8192
 endif
+
+menu "libuv extension"
+
+config LIBUV_EXTENSION
+	bool "Enable libuv extension"
+	default n
+	---help---
+		Enable libuv extension
+
+if LIBUV_EXTENSION
+
+config UV_REQUEST_MAX_LINKS
+	int "libuv extension maximum number of concurrent network requests"
+	default 5
+	---help---
+		Set -1 for unlimited
+
+config LIBUV_EXTENSION_TEST
+	bool "libuv extension test"
+	default n
+	---help---
+		Enable libuv extension test
+
+if LIBUV_EXTENSION_TEST
+
+config LIBUV_EXTENSION_TEST_PRIORITY
+	int "libuv extension test priority"
+	default 100
+
+config LIBUV_EXTENSION_TEST_TASK_STACKSIZE
+	int "libuv extension test stack size"
+	default 65535
+
+endif
+
+endif
+
+endmenu
 
 endif

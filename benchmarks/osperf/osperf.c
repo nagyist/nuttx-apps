@@ -44,8 +44,8 @@
 
 struct performance_time_s
 {
-  clock_t start;
-  clock_t end;
+  size_t start;
+  size_t end;
 };
 
 struct performance_thread_s
@@ -109,18 +109,18 @@ static int performance_thread_create(FAR void *(*entry)(FAR void *),
 
 static void performance_start(FAR struct performance_time_s *result)
 {
-  result->start = perf_gettime();
+  result->start = up_perf_gettime();
 }
 
 static void performance_end(FAR struct performance_time_s *result)
 {
-  result->end = perf_gettime();
+  result->end = up_perf_gettime();
 }
 
 static size_t performance_gettime(FAR struct performance_time_s *result)
 {
   struct timespec ts;
-  perf_convert(result->end - result->start, &ts);
+  up_perf_convert(result->end - result->start, &ts);
   return ts.tv_sec * NSEC_PER_SEC + ts.tv_nsec;
 }
 
@@ -217,7 +217,7 @@ static size_t context_switch_performance(void)
 
 static void work_handle(void *arg)
 {
-  FAR struct performance_time_s *time = ((FAR void **)arg)[2];
+  FAR struct performance_time_s *time = ((FAR void **)arg)[0];
   FAR sem_t *sem = ((void **)arg)[1];
   performance_end(time);
   sem_post(sem);
@@ -233,8 +233,7 @@ static size_t hpwork_performance(void)
   FAR void *args = (void *[])
   {
     (FAR void *)&work,
-    (FAR void *)&sem,
-    (FAR void *)&result
+    (FAR void *)&sem
   };
 
   memset(&work, 0, sizeof(work));
