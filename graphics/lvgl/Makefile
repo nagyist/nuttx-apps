@@ -48,7 +48,7 @@ ifneq ($(CONFIG_LV_USE_RLOTTIE),)
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rlottie/rlottie/inc
 endif
 
-ifneq ($(CONFIG_LV_USE_QRSCAN),)
+ifneq ($(CONFIG_LVX_USE_QRSCAN),)
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/quirc/quirc/lib
 endif
 
