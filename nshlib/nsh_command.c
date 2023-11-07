@@ -278,7 +278,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #ifdef CONFIG_NET
 #  ifndef CONFIG_NSH_DISABLE_IFCONFIG
   CMD_MAP("ifconfig", cmd_ifconfig, 1, 12,
-    "[interface [mtu <len>]|[address_family] [[add|del] <ip-address>|dhcp]]"
+    "[interface [address_family] [mtu <len>] | [<ip-address>|dhcp]]"
     "[dr|gw|gateway <dr-address>] [netmask <net-mask>|prefixlen <len>] "
     "[dns <dns-address>] [hw <hw-mac>]"),
 #  endif
@@ -514,7 +514,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
-  CMD_MAP("rptun",    cmd_rptun,    3, 7,
+  CMD_MAP("rptun",    cmd_rptun,    2, 7,
     "<start|stop|reset|panic|dump|ping> <path|all>"
     " [value|times length ack sleep]"),
 #endif
