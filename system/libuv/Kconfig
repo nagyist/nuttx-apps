@@ -26,8 +26,8 @@ config LIBUV_THREADPOOL_PRIORITY
 
 config LIBUV_BACKEND_EPOLL
 	bool "Using epoll backend in libuv"
-	select FS_NOTIFY
 	default y
+	depends on FS_NOTIFY
 
 if LIBUV_BACKEND_EPOLL
 
