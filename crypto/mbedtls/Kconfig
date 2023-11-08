@@ -17,7 +17,7 @@ config MBEDTLS_VERSION
 
 config MBEDTLS_DEBUG_C
 	bool "This module provides debugging functions."
-	default y
+	default DEBUG_FEATURES
 	---help---
 		This module provides debugging functions.
 
@@ -82,7 +82,7 @@ config MBEDTLS_CAMELLIA_C
 
 config MBEDTLS_PADLOCK_C
 	bool "Enable VIA Padlock support on x86."
-	default y if !MBEDTLS_AES_ALT
+	default !MBEDTLS_AES_ALT
 
 config MBEDTLS_TIMING_C
 	bool "Enable the semi-portable timing interface."
@@ -106,10 +106,6 @@ config MBEDTLS_SSL_DTLS_HELLO_VERIFY
 	bool "Enable support for HelloVerifyRequest on DTLS servers."
 	default y
 
-config MBEDTLS_SSL_DTLS_BADMAC_LIMIT
-	bool "Enable support for a limit of records with bad MAC."
-	default n
-
 config MBEDTLS_SSL_DTLS_CONNECTION_ID
 	bool "Enable the Connection ID extension."
 	default y
@@ -127,7 +123,8 @@ config MBEDTLS_SSL_ALPN
 
 config MBEDTLS_AESNI_C
 	bool "Enable AES-NI support on x86-64."
-	default y
+	depends on ARCH_X86_64
+	default !MBEDTLS_AES_ALT
 
 config MBEDTLS_ECP_WINDOW_SIZE
 	int "Maximum window size used"
@@ -143,8 +140,7 @@ config MBEDTLS_CMAC_C
 
 config MBEDTLS_NET_C
 	bool "Enable the TCP and UDP over IPv6/IPv4 networking routines"
-	default y if LIBC_NETDB
-	default n if !LIBC_NETDB
+	default LIBC_NETDB
 
 config MBEDTLS_ECDSA_C
 	bool "Enable the elliptic curve DSA library."
