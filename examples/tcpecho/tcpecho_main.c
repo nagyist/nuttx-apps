@@ -244,8 +244,7 @@ static int tcpecho_server(void)
           /* new client connection */
 
           clilen = sizeof(cliaddr);
-          connfd = accept4(listenfd, (struct sockaddr *)&cliaddr, &clilen,
-                           SOCK_CLOEXEC);
+          connfd = accept(listenfd, (struct sockaddr *)&cliaddr, &clilen);
 
           ninfo("new client: %s\n",
                 inet_ntoa_r(cliaddr.sin_addr, inetaddr, sizeof(inetaddr)));
