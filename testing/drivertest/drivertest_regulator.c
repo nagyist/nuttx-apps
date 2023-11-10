@@ -446,8 +446,10 @@ static void test_regulator_supply_4(FAR void **state)
                                              &g_fake_regulator);
   assert_false(NULL == g_fake_regulator.rdev);
   test = regulator_get(REGULATOR_ID);
-  assert_true(NULL == test);
+  assert_false(NULL == test);
   g_fake_regulator_supply.state = 0;
+  ret = regulator_enable(test);
+  assert_true(ret < 0);
   g_fake_regulator_supply.rdev = regulator_register(
                                              &g_fake_regulator_supply_desc,
                                              &g_fake_regulator_ops,
@@ -455,8 +457,7 @@ static void test_regulator_supply_4(FAR void **state)
   assert_false(NULL == g_fake_regulator_supply.rdev);
   assert_int_equal(g_fake_regulator_supply.state, 0);
   assert_int_equal(g_fake_regulator.state, 0);
-  test = regulator_get(REGULATOR_ID);
-  assert_false(NULL == test);
+
   while (cnt--)
     {
       ret = regulator_enable(test);
@@ -498,7 +499,6 @@ static void test_regulator_mode(FAR void **state)
   int ret = 0;
 
   g_fake_regulator.lpmode = 0;
-  g_fake_regulator_desc.supply_name = NULL;
   g_fake_regulator.rdev = regulator_register(&g_fake_regulator_desc,
                                              &g_fake_regulator_ops,
                                              &g_fake_regulator);

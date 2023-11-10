@@ -1593,35 +1593,3 @@ int wapi_get_pta_prio(int sock, FAR const char *ifname,
   return ret;
 }
 
-/****************************************************************************
- * Name: wapi_extend_params
- *
- * Description:
- *   wapi extension interface for privatization method.
- *   cmd should be definded in wireless_priv.h before use.
- *
- ****************************************************************************/
-
-int wapi_extend_params(int sock, int cmd, FAR struct iwreq *wrq)
-{
-  int ret;
-
-  WAPI_VALIDATE_PTR(wrq);
-
-  if (cmd < SIOCIWFIRSTPRIV || cmd > SIOCIWLASTPRIV)
-    {
-      wlerr("extend ioctl cmd invalid");
-      return -EINVAL;
-    }
-
-  ret = ioctl(sock, cmd, (unsigned long)((uintptr_t)wrq));
-  if (ret < 0)
-    {
-      int errcode = errno;
-      wlerr("extend ioctl(%d): %d", cmd, errcode);
-      ret = -errcode;
-    }
-
-  return ret;
-}
-
