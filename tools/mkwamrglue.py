@@ -89,7 +89,7 @@ def generate_include(csv, out):
   headers.sort()
 
   for header in headers:
-    out.write("#include <" + header + ">\n")
+    out.write(f"#include <{header}>\n")
 
   out.write("\n")
   out.write("#include <wasm_export.h>\n")
@@ -113,17 +113,16 @@ def generate_functions(csv, out):
     if nodef:
       out.write("#if " + args[COND_INDEX] + "\n\n")
 
-    out.write("#ifndef GLUE_FUNCTION_" + args[NAME_INDEX] + "\n")
-    out.write("#define GLUE_FUNCTION_" + args[NAME_INDEX] + "\n")
+    out.write(f"#ifndef GLUE_FUNCTION_{args[NAME_INDEX]}\n")
+    out.write(f"#define GLUE_FUNCTION_{args[NAME_INDEX]}\n")
 
     noreturn = args[RETTYPE_INDEX] == 'void' or \
         args[RETTYPE_INDEX] == 'noreturn'
 
     if noreturn:
-      out.write("void glue_" + args[NAME_INDEX] + "(wasm_exec_env_t env")
+      out.write(f"void glue_{args[NAME_INDEX]}(wasm_exec_env_t env")
     else:
-      out.write("uintptr_t glue_" +
-                args[NAME_INDEX] + "(wasm_exec_env_t env")
+      out.write(f"uintptr_t glue_{args[NAME_INDEX]}(wasm_exec_env_t env")
 
     if is_va_additional_function(args[NAME_INDEX]):
       findex = len(args) - 2
@@ -146,7 +145,7 @@ def generate_functions(csv, out):
       elif args[index] == 'void':
         continue
       else:
-        out.write(", uintptr_t parm" + str(index - PARM1_INDEX + 1))
+        out.write(f", uintptr_t parm{index - PARM1_INDEX + 1}")
 
     out.write(")\n{\n")
 
@@ -188,10 +187,10 @@ def generate_functions(csv, out):
       if args[index] == '...':
         if index < len(args) - 1 and args[NAME_INDEX] == 'ioctl':
           out.write(
-              "(*(uintptr_t **)&ap != NULL && **(uintptr_t **)&ap != (uintptr_t)NULL) ? (uintptr_t)addr_app_to_native((uintptr_t)va_arg(ap, " + args[index + 1] + ")) : (uintptr_t)NULL")
+              f"(*(uintptr_t **)&ap != NULL && **(uintptr_t **)&ap != (uintptr_t)NULL) ? (uintptr_t)addr_app_to_native((uintptr_t)va_arg(ap, {args[index + 1]})) : (uintptr_t)NULL")
         elif index < len(args) - 1:
           out.write(
-              "(*(uintptr_t **)&ap != NULL && **(uintptr_t **)&ap != (uintptr_t)NULL) ? (uintptr_t)va_arg(ap, " + args[index + 1] + ") : (uintptr_t)NULL")
+              f"(*(uintptr_t **)&ap != NULL && **(uintptr_t **)&ap != (uintptr_t)NULL) ? (uintptr_t)va_arg(ap, {args[index + 1]}) : (uintptr_t)NULL")
         else:
           out.write("ap")
         break
@@ -203,10 +202,9 @@ def generate_functions(csv, out):
       if '|' in args[index]:
         args[index] = args[index].split("|")[1]
       if findex == index:
-        out.write("(" + args[index] + ")format")
+        out.write(f"({args[index]})format")
       else:
-        out.write("(" + args[index] + ")parm" +
-                  str(index - PARM1_INDEX + 1))
+        out.write(f"({args[index]})parm{index - PARM1_INDEX + 1}")
 
     if addrcov != '':
       out.write(")")
@@ -226,10 +224,10 @@ def generate_functions(csv, out):
 
     out.write("}\n\n")
 
-    out.write("#endif /* GLUE_FUNCTION_" + args[NAME_INDEX] + " */\n")
+    out.write(f"#endif /* GLUE_FUNCTION_{args[NAME_INDEX]} */\n")
 
     if nodef:
-      out.write("#endif /* " + args[COND_INDEX] + " */\n\n")
+      out.write(f"#endif /* {args[COND_INDEX]} */\n\n")
   csv.seek(0)
 
 
@@ -239,8 +237,8 @@ def generate_table(csv, out):
   out.write("  { #func_name, glue_##func_name, signature, NULL }\n\n")
   out.write("#endif\n")
 
-  out.write("static NativeSymbol g_" +
-            os.path.splitext(os.path.basename(csv.name))[0] + "_native_symbols[] =\n{\n")
+  out.write(f"static NativeSymbol g_{os.path.splitext(os.path.basename(csv.name))[0]}_native_symbols[] =\n")
+  out.write("{\n")
 
   for line in csv.readlines():
     sline = line.strip()
@@ -257,10 +255,10 @@ def generate_table(csv, out):
     if nodef:
       out.write("#if " + args[COND_INDEX] + "\n")
 
-    out.write("#ifndef GLUE_ENTRY_" + args[NAME_INDEX] + "\n")
-    out.write("#define GLUE_ENTRY_" + args[NAME_INDEX] + "\n")
+    out.write(f"#ifndef GLUE_ENTRY_{args[NAME_INDEX]}\n")
+    out.write(f"#define GLUE_ENTRY_{args[NAME_INDEX]}\n")
 
-    out.write("  native_function(" + args[NAME_INDEX] + ",\"(")
+    out.write(f"  native_function({args[NAME_INDEX]},\"(")
 
     noreturn = args[RETTYPE_INDEX] == 'void' or \
         args[RETTYPE_INDEX] == 'noreturn'
@@ -315,10 +313,10 @@ def generate_table(csv, out):
 
     out.write("\"),\n")
 
-    out.write("#endif /* GLUE_ENTRY_" + args[NAME_INDEX] + " */\n")
+    out.write(f"#endif /* GLUE_ENTRY_{args[NAME_INDEX]} */\n")
 
     if nodef:
-      out.write("#endif /* " + args[COND_INDEX] + " */\n\n")
+      out.write(f"#endif /* {args[COND_INDEX]} */\n\n")
 
   out.write("};\n")
   csv.seek(0)
