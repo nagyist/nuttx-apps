@@ -180,7 +180,7 @@ vg_lite_error_t vg_lite_color_premult(FAR vg_lite_buffer_t *buffer);
 vg_lite_error_t vg_lite_create_image(FAR vg_lite_buffer_t *image,
                                      int width,
                                      int height,
-                                     vg_lite_format_t fmt,
+                                     vg_lite_buffer_format_t fmt,
                                      bool tiled);
 
 /****************************************************************************
