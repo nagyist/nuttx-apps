@@ -514,7 +514,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
-  CMD_MAP("rptun",    cmd_rptun,    3, 7,
+  CMD_MAP("rptun",    cmd_rptun,    2, 7,
     "<start|stop|reset|panic|dump|ping> <path|all>"
     " [value|times length ack sleep]"),
 #endif
@@ -1162,6 +1162,7 @@ int nsh_command(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char *argv[])
     }
 
   ret = handler(vtbl, argc, argv);
+  vtbl->np.np_lastpid = getpid();
   return ret;
 }
 
