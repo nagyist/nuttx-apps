@@ -358,7 +358,7 @@ TEST_SETUP(block_send)
 
 TEST_TEAR_DOWN(block_send)
 {
-  int unused_data ret;
+  int ret;
   if (sd >= 0)
     {
       ret = close(sd);

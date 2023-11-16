@@ -235,7 +235,7 @@ TEST_SETUP(basic_getsockname)
 
 TEST_TEAR_DOWN(basic_getsockname)
 {
-  int unused_data ret;
+  int ret;
   if (sd >= 0)
     {
       ret = close(sd);
