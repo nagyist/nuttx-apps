@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/interpreters/wamr/wamr_custom_init.c
+ * apps/interpreters/wamr/wamr_custom_init.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,46 +18,19 @@
  *
  ****************************************************************************/
 
+#ifndef __WAMR_CUSTOM_INIT_H
+#define __WAMR_CUSTOM_INIT_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <stdbool.h>
-#include <stdint.h>
-#include <semaphore.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#include <iconv.h>
-
-#include "wasm_export.h"
-#include "wasm_native.h"
-
-#include "wamr_custom_init.h"
 
 /****************************************************************************
- * Public Functions
+ * Public Functions Prototypes
  ****************************************************************************/
 
-bool wamr_custom_init(RuntimeInitArgs *init_args)
-{
-  bool ret = wasm_runtime_full_init(init_args);
+bool wamr_libc_nuttx_register(void);
 
-  if (!ret)
-    {
-      return ret;
-    }
-
-  /* Add extra init hook here */
-
-#ifdef CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX
-  ret = wamr_libc_nuttx_register();
-  if (!ret)
-    {
-      return ret;
-    }
-#endif
-
-  return ret;
-}
+#endif /* __WAMR_CUSTOM_INIT_H */

@@ -45,7 +45,7 @@ ifeq ($(CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX),y)
 
 $(WAMR_UNPACK)/product-mini/platforms/nuttx/main.c_CFLAGS = -Dwasm_runtime_full_init=wamr_custom_init
 
-CSRCS += wamr_custom_init.c
+CSRCS += wamr_custom_init.c libc_nuttx.c
 
 GLUECSRCS = syscall_glue.c libc_glue.c libm_glue.c
 CSVSRCS = $(TOPDIR)/syscall/syscall.csv $(TOPDIR)/libs/libc/libc.csv $(TOPDIR)/libs/libm/libm.csv
