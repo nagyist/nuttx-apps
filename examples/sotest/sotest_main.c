@@ -69,7 +69,7 @@
 
 #  define SECTORSIZE   64
 #  define NSECTORS(b)  (((b)+SECTORSIZE-1)/SECTORSIZE)
-#  define BINDIR       "/mnt/romfs"
+#  define BINDIR       "/mnt/sotest/romfs"
 
 #  ifndef CONFIG_EXAMPLES_SOTEST_DEVMINOR
 #    define CONFIG_EXAMPLES_SOTEST_DEVMINOR 0
