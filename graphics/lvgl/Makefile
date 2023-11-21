@@ -75,4 +75,8 @@ ifeq ($(CONFIG_DEBUG_CUSTOMOPT),y)
   ./lvgl/src/misc/lv_mem.c_CFLAGS += -O2
 endif
 
+ifeq ($(CONFIG_LV_USE_DRAW_VG_LITE),y)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../$(CONFIG_LV_DRAW_VG_LITE_INCLUDE)
+endif
+
 include $(APPDIR)/Application.mk

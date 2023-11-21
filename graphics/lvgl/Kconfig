@@ -80,6 +80,11 @@ config LV_UV_POLL_DEVICEPATH
 	depends on LIBUV
 	default "/dev/fb0"
 
+config LV_DRAW_VG_LITE_INCLUDE
+	string "VG-Lite API header include path"
+	depends on LV_USE_DRAW_VG_LITE
+	default ""
+
 menuconfig LV_USE_GPU_INTERFACE
 	bool "GPU acceleration interface"
 	default n
