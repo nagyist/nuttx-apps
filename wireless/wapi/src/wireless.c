@@ -47,7 +47,6 @@
 #include <netinet/arp.h>
 
 #include <nuttx/wireless/wireless.h>
-#include <nuttx/wireless/wireless_priv.h>
 
 #include "wireless/wapi.h"
 #include "util.h"
@@ -1599,7 +1598,6 @@ int wapi_get_pta_prio(int sock, FAR const char *ifname,
  *
  * Description:
  *   wapi extension interface for privatization method.
- *   cmd should be definded in wireless_priv.h before use.
  *
  ****************************************************************************/
 
