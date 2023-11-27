@@ -85,6 +85,16 @@ config LV_DRAW_VG_LITE_INCLUDE
 	depends on LV_USE_DRAW_VG_LITE
 	default ""
 
+config LV_VG_LITE_ASSERT_ENABLE
+	bool "VG-Lite assert enable"
+	depends on LV_USE_DRAW_VG_LITE
+	default n
+
+config LV_VG_LITE_GPU_INIT
+	bool "VG-Lite GPU init"
+	depends on LV_USE_DRAW_VG_LITE
+	default y
+
 menuconfig LV_USE_GPU_INTERFACE
 	bool "GPU acceleration interface"
 	default n
