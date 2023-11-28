@@ -27,6 +27,14 @@ LVGL_DIR_NAME = lvgl
 
 # Relax format check for LVGL to avoid errors on prinf() use
 
+# Since this change is only merged into the lvgl.v9, let us workaround for v8
+# ./lvgl/src/core/lv_obj.c:363:25: warning: variable 'x' set but not used [-Wunused-but-set-variable]
+#   363 |         static uint32_t x = 0;
+#       |                         ^
+# 1 warning generated.
+
+CFLAGS += -Wno-unused-but-set-variable
+
 -include ./lvgl/lvgl.mk
 
 -include ./ext/Makefile
