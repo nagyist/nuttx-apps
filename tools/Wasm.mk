@@ -22,13 +22,63 @@
 # Only build wasm if one of the following runtime is enabled
 
 ifneq ($(CONFIG_INTERPRETERS_WAMR)$(CONFIG_INTERPRETERS_WASM)$(CONFIG_INTERPRETERS_TOYWASM),)
-include $(APPDIR)$(DELIM)tools$(DELIM)WASI-SDK.defs
 include $(APPDIR)$(DELIM)interpreters$(DELIM)wamr$(DELIM)Toolchain.defs
 
-# If called from $(APPDIR)/Makefile,
+# wasi-sdk toolchain setting
+
+WCC ?= $(WASI_SDK_PATH)/bin/clang
+WAR ?= $(WASI_SDK_PATH)/bin/llvm-ar rcs
+
+# sysroot for building wasm, default is NuttX
+
+ifeq ($(WSYSROOT),)
+	WSYSROOT := $(TOPDIR)
+	
+	# Force disable wasm build when WASM_SYSROOT is not defined and on specific
+	# targets that do not support wasm build.
+	# Since some architecture level inline assembly instructions can not be
+	# recognized by wasm-clang. For example:
+	# Error: /github/workspace/sources/nuttx/include/arch/chip/irq.h:220:27: error: invalid output constraint '=a' in asm
+    # asm volatile("rdtscp" : "=a" (lo), "=d" (hi)::"memory");
+
+	ifeq ($(CONFIG_ARCH_INTEL64)$(CONFIG_ARCH_SPARC_V8)$(CONFIG_ARCH_AVR)$(CONFIG_ARCH_XTENSA),y)
+		WASM_BUILD = n
+	endif
+
+endif
+
+# Only build wasm when WCC is exist
+
+ifneq ($(wildcard $(WCC)),)
+
+CFLAGS_STRIP = -fsanitize=kernel-address -fsanitize=address -fsanitize=undefined
+CFLAGS_STRIP += $(ARCHCPUFLAGS) $(ARCHCFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(ARCHOPTIMIZATION) $(EXTRAFLAGS)
+
+WCFLAGS += $(filter-out $(CFLAGS_STRIP),$(CFLAGS))
+WCFLAGS += --sysroot=$(WSYSROOT) -nostdlib -D__NuttX__
+
+# If CONFIG_LIBM not defined, then define it to 1
+ifeq ($(CONFIG_LIBM),)
+WCFLAGS += -DCONFIG_LIBM=1 -I$(APPDIR)$(DELIM)include$(DELIM)wasm
+endif
+
+WLDFLAGS += -z stack-size=$(STACKSIZE) -Wl,--initial-memory=$(INITIAL_MEMORY)
+WLDFLAGS += -Wl,--export=main -Wl,--export=__main_argc_argv
+WLDFLAGS += -Wl,--export=__heap_base -Wl,--export=__data_end
+WLDFLAGS += -Wl,--no-entry -Wl,--strip-all -Wl,--allow-undefined
+
+COMPILER_RT_LIB = $(shell $(WCC) --print-libgcc-file-name)
+ifeq ($(wildcard $(COMPILER_RT_LIB)),)
+  # if "--print-libgcc-file-name" unable to find the correct libgcc PATH
+  # then go ahead and try "--print-file-name"
+  COMPILER_RT_LIB := $(wildcard $(shell $(WCC) --print-file-name $(notdir $(COMPILER_RT_LIB))))
+endif
+
+# If called from $(APPDIR)/Make.defs, WASM_BUILD is not defined
 # Provide LINK_WASM, but only execute it when file wasm/*.wo exists
 
-ifeq ($(CURDIR),$(APPDIR))
+ifeq ($(WASM_BUILD),)
+
 
 define LINK_WASM
 	$(if $(wildcard $(APPDIR)$(DELIM)wasm$(DELIM)*), \
@@ -36,10 +86,8 @@ define LINK_WASM
 	    $(eval INITIAL_MEMORY=$(shell echo $(notdir $(bin)) | cut -d'#' -f2)) \
 	    $(eval STACKSIZE=$(shell echo $(notdir $(bin)) | cut -d'#' -f3)) \
 	    $(eval PROGNAME=$(shell echo $(notdir $(bin)) | cut -d'#' -f1)) \
-	    $(eval WLDFLAGS=$(shell cat $(APPDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).ldflags)) \
-	    $(eval RETVAL=$(shell $(WCC) $(bin) $(WBIN) $(WCFLAGS) $(WLDFLAGS) $(WCC_COMPILER_RT_LIB) \
-	        -Wl,--Map=$(APPDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).map \
-	        -o $(BINDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).wasm || echo 1;)) \
+	    $(eval RETVAL=$(shell $(WCC) $(bin) $(WBIN) $(WCFLAGS) $(WLDFLAGS) $(COMPILER_RT_LIB) \
+	        -o $(APPDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).wasm || echo 1;)) \
 	    $(if $(RETVAL), \
 	        $(error wasm build failed for $(PROGNAME).wasm) \
 	    ) \
@@ -48,12 +96,14 @@ define LINK_WASM
 	 )
 endef
 
-endif # CURDIR
+endif # WASM_BUILD
 
 # Default values for WASM_BUILD, it's a three state variable:
 #   y - build wasm module only
-#   n - don't build wasm module, default
+#   n - don't build wasm module
 #   both - build wasm module and native module
+
+WASM_BUILD ?= n
 
 ifneq ($(WASM_BUILD),n)
 
@@ -86,10 +136,7 @@ endif
 
 all:: $(WBIN)
 
-$(BINDIR)/wasm:
-	$(Q) mkdir -p $(BINDIR)/wasm
-
-depend:: $(APPDIR)$(DELIM)include$(DELIM)wasm$(DELIM)math.h $(BINDIR)/wasm
+depend:: $(APPDIR)$(DELIM)include$(DELIM)wasm$(DELIM)math.h
 
 $(WOBJS): %.c$(SUFFIX).wo : %.c
 	$(Q) $(WCC) $(WCFLAGS) -c $^ -o $@
@@ -103,7 +150,6 @@ $(WBIN): $(WOBJS)
 	  $(shell cp -rf $(strip $(main:=$(SUFFIX).wo)) \
 	    $(strip $(APPDIR)/wasm/$(progname)#$(WASM_INITIAL_MEMORY)#$(STACKSIZE)#$(PRIORITY)#$(WAMR_MODE)#$(dstname)) \
 	   ) \
-	  $(shell echo $(WLDFLAGS) > $(APPDIR)/wasm/$(progname).ldflags) \
 	 )
 
 clean::
@@ -113,4 +159,5 @@ clean::
 
 endif # WASM_BUILD
 
-endif # CONFIG_INTERPRETERS_WAMR || CONFIG_INTERPRETERS_WASM || CONFIG_INTERPRETERS_TOYWASM
+endif # WCC
+endif
