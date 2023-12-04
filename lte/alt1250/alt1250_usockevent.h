@@ -53,7 +53,7 @@
 #define REP_SEND_DACK_RXREADY W_CONTAINER_FREE(11)
 
 /****************************************************************************
- * Public Types
+ * Public Data Type
  ****************************************************************************/
 
 typedef int (*usrsock_reqhandler_t)(FAR struct alt1250_s *dev,
