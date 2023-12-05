@@ -133,9 +133,6 @@ endif
 ZIGELFFLAGS ?= $(ZIGFLAGS)
 RUSTELFFLAGS ?= $(RUSTFLAGS)
 
-DEPPATH += --dep-path .
-DEPPATH += --obj-path .
-
 VPATH += :.
 
 # Targets follow
