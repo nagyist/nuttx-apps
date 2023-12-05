@@ -188,7 +188,7 @@ int main(int argc, FAR char *argv[])
         }
 
 reconnect:
-      if (((fd = accept4(sock, NULL, NULL, SOCK_CLOEXEC)) < 0))
+      if (((fd = accept(sock, NULL, NULL)) < 0))
         {
           fprintf(stderr, "ERROR: Failed to accept socket: %d\n", errno);
           return -errno;
@@ -219,7 +219,7 @@ reconnect:
 
   do
     {
-      ret = gdb_process(state);
+      ret = gdb_process(state, 0, NULL);
       if (ret == -ECONNRESET)
         {
 #ifdef CONFIG_NET
