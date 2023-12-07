@@ -84,6 +84,9 @@ class CmockaReport:
                 except ET.ParseError as e:
                     print("Error parsing XML:", _, e)
                     return
+        if not merged:
+            print("Can not find any xml file")
+            return
         if self.out:
             try:
                 ET.ElementTree(merged).write(
@@ -93,9 +96,9 @@ class CmockaReport:
             except FileNotFoundError:
                 print("No such file or directory: {0}".format(self.out))
             except Exception:
-                print("Failed to write json file")
+                print("Failed to write merge xml file")
         else:
-            print(ET.dump(merged))
+            ET.dump(merged)
 
 
 app = typer.Typer()
