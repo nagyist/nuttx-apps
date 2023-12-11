@@ -27,10 +27,12 @@ from enum import Enum
 import typer
 import xmltodict
 from bs4 import BeautifulSoup
+from junit2htmlreport.parser import Junit
 
 
 class ConvertType(str, Enum):
     XML2JSON = "xml2json"
+    XML2HTML = "xml2html"
     MERGEXML = "merge"
 
 
@@ -71,6 +73,22 @@ class CmockaReport:
                 print("Failed to write json file")
         else:
             print(json_data)
+
+    def xml2html(self):
+        """Convert XML file into a html file"""
+        if not self.out:
+            self.out = "{0}.html".format(self.xml.split(".")[0])
+        try:
+            report = Junit(self.xml)
+            html = report.html()
+            f = open(self.out, "wb")
+            f.write(html.encode("UTF-8"))
+            f.close()
+            print("Job Done")
+        except FileNotFoundError:
+            print("No such file: {0}".format(self.out))
+        except Exception as e:
+            print("Failed to write html file")
 
     def mergexml(self):
         """Merge multiple XML files into one"""
@@ -122,6 +140,8 @@ def main(
     rpt = CmockaReport(xml, out)
     if operate == ConvertType.XML2JSON:
         rpt.xml2json()
+    elif operate == ConvertType.XML2HTML:
+        rpt.xml2html()
     elif operate == ConvertType.MERGEXML:
         rpt.mergexml()
     else:
