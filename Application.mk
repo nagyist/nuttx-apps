@@ -76,7 +76,6 @@ COBJS = $(CSRCS:=$(SUFFIX)$(OBJEXT))
 CXXOBJS = $(CXXSRCS:=$(SUFFIX)$(OBJEXT))
 RUSTOBJS = $(RUSTSRCS:=$(SUFFIX)$(OBJEXT))
 ZIGOBJS = $(ZIGSRCS:=$(SUFFIX)$(OBJEXT))
-AIDLOBJS = $(patsubst %$(AIDLEXT),%$(CXXEXT),$(AIDLSRCS))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
@@ -133,6 +132,9 @@ endif
 ZIGELFFLAGS ?= $(ZIGFLAGS)
 RUSTELFFLAGS ?= $(RUSTFLAGS)
 
+DEPPATH += --dep-path .
+DEPPATH += --obj-path .
+
 VPATH += :.
 
 # Targets follow
@@ -179,18 +181,6 @@ define ELFLD
 	$(ECHO_END)
 endef
 
-define COMPILEAIDL
-	$(ECHO_BEGIN)"AIDL: $1 "
-	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1
-	$(ECHO_END)
-endef
-
-define DELAIDLOUT
-	$(ECHO_BEGIN)"DELAIDLOUT: $1 "
-	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1 --delete
-	$(ECHO_END)
-endef
-
 $(RAOBJS): %.s$(SUFFIX)$(OBJEXT): %.s
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(AELFFLAGS)), \
 		$(call ELFASSEMBLE, $<, $@), $(call ASSEMBLE, $<, $@))
@@ -214,9 +204,6 @@ $(RUSTOBJS): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
 $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
-
-$(AIDLOBJS): %$(CXXEXT): %$(AIDLEXT)
-	$(call COMPILEAIDL, $<)
 
 AROBJS :=
 ifneq ($(OBJS),)
@@ -286,7 +273,7 @@ install::
 
 endif # BUILD_MODULE
 
-context:: $(AIDLOBJS)
+context::
 	@:
 
 ifeq ($(DO_REGISTRATION),y)
@@ -325,7 +312,6 @@ clean::
 distclean:: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
-	$(foreach AIDLSRC,$(AIDLSRCS),$(call DELAIDLOUT,$(AIDLSRC)))
 
 -include Make.dep
 
