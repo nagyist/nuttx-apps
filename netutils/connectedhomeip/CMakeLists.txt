@@ -153,8 +153,12 @@ if(CONFIG_MATTER)
   set(nuttx_include_dirs)
   get_target_property(include_dirs nuttx NUTTX_INCLUDE_DIRECTORIES)
   list(APPEND nuttx_include_dirs ${include_dirs})
+
   get_target_property(include_dirs nuttx INCLUDE_DIRECTORIES)
-  list(APPEND nuttx_include_dirs ${include_dirs})
+  if(include_dirs)
+    list(APPEND nuttx_include_dirs ${include_dirs})
+  endif()
+
   get_target_property(include_dirs mbedtls INCLUDE_DIRECTORIES)
   list(APPEND nuttx_include_dirs ${include_dirs})
 
@@ -177,11 +181,14 @@ if(CONFIG_MATTER)
       connectedhomeip/examples/lighting-app/lighting-common/include
       connectedhomeip/examples/all-clusters-app/all-clusters-common/include)
 
+  set(gn_depens mbedtls)
+
   if(CONFIG_BT)
     set(MATTER_INCDIR
         ${MATTER_INCDIR} ${NUTTX_APPS_DIR}/external/zblue/zblue/port/include
         ${NUTTX_APPS_DIR}/external/zblue/zblue/include
         ${NUTTX_APPS_DIR}/external/zblue/zblue/subsys/testsuite/ztest/include)
+    list(APPEND gn_depens zblue)
   endif()
 
   set(MATTER_FLAGS
@@ -267,7 +274,7 @@ if(CONFIG_MATTER)
     ${CONFIG_CHIP_BUILD_TESTS}
     LIB_MBEDTLS
     GN_DEPENDENCIES
-    mbedtls)
+    ${gn_depens})
 
   add_custom_command(
     OUTPUT connectedhomeip/third_party/pigweed/repo
