@@ -82,6 +82,8 @@ struct wdg_state_s
   int test_case;
 };
 
+static sem_t g_semaphore;
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -268,6 +270,16 @@ static void parse_commandline(FAR struct wdg_state_s *wdg_state, int argc,
 }
 
 /****************************************************************************
+ * Name: capture_callback
+ ****************************************************************************/
+
+static int capture_callback(int irq, FAR void *context, FAR void *arg)
+{
+  sem_post(&g_semaphore);
+  return OK;
+}
+
+/****************************************************************************
  * Name: test_case_wdog_01
  *
  * Description:
@@ -420,6 +432,7 @@ static void test_case_wdog_04(FAR void **state)
   FAR struct wdg_state_s *wdg_state;
   struct watchdog_status_s status;
   struct boardioc_reset_cause_s reset_cause;
+  struct watchdog_capture_s watchdog_capture;
 
   wdg_state = (FAR struct wdg_state_s *)*state;
 
@@ -458,6 +471,22 @@ static void test_case_wdog_04(FAR void **state)
       ret = ioctl(dev_fd, WDIOC_KEEPALIVE, 0);
       assert_return_code(ret, OK);
     }
+
+  /* Test capture. */
+
+  ret = sem_init(&g_semaphore, 0, 0);
+  assert_return_code(ret, OK);
+
+  watchdog_capture.newhandler = capture_callback;
+  ret = ioctl(dev_fd, WDIOC_CAPTURE, &watchdog_capture);
+  assert_return_code(ret, OK);
+
+  sem_wait(&g_semaphore);
+  sem_destroy(&g_semaphore);
+
+  watchdog_capture.newhandler = watchdog_capture.oldhandler;
+  ret = ioctl(dev_fd, WDIOC_CAPTURE, &watchdog_capture);
+  assert_return_code(ret, OK);
 
   /* Then stop pinging */
 
