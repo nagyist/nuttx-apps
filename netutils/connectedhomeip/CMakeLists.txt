@@ -174,7 +174,15 @@ if(CONFIG_MATTER)
       connectedhomeip/zzz_generated/app-common
       connectedhomeip/src/platform/Linux
       connectedhomeip/examples/platform/linux
-      connectedhomeip/examples/lighting-app/lighting-common/include)
+      connectedhomeip/examples/lighting-app/lighting-common/include
+      connectedhomeip/examples/all-clusters-app/all-clusters-common/include)
+
+  if(CONFIG_BT)
+    set(MATTER_INCDIR
+        ${MATTER_INCDIR} ${NUTTX_APPS_DIR}/external/zblue/zblue/port/include
+        ${NUTTX_APPS_DIR}/external/zblue/zblue/include
+        ${NUTTX_APPS_DIR}/external/zblue/zblue/subsys/testsuite/ztest/include)
+  endif()
 
   set(MATTER_FLAGS
       -DCHIP_HAVE_CONFIG_H
@@ -236,10 +244,13 @@ if(CONFIG_MATTER)
     endif()
   endif()
 
+  matter_add_gn_arg_bool("chip_use_external_jsoncpp" true)
   matter_add_gn_arg_bool("chip_inet_config_enable_ipv4" CONFIG_NET_IPv4)
-  matter_add_gn_arg_bool("chip_enable_ble")
-  matter_add_gn_arg_bool("chip_example_lighting" true)
-  matter_add_gn_arg_bool("chip_config_network_layer_ble")
+  matter_add_gn_arg_bool("chip_config_network_layer_ble" CONFIG_BT)
+  matter_add_gn_arg_bool("chip_enable_wifi" CONFIG_WIRELESS)
+  matter_add_gn_arg_bool("chip_example_all_clusters_app"
+                         CONFIG_MATTER_EXAMPLE_ALL_CLUSTERS_APP)
+  matter_add_gn_arg_bool("chip_example_lighting" CONFIG_MATTER_EXAMPLE_LIGHTING)
 
   matter_get_compiler_flags_from_targets(nuttx)
   matter_common_gn_args(PROJECT_CONFIG_INC_DIR ${EXTERNAL_MATTER_INCDIR})
@@ -317,9 +328,13 @@ if(CONFIG_MATTER)
                     DEPENDS connectedhomeip/third_party/jsoncpp/repo)
   ExternalProject_Add_StepDependencies(chip-gn configure chipjsoncpp)
 
-  set(DEMOSRC
-      ${CHIP_ROOT}/examples/lighting-app/linux/main.cpp
-      ${CHIP_ROOT}/examples/lighting-app/linux/LightingAppCommandDelegate.cpp)
+  if(CONFIG_MATTER_EXAMPLE_LIGHTING)
+    set(DEMOSRC
+        ${CHIP_ROOT}/examples/lighting-app/linux/main.cpp
+        ${CHIP_ROOT}/examples/lighting-app/linux/LightingAppCommandDelegate.cpp)
+  elseif(CONFIG_MATTER_EXAMPLE_ALL_CLUSTERS_APP)
+    set(DEMOSRC ${CHIP_ROOT}/examples/all-clusters-app/linux/main.cpp)
+  endif()
 
   nuttx_add_application(
     NAME

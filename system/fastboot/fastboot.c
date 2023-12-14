@@ -23,6 +23,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <nuttx/mtd/mtd.h>
 #include <nuttx/version.h>
 
 #include <errno.h>
@@ -220,7 +221,7 @@ static void fastboot_okay(FAR struct fastboot_ctx_s *context,
 
 static int fastboot_flash_open(FAR const char *name)
 {
-  int fd = open(name, O_RDWR);
+  int fd = open(name, O_RDWR | O_CLOEXEC);
   if (fd < 0)
     {
       printf("Open %s error\n", name);
@@ -296,7 +297,15 @@ out:
 
 static int fastboot_flash_erase(int fd)
 {
-  return OK;
+  int ret;
+
+  ret = ioctl(fd, MTDIOC_BULKERASE, 0);
+  if (ret < 0)
+    {
+      printf("Erase device failed\n");
+    }
+
+  return ret;
 }
 
 static int
@@ -511,7 +520,10 @@ static void fastboot_reboot(FAR struct fastboot_ctx_s *context,
                             FAR const char *arg)
 {
 #ifdef CONFIG_BOARDCTL_RESET
+  fastboot_okay(context, "");
   boardctl(BOARDIOC_RESET, BOARDIOC_SOFTRESETCAUSE_USER_REBOOT);
+#else
+  fastboot_fail(context, "Operation not supported");
 #endif
 }
 
@@ -519,7 +531,10 @@ static void fastboot_reboot_bootloader(FAR struct fastboot_ctx_s *context,
                                        FAR const char *arg)
 {
 #ifdef CONFIG_BOARDCTL_RESET
+  fastboot_okay(context, "");
   boardctl(BOARDIOC_RESET, BOARDIOC_SOFTRESETCAUSE_ENTER_BOOTLOADER);
+#else
+  fastboot_fail(context, "Operation not supported");
 #endif
 }
 
@@ -617,7 +632,7 @@ int main(int argc, FAR char **argv)
 
   snprintf(usbdev, sizeof(usbdev), "%s/ep%d",
            FASTBOOT_USBDEV, FASTBOOT_EP_BULKOUT_IDX + 1);
-  context.usbdev_in = open(usbdev, O_RDONLY);
+  context.usbdev_in = open(usbdev, O_RDONLY | O_CLOEXEC);
   if (context.usbdev_in < 0)
     {
       printf("open [%s] error\n", usbdev);
@@ -627,7 +642,7 @@ int main(int argc, FAR char **argv)
 
   snprintf(usbdev, sizeof(usbdev), "%s/ep%d",
            FASTBOOT_USBDEV, FASTBOOT_EP_BULKIN_IDX + 1);
-  context.usbdev_out = open(usbdev, O_WRONLY);
+  context.usbdev_out = open(usbdev, O_WRONLY | O_CLOEXEC);
   if (context.usbdev_out < 0)
     {
       printf("open [%s] error\n", usbdev);
