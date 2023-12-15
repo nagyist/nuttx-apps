@@ -63,6 +63,7 @@ if(CONFIG_NETUTILS_NETLIB)
     list(APPEND SRCS netlib_ipv6adaptor.c)
     if(CONFIG_NET_ICMPv6_AUTOCONF)
       list(APPEND SRCS netlib_autoconfig.c)
+      list(APPEND SRCS netlib_obtainipv6addr.c)
     endif()
     if(CONFIG_NETDB_DNSCLIENT)
       list(APPEND SRCS netlib_setipv6dnsaddr.c)
@@ -82,12 +83,6 @@ if(CONFIG_NETUTILS_NETLIB)
     if(CONFIG_NET_ROUTE)
       list(APPEND SRCS netlib_getroute.c)
     endif()
-  endif()
-
-  # Netfilter connection support
-
-  if(CONFIG_NETLINK_NETFILTER)
-    list(APPEND SRCS netlib_conntrack.c)
   endif()
 
   # These require TCP support

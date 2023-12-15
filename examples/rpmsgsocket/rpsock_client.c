@@ -22,25 +22,24 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-
-#include <assert.h>
 #include <errno.h>
-#include <netpacket/rpmsg.h>
 #include <poll.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <sys/socket.h>
+#include <netpacket/rpmsg.h>
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
 #define ALIGN_UP(a)     (((a) + 0x3) & ~0x3)
-#define SYNCSIZE        CONFIG_NET_RPMSG_RXBUF_SIZE
+#define SYNCSIZE        1024
 #define BUFSIZE         SYNCSIZE * 2
 #define BUFHEAD         64
 
@@ -59,10 +58,10 @@ struct rpsock_arg_s
 };
 
 /****************************************************************************
- * Public Functions
+ * Private Functions
  ****************************************************************************/
 
-static void *rpsock_send_thread(pthread_addr_t pvarg)
+static void *rpsock_send_thread(void *pvarg)
 {
   struct rpsock_arg_s *args = pvarg;
   int bufsize = args->bufsize;
@@ -149,8 +148,7 @@ static int rpsock_unsync_test(struct rpsock_arg_s *args)
 
   pthread_attr_init(&attr);
   pthread_attr_setstacksize(&attr, 10 * 1024);
-  ret = pthread_create(&thread, &attr, rpsock_send_thread,
-                       (pthread_addr_t)args);
+  ret = pthread_create(&thread, &attr, rpsock_send_thread, args);
   if (ret < 0)
     {
       return ret;
@@ -225,7 +223,7 @@ static int rpsock_unsync_test(struct rpsock_arg_s *args)
   return 0;
 }
 
-static int rpsock_stream_client(int argc, char *argv[])
+static int rpsock_stream_client(char *argv[])
 {
   struct sockaddr_rpmsg myaddr;
   struct rpsock_arg_s args;
@@ -420,7 +418,7 @@ errout_with_buffers:
   return -errno;
 }
 
-static int rpsock_dgram_client(int argc, char *argv[])
+static int rpsock_dgram_client(char *argv[])
 {
   struct sockaddr_rpmsg myaddr;
   struct rpsock_arg_s args;
@@ -515,6 +513,18 @@ errout_with_buffers:
   return -errno;
 }
 
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: rpsock_client_main
+ *
+ * Description:
+ *   Main entry point for the rpsock_client example.
+ *
+ ****************************************************************************/
+
 int main(int argc, char *argv[])
 {
   if (argc < 4)
@@ -526,11 +536,11 @@ int main(int argc, char *argv[])
 
   if (!strcmp(argv[1], "stream"))
     {
-      return rpsock_stream_client(argc, argv);
+      return rpsock_stream_client(argv);
     }
   else if (!strcmp(argv[1], "dgram"))
     {
-      return rpsock_dgram_client(argc, argv);
+      return rpsock_dgram_client(argv);
     }
 
   return -EINVAL;
