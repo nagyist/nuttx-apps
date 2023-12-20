@@ -117,7 +117,6 @@ static FAR const char * const g_resetflag[] =
   "panic",
   "bootloader",
   "recovery",
-  "restore",
   "factory",
   NULL
 };
@@ -518,9 +517,7 @@ int cmd_reset_cause(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl,
                           FAR const char *path, FAR char **argv)
 {
-#ifdef CONFIG_RPTUN_PING
   struct rptun_ping_s ping;
-#endif
   unsigned long val = 0;
   int cmd;
   int fd;
@@ -546,7 +543,6 @@ static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl,
     {
       cmd = RPTUNIOC_DUMP;
     }
-#ifdef CONFIG_RPTUN_PING
   else if (strcmp(argv[1], "ping") == 0)
     {
       if (argv[3] == 0 || argv[4] == 0 ||
@@ -564,14 +560,13 @@ static int cmd_rptun_once(FAR struct nsh_vtbl_s *vtbl,
       cmd = RPTUNIOC_PING;
       val = (unsigned long)&ping;
     }
-#endif
   else
     {
       nsh_output(vtbl, g_fmtarginvalid, argv[1]);
       return ERROR;
     }
 
-  fd = open(path, O_CLOEXEC);
+  fd = open(path, 0);
   if (fd < 0)
     {
       nsh_output(vtbl, g_fmtarginvalid, path);
