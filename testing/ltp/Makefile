@@ -254,7 +254,7 @@ MAINSRC      += $(TESTDIR)/../network/can/filter-tests/can_filter.c
 MAINSRC      += $(TESTDIR)/../network/can/filter-tests/can_rcv_own_msgs.c
 endif
 PRIORITY      = SCHED_PRIORITY_DEFAULT
-STACKSIZE     = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+STACKSIZE     = $(CONFIG_TESTING_LTP_STACKSIZE)
 MODULE        = $(CONFIG_TESTING_LTP)
 
 CSRCS        := $(LTP_CSRCS)
