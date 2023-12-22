@@ -71,11 +71,6 @@ MAINSRC  += drivertest_pwm.c
 PROGNAME += cmocka_driver_pwm
 endif
 
-ifneq ($(CONFIG_WATCHDOG),)
-MAINSRC  += drivertest_watchdog.c
-PROGNAME += cmocka_driver_watchdog
-endif
-
 ifneq ($(CONFIG_ADC),)
 MAINSRC  += drivertest_adc.c
 PROGNAME += cmocka_driver_adc
@@ -106,6 +101,11 @@ endif
 ifneq ($(CONFIG_AUDIO),)
 MAINSRC  += drivertest_audio.c
 PROGNAME += cmocka_driver_audio
+endif
+
+ifneq ($(CONFIG_CPUFREQ),)
+MAINSRC  += drivertest_cpufreq.c
+PROGNAME += cmocka_driver_cpufreq
 endif
 
 ifneq ($(CONFIG_VIDEO_FB),)
