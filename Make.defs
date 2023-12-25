@@ -166,7 +166,7 @@ endef
 
 define AROBJSRULES
 $(1) : $(2)
-	cp $(2) $(1)
+	@ cp $(2) $(1)
 endef
 
 # CLEANAROBJS - del AR target files exclusively
@@ -177,6 +177,6 @@ define CLEANAROBJS
 endef
 else
 define CLEANAROBJS
-	$(Q) rm -f $(AROBJS)
+	$(foreach AROBJ, $(AROBJS), $(shell rm -f $(AROBJ)))
 endef
 endif
