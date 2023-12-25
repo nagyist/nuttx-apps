@@ -279,6 +279,7 @@ static const char g_redirect1[]       = ">";
 static const char g_redirect2[]       = ">>";
 #ifdef NSH_HAVE_VARS
 static const char g_exitstatus[]      = "?";
+static const char g_lastpid[]         = "!";
 static const char g_success[]         = "0";
 static const char g_failure[]         = "1";
 #endif
@@ -1227,6 +1228,11 @@ static FAR char *nsh_envexpand(FAR struct nsh_vtbl_s *vtbl,
         {
           return (FAR char *)g_success;
         }
+    }
+  else if (strcmp(varname, g_lastpid) == 0)
+    {
+      itoa(vtbl->np.np_lastpid, vtbl->np.np_pids, 10);
+      return vtbl->np.np_pids;
     }
   else
     {
