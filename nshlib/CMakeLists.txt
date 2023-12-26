@@ -60,6 +60,10 @@ if(CONFIG_NSH_LIBRARY)
     list(APPEND CSRCS nsh_vars.c)
   endif()
 
+  if(CONFIG_NSH_ROMFSETC)
+    list(APPEND CSRCS nsh_romfsetc.c)
+  endif()
+
   if(CONFIG_NET)
     list(APPEND CSRCS nsh_netcmds.c)
 
@@ -95,10 +99,6 @@ if(CONFIG_NSH_LIBRARY)
 
   if(NOT CONFIG_NSH_DISABLESCRIPT)
     list(APPEND CSRCS nsh_test.c)
-  endif()
-
-  if(NOT CONFIG_NSH_DISABLE_WAIT)
-    list(APPEND CSRCS nsh_wait.c)
   endif()
 
   if(CONFIG_USBDEV)
