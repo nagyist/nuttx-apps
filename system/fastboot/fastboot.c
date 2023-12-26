@@ -23,6 +23,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <nuttx/mtd/mtd.h>
 #include <nuttx/version.h>
 
 #include <errno.h>
@@ -32,10 +33,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <sys/boardctl.h>
 #include <sys/ioctl.h>
 #include <sys/param.h>
+#include <sys/stat.h>
 #include <sys/statfs.h>
 #include <sys/types.h>
 
@@ -220,7 +223,7 @@ static void fastboot_okay(FAR struct fastboot_ctx_s *context,
 
 static int fastboot_flash_open(FAR const char *name)
 {
-  int fd = open(name, O_RDWR);
+  int fd = open(name, O_RDWR | O_CLOEXEC);
   if (fd < 0)
     {
       printf("Open %s error\n", name);
@@ -296,7 +299,15 @@ out:
 
 static int fastboot_flash_erase(int fd)
 {
-  return OK;
+  int ret;
+
+  ret = ioctl(fd, MTDIOC_BULKERASE, 0);
+  if (ret < 0)
+    {
+      printf("Erase device failed\n");
+    }
+
+  return ret < 0 ? -errno : ret;
 }
 
 static int
@@ -413,6 +424,7 @@ static void fastboot_erase(FAR struct fastboot_ctx_s *context,
                            FAR const char *arg)
 {
   char blkdev[PATH_MAX];
+  int ret;
   int fd;
 
   snprintf(blkdev, PATH_MAX, FASTBOOT_BLKDEV, arg);
@@ -425,7 +437,32 @@ static void fastboot_erase(FAR struct fastboot_ctx_s *context,
       return;
     }
 
-  if (fastboot_flash_erase(fd) < 0)
+  ret = fastboot_flash_erase(fd);
+  if (ret == -ENOTTY)
+    {
+      struct stat sb;
+
+      ret = fstat(fd, &sb);
+      if (ret >= 0)
+        {
+          memset(context->download_buffer, 0xff, context->download_max);
+
+          while (sb.st_size > 0)
+            {
+              size_t len = MIN(sb.st_size, context->download_max);
+
+              ret = fastboot_write(fd, context->download_buffer, len);
+              if (ret < 0)
+                {
+                  break;
+                }
+
+              sb.st_size -= len;
+            }
+        }
+    }
+
+  if (ret < 0)
     {
       fastboot_fail(context, "Flash erase failure");
     }
@@ -511,7 +548,10 @@ static void fastboot_reboot(FAR struct fastboot_ctx_s *context,
                             FAR const char *arg)
 {
 #ifdef CONFIG_BOARDCTL_RESET
+  fastboot_okay(context, "");
   boardctl(BOARDIOC_RESET, BOARDIOC_SOFTRESETCAUSE_USER_REBOOT);
+#else
+  fastboot_fail(context, "Operation not supported");
 #endif
 }
 
@@ -519,7 +559,10 @@ static void fastboot_reboot_bootloader(FAR struct fastboot_ctx_s *context,
                                        FAR const char *arg)
 {
 #ifdef CONFIG_BOARDCTL_RESET
+  fastboot_okay(context, "");
   boardctl(BOARDIOC_RESET, BOARDIOC_SOFTRESETCAUSE_ENTER_BOOTLOADER);
+#else
+  fastboot_fail(context, "Operation not supported");
 #endif
 }
 
@@ -608,6 +651,42 @@ int main(int argc, FAR char **argv)
   char usbdev[32];
   int ret = OK;
 
+#ifdef CONFIG_FASTBOOTD_USB_BOARDCTL
+  struct boardioc_usbdev_ctrl_s ctrl;
+#  ifdef CONFIG_USBDEV_COMPOSITE
+    uint8_t dev = BOARDIOC_USBDEV_COMPOSITE;
+#  else
+    uint8_t dev = BOARDIOC_USBDEV_FASTBOOT;
+#  endif
+  FAR void *handle;
+
+  ctrl.usbdev   = dev;
+  ctrl.action   = BOARDIOC_USBDEV_INITIALIZE;
+  ctrl.instance = 0;
+  ctrl.config   = 0;
+  ctrl.handle   = NULL;
+
+  ret = boardctl(BOARDIOC_USBDEV_CONTROL, (uintptr_t)&ctrl);
+  if (ret < 0)
+    {
+      printf("boardctl(BOARDIOC_USBDEV_CONTROL) failed: %d\n", ret);
+      return ret;
+    }
+
+  ctrl.usbdev   = dev;
+  ctrl.action   = BOARDIOC_USBDEV_CONNECT;
+  ctrl.instance = 0;
+  ctrl.config   = 0;
+  ctrl.handle   = &handle;
+
+  ret = boardctl(BOARDIOC_USBDEV_CONTROL, (uintptr_t)&ctrl);
+  if (ret < 0)
+    {
+      printf("boardctl(BOARDIOC_USBDEV_CONTROL) failed: %d\n", ret);
+      return ret;
+    }
+#endif /* FASTBOOTD_USB_BOARDCTL */
+
   buffer = malloc(CONFIG_SYSTEM_FASTBOOTD_DOWNLOAD_MAX);
   if (buffer == NULL)
     {
@@ -617,7 +696,7 @@ int main(int argc, FAR char **argv)
 
   snprintf(usbdev, sizeof(usbdev), "%s/ep%d",
            FASTBOOT_USBDEV, FASTBOOT_EP_BULKOUT_IDX + 1);
-  context.usbdev_in = open(usbdev, O_RDONLY);
+  context.usbdev_in = open(usbdev, O_RDONLY | O_CLOEXEC);
   if (context.usbdev_in < 0)
     {
       printf("open [%s] error\n", usbdev);
@@ -627,7 +706,7 @@ int main(int argc, FAR char **argv)
 
   snprintf(usbdev, sizeof(usbdev), "%s/ep%d",
            FASTBOOT_USBDEV, FASTBOOT_EP_BULKIN_IDX + 1);
-  context.usbdev_out = open(usbdev, O_WRONLY);
+  context.usbdev_out = open(usbdev, O_WRONLY | O_CLOEXEC);
   if (context.usbdev_out < 0)
     {
       printf("open [%s] error\n", usbdev);
