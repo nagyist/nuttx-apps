@@ -21,6 +21,11 @@
 ifneq ($(CONFIG_GRAPHICS_LVGL),)
 CONFIGURED_APPS += $(APPDIR)/graphics/lvgl
 
+# Use LVGL v9 dev version, removed after Release
+
+CFLAGS += -DLV_USE_DEV_VERSION=1
+CXXFLAGS += -DLV_USE_DEV_VERSION=1
+
 # It allows `<lvgl/lvgl.h>` import.
 
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/graphics/lvgl
