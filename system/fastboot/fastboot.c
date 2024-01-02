@@ -239,6 +239,7 @@ static void fastboot_flash_close(int fd)
 {
   if (fd >= 0)
     {
+      fsync(fd);
       close(fd);
     }
 }
