@@ -229,7 +229,7 @@ static void add_timeout(struct rtc_time * rtc_tm, const int delay)
   timesp = timegm((struct tm *)rtc_tm);
   timesp += delay;
 
-  tm = gmtime(&timesp);
+  tm = localtime(&timesp);
   rtc_tm->tm_sec = tm->tm_sec;
   rtc_tm->tm_min = tm->tm_min;
   rtc_tm->tm_hour = tm->tm_hour;
