@@ -658,11 +658,6 @@ struct nsh_parser_s
 #endif
   bool     np_redirect; /* true: Output from the last command was re-directed */
   bool     np_fail;     /* true: The last command failed */
-  pid_t    np_lastpid;  /* Pid of the last command executed */
-#ifdef NSH_HAVE_VARS
-  char     np_pids[32];  /* String representation of the last pid */
-#endif
-
 #ifndef CONFIG_NSH_DISABLESCRIPT
   uint8_t  np_flags;    /* See nsh_npflags_e above */
 #endif
@@ -1210,10 +1205,6 @@ int cmd_switchboot(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 #ifdef CONFIG_NSH_ALIAS
 int cmd_alias(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 int cmd_unalias(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
-#endif
-
-#if !defined(CONFIG_NSH_DISABLE_WAIT) && defined(CONFIG_SCHED_WAITPID)
-int cmd_wait(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv);
 #endif
 
 /****************************************************************************
