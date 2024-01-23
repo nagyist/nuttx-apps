@@ -101,8 +101,8 @@ ifeq ($(CONFIG_SIG_DEFAULT),)
 BLACKWORDS += SIGKILL
 BLACKWORDS += SIGSTOP
 endif
-ifeq ($(CONFIG_RR_INTERVAL),)
-BLACKSRCS += $(TESTDIR)/functional/threads/condvar/pthread_cond_wait_1.c
+ifneq ($(shell expr $(CONFIG_RR_INTERVAL) \> 0),1)
+BLACKWORDS += SCHED_RR
 endif
 ifeq ($(CONFIG_FS_NAMED_SEMAPHORES),)
 BLACKWORDS += sem_open
