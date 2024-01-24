@@ -67,7 +67,7 @@ if(CONFIG_CRYPTO_MBEDTLS)
   # Include Directory
   # ############################################################################
 
-  set(INCDIR ${MBEDTLS_DIR}/include)
+  set(INCDIR ${CMAKE_CURRENT_LIST_DIR}/include ${MBEDTLS_DIR}/include)
 
   # ############################################################################
   # Library Configuration
