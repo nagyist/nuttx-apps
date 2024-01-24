@@ -11,6 +11,12 @@ config MATTER
 
 if MATTER
 
+config MATTER_LOG
+	bool "Build matter with logs"
+	default n
+	---help---
+		To reduce flash size, logs are not opened by default
+
 choice
 	prompt "Matter Example Configuration"
 	default MATTER_EXAMPLE_LIGHTING
