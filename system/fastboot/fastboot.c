@@ -108,6 +108,7 @@ struct fastboot_ctx_s
 {
   int usbdev_in;
   int usbdev_out;
+  int flash_fd;
   size_t download_max;
   size_t download_size;
   size_t download_offset;
@@ -400,18 +401,20 @@ static void fastboot_flash(FAR struct fastboot_ctx_s *context,
                            FAR const char *arg)
 {
   char blkdev[PATH_MAX];
-  int fd;
 
   snprintf(blkdev, PATH_MAX, FASTBOOT_BLKDEV, arg);
 
-  fd = fastboot_flash_open(blkdev);
-  if (fd < 0)
+  if (context->flash_fd < 0)
     {
-      fastboot_fail(context, "Flash open failure");
-      return;
+      context->flash_fd = fastboot_flash_open(blkdev);
+      if (context->flash_fd < 0)
+        {
+          fastboot_fail(context, "Flash open failure");
+          return;
+        }
     }
 
-  if (fastboot_flash_program(context, fd) < 0)
+  if (fastboot_flash_program(context, context->flash_fd) < 0)
     {
       fastboot_fail(context, "Image flash failure");
     }
@@ -420,7 +423,11 @@ static void fastboot_flash(FAR struct fastboot_ctx_s *context,
       fastboot_okay(context, "");
     }
 
-  fastboot_flash_close(fd);
+  if (context->total_imgsize == 0)
+    {
+      fastboot_flash_close(context->flash_fd);
+      context->flash_fd = -1;
+    }
 }
 
 static void fastboot_erase(FAR struct fastboot_ctx_s *context,
@@ -745,6 +752,7 @@ int main(int argc, FAR char **argv)
       goto err_with_in;
     }
 
+  context.flash_fd = -1;
   context.download_buffer = buffer;
   context.download_size   = 0;
   context.download_offset = 0;
