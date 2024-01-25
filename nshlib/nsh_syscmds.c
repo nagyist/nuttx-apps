@@ -616,6 +616,7 @@ int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       nsh_output(vtbl, "  rptun <start|stop|reset|panic|dump> <path> "
                 "<value>\n");
       nsh_output(vtbl, "  rptun <reset> <path> <resetvalue>\n");
+#ifdef CONFIG_RPTUN_PING
       nsh_output(vtbl, "  rptun ping <path> <times> <length> <ack> "
                 "<period(ms)>\n\n");
       nsh_output(vtbl, "  <path>         Rptun device path.\n");
@@ -627,6 +628,7 @@ int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       nsh_output(vtbl, "                 1 - Acknowledge, no data check.\n");
       nsh_output(vtbl, "                 2 - Acknowledge and data check.\n");
       nsh_output(vtbl, "  <period(ms)>   ping period (ms) \n\n");
+#endif
 
       return OK;
     }
