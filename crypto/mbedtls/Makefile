@@ -36,7 +36,7 @@ MBEDTLS_UNPACKLIBDIR = $(MBEDTLS_UNPACKNAME)$(DELIM)library
 MBEDTLS_UNPACKPROGDIR = $(MBEDTLS_UNPACKNAME)$(DELIM)programs
 
 # This lets Mbed TLS better use some of the POSIX features we have
-CFLAGS += ${DEFINE_PREFIX}unix
+CFLAGS += ${DEFINE_PREFIX}__unix__
 
 mbedtls/library/bignum.c_CFLAGS += -fno-lto
 
@@ -48,7 +48,6 @@ mbedtls/library/bignum.c_CFLAGS += -fno-lto
 ifeq ($(CONFIG_FRAME_POINTER),y)
   ifeq ($(CONFIG_DEBUG_OPTLEVEL),"-O3")
     mbedtls/library/sha256.c_CFLAGS += -O2
-    mbedtls/library/cmac.c_CFLAGS += -O2
   endif
 endif
 
@@ -121,14 +120,6 @@ endif
 
 ifeq ($(CONFIG_MBEDTLS_MD5_ALT),y)
 CSRCS += $(APPDIR)/crypto/mbedtls/source/md5_alt.c
-endif
-
-ifeq ($(CONFIG_MBEDTLS_POLY1305_ALT),y)
-CSRCS += $(APPDIR)/crypto/mbedtls/source/poly1305_alt.c
-endif
-
-ifeq ($(CONFIG_MBEDTLS_RIPEMD160_ALT),y)
-CSRCS += $(APPDIR)/crypto/mbedtls/source/ripemd160_alt.c
 endif
 
 ifeq ($(CONFIG_MBEDTLS_SHA1_ALT),y)

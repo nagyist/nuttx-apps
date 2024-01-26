@@ -54,11 +54,6 @@ $(foreach BDIR, $(BUILDIRS), $(eval $(call Add_Application,$(BDIR))))
 CXXEXT ?= .cxx
 RUSTEXT ?= .rs
 ZIGEXT ?= .zig
-AIDLEXT ?= .aidl
-
-# Tools
-
-AIDL ?= aidl
 
 # Library path
 
@@ -166,7 +161,7 @@ endef
 
 define AROBJSRULES
 $(1) : $(2)
-	@ cp $(2) $(1)
+	cp $(2) $(1)
 endef
 
 # CLEANAROBJS - del AR target files exclusively
@@ -177,6 +172,6 @@ define CLEANAROBJS
 endef
 else
 define CLEANAROBJS
-	$(foreach AROBJ, $(AROBJS), $(shell rm -f $(AROBJ)))
+	$(Q) rm -f $(AROBJS)
 endef
 endif
