@@ -27,5 +27,5 @@ if(CONFIG_TESTING_CXXTEST)
     MODULE
     ${CONFIG_TESTING_CXXTEST}
     SRCS
-    cxxtest_main.cxx)
+    cxxtest_main.c)
 endif()

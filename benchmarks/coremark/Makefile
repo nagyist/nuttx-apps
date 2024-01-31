@@ -39,7 +39,6 @@ VPATH += $(COREMARK_UNPACKNAME)$(DELIM)posix
 DEPPATH += --dep-path $(COREMARK_UNPACKNAME)
 DEPPATH += --dep-path $(COREMARK_UNPACKNAME)$(DELIM)posix
 
-CFLAGS += -Dcrc16=coremark_crc16
 CFLAGS += -Wno-strict-prototypes -Wno-undef
 
 ifeq ($(CONFIG_COREMARK_MULTITHREAD_OVERRIDE),y)

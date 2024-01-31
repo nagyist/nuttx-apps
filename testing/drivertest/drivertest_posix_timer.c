@@ -26,9 +26,6 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <cmocka.h>
 #include <syslog.h>
 #include <nuttx/timers/timer.h>
@@ -40,6 +37,7 @@
 #define RTC_DEFAULT_DEVIATION 10
 #define DEFAULT_TIME_OUT      2
 #define SLEEPSECONDS          10
+#define COMEINCALLBACK        0
 
 #define OPTARG_TO_VALUE(value, type, base)                            \
   do                                                                  \
@@ -60,8 +58,12 @@
 struct posix_timer_state_s
 {
   struct itimerspec it;
-  uint32_t tim;
-  uint32_t deviation;
+};
+
+struct sigev_para_s
+{
+  int tim;
+  int interval;
 };
 
 /****************************************************************************
@@ -78,9 +80,8 @@ struct posix_timer_state_s
 
 static void show_usage(FAR const char *progname, int exitcode)
 {
-  printf("Usage: %s\n"
-         " -s <timeout seconds>\n"
-         " -a <timeout deviation>\n",
+  printf("Usage: %s"
+         " -s <timeout seconds>\n",
          progname);
 
   exit(exitcode);
@@ -97,7 +98,7 @@ static void parse_commandline(
   int ch;
   int converted;
 
-  while ((ch = getopt(argc, argv, "s:a:")) != ERROR)
+  while ((ch = getopt(argc, argv, "s:")) != ERROR)
     {
       switch (ch)
         {
@@ -111,17 +112,6 @@ static void parse_commandline(
 
             posix_timer_state->it.it_value.tv_sec = (uint32_t)converted;
             posix_timer_state->it.it_interval.tv_sec = (uint32_t)converted;
-            break;
-
-          case 'a':
-            OPTARG_TO_VALUE(converted, uint32_t, 10);
-            if (converted < 0 || converted > INT_MAX)
-              {
-                printf("deviation out of range: %d\n", converted);
-                show_usage(argv[0], EXIT_FAILURE);
-              }
-
-            posix_timer_state->deviation = (uint32_t)converted;
             break;
 
           case '?':
@@ -151,14 +141,11 @@ static uint32_t get_timestamp(void)
 
 static void posix_timer_callback(union sigval arg)
 {
-  FAR struct posix_timer_state_s *sigev_para =
-                      (FAR struct posix_timer_state_s *)arg.sival_ptr;
+  FAR struct sigev_para_s *sigev_para = (struct sigev_para_s *)arg.sival_ptr;
   int range = get_timestamp() - (*sigev_para).tim;
-
   assert_in_range(range,
-          sigev_para->it.it_interval.tv_sec * 1000 - sigev_para->deviation,
-          sigev_para->it.it_interval.tv_sec * 1000 + sigev_para->deviation);
-
+                  (*sigev_para).interval * 1000 - RTC_DEFAULT_DEVIATION,
+                  (*sigev_para).interval * 1000 + RTC_DEFAULT_DEVIATION);
   syslog(LOG_DEBUG, "callback trigger!!!\n");
   (*sigev_para).tim = get_timestamp();
 }
@@ -172,6 +159,7 @@ static void test_case_posix_timer(FAR void **state)
   int ret;
   timer_t timerid;
   struct sigevent event;
+  struct sigev_para_s sigev_para;
 
   FAR struct posix_timer_state_s *posix_timer_state;
   struct itimerspec it;
@@ -182,7 +170,7 @@ static void test_case_posix_timer(FAR void **state)
   event.sigev_notify = SIGEV_THREAD;
   event.sigev_notify_function = posix_timer_callback;
   event.sigev_notify_attributes = NULL;
-  event.sigev_value.sival_ptr = posix_timer_state;
+  event.sigev_value.sival_ptr = (struct sigev_para_s *)&sigev_para;
 
   /* Create the timer */
 
@@ -194,7 +182,8 @@ static void test_case_posix_timer(FAR void **state)
   ret = timer_settime(timerid, 0, &(posix_timer_state->it), NULL);
   assert_return_code(ret, OK);
 
-  posix_timer_state->tim = get_timestamp();
+  sigev_para.interval = posix_timer_state->it.it_interval.tv_sec;
+  sigev_para.tim = get_timestamp();
 
   /* Get the timer status */
 
@@ -220,8 +209,7 @@ int main(int argc, FAR char *argv[])
     .it.it_value.tv_sec     = DEFAULT_TIME_OUT,
     .it.it_value.tv_nsec    = 0,
     .it.it_interval.tv_sec  = DEFAULT_TIME_OUT,
-    .it.it_interval.tv_nsec = 0,
-    .deviation              = RTC_DEFAULT_DEVIATION
+    .it.it_interval.tv_nsec = 0
   };
 
   const struct CMUnitTest tests[] =
