@@ -169,7 +169,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_CP
-  CMD_MAP("cp",       cmd_cp,       3, 3, "<source-path> <dest-path>"),
+  CMD_MAP("cp",       cmd_cp,       3, 4, "[-r] <source-path> <dest-path>"),
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_CMP
@@ -188,7 +188,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #ifndef CONFIG_NSH_DISABLE_DD
   CMD_MAP("dd",       cmd_dd,       3, 7,
     "if=<infile> of=<outfile> [bs=<sectsize>] [count=<sectors>] "
-    "[skip=<sectors>] [verify]"),
+    "[skip=<sectors>] [seek=<sectors>] [verify] [conv=<nocreat,notrunc>]"),
 #endif
 
 #if defined(CONFIG_NET) && defined(CONFIG_NET_ROUTE) && !defined(CONFIG_NSH_DISABLE_DELROUTE)
@@ -523,12 +523,6 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 #endif
 
-#if defined(CONFIG_RPMSG) && !defined(CONFIG_NSH_DISABLE_RPMSG)
-  CMD_MAP("rpmsg",    cmd_rpmsg,    2, 7,
-    "<panic|dump|ping> <path|all>"
-    " [value|times length ack sleep]"),
-#endif
-
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
   CMD_MAP("rptun",    cmd_rptun,    2, 7,
     "<start|stop|reset|panic|dump|ping> <path|all>"
@@ -656,6 +650,10 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #ifndef CONFIG_NSH_DISABLE_XD
   CMD_MAP("xd",       cmd_xd,       3, 3, "<hex-address> <byte-count>"),
+#endif
+#if !defined(CONFIG_NSH_DISABLE_WAIT) && defined(CONFIG_SCHED_WAITPID)
+  CMD_MAP("wait",     cmd_wait,     1, CONFIG_NSH_MAXARGUMENTS,
+          "pid1 [pid2 [pid3] ...]"),
 #endif
   CMD_MAP(NULL,       NULL,         1, 1, NULL)
 };
@@ -1246,6 +1244,7 @@ int nsh_command(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char *argv[])
     }
 
   ret = handler(vtbl, argc, argv);
+  vtbl->np.np_lastpid = getpid();
   return ret;
 }
 

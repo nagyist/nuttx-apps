@@ -1,6 +1,9 @@
 """
 Stringify to unicode
 """
+import sys
+
+__py3__ = sys.version_info > (3, 0)
 
 
 def unicode_str(text):
@@ -9,6 +12,8 @@ def unicode_str(text):
     :param text:
     :return:
     """
-    if isinstance(text, bytes):
-        return text.decode("utf-8", "strict")
-    return str(text)
+    if __py3__:
+        if isinstance(text, bytes):
+            return text.decode("utf-8", "strict")
+        return str(text)
+    return unicode(text)

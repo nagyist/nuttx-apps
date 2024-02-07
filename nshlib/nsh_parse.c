@@ -279,6 +279,7 @@ static const char g_redirect1[]       = ">";
 static const char g_redirect2[]       = ">>";
 #ifdef NSH_HAVE_VARS
 static const char g_exitstatus[]      = "?";
+static const char g_lastpid[]         = "!";
 static const char g_success[]         = "0";
 static const char g_failure[]         = "1";
 #endif
@@ -498,6 +499,12 @@ static pthread_addr_t nsh_child(pthread_addr_t arg)
 
   _info("BG %s complete\n", carg->argv[0]);
   nsh_releaseargs(carg);
+
+  /* Detach from the pthread since we are not going to join with it.
+   * Otherwise, we would have a memory leak.
+   */
+
+  pthread_detach(pthread_self());
   return (pthread_addr_t)((uintptr_t)ret);
 }
 #endif
@@ -813,12 +820,6 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
           nsh_releaseargs(args);
           goto errout;
         }
-
-      /* Detach from the pthread since we are not going to join with it.
-       * Otherwise, we would have a memory leak.
-       */
-
-      pthread_detach(thread);
 
       nsh_output(vtbl, "%s [%d:%d]\n", argv[0], thread,
                  param.sched_priority);
@@ -1227,6 +1228,11 @@ static FAR char *nsh_envexpand(FAR struct nsh_vtbl_s *vtbl,
         {
           return (FAR char *)g_success;
         }
+    }
+  else if (strcmp(varname, g_lastpid) == 0)
+    {
+      itoa(vtbl->np.np_lastpid, vtbl->np.np_pids, 10);
+      return vtbl->np.np_pids;
     }
   else
     {
@@ -2711,7 +2717,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
         {
           redirect_save        = vtbl->np.np_redirect;
           vtbl->np.np_redirect = true;
-          oflags               = O_WRONLY | O_CREAT | O_TRUNC;
+          oflags               = O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC;
           redirfile            = nsh_getfullpath(vtbl, argv[argc - 1]);
           argc                -= 2;
         }
@@ -2722,7 +2728,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
         {
           redirect_save        = vtbl->np.np_redirect;
           vtbl->np.np_redirect = true;
-          oflags               = O_WRONLY | O_CREAT | O_APPEND;
+          oflags               = O_WRONLY | O_CREAT | O_APPEND | O_CLOEXEC;
           redirfile            = nsh_getfullpath(vtbl, argv[argc - 1]);
           argc                -= 2;
         }

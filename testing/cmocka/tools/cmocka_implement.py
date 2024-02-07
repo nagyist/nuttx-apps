@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-import copy
 import os
 import re
-import traceback
-
 import typer
+import copy
+import traceback
 
 TESTSUITE_TEMPLATE = """
 /*
@@ -86,6 +85,7 @@ void {case_name}(FAR void **state)
 
 
 class CmockaGen:
+
     def __init__(self, path):
         self.path = path
         self.suite_path = None
@@ -183,23 +183,22 @@ class CmockaGen:
             if not self.check_case_option(case_option):
                 self.generate_case()
                 print("generate case success")
-        except Exception:
+        except Exception as e:
             traceback.print_exc()
 
 
 app = typer.Typer()
-
 
 @app.command()
 def main(
     path: str = typer.Option("", help="where to gnerate suite/case file"),
     suite: str = typer.Option(
         default="",
-        help="suite file name and suite function name, path/suite::name, eg aaa/bbb/ccc.c::VelaAutoTestcase",
+        help="suite file name and suite function name, path/suite::name, eg aaa/bbb/ccc.c::VelaAutoTestcase"
     ),
     case: str = typer.Option(
         default="",
-        help="case file name and case function name, path/case::function, eg ddd/eee/fff.c::test_playback_uv_01",
+        help="case file name and case function name, path/case::function, eg ddd/eee/fff.c::test_playback_uv_01"
     ),
 ):
     """
@@ -211,6 +210,5 @@ def main(
     gen = CmockaGen(path)
     gen.main(suite, case)
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app()

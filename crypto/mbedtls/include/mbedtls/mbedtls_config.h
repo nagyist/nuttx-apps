@@ -371,9 +371,13 @@
 #ifdef CONFIG_MBEDTLS_MD5_ALT
 #define MBEDTLS_MD5_ALT
 #endif
-/* #define MBEDTLS_POLY1305_ALT
- * #define MBEDTLS_RIPEMD160_ALT
- * #define MBEDTLS_RSA_ALT
+#ifdef CONFIG_MBEDTLS_POLY1305_ALT
+#define MBEDTLS_POLY1305_ALT
+#endif
+#ifdef CONFIG_MBEDTLS_RIPEMD160_ALT
+#define MBEDTLS_RIPEMD160_ALT
+#endif
+/* #define MBEDTLS_RSA_ALT
  */
 #ifdef CONFIG_MBEDTLS_SHA1_ALT
 #define MBEDTLS_SHA1_ALT
@@ -981,21 +985,6 @@
  */
 #ifdef CONFIG_MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED
 #define MBEDTLS_KEY_EXCHANGE_RSA_PSK_ENABLED
-#endif
-
-/**
- * \def MBEDTLS_X509_CRT_POOL
- *
- * Enable X.509 certificate pool.
- *
- * Module:  library/x509_crt_pool.c
- *
- * Requires: MBEDTLS_THREADING_C
- *
- * This module is required for X.509 certificate pool.
- */
-#ifdef CONFIG_MBEDTLS_X509_CRT_POOL
-#define MBEDTLS_X509_CRT_POOL
 #endif
 
 /**
@@ -3840,6 +3829,21 @@
  * This module is required for X.509 certificate parsing.
  */
 #define MBEDTLS_X509_CRT_PARSE_C
+
+/**
+ * \def MBEDTLS_X509_CRT_POOL
+ *
+ * Enable X.509 certificate pool.
+ *
+ * Module:  library/x509_crt_pool.c
+ *
+ * Requires: MBEDTLS_THREADING_C
+ *
+ * This module is required for X.509 certificate pool.
+ */
+#ifdef CONFIG_MBEDTLS_X509_CRT_POOL
+#define MBEDTLS_X509_CRT_POOL
+#endif
 
 /**
  * \def MBEDTLS_X509_CRL_PARSE_C

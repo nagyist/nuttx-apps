@@ -87,7 +87,7 @@ class CmockaReport:
             print("Job Done")
         except FileNotFoundError:
             print("No such file: {0}".format(self.out))
-        except Exception:
+        except Exception as e:
             print("Failed to write html file")
 
     def mergexml(self):
