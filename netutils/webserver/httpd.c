@@ -768,8 +768,7 @@ static void single_server(uint16_t portno, pthread_startroutine_t handler,
   for (; ; )
     {
       addrlen = sizeof(struct sockaddr_in);
-      acceptsd = accept4(listensd, (FAR struct sockaddr *)&myaddr, &addrlen,
-                         SOCK_CLOEXEC);
+      acceptsd = accept(listensd, (FAR struct sockaddr *)&myaddr, &addrlen);
 
       if (acceptsd < 0)
         {
