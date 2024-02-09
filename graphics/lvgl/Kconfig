@@ -13,7 +13,7 @@ if GRAPHICS_LVGL
 
 config LVGL_VERSION
 	string "LVGL Version"
-	default "9.0.0"
+	default "9.1.0"
 
 osource "$APPSDIR/graphics/lvgl/lvgl/Kconfig"
 osource "$APPSDIR/graphics/lvgl/ext/Kconfig"
