@@ -312,6 +312,12 @@ void icmp_ping(FAR const struct ping_info_s *info)
               goto wait;
             }
 
+          if (priv->recvfd.revents & (POLLHUP | POLLERR))
+            {
+              icmp_callback(&result, ICMP_E_POLL, ENETDOWN);
+              continue;
+            }
+
           /* Get the ICMP response (ignoring the sender) */
 
           priv->addrlen = sizeof(struct sockaddr_in);
