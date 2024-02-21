@@ -38,7 +38,7 @@
 #include <lte/lte_lwm2m.h>
 
 /****************************************************************************
- * Public Types
+ * Public Data Type
  ****************************************************************************/
 
 typedef int (*atreply_parser_t)(FAR char *reply, int len, void *arg);
@@ -108,13 +108,6 @@ int ltenwop_send_getnwop(FAR struct alt1250_s *dev,
 
 int ltenwop_send_setnwoptp(FAR struct alt1250_s *dev,
                            FAR struct alt_container_s *container);
-
-int ltesp_send_getscanplan(FAR struct alt1250_s *dev,
-                           FAR struct alt_container_s *container);
-
-int ltesp_send_setscanplan(FAR struct alt1250_s *dev,
-                           FAR struct alt_container_s *container,
-                           bool enable);
 
 int lwm2mstub_send_getqueuemode(FAR struct alt1250_s *dev,
                                 FAR struct alt_container_s *container,
