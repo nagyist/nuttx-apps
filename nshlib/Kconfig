@@ -569,10 +569,15 @@ config NSH_DISABLE_ROUTE
 	depends on FS_PROCFS && NET_ROUTE && !FS_PROCFS_EXCLUDE_NET && !FS_PROCFS_EXCLUDE_ROUTE
 	default DEFAULT_SMALL
 
+config NSH_DISABLE_RPMSG
+	bool "Disable rpmsg"
+	default DEFAULT_SMALL
+	depends on RPMSG
+
 config NSH_DISABLE_RPTUN
 	bool "Disable rptun"
 	default DEFAULT_SMALL
-	depends on RPTUN
+	depends on RPTUN && !NSH_DISABLE_RPMSG
 
 config NSH_DISABLE_SET
 	bool "Disable set"
@@ -659,11 +664,6 @@ config NSH_DISABLE_RESET_CAUSE
 	bool "Disable reset cause"
 	default DEFAULT_SMALL
 	depends on BOARDCTL_RESET_CAUSE
-
-config NSH_DISABLE_WAIT
-	bool "Disable wait"
-	default DEFAULT_SMALL
-	depends on SCHED_WAITPID
 
 endmenu
 

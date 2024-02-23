@@ -278,8 +278,7 @@ void *net_reader(pthread_addr_t pvarg)
       printf("net_reader: Accepting new connections on port %d\n",
              LISTENER_PORT);
       addrlen = sizeof(struct sockaddr_in);
-      acceptsd = accept4(listensd, (struct sockaddr *)&addr, &addrlen,
-                         SOCK_CLOEXEC);
+      acceptsd = accept(listensd, (struct sockaddr *)&addr, &addrlen);
       if (acceptsd < 0)
         {
           printf("net_reader: accept failure: %d\n", errno);
