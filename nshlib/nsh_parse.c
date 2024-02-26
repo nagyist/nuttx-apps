@@ -2543,6 +2543,12 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
   int       argc;
   int       ret;
   bool      redirect_save = false;
+#ifdef CONFIG_SCHED_INSTRUMENTATION_DUMP
+  char      tracebuf[CONFIG_NSH_LINELEN + 1];
+
+  strlcpy(tracebuf, cmdline, sizeof(tracebuf));
+  sched_note_beginex(NOTE_TAG_APP, tracebuf);
+#endif
 
   /* Initialize parser state */
 
@@ -2752,6 +2758,9 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
 dynlist_free:
   NSH_ALIASLIST_FREE(vtbl, &alist);
   NSH_MEMLIST_FREE(&memlist);
+#ifdef CONFIG_SCHED_INSTRUMENTATION_DUMP
+  sched_note_endex(NOTE_TAG_APP, tracebuf);
+#endif
   return ret;
 }
 
