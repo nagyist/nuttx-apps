@@ -183,36 +183,6 @@ if(CONFIG_TESTING_DRIVER_TEST)
     endif()
   endif()
 
-  if(CONFIG_I2C_DRIVER AND CONFIG_I2C_SLAVE_DRIVER)
-    nuttx_add_application(
-      NAME
-      cmocka_driver_i2c_write
-      PRIORITY
-      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
-      STACKSIZE
-      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
-      MODULE
-      ${CONFIG_TESTING_DRIVER_TEST}
-      DEPENDS
-      cmocka
-      SRCS
-      drivertest_i2c_write.c)
-
-    nuttx_add_application(
-      NAME
-      cmocka_driver_i2c_read
-      PRIORITY
-      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
-      STACKSIZE
-      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
-      MODULE
-      ${CONFIG_TESTING_DRIVER_TEST}
-      DEPENDS
-      cmocka
-      SRCS
-      drivertest_i2c_read.c)
-  endif()
-
   if(CONFIG_DEV_GPIO)
     nuttx_add_application(
       NAME
@@ -355,54 +325,6 @@ if(CONFIG_TESTING_DRIVER_TEST)
       cmocka
       SRCS
       drivertest_touchpanel.c)
-  endif()
-
-  if(CONFIG_ARCH_CHIP_MPS2_AN500 AND CONFIG_ARCH_IRQPRIO)
-    nuttx_add_application(
-      NAME
-      cmocka_driver_mps2
-      PRIORITY
-      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
-      STACKSIZE
-      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
-      MODULE
-      ${CONFIG_TESTING_DRIVER_TEST}
-      DEPENDS
-      cmocka
-      SRCS
-      drivertest_mps2.c)
-  endif()
-
-  if(CONFIG_PM)
-    nuttx_add_application(
-      NAME
-      cmocka_driver_pm
-      PRIORITY
-      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
-      STACKSIZE
-      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
-      MODULE
-      ${CONFIG_TESTING_DRIVER_TEST}
-      DEPENDS
-      cmocka
-      SRCS
-      drivertest_pm.c)
-  endif()
-
-  if(CONFIG_PM AND CONFIG_SMP)
-    nuttx_add_application(
-      NAME
-      cmocka_driver_pm_smp
-      PRIORITY
-      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
-      STACKSIZE
-      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
-      MODULE
-      ${CONFIG_TESTING_DRIVER_TEST}
-      DEPENDS
-      cmocka
-      SRCS
-      drivertest_pm_smp.c)
   endif()
 
   if(CONFIG_PM_RUNTIME)

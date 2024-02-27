@@ -27,7 +27,7 @@
 #include <getopt.h>
 #include <pthread.h>
 
-#include <nuttx/circbuf.h>
+#include <nuttx/mm/circbuf.h>
 
 #include "ymodem.h"
 
@@ -331,12 +331,6 @@ static void show_usage(FAR const char *progname)
           "\t-t|--threshold <size>: Threshold for writing asynchronously."
           "Threshold must be less than or equal buffersize, Default: 0kB\n");
   fprintf(stderr,
-          "\t-i|--interval <time>: Waiting interval for transmitting data."
-          "Max:255 Min:1 Default:15 unit: 100 milliseconds\n");
-  fprintf(stderr,
-          "\t-r|--retry <retry>: Number of retries."
-          "Will try <retry> times to transmitting, Default:100\n");
-  fprintf(stderr,
           "\t-k <size>: Use a custom size to tansfer, Default: 1kB\n");
 
   exit(EXIT_FAILURE);
@@ -358,17 +352,13 @@ int main(int argc, FAR char *argv[])
       {"buffersize", 1, NULL, 'b'},
       {"skip_prefix", 1, NULL, 'p'},
       {"skip_suffix", 1, NULL, 's'},
-      {"threshold", 1, NULL, 't'},
-      {"interval", 1, NULL, 'i'},
-      {"retry", 1, NULL, 'r'},
+      {"threshold", 1, NULL, 't'}
     };
 
   memset(&priv, 0, sizeof(priv));
   memset(&ctx, 0, sizeof(ctx));
-  ctx.interval = 15;
-  ctx.retry = 100;
-  while ((ret = getopt_long(argc, argv, "b:d:f:hk:p:s:t:i:r:",
-                            options, NULL)) != ERROR)
+  while ((ret = getopt_long(argc, argv, "b:d:f:hk:p:s:t:", options, NULL))
+         != ERROR)
     {
       switch (ret)
         {
@@ -400,12 +390,6 @@ int main(int argc, FAR char *argv[])
             break;
           case 't':
             priv.threshold = atoi(optarg) * 1024;
-            break;
-          case 'i':
-            ctx.interval = atoi(optarg);
-            break;
-          case 'r':
-            ctx.retry = atoi(optarg);
             break;
 
           case '?':
