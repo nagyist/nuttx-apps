@@ -19,30 +19,47 @@
 # ##############################################################################
 
 if(CONFIG_TESTING_UNITY)
+  nuttx_add_library(unity)
 
-  set(UNITY_DIR ${CMAKE_CURRENT_LIST_DIR}/unity)
-
-  if(NOT EXISTS ${UNITY_DIR})
-
+  if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/unity)
     FetchContent_Declare(
-      unity_fetch
-      URL ${CONFIG_TESTING_UNITY_URL}/${CONFIG_TESTING_UNITY_VERSION} SOURCE_DIR
-          ${CMAKE_CURRENT_LIST_DIR}/unity BINARY_DIR
+      unity
+      DOWNLOAD_NAME "v${CONFIG_TESTING_UNITY_VERSION}.tar.gz"
+      DOWNLOAD_DIR ${CMAKE_CURRENT_LIST_DIR}
+      URL "${CONFIG_TESTING_UNITY_URL}/v${CONFIG_TESTING_UNITY_VERSION}.tar.gz"
+          SOURCE_DIR
+          ${CMAKE_CURRENT_LIST_DIR}/Unity
+          BINARY_DIR
           ${CMAKE_BINARY_DIR}/apps/testing/unity/unity
+          CONFIGURE_COMMAND
+          ""
+          BUILD_COMMAND
+          ""
+          INSTALL_COMMAND
+          ""
+          TEST_COMMAND
+          ""
       DOWNLOAD_NO_PROGRESS true
       TIMEOUT 30)
 
-    FetchContent_GetProperties(unity_fetch)
+    FetchContent_GetProperties(unity)
 
-    if(NOT unity_fetch_POPULATED)
-      FetchContent_Populate(unity_fetch)
+    if(NOT unity_POPULATED)
+      FetchContent_Populate(unity)
     endif()
   endif()
 
-  set(CFLAGS -DUNITY_INCLUDE_CONFIG_H -DUNITY_INCLUDE_DOUBLE)
+  set(SRCS Unity/src/unity.c)
+  target_compile_options(unity PRIVATE -DUNITY_INCLUDE_CONFIG_H
+                                       -DUNITY_INCLUDE_DOUBLE)
 
-  target_sources(apps PRIVATE ${UNITY_DIR}/src/unity.c)
-  target_include_directories(apps PRIVATE ${UNITY_DIR}/src)
-  target_compile_options(apps PRIVATE ${CFLAGS})
+  target_include_directories(unity PRIVATE ${NUTTX_APPS_DIR}/include/testing)
+
+  # allow use of <testing/unity.h> like for make build
+  file(COPY ${CMAKE_CURRENT_LIST_DIR}/Unity/src/unity.h
+            ${CMAKE_CURRENT_LIST_DIR}/Unity/src/unity_internals.h
+       DESTINATION ${CMAKE_BINARY_DIR}/include/testing/)
+
+  target_sources(unity PRIVATE ${SRCS})
 
 endif()

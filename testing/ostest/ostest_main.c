@@ -260,6 +260,12 @@ static int user_main(int argc, char *argv[])
   getopt_test();
   check_test_memory_usage();
 
+  /* Test misc libc functions. */
+
+  printf("\nuser_main: libc tests\n");
+  memmem_test();
+  check_test_memory_usage();
+
   /* If retention of child status is enable, then suppress it for this task.
    * This task may produce many, many children (especially if
    * CONFIG_TESTING_OSTEST_LOOPS) and it does not harvest their exit status.
@@ -464,7 +470,7 @@ static int user_main(int argc, char *argv[])
       pthread_rwlock_cancel_test();
       check_test_memory_usage();
 
-#if CONFIG_TLS_NCLEANUP > 0
+#if CONFIG_PTHREAD_CLEANUP_STACKSIZE > 0
       /* Verify pthread cancellation cleanup handlers */
 
       printf("\nuser_main: pthread_cleanup test\n");
