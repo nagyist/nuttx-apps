@@ -55,6 +55,12 @@ config INTERPRETERS_NONE
 
 endchoice # Enable interpreter
 
+config INTERPRETERS_WAMR_GC
+	bool "Enable GC support"
+	default n
+	---help---
+		Note: Only WAMR 2.0 support this option
+
 config INTERPRETERS_WAMR_DEBUG_INTERP
 	bool "Enable debugger support in the interpreter"
 	default n
