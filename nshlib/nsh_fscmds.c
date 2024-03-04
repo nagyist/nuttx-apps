@@ -413,7 +413,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
               details[0] = 'f';
             }
 #endif
-#ifdef CONFIG_FS_SHMFS
+#ifdef CONFIG_FS_SHM
           else if (S_ISSHM(buf.st_mode))
             {
               details[0] = 'h';
@@ -2101,21 +2101,20 @@ int cmd_readlink(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #ifdef NSH_HAVE_DIROPTS
 #ifndef CONFIG_NSH_DISABLE_RM
 
-static int unlink_recursive(FAR char *path)
+static int unlink_recursive(FAR char *path, FAR struct stat *stat)
 {
   struct dirent *d;
-  struct stat stat;
   size_t len;
   int ret;
   DIR *dp;
 
-  ret = lstat(path, &stat);
+  ret = lstat(path, stat);
   if (ret < 0)
     {
       return ret;
     }
 
-  if (!S_ISDIR(stat.st_mode))
+  if (!S_ISDIR(stat->st_mode))
     {
       return unlink(path);
     }
@@ -2140,7 +2139,7 @@ static int unlink_recursive(FAR char *path)
         }
 
       snprintf(&path[len], PATH_MAX - len, "/%s", d->d_name);
-      ret = unlink_recursive(path);
+      ret = unlink_recursive(path, stat);
       if (ret < 0)
         {
           closedir(dp);
@@ -2163,6 +2162,7 @@ int cmd_rm(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   bool recursive = (strcmp(argv[1], "-r") == 0);
   FAR char *fullpath;
   char buf[PATH_MAX];
+  struct stat stat;
   int ret = ERROR;
 
   if (recursive && argc == 2)
@@ -2178,7 +2178,7 @@ int cmd_rm(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       if (recursive)
         {
           strlcpy(buf, fullpath, PATH_MAX);
-          ret = unlink_recursive(buf);
+          ret = unlink_recursive(buf, &stat);
         }
       else
         {

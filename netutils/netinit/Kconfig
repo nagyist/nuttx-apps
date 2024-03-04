@@ -1,4 +1,5 @@
 #
+#
 # For a description of the syntax of this configuration file,
 # see the file kconfig-language.txt in the NuttX tools repository.
 #
@@ -117,13 +118,6 @@ config NETINIT_THREAD_PRIORITY
 		This should be set to a priority lower than most tasks.  The network
 		PHY polling is CPU intensive and can interfere with the usability of
 		of threads competing for CPU bandwidth.
-
-config NETINIT_RETRY_MOUNTPATH
-	int "Network initialization retry mount path count"
-	default 0
-	---help---
-		This should be set if the filesystem get mounted after netinit got started.
-		The netinit thread will check for the mount path before continuing.
 
 endif # NETINIT_THREAD
 
