@@ -520,7 +520,7 @@ static int iperf_tcp_server(FAR struct iperf_ctrl_t *ctrl,
     {
       /* TODO need to change to non-block mode */
 
-      sockfd = accept4(listen_socket, remote_addr, &addrlen, SOCK_CLOEXEC);
+      sockfd = accept(listen_socket, remote_addr, &addrlen);
       if (sockfd < 0)
         {
           iperf_show_socket_error_reason("tcp server listen", listen_socket);
