@@ -158,7 +158,6 @@ static void get_prime_in_parallel(int n)
     }
 
   printf("Done\n");
-  UNUSED(status);
 }
 
 /****************************************************************************
