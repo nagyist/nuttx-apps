@@ -11,12 +11,8 @@ menuconfig GRAPHICS_LVGL
 
 if GRAPHICS_LVGL
 
-config LVGL_VERSION
-	string "LVGL Version"
-	default "8.0.0"
-
-source "$APPSDIR/graphics/lvgl/lvgl/Kconfig"
-source "$APPSDIR/graphics/lvgl/ext/Kconfig"
+osource "$APPSDIR/graphics/lvgl/lvgl/Kconfig"
+osource "$APPSDIR/graphics/lvgl/ext/Kconfig"
 
 config LV_USE_SYSLOG_INTERFACE
 	bool "Syslog interface"
