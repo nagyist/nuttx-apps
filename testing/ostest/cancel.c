@@ -49,7 +49,7 @@ static sem_t sem_thread_started;
  * Private Functions
  ****************************************************************************/
 
-#if CONFIG_TLS_NCLEANUP > 0
+#if CONFIG_PTHREAD_CLEANUP_STACKSIZE > 0
 static void sem_cleaner(FAR void *arg)
 {
   printf("sem_cleaner #%u\n", (unsigned int)((uintptr_t)arg));
@@ -60,12 +60,12 @@ static FAR void *sem_waiter(FAR void *parameter)
 {
   int status;
 
-#if CONFIG_TLS_NCLEANUP > 0
+#if CONFIG_PTHREAD_CLEANUP_STACKSIZE > 0
   int i;
 
   /* Register some clean-up handlers */
 
-  for (i = 0; i < CONFIG_TLS_NCLEANUP ; i++)
+  for (i = 0; i < CONFIG_PTHREAD_CLEANUP_STACKSIZE ; i++)
     {
       pthread_cleanup_push(sem_cleaner, (FAR void *)((uintptr_t)(i + 1)));
     }
@@ -161,7 +161,7 @@ static FAR void *sem_waiter(FAR void *parameter)
 }
 
 #if !defined(CONFIG_DISABLE_MQUEUE) && defined(CONFIG_CANCELLATION_POINTS)
-#if CONFIG_TLS_NCLEANUP > 0
+#if CONFIG_PTHREAD_CLEANUP_STACKSIZE > 0
 static void mqueue_cleaner(FAR void *arg)
 {
   FAR mqd_t *mqcancel = (FAR mqd_t *)arg;
@@ -182,7 +182,7 @@ static FAR void *mqueue_waiter(FAR void *parameter)
   char msgbuffer[CONFIG_MQ_MAXMSGSIZE];
   size_t nbytes;
 
-#if CONFIG_TLS_NCLEANUP > 0
+#if CONFIG_PTHREAD_CLEANUP_STACKSIZE > 0
   /* Register clean-up handler */
 
   pthread_cleanup_push(mqueue_cleaner, (FAR void *)&mqcancel);
@@ -249,12 +249,12 @@ static FAR void *asynch_waiter(FAR void *parameter)
 {
   int status;
 
-#if CONFIG_TLS_NCLEANUP > 0
+#if CONFIG_PTHREAD_CLEANUP_STACKSIZE > 0
   int i;
 
   /* Register some clean-up handlers */
 
-  for (i = 0; i < CONFIG_TLS_NCLEANUP ; i++)
+  for (i = 0; i < CONFIG_PTHREAD_CLEANUP_STACKSIZE ; i++)
     {
       pthread_cleanup_push(sem_cleaner,
                           (FAR void *)((uintptr_t)(i + 1)));
@@ -607,7 +607,7 @@ void cancel_test(void)
       printf("cancel_test: ERROR pthread_join succeeded\n");
       ASSERT(false);
     }
-  else if (status != ESRCH)
+  else if (status != EINVAL)
     {
       printf("cancel_test:"
              " ERROR pthread_join failed but with wrong status=%d\n",
@@ -616,7 +616,7 @@ void cancel_test(void)
     }
   else
     {
-      printf("cancel_test: PASS pthread_join failed with status=ESRCH\n");
+      printf("cancel_test: PASS pthread_join failed with status=EINVAL\n");
     }
 
   /* Test 4: Non-cancelable threads *****************************************/

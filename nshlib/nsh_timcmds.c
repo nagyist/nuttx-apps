@@ -431,7 +431,6 @@ int cmd_date(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   return ret;
 
 errout:
-  optind = 0;
   nsh_error(vtbl, errfmt, argv[0]);
   return ERROR;
 }
@@ -514,6 +513,7 @@ int cmd_timedatectl(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 
       nsh_output(vtbl, "Universal time: %s %s\n", timbuf, tm.tm_zone);
 
+#ifdef CONFIG_RTC_DRIVER
       ret = open("/dev/rtc0", O_RDONLY);
       if (ret > 0)
         {
@@ -535,6 +535,7 @@ int cmd_timedatectl(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 
           nsh_output(vtbl, "      RTC time: %s\n", timbuf);
         }
+#endif /* CONFIG_RTC_DRIVER */
     }
 
   return ret;
