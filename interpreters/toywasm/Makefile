@@ -31,14 +31,11 @@ CSRCS += repl.c
 
 # lib
 CSRCS += bitmap.c
-CSRCS += cconv.c
 CSRCS += cell.c
 CSRCS += context.c
 CSRCS += decode.c
 CSRCS += endian.c
 CSRCS += exec.c
-CSRCS += exec_debug.c
-CSRCS += exec_insn_subr.c
 CSRCS += expr.c
 CSRCS += fileio.c
 CSRCS += host_instance.c
@@ -51,11 +48,9 @@ CSRCS += list.c
 CSRCS += load_context.c
 CSRCS += module.c
 CSRCS += module_writer.c
-CSRCS += name.c
 CSRCS += nbio.c
 CSRCS += options.c
 CSRCS += report.c
-CSRCS += restart.c
 CSRCS += shared_memory.c
 CSRCS += timeutil.c
 CSRCS += toywasm_config.c
@@ -74,23 +69,7 @@ CSRCS += waitlist.c
 
 # libwasi
 CSRCS += wasi.c
-CSRCS += wasi_abi_clock.c
-CSRCS += wasi_abi_environ.c
-CSRCS += wasi_abi_fd.c
-CSRCS += wasi_abi_path.c
-CSRCS += wasi_abi_poll.c
-CSRCS += wasi_abi_proc.c
-CSRCS += wasi_abi_random.c
-CSRCS += wasi_abi_sched.c
-CSRCS += wasi_abi_sock.c
 CSRCS += wasi_fdtable.c
-CSRCS += wasi_host_dirent.c
-CSRCS += wasi_host_fdop.c
-CSRCS += wasi_host_pathop.c
-CSRCS += wasi_host_subr.c
-CSRCS += wasi_path_subr.c
-CSRCS += wasi_poll_subr.c
-CSRCS += wasi_subr.c
 
 # TOYWASM_ENABLE_WASI_THREADS
 CSRCS += wasi_threads.c
@@ -107,7 +86,7 @@ CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/toywasm/toywasm/lib
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/toywasm/toywasm/libwasi
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/interpreters/toywasm/toywasm/libdyld
 
-TOYWASM_VERSION  = 4ccb44f9f6477412c289f7ffad6a0f660e99d5a5
+TOYWASM_VERSION  = e03d1f61d3f3163da76b33c4c770dbf0d2024324
 TOYWASM_UNPACK   = toywasm
 TOYWASM_TARBALL  = $(TOYWASM_VERSION).zip
 TOYWASM_URL_BASE = https://github.com/yamt/toywasm/archive/

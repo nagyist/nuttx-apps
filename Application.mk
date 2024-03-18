@@ -76,6 +76,7 @@ COBJS = $(CSRCS:=$(SUFFIX)$(OBJEXT))
 CXXOBJS = $(CXXSRCS:=$(SUFFIX)$(OBJEXT))
 RUSTOBJS = $(RUSTSRCS:=$(SUFFIX)$(OBJEXT))
 ZIGOBJS = $(ZIGSRCS:=$(SUFFIX)$(OBJEXT))
+AIDLOBJS = $(patsubst %$(AIDLEXT),%$(CXXEXT),$(AIDLSRCS))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
@@ -94,7 +95,7 @@ ifneq ($(BUILD_MODULE),y)
 endif
 
 ifneq ($(strip $(PROGNAME)),)
-  PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJ)
+  PROGOBJ := $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
   PROGLIST := $(addprefix $(BINDIR)$(DELIM),$(PROGNAME))
   REGLIST := $(addprefix $(BUILTIN_REGISTRY)$(DELIM),$(addsuffix .bdat,$(PROGNAME)))
 
@@ -132,9 +133,6 @@ endif
 ZIGELFFLAGS ?= $(ZIGFLAGS)
 RUSTELFFLAGS ?= $(RUSTFLAGS)
 
-DEPPATH += --dep-path .
-DEPPATH += --obj-path .
-
 VPATH += :.
 
 # Targets follow
@@ -168,9 +166,9 @@ define ELFCOMPILERUST
 	$(ECHO_END)
 endef
 
-# Remove target suffix here since zig compiler add .o automatically
 define ELFCOMPILEZIG
 	$(ECHO_BEGIN)"ZIG: $1 "
+	# Remove target suffix here since zig compiler add .o automatically
 	$(Q) $(ZIG) build-obj $(ZIGELFFLAGS) $($(strip $1)_ZIGELFFLAGS) --name $(basename $2) $1
 	$(ECHO_END)
 endef
@@ -181,10 +179,15 @@ define ELFLD
 	$(ECHO_END)
 endef
 
-# rename "main()" in $1 to "xxx_main()" and save to $2
-define RENAMEMAIN
-	$(ECHO_BEGIN)"Rename main() in $1 and save to $2"
-	$(Q) ${shell cat $1 | sed -e "s/fn[ ]\+main/fn $(addsuffix _main,$(PROGNAME_$@))/" > $2}
+define COMPILEAIDL
+	$(ECHO_BEGIN)"AIDL: $1 "
+	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1
+	$(ECHO_END)
+endef
+
+define DELAIDLOUT
+	$(ECHO_BEGIN)"DELAIDLOUT: $1 "
+	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1 --delete
 	$(ECHO_END)
 endef
 
@@ -211,6 +214,9 @@ $(RUSTOBJS): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
 $(ZIGOBJS): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
 	$(if $(and $(CONFIG_BUILD_LOADABLE), $(CELFFLAGS)), \
 		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
+
+$(AIDLOBJS): %$(CXXEXT): %$(AIDLEXT)
+	$(call COMPILEAIDL, $<)
 
 AROBJS :=
 ifneq ($(OBJS),)
@@ -242,13 +248,9 @@ $(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
 
-$(MAINZIGOBJ): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
-	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
-		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
-
-$(PROGLIST): $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ) $(MAINZIGOBJ)
+$(PROGLIST): $(MAINCOBJ) $(MAINCXXOBJ) $(MAINRUSTOBJ)
 	$(Q) mkdir -p $(BINDIR)
-	$(call ELFLD, $(PROGOBJ_$@), $(call CONVERT_PATH,$@))
+	$(call ELFLD,$(PROGOBJ_$@),$(call CONVERT_PATH,$@))
 	$(Q) chmod +x $@
 ifneq ($(CONFIG_DEBUG_SYMBOLS),y)
 	$(Q) $(STRIP) $@
@@ -276,17 +278,15 @@ $(MAINRUSTOBJ): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
 		$(call ELFCOMPILERUST, $<, $@), $(call COMPILERUST, $<, $@))
 
 $(MAINZIGOBJ): %$(ZIGEXT)$(SUFFIX)$(OBJEXT): %$(ZIGEXT)
-	$(Q) $(call RENAMEMAIN, $<, $(basename $<)_tmp.zig)
 	$(if $(and $(CONFIG_BUILD_LOADABLE),$(CELFFLAGS)), \
-			$(call ELFCOMPILEZIG, $(basename $<)_tmp.zig, $@), $(call COMPILEZIG, $(basename $<)_tmp.zig, $@))
-	$(Q) rm -f $(basename $<)_tmp.zig
+		$(call ELFCOMPILEZIG, $<, $@), $(call COMPILEZIG, $<, $@))
 
 install::
 	@:
 
 endif # BUILD_MODULE
 
-context::
+context:: $(AIDLOBJS)
 	@:
 
 ifeq ($(DO_REGISTRATION),y)
@@ -325,6 +325,7 @@ clean::
 distclean:: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
+	$(foreach AIDLSRC,$(AIDLSRCS),$(call DELAIDLOUT,$(AIDLSRC)))
 
 -include Make.dep
 

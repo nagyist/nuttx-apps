@@ -153,7 +153,8 @@ void tcpblaster_server(void)
 
   printf("server: Accepting connections on port %d\n",
          CONFIG_EXAMPLES_TCPBLASTER_SERVER_PORTNO);
-  acceptsd = accept(listensd, (FAR struct sockaddr *)&myaddr, &addrlen);
+  acceptsd = accept4(listensd, (FAR struct sockaddr *)&myaddr, &addrlen,
+                     SOCK_CLOEXEC);
   if (acceptsd < 0)
     {
       printf("server: accept failure: %d\n", errno);
