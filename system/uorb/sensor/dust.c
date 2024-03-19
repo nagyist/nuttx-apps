@@ -29,11 +29,20 @@
  ****************************************************************************/
 
 #ifdef CONFIG_DEBUG_UORB
-static const char sensor_dust_format[] = "timestamp:%" PRIu64 ",dust:%hf";
+static void print_sensor_dust_message(FAR const struct orb_metadata *meta,
+                                      FAR const void *buffer)
+{
+  FAR const struct sensor_dust *message = buffer;
+  const orb_abstime now = orb_absolute_time();
+
+  uorbinfo_raw("%s:\ttimestamp: %" PRIu64 " (%" PRIu64 " us ago) dust: %.2f",
+               meta->o_name, message->timestamp, now - message->timestamp,
+               message->dust);
+}
 #endif
 
 /****************************************************************************
  * Public Data
  ****************************************************************************/
 
-ORB_DEFINE(sensor_dust, struct sensor_dust, sensor_dust_format);
+ORB_DEFINE(sensor_dust, struct sensor_dust, print_sensor_dust_message);
