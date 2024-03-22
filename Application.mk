@@ -299,6 +299,9 @@ install::
 
 endif # BUILD_MODULE
 
+postinstall::
+	@:
+
 context:: $(AIDLOBJS)
 	@:
 
