@@ -38,7 +38,6 @@
 #include <sensor/dust.h>
 #include <sensor/ecg.h>
 #include <sensor/force.h>
-#include <sensor/gas.h>
 #include <sensor/gps.h>
 #include <sensor/gyro.h>
 #include <sensor/gesture.h>
@@ -81,7 +80,6 @@ static FAR const struct orb_metadata *g_sensor_list[] =
   ORB_ID(sensor_dust),
   ORB_ID(sensor_ecg),
   ORB_ID(sensor_force),
-  ORB_ID(sensor_gas),
   ORB_ID(sensor_gps),
   ORB_ID(sensor_gps_satellite),
   ORB_ID(sensor_gyro),
