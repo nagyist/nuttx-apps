@@ -32,4 +32,6 @@ CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/graphics/lvgl/lvgl
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/graphics/lvgl/lvgl
 
 -include $(APPDIR)/graphics/lvgl/ext/Make.defs
+-include $(APPDIR)/graphics/lvgl/lvgl/tests/Make.defs
+
 endif
