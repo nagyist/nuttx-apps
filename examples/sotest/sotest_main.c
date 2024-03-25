@@ -69,7 +69,7 @@
 
 #  define SECTORSIZE   64
 #  define NSECTORS(b)  (((b)+SECTORSIZE-1)/SECTORSIZE)
-#  define BINDIR       "/mnt/romfs"
+#  define BINDIR       "/mnt/sotest/romfs"
 
 #  ifndef CONFIG_EXAMPLES_SOTEST_DEVMINOR
 #    define CONFIG_EXAMPLES_SOTEST_DEVMINOR 0
@@ -85,8 +85,8 @@
  ****************************************************************************/
 
 #ifdef CONFIG_EXAMPLES_SOTEST_BUILTINFS
-extern const unsigned char romfs_img[];
-extern const unsigned int romfs_img_len;
+extern const unsigned char sotest_romfs_img[];
+extern const unsigned int sotest_romfs_img_len;
 #endif
 
 extern const struct symtab_s g_sot_exports[];
@@ -102,7 +102,9 @@ extern const int g_sot_nexports;
 
 int main(int argc, FAR char *argv[])
 {
+#ifdef CONFIG_EXAMPLES_SOTEST_BUILTINFS
   char devname[32];
+#endif
 #if CONFIG_MODLIB_MAXDEPEND > 0
   FAR void *handle1;
 #endif
@@ -126,9 +128,9 @@ int main(int argc, FAR char *argv[])
   /* Create a ROM disk for the ROMFS filesystem */
 
   desc.minor    = CONFIG_EXAMPLES_SOTEST_DEVMINOR;     /* Minor device number of the ROM disk. */
-  desc.nsectors = NSECTORS(romfs_img_len);             /* The number of sectors in the ROM disk */
+  desc.nsectors = NSECTORS(sotest_romfs_img_len);      /* The number of sectors in the ROM disk */
   desc.sectsize = SECTORSIZE;                          /* The size of one sector in bytes */
-  desc.image    = (FAR uint8_t *)romfs_img;            /* File system image */
+  desc.image    = (FAR uint8_t *)sotest_romfs_img;     /* File system image */
 
   printf("main: Registering romdisk at /dev/ram%d\n",
          CONFIG_EXAMPLES_SOTEST_DEVMINOR);
