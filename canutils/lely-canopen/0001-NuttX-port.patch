@@ -49,12 +49,13 @@ diff --git a/src/can/socket.c b/src/can/socket.c
 index 4fc133dd..b059c849 100644
 --- a/src/can/socket.c
 +++ b/src/can/socket.c
-@@ -39,6 +39,10 @@
+@@ -39,6 +39,11 @@
  #include <linux/can/error.h>
  #endif
  
 +#ifdef __NuttX__
 +#include <nuttx/can.h>
++#include <netpacket/can.h>
 +#endif
 +
  int
@@ -91,13 +92,14 @@ index ca7e7d95..35d9a9f2 100644
  
  #ifdef HAVE_LINUX_CAN_ERROR_H
  #include <linux/can/error.h>
-@@ -56,6 +56,12 @@
+@@ -56,6 +56,13 @@
  #include <linux/can/raw.h>
  #endif
  
 +#ifdef __NuttX__
 +#include <sys/ioctl.h>
 +#include <nuttx/can.h>
++#include <netpacket/can.h>
 +#include <net/if.h>
 +#endif
 +

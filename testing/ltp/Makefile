@@ -56,6 +56,18 @@ BLACKWORDS  += "lfind"
 BLACKSRCS += $(TESTDIR)/conformance/definitions/time_h/19-1-buildonly.c
 BLACKSRCS += $(TESTDIR)/conformance/definitions/signal_h/21-1-buildonly.c
 BLACKSRCS += $(TESTDIR)/conformance/definitions/signal_h/27-1-buildonly.c
+BLACKSRCS += $(TESTDIR)/conformance/definitions/time_h/19-1-buildonly.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/sem_post/8-1.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/clock_nanosleep/9-1.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/clock_nanosleep/2-2.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/clock_nanosleep/10-1.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/clock_nanosleep/1-5.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/clock_nanosleep/1-3.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/clock_nanosleep/2-3.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/clock_nanosleep/1-4.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/pthread_sigmask/18-1.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/pthread_sigmask/4-1.c
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/sigprocmask/4-1.c
 ifeq ($(CONFIG_LIBC_LOCALTIME),)
 BLACKSRCS += $(TESTDIR)/conformance/definitions/time_h/34-1-buildonly.c
 BLACKSRCS += $(TESTDIR)/conformance/definitions/time_h/35-3-buildonly.c
@@ -144,7 +156,7 @@ BLACKWORDS += pthread_key_delete
 BLACKWORDS += pthread_setspecific
 BLACKWORDS += pthread_getspecific
 endif
-ifeq ($(CONFIG_TLS_NCLEANUP),0)
+ifeq ($(CONFIG_PTHREAD_CLEANUP_STACKSIZE),0)
 BLACKWORDS += pthread_cleanup_push
 BLACKWORDS += pthread_cleanup_pop
 endif
@@ -244,8 +256,6 @@ $(LTP_UNPACK): ltp-$(LTPS_VERSION).zip
 	$(Q) patch -d $(LTP_UNPACK) -p1 < 0008-test-ltp-fix-ltp_interfaces_sigaction_23_10-deadloop.patch
 	$(Q) patch -d $(LTP_UNPACK) -p1 < 0009-ltp-modify-user-code-for-fdcheck-compatibility.patch
 	$(Q) patch -d $(LTP_UNPACK) -p1 < 0010-ltp-fix-build-warning.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0011-ltp-fix-the-proc.h-header-file-duplicate-inclusion.patch
-	$(Q) patch -d $(LTP_UNPACK) -p1 < 0012-ltp-fix-build-error.patch
 
 # Download and unpack tarball if no git repo found
 ifeq ($(wildcard $(LTP_UNPACK)/.git),)

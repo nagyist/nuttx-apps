@@ -62,6 +62,7 @@
 #include <net/if.h>
 
 #include <nuttx/can.h>
+#include <netpacket/can.h>
 
 #include "terminal.h"
 #include "lib.h"
@@ -98,6 +99,7 @@
 const char col_on [MAXCOL][19] = {BLUE, RED, GREEN, BOLD, MAGENTA, CYAN};
 const char col_off [] = ATTRESET;
 
+static char *cmdlinename[MAXSOCK];
 static __u32 dropcnt[MAXSOCK];
 static __u32 last_dropcnt[MAXSOCK];
 static char devname[MAXIFNAMES][IFNAMSIZ+1];
@@ -227,7 +229,7 @@ int main(int argc, char **argv)
 	unsigned char logfrmt = 0;
 	int count = 0;
 	int rcvbuf_size = 0;
-	int opt;
+	int opt, ret;
 	int currmax, numfilter;
 	int join_filter;
 	char *ptr, *nptr;
@@ -391,6 +393,8 @@ int main(int argc, char **argv)
 			perror("socket");
 			return 1;
 		}
+
+		cmdlinename[i] = ptr; /* save pointer to cmdline name of this socket */
 
 		if (nptr)
 			nbytes = nptr - ptr;  /* interface name is up the first ',' */
@@ -614,7 +618,7 @@ int main(int argc, char **argv)
 		if (timeout_current)
 			*timeout_current = timeout_config;
 
-		if ((select(s[currmax-1]+1, &rdfs, NULL, NULL, timeout_current)) <= 0) {
+		if ((ret = select(s[currmax-1]+1, &rdfs, NULL, NULL, timeout_current)) <= 0) {
 			//perror("select");
 			running = 0;
 			continue;
