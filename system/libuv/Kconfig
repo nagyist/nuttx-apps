@@ -29,6 +29,10 @@ config LIBUV_BACKEND_EPOLL
 	default y
 	depends on FS_NOTIFY
 
+config LIBUV_STREAM_READ_BUF_SIZE
+	int "libuv stream read buffer size"
+	default 4096
+
 if LIBUV_BACKEND_EPOLL
 
 config LIBUV_MAX_EPOLL_EVENTS
