@@ -261,10 +261,10 @@ static int critmon_process_directory(FAR struct dirent *entryp)
   /* Finally, output the stack info that we gleaned from the procfs */
 
 #if CONFIG_TASK_NAME_SIZE > 0
-  printf("%11s %11s %11s %-16s %-5s %s\n",
+  printf("%-29s %-29s %11s %-16s %-5s %s\n",
          maxpreemp, maxcrit, maxrun, runtime, entryp->d_name, name);
 #else
-  printf("%11s %11s %11s %16s %5s\n",
+  printf("%-29s %-29s %11s %16s %5s\n",
          maxpreemp, maxcrit, maxrun, runtime, entryp->d_name);
 #endif
 
@@ -386,7 +386,7 @@ static void critmon_global_crit(void)
 
       /* Finally, output the stack info that we gleaned from the procfs */
 
-      printf("%11s %11s ----------- ---------------- ----  CPU %s\n",
+      printf("%-29s %-29s ----------- ---------------- ----  CPU %s\n",
               maxpreemp, maxcrit, cpu);
     }
 
@@ -410,10 +410,12 @@ static int critmon_list_once(void)
   /* Output a Header */
 
 #if CONFIG_TASK_NAME_SIZE > 0
-  printf("PRE-EMPTION CSECTION    RUN         TIME             "
-         "PID   DESCRIPTION\n");
+  printf("PRE-EMPTION CALLER            CSECTION CALLER               "
+         "RUN         TIME             PID   DESCRIPTION\n");
 #else
-  printf("PRE-EMPTION CSECTION    RUN         TIME             PID\n");
+  printf("PRE-EMPTION CALLER            CSECTION CALLER               "
+  printf("PRE-EMPTION           CSECTION              RUN         "
+         "RUN         TIME             PID\n");
 #endif
 
   /* Should global usage first */
