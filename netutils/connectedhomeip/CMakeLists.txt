@@ -162,6 +162,7 @@ if(CONFIG_MATTER)
   set(MATTER_INCDIR
       ${nuttx_include_dirs}
       ${CMAKE_BINARY_DIR}/apps/netutils/connectedhomeip/gen/include
+      ${NUTTX_APPS_DIR}/include
       ${NUTTX_APPS_DIR}/netutils/jsoncpp/jsoncpp/include
       inipp
       nlio/include
