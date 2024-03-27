@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_SYSTEM_RAMTEST)
-  nuttx_add_application(
-    NAME
-    ${CONFIG_TESTING_RAMTEST_PROGNAME}
-    PRIORITY
-    ${CONFIG_TESTING_RAMTEST_PRIORITY}
-    STACKSIZE
-    ${CONFIG_TESTING_RAMTEST_STACKSIZE}
-    MODULE
-    ${CONFIG_TESTING_RAMTEST}
-    SRCS
-    ramtest.c)
+  nuttx_add_application(NAME ramtest)
 endif()

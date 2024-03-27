@@ -29,11 +29,20 @@
  ****************************************************************************/
 
 #ifdef CONFIG_DEBUG_UORB
-static const char sensor_ir_format[] = "timestamp:%" PRIu64 ",ir:%hf";
+static void print_sensor_ir_message(FAR const struct orb_metadata *meta,
+                                    FAR const void *buffer)
+{
+  FAR const struct sensor_ir *message = buffer;
+  const orb_abstime now = orb_absolute_time();
+
+  uorbinfo_raw("%s:\ttimestamp: %" PRIu64 " (%" PRIu64 " us ago) ir: %.4f",
+               meta->o_name, message->timestamp, now - message->timestamp,
+               message->ir);
+}
 #endif
 
 /****************************************************************************
  * Public Data
  ****************************************************************************/
 
-ORB_DEFINE(sensor_ir, struct sensor_ir, sensor_ir_format);
+ORB_DEFINE(sensor_ir, struct sensor_ir, print_sensor_ir_message);
