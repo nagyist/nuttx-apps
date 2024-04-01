@@ -25,18 +25,14 @@
  * Included Files
  ****************************************************************************/
 
-#ifdef __NuttX__
 #include <nuttx/uorb.h>
-#else
-#include <linux/uorb.h>
-#endif
 
 #include <sys/time.h>
+#include <debug.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <syslog.h>
-#include <inttypes.h>
 
 /****************************************************************************
  * Public Types
@@ -114,51 +110,41 @@ struct orb_handle_s
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define ORB_EVENT_FLUSH_COMPLETE SENSOR_EVENT_FLUSH_COMPLETE
-
 #define ORB_SENSOR_PATH        "/dev/uorb/"
 #define ORB_USENSOR_PATH       "/dev/usensor"
 #define ORB_PATH_MAX           (NAME_MAX + 16)
 
-#ifdef CONFIG_UORB_STORAGE_DIR
-#define UORB_STORAGE_DIR       CONFIG_UORB_STORAGE_DIR
-#else
-#define UORB_STORAGE_DIR       "/data"
-#endif
-
-#define uorbnone(fmt, ...)     do { if (0) syslog(LOG_INFO, fmt, ##__VA_ARGS__); } while (0)
-
 #ifdef CONFIG_UORB_ALERT
-#  define uorbpanic(fmt, ...)  syslog(LOG_EMERGY, fmt "\n", ##__VA_ARGS__)
+#  define uorbpanic(fmt, ...)  _alert(fmt "\n", ##__VA_ARGS__)
 #else
-#  define uorbpanic            uorbnone
+#  define uorbpanic            _none
 #endif
 
 #ifdef CONFIG_UORB_ERROR
-#  define uorberr(fmt, ...)    syslog(LOG_ERR, fmt "\n", ##__VA_ARGS__)
+#  define uorberr(fmt, ...)    _err(fmt "\n", ##__VA_ARGS__)
 #else
-#  define uorberr              uorbnone
+#  define uorberr              _none
 #endif
 
 #ifdef CONFIG_UORB_WARN
-#  define uorbwarn(fmt, ...)   syslog(LOG_WARN, fmt "\n", ##__VA_ARGS__)
+#  define uorbwarn(fmt, ...)   _warn(fmt "\n", ##__VA_ARGS__)
 #else
-#  define uorbwarn             uorbnone
+#  define uorbwarn             _none
 #endif
 
 #ifdef CONFIG_UORB_INFO
-#  define uorbinfo(fmt, ...)   syslog(LOG_INFO, fmt "\n", ##__VA_ARGS__)
+#  define uorbinfo(fmt, ...)   _info(fmt "\n", ##__VA_ARGS__)
 #else
-#  define uorbinfo             uorbnone
+#  define uorbinfo             _none
 #endif
 
 #ifdef CONFIG_DEBUG_UORB
 #  define uorbdebug(fmt, ...)  syslog(LOG_INFO, fmt "\n", ##__VA_ARGS__)
 #else
-#  define uorbdebug            uorbnone
+#  define uorbdebug            _none
 #endif
 
-#define uorbinfo_raw(fmt, ...) printf(fmt "\n", ##__VA_ARGS__)
+#define uorbinfo_raw(fmt, ...) syslog(LOG_INFO, fmt "\n", ##__VA_ARGS__)
 
 /* Generates a pointer to the uORB metadata structure for
  * a given topic.
@@ -524,23 +510,6 @@ static inline int orb_copy(FAR const struct orb_metadata *meta,
 int orb_get_state(int fd, FAR struct orb_state *state);
 
 /****************************************************************************
- * Name: orb_get_events
- *
- * Description:
- *   Get the events about the specify subscriber of topic.
- *
- * Input Parameters:
- *   fd       The fd returned from orb_advertise / orb_subscribe.
- *   events   Pointer to events, type is unsigned int pointer.
- *            eg: ORB_EVENT_FLUSH_COMPLETE
- *
- * Returned Value:
- *   -1 on error.
- ****************************************************************************/
-
-int orb_get_events(int fd, FAR unsigned int *events);
-
-/****************************************************************************
  * Name: orb_check
  *
  * Description:
@@ -581,27 +550,6 @@ int orb_check(int fd, FAR bool *updated);
  ****************************************************************************/
 
 int orb_ioctl(int fd, int cmd, unsigned long arg);
-
-/****************************************************************************
- * Name: orb_flush
- *
- * Description:
- *   When topic data accumulates in the hardware buffer but does not reach
- *   the watermark, you can mmediately read the fifo data through the flush
- *   operation. You can call the flush operation at any time.
- *
- *   After you call flush, you can determine whether the flush is completed
- *   by listening to the POLLPRI event of fd and getting the event in
- *   orb_get_events
- *
- * Input Parameters:
- *   fd       A fd returned from orb_advertise / orb_subscribe.
- *
- * Returned Value:
- *   0 on success.
- ****************************************************************************/
-
-int orb_flush(int fd);
 
 /****************************************************************************
  * Name: orb_set_batch_interval

@@ -29,8 +29,9 @@ MODULE = $(CONFIG_TESTING_OSTEST)
 
 # NuttX OS Test
 
-CSRCS   = getopt.c restart.c sigprocmask.c sighand.c signest.c
-CSRCS  += sighelper.c
+CSRCS   = getopt.c libc_memmem.c restart.c sigprocmask.c sighand.c \
+          signest.c sighelper.c
+
 MAINSRC = ostest_main.c
 
 ifeq ($(CONFIG_DEV_NULL),y)
@@ -123,7 +124,7 @@ CSRCS += sigev_thread.c
 endif
 endif
 
-ifeq ($(CONFIG_ARCH_HAVE_VFORK),y)
+ifeq ($(CONFIG_ARCH_HAVE_FORK),y)
 ifeq ($(CONFIG_SCHED_WAITPID),y)
 CSRCS += vfork.c
 endif
@@ -133,12 +134,14 @@ ifeq ($(CONFIG_ARCH_SETJMP_H),y)
 CSRCS += setjmp.c
 endif
 
-ifeq ($(CONFIG_SMP),y)
+ifeq ($(CONFIG_SMP_CALL),y)
 CSRCS += smp_call.c
 endif
 
+ifeq ($(CONFIG_SCHED_EVENTS),y)
 ifeq ($(CONFIG_BUILD_FLAT),y)
-CSRCS += wdog.c
+CSRCS += nxevent.c
+endif
 endif
 
 include $(APPDIR)/Application.mk
