@@ -258,6 +258,16 @@ int orb_get_interval(int fd, FAR unsigned *interval)
   return ret;
 }
 
+int orb_set_info(int fd, FAR const orb_info_t *info)
+{
+  return ioctl(fd, SNIOC_SET_INFO, (unsigned long)(uintptr_t)info);
+}
+
+int orb_get_info(int fd, FAR orb_info_t *info)
+{
+  return ioctl(fd, SNIOC_GET_INFO, (unsigned long)(uintptr_t)info);
+}
+
 int orb_set_batch_interval(int fd, unsigned batch_interval)
 {
   return ioctl(fd, SNIOC_BATCH, (unsigned long)batch_interval);
