@@ -25,7 +25,6 @@
 #include <nuttx/config.h>
 
 #include <sys/wait.h>
-#include <sys/ioctl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -323,7 +322,7 @@ FILE *popen(FAR const char *command, FAR const char *mode)
 
   if (strchr(mode, 'e') == NULL)
     {
-      ioctl(retfd, FIOCLEX, 0);
+      fcntl(retfd, F_SETFD, 0);
     }
 
   /* Finale and return input input/output stream */
