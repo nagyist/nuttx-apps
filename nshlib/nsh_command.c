@@ -456,7 +456,6 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #if defined(CONFIG_BOARDCTL_POWEROFF) && !defined(CONFIG_NSH_DISABLE_POWEROFF)
   CMD_MAP("poweroff", cmd_poweroff, 1, 2, NULL),
-  CMD_MAP("quit", cmd_poweroff, 1, 2, NULL),
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_PRINTF
