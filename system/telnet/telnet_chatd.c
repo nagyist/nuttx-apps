@@ -118,15 +118,15 @@ static void cleanup_exit(void)
           close(g_users[i].sock);
           free(g_users[i].name);
           telnet_free(g_users[i].telnet);
-        }
+      }
     }
 
   exit(1);
 }
 
 static void linebuffer_push(char *buffer, size_t size, int *linepos,
-                            char ch, void (*cb) (const char *line,
-                            int overflow, void *ud), void *ud)
+                            char ch, void (*cb) (const char *line, int overflow,
+                                                 void *ud), void *ud)
 {
   /* CRLF -- line terminator */
 
@@ -272,8 +272,7 @@ static void _online(const char *line, int overflow, void *ud)
   _message(user->name, line);
 }
 
-static void _input(struct user_s *user, const char *buffer,
-                   unsigned int size)
+static void _input(struct user_s *user, const char *buffer, unsigned int size)
 {
   unsigned int i;
 
@@ -330,7 +329,6 @@ static void _event_handler(struct telnet_s *telnet,
       break;
 
     default:
-
       /* Ignore */
 
       break;
@@ -385,8 +383,7 @@ int main(int argc, FAR char *argv[])
   /* Reuse address option */
 
   ret = 1;
-  setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, (void *)&ret,
-             sizeof(ret));
+  setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, (void *)&ret, sizeof(ret));
 
   /* Bind to listening addr/port */
 
@@ -417,7 +414,7 @@ int main(int argc, FAR char *argv[])
 
   /* Loop for ever */
 
-  for (; ; )
+  for (;;)
     {
       /* Prepare for poll */
 
@@ -451,8 +448,8 @@ int main(int argc, FAR char *argv[])
           /* Accept the sock */
 
           addrlen = sizeof(addr);
-          if ((ret = accept4(listen_sock, (struct sockaddr *)&addr,
-                             &addrlen, SOCK_CLOEXEC)) == -1)
+          if ((ret = accept(listen_sock, (struct sockaddr *)&addr,
+                           &addrlen)) == -1)
             {
               fprintf(stderr, "accept() failed: %d\n", errno);
               cleanup_exit();
@@ -480,14 +477,12 @@ int main(int argc, FAR char *argv[])
           /* Init, welcome */
 
           g_users[i].sock = ret;
-          g_users[i].telnet = telnet_init(g_telopts, _event_handler, 0,
-                                          &g_users[i]);
+          g_users[i].telnet = telnet_init(g_telopts, _event_handler, 0, &g_users[i]);
           telnet_negotiate(g_users[i].telnet, TELNET_WILL,
                            TELNET_TELOPT_COMPRESS2);
           telnet_printf(g_users[i].telnet, "Enter name: ");
 
-          telnet_negotiate(g_users[i].telnet, TELNET_WILL,
-                           TELNET_TELOPT_ECHO);
+          telnet_negotiate(g_users[i].telnet, TELNET_WILL, TELNET_TELOPT_ECHO);
         }
 
       /* Read from client */
@@ -503,8 +498,7 @@ int main(int argc, FAR char *argv[])
 
           if (pfd[i].revents & (POLLIN | POLLERR | POLLHUP))
             {
-              if ((ret =
-                       recv(g_users[i].sock, buffer, sizeof(buffer), 0)) > 0)
+              if ((ret = recv(g_users[i].sock, buffer, sizeof(buffer), 0)) > 0)
                 {
                   telnet_recv(g_users[i].telnet, buffer, ret);
                 }
