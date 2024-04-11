@@ -62,9 +62,12 @@ ifeq ($(and $(CONFIG_LV_USE_PERF_MONITOR),$(CONFIG_SCHED_CPULOAD)),y)
 CFLAGS += "-DLV_SYSMON_GET_IDLE=lv_nuttx_get_idle"
 endif
 
-ifneq ($(CONFIG_LV_USE_PROFILER),)
-CFLAGS += "-DLV_PROFILER_BEGIN=sched_note_begin(NOTE_TAG_ALWAYS)"
-CFLAGS += "-DLV_PROFILER_END=sched_note_end(NOTE_TAG_ALWAYS)"
+ifeq ($(and $(CONFIG_SCHED_INSTRUMENTATION),$(CONFIG_LV_USE_PROFILER)),y)
+CFLAGS += "-DLV_PROFILER_BEGIN=sched_note_beginex(NOTE_TAG_GRAPHICS, __func__)"
+CFLAGS += "-DLV_PROFILER_END=sched_note_endex(NOTE_TAG_GRAPHICS, __func__)"
+
+CFLAGS += "-DLV_PROFILER_BEGIN_TAG(str)=sched_note_beginex(NOTE_TAG_GRAPHICS, str)"
+CFLAGS += "-DLV_PROFILER_END_TAG(str)=sched_note_endex(NOTE_TAG_GRAPHICS, str)"
 endif
 
 ifneq ($(CONFIG_LV_GPU_G2D_INCLUDE_PATH),)
