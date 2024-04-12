@@ -129,10 +129,6 @@ int main(int argc, FAR char *argv[])
   info.fb_path = "/dev/lcd0";
 #endif
 
-#ifdef CONFIG_INPUT_TOUCHSCREEN
-  info.input_path = CONFIG_EXAMPLES_LVGLDEMO_DEVPATH;
-#endif
-
   lv_nuttx_init(&info, &result);
 
   if (result.disp == NULL)
@@ -155,8 +151,13 @@ int main(int argc, FAR char *argv[])
 #else
   while (1)
     {
-      lv_timer_handler();
-      usleep(10 * 1000);
+      uint32_t idle;
+      idle = lv_timer_handler();
+
+      /* Minimum sleep of 1ms */
+
+      idle = idle ? idle : 1;
+      usleep(idle * 1000);
     }
 #endif
 
