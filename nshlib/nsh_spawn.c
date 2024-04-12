@@ -69,7 +69,7 @@ int nsh_spawn(FAR const char *appname, FAR main_t main,
   posix_spawnattr_t attr;
   posix_spawn_file_actions_t file_actions;
   struct sched_param param;
-  pid_t pid;
+  pid_t pid = -1;
   int ret;
 
   /* Initialize attributes for task_spawn(). */
@@ -148,8 +148,11 @@ int nsh_spawn(FAR const char *appname, FAR main_t main,
   /* Load and execute the application. */
 
   ret = posix_spawnp(&pid, appname, &file_actions, &attr, argv, NULL);
+#  ifndef CONFIG_BUILD_KERNEL
   if (ret != 0 && main != NULL)
+#  endif
 #endif
+#ifndef CONFIG_BUILD_KERNEL
     {
       /* Start the built-in */
 
@@ -164,10 +167,11 @@ int nsh_spawn(FAR const char *appname, FAR main_t main,
           ret = OK;
         }
     }
+#endif
 
   if (ret != 0)
     {
-      serr("ERROR: task_spawn failed: %d\n", ret);
+      serr("ERROR: app spawn failed: %d\n", ret);
       goto errout_with_actions;
     }
 
