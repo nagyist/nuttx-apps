@@ -27,14 +27,14 @@ ifneq ($(MAINSRC),)
     BUILD_MODULE = y
     MODAELFFLAGS = $(CMODULELFFLAGS)
     MODCFLAGS = $(CMODULEFLAGS)
-    MODCXXLFAGS = $(CXXMODULEFLAGS)
-    MODLDLFAGS = $(LDMODULEFLAGS)
-  else ifeq ($or ($(MODULE),m), ($(CONFIG_BUILD_KERNEL),y))
-    BUILD_MODULE = y
-    MODAELFFLAGS = $(AELFFLAGS)
-    MODCFLAGS = $(CELFFLAGS)
-    MODCXXLFAGS = $(CXXELFFLAGS)
-    MODLDLFAGS = $(LDELFFLAGS)
+    MODCXXFLAGS = $(CXXMODULEFLAGS)
+    MODLDFLAGS = $(LDMODULEFLAGS)
+  else ifneq ($(or $(filter y,$(CONFIG_BUILD_KERNEL)), $(filter m,$(MODULE))),)
+      BUILD_MODULE = y
+      MODAELFFLAGS = $(AELFFLAGS)
+      MODCFLAGS = $(CELFFLAGS)
+      MODCXXFLAGS = $(CXXELFFLAGS)
+      MODLDFLAGS = $(LDELFFLAGS)
   endif
 endif
 
@@ -157,19 +157,19 @@ all:: .built
 
 define ELFASSEMBLE
 	$(ECHO_BEGIN)"AS: $1 "
-	$(Q) $(CC) -c $(MODAELFFLAGS) $($(strip $1)_MODAELFFLAGS) $1 -o $2
+	$(Q) $(CC) -c $(MODAELFFLAGS) $($(strip $1)_AELFFLAGS) $1 -o $2
 	$(ECHO_END)
 endef
 
 define ELFCOMPILE
 	$(ECHO_BEGIN)"CC: $1 "
-	$(Q) $(CC) -c $(MODCFLAGS) $($(strip $1)_MODCFLAGS) $1 -o $2
+	$(Q) $(CC) -c $(MODCFLAGS) $($(strip $1)_CFLAGS) $1 -o $2
 	$(ECHO_END)
 endef
 
 define ELFCOMPILEXX
 	$(ECHO_BEGIN)"CXX: $1 "
-	$(Q) $(CXX) -c $(MODCXXLFAGS) $($(strip $1)_MODCXXLFAGS) $1 -o $2
+	$(Q) $(CXX) -c $(MODCXXFLAGS) $($(strip $1)_CXXLFAGS) $1 -o $2
 	$(ECHO_END)
 endef
 
@@ -188,7 +188,7 @@ endef
 
 define ELFLD
 	$(ECHO_BEGIN)"LD: $2 "
-	$(Q) $(LD) $(MODLDLFAGS) $(LDMAP) $(LDLIBPATH) $(ARCHCRT0OBJ) $1 $(LDSTARTGROUP) $(LDLIBS) $(LDENDGROUP) -o $2
+	$(Q) $(LD) $(MODLDFLAGS) $(LDMAP) $(LDLIBPATH) $(ARCHCRT0OBJ) $1 $(LDSTARTGROUP) $(LDLIBS) $(LDENDGROUP) -o $2
 	$(ECHO_END)
 endef
 
@@ -217,7 +217,7 @@ $(COBJS): %.c$(SUFFIX)$(OBJEXT): %.c
 		$(call ELFCOMPILE, $<, $@), $(call COMPILE, $<, $@))
 
 $(CXXOBJS): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
-	$(if $(and $(CONFIG_MODULES),$(CMODCXXLFAGS)), \
+	$(if $(and $(CONFIG_MODULES),$(MODCXXFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
 $(RUSTOBJS): %$(RUSTEXT)$(SUFFIX)$(OBJEXT): %$(RUSTEXT)
@@ -254,7 +254,7 @@ endif
 ifeq ($(BUILD_MODULE),y)
 
 $(MAINCXXOBJ): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
-	$(if $(and $(CONFIG_MODULES),$(CMODCXXLFAGS)), \
+	$(if $(and $(CONFIG_MODULES),$(MODCXXFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
 $(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
@@ -277,7 +277,7 @@ else
 $(MAINCXXOBJ): %$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 	$(eval $<_CXXFLAGS += ${shell $(DEFINE) "$(CXX)" main=$(addsuffix _main,$(PROGNAME_$@))})
 	$(eval $<_CXXELFFLAGS += ${shell $(DEFINE) "$(CXX)" main=$(addsuffix _main,$(PROGNAME_$@))})
-	$(if $(and $(CONFIG_MODULES),$(MODCXXLFAGS)), \
+	$(if $(and $(CONFIG_MODULES),$(MODCXXFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
 
 $(MAINCOBJ): %.c$(SUFFIX)$(OBJEXT): %.c
