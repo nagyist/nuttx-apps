@@ -36,7 +36,7 @@ if LIBUV_BACKEND_EPOLL
 
 config LIBUV_MAX_EPOLL_EVENTS
 	int "libuv max epoll events"
-	default 64
+	default 8
 
 config LIBUV_PREP_EVENT_SIZE
 	int "libuv prep event size"
