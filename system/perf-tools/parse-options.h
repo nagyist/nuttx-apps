@@ -60,6 +60,7 @@ struct stat_args_s
   FAR char *cmd;
   FAR char **cmd_args;
   int cmd_nr;
+  int sec;
 };
 
 #define OPT_ARGUMENT(l, h) \

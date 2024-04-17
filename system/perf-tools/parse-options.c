@@ -22,19 +22,37 @@
  * Included Files
  ****************************************************************************/
 
+#include <ctype.h>
 #include <getopt.h>
 #include <stdio.h>
 
+#include "builtin.h"
 #include "parse-options.h"
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
+int check_and_atoi(char *arg)
+{
+  int i;
+
+  for (i = 0; arg[i] != '\0'; i++)
+    {
+      if (!isdigit(arg[i]))
+        {
+          return -EINVAL;
+        }
+    }
+
+  return atoi(arg);
+}
+
 int parse_stat_options(int argc, FAR char **argv,
                        FAR struct stat_args_s *stat_args)
 {
   int opt;
+  int ret;
 
   stat_args->cmd_nr = argc;
 
@@ -58,20 +76,20 @@ int parse_stat_options(int argc, FAR char **argv,
             if (stat_args->type == STAT_ARGS_NONE)
               {
                 stat_args->type = STAT_ARGS_CPU;
-                stat_args->cpu = atoi(optarg);
+                stat_args->cpu = check_and_atoi(optarg);
                 stat_args->pid = -1;
                 stat_args->events = NULL;
               }
             else if (stat_args->type == STAT_ARGS_EVENT)
               {
-                stat_args->cpu = atoi(optarg);
+                stat_args->cpu = check_and_atoi(optarg);
                 stat_args->pid = -1;
                 stat_args->cmd_nr += 1;
               }
             else if (stat_args->type == STAT_ARGS_TASK)
               {
                 printf("PID/TID switch overriding CPU\n");
-                stat_args->cpu = atoi(optarg);
+                stat_args->cpu = check_and_atoi(optarg);
                 stat_args->cmd_nr += 1;
               }
 
@@ -81,13 +99,13 @@ int parse_stat_options(int argc, FAR char **argv,
             if (stat_args->type == STAT_ARGS_NONE)
               {
                 stat_args->type = STAT_ARGS_TASK;
-                stat_args->pid = atoi(optarg);
+                stat_args->pid = check_and_atoi(optarg);
                 stat_args->cpu = -1;
                 stat_args->events = NULL;
               }
             else if (stat_args->type == STAT_ARGS_EVENT)
               {
-                stat_args->pid = atoi(optarg);
+                stat_args->pid = check_and_atoi(optarg);
                 stat_args->cpu = -1;
                 stat_args->cmd_nr += 1;
               }
@@ -95,7 +113,7 @@ int parse_stat_options(int argc, FAR char **argv,
               {
                 printf("PID/TID switch overriding CPU\n");
                 stat_args->type = STAT_ARGS_TASK;
-                stat_args->pid = atoi(optarg);
+                stat_args->pid = check_and_atoi(optarg);
                 stat_args->cmd_nr += 1;
               }
 
@@ -126,6 +144,7 @@ int parse_stat_options(int argc, FAR char **argv,
         }
     }
 
+  stat_args->sec = PERF_DEFAULT_RUN_TIME;
   stat_args->cmd = argv[optind];
   stat_args->cmd_args = &argv[optind];
 
@@ -139,30 +158,78 @@ int parse_stat_options(int argc, FAR char **argv,
     }
   else if (stat_args->cmd_nr > 0)
     {
-      if (stat_args->type == STAT_ARGS_NONE)
+      if (!strcmp(stat_args->cmd, "sleep"))
         {
-          stat_args->type = STAT_ARGS_FORK;
-          stat_args->cpu = -1;
-          stat_args->pid = _SCHED_GETPID();
-          stat_args->events = NULL;
-          stat_args->cmd_nr -= 1;
-        }
-      else if (stat_args->type == STAT_ARGS_CPU ||
-               stat_args->type == STAT_ARGS_EVENT)
-        {
-          stat_args->type = STAT_ARGS_FORK;
-          stat_args->pid = _SCHED_GETPID();
-        }
-      else if (stat_args->type == STAT_ARGS_TASK)
-        {
+          if (stat_args->type == STAT_ARGS_NONE)
+            {
+              stat_args->cpu = -1;
+              stat_args->pid = -1;
+              stat_args->events = NULL;
+              stat_args->cmd_nr -= 1;
+            }
+
+          if (stat_args->cmd_nr == 2)
+            {
+              stat_args->sec = check_and_atoi(stat_args->cmd_args[1]);
+              if (stat_args->sec < 0)
+                {
+                  return -EINVAL;
+                }
+            }
+          else
+            {
+              printf("sleep: invalid time interval\n");
+              return -EINVAL;
+            }
+
           stat_args->cmd = NULL;
           stat_args->cmd_nr = 0;
         }
+      else
+        {
+          if (stat_args->type == STAT_ARGS_NONE)
+            {
+              stat_args->type = STAT_ARGS_FORK;
+              stat_args->cpu = -1;
+              stat_args->pid = _SCHED_GETPID();
+              stat_args->events = NULL;
+              stat_args->cmd_nr -= 1;
+            }
+          else if (stat_args->type == STAT_ARGS_CPU ||
+                   stat_args->type == STAT_ARGS_EVENT)
+            {
+              stat_args->type = STAT_ARGS_FORK;
+              stat_args->pid = _SCHED_GETPID();
+            }
+          else if (stat_args->type == STAT_ARGS_TASK)
+            {
+              stat_args->cmd = NULL;
+              stat_args->cmd_nr = 0;
+            }
+        }
     }
 
-  if (stat_args->cpu >= CONFIG_SMP_NCPUS)
+  if (stat_args->cpu >= CONFIG_SMP_NCPUS || stat_args->cpu < -1)
     {
       printf(" Perf can support %d CPUs.\n", CONFIG_SMP_NCPUS);
+      return -EINVAL;
+    }
+
+  if (stat_args->pid > 0)
+    {
+      ret = kill(stat_args->pid, 0);
+      if (ret == -1 && errno == ESRCH)
+        {
+          printf("The specified process does not exist\n");
+          return -EINVAL;
+        }
+      else if (ret != 0)
+        {
+          printf("Error trying to determine whether the process exists\n");
+        }
+    }
+  else if (stat_args->pid != -1)
+    {
       return -EINVAL;
     }
 

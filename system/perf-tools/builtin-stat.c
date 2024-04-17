@@ -41,7 +41,6 @@
  * Private Definitions
  ****************************************************************************/
 
-#define PERF_STAT_DEFAULT_RUN_TIME    5
 #define PERF_STAT_DEFAULT_MAX_EVSTR   64
 #define PERF_STAT_DEFAULT_MAX_CMDSTR  128
 
@@ -279,6 +278,10 @@ int perf_stat_handle(FAR struct evlist_s *evlist)
   int status = 0;
 
   evlist_for_each_evsel(evlist, node, evsel_count_start, status);
+  if (status)
+    {
+      return status;
+    }
 
   if (evlist->cmd_str)
     {
@@ -290,8 +293,7 @@ int perf_stat_handle(FAR struct evlist_s *evlist)
     }
   else
     {
-      evlist->sec = PERF_STAT_DEFAULT_RUN_TIME;
-      sleep(PERF_STAT_DEFAULT_RUN_TIME);
+      sleep(evlist->sec);
     }
 
   evlist_for_each_evsel(evlist, node, evsel_read_counter, status);
@@ -390,6 +392,7 @@ int cmd_stat(int argc, FAR const char **argv)
       return -ENOMEM;
     }
 
+  evlist->sec = stat_args.sec;
   evlist->type = stat_args.type;
   if (stat_args.pid == -1 && stat_args.cpu == -1)
     {

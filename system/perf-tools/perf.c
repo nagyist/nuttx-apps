@@ -80,7 +80,7 @@ static inline bool strstarts(FAR const char *str, FAR const char *prefix)
   return strncmp(str, prefix, strlen(prefix)) == 0;
 }
 
-static void run_argv(int argc, FAR const char **argv)
+static int run_argv(int argc, FAR const char **argv)
 {
   FAR const char *cmd = argv[0];
   unsigned int i;
@@ -108,6 +108,9 @@ static void run_argv(int argc, FAR const char **argv)
 
       exit(p->fn(argc, argv));
     }
+
+  printf("perf: '%s' is not a perf-command. See 'perf --help'.\n", cmd);
+  exit(-EINVAL);
 }
 
 static int handle_options(FAR const char ***argv, FAR int *argc)
@@ -169,7 +172,7 @@ static int handle_options(FAR const char ***argv, FAR int *argc)
         {
           fprintf(stderr, "Unknown option: %s\n", cmd);
           fprintf(stderr, "\n Usage: %s\n", perf_usage_string);
-          exit(129);
+          exit(-EINVAL);
         }
 
       (*argv)++;
