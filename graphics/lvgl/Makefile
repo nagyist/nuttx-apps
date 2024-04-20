@@ -25,58 +25,107 @@ include $(APPDIR)/Make.defs
 LVGL_DIR = .
 LVGL_DIR_NAME = lvgl
 
-SUFFIX := lvgl
+# Relax LVGL's format checking and unused variable checking to avoid errors
 
-# Relax format check for LVGL to avoid errors on prinf() use
+CFLAGS += -Wno-format -Wno-format-security -Wno-unused-variable
+
+# Since this change is only merged into the lvgl.v9, let us workaround for v8
+# ./lvgl/src/core/lv_obj.c:363:25: warning: variable 'x' set but not used [-Wunused-but-set-variable]
+#   363 |         static uint32_t x = 0;
+#       |                         ^
+# 1 warning generated.
+
+CFLAGS += -Wno-unused-but-set-variable
 
 -include ./lvgl/lvgl.mk
 
--include ./ext/Makefile
+CSRCS += port/lv_port.c
+CSRCS += port/lv_port_tick.c
 
-ifneq ($(CONFIG_LV_USE_LIBPNG),)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libpng
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libpng/libpng
+ifeq ($(CONFIG_LIBUV),y)
+CSRCS += port/lv_port_libuv.c
 endif
 
-ifneq ($(CONFIG_LV_USE_LIBJPEG_TURBO),)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libjpeg-turbo/libjpeg-turbo
+ifeq ($(CONFIG_LV_PORT_USE_LCDDEV),y)
+CSRCS += port/lv_port_lcddev.c
 endif
 
-ifneq ($(CONFIG_LV_USE_FFMPEG),)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/ffmpeg/ffmpeg
+ifeq ($(CONFIG_LV_PORT_USE_FBDEV),y)
+CSRCS += port/lv_port_fbdev.c
 endif
 
-ifneq ($(CONFIG_LV_USE_RLOTTIE),)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rlottie/rlottie/inc
+ifeq ($(CONFIG_LV_PORT_USE_TOUCHPAD),y)
+CSRCS += port/lv_port_touchpad.c
 endif
 
-ifneq ($(CONFIG_LVX_USE_QRSCAN),)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/quirc/quirc/lib
+ifeq ($(CONFIG_LV_PORT_USE_BUTTON),y)
+CSRCS += port/lv_port_button.c
+endif
+
+ifeq ($(CONFIG_LV_PORT_USE_KEYPAD),y)
+CSRCS += port/lv_port_keypad.c
+endif
+
+ifeq ($(CONFIG_LV_PORT_USE_ENCODER),y)
+CSRCS += port/lv_port_encoder.c
+endif
+
+ifeq ($(CONFIG_LV_USE_LOG),y)
+CSRCS += port/lv_port_syslog.c
+endif
+
+ifneq ($(CONFIG_LV_PORT_MEM_ATTRIBUTE_FAST_MEM_SECTION_NAME), "")
+CFLAGS   += "-DLV_ATTRIBUTE_FAST_MEM=locate_data(CONFIG_LV_PORT_MEM_ATTRIBUTE_FAST_MEM_SECTION_NAME)"
+CXXFLAGS += "-DLV_ATTRIBUTE_FAST_MEM=locate_data(CONFIG_LV_PORT_MEM_ATTRIBUTE_FAST_MEM_SECTION_NAME)"
+endif
+
+ifeq ($(CONFIG_LV_MEM_CUSTOM),y)
+ifneq ($(CONFIG_LV_PORT_MEM_CUSTOM_SIZE), 0)
+CFLAGS += "-DLV_MEM_CUSTOM_ALLOC=lv_port_mem_alloc"
+CFLAGS += "-DLV_MEM_CUSTOM_FREE=lv_port_mem_free"
+CFLAGS += "-DLV_MEM_CUSTOM_REALLOC=lv_port_mem_realloc"
+CSRCS  += port/lv_port_mem.c
+endif
 endif
 
 ifneq ($(CONFIG_LV_ASSERT_HANDLER_INCLUDE), "")
 CFLAGS += "-DLV_ASSERT_HANDLER=ASSERT(0);"
 endif
 
-ifeq ($(and $(CONFIG_LV_USE_PERF_MONITOR),$(CONFIG_SCHED_CPULOAD)),y)
-CFLAGS += "-DLV_SYSMON_GET_IDLE=lv_nuttx_get_idle"
-endif
+# Set up build configuration and environment
 
-ifneq ($(CONFIG_LV_USE_PROFILER),)
-CFLAGS += "-DLV_PROFILER_BEGIN=sched_note_begin(NOTE_TAG_ALWAYS)"
-CFLAGS += "-DLV_PROFILER_END=sched_note_end(NOTE_TAG_ALWAYS)"
-endif
+WD := ${shell echo $(CURDIR) | sed -e 's/ /\\ /g'}
 
-ifneq ($(CONFIG_LV_GPU_G2D_INCLUDE_PATH),)
-CFLAGS += "-I$(addprefix $(strip $(INCDIR_PREFIX))$(APPDIR)/../,$(CONFIG_LV_GPU_G2D_INCLUDE_PATH))"
-endif
+CONFIG_GRAPH_LVGL_URL ?= "https://github.com/lvgl/lvgl/archive/refs/tags"
 
-ifeq ($(CONFIG_LV_USE_DRAW_VG_LITE),y)
-CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../$(CONFIG_LV_DRAW_VG_LITE_INCLUDE)
+LVGL_VERSION = $(patsubst "%",%,$(strip $(CONFIG_LVGL_VERSION)))
+LVGL_TARBALL = v$(LVGL_VERSION).zip
 
-# Disable optimization for vg_lite_path.c to avoid a compiler bug.
-# See: https://bugs.launchpad.net/gcc-arm-embedded/+bug/1982289
-$(CURDIR)/lvgl/src/draw/vg_lite/lv_vg_lite_path.c_CFLAGS += -O0
+LVGL_UNPACKNAME = lvgl
+UNPACK ?= unzip -o $(if $(V),,-q)
+CURL ?= curl -L -O $(if $(V),,-Ss)
+
+LVGL_UNPACKDIR =  $(WD)/$(LVGL_UNPACKNAME)
+
+$(LVGL_TARBALL):
+	$(ECHO_BEGIN)"Downloading: $(LVGL_TARBALL)"
+	$(Q) $(CURL) $(CONFIG_GRAPH_LVGL_URL)/$(LVGL_TARBALL)
+	$(ECHO_END)
+
+$(LVGL_UNPACKNAME): $(LVGL_TARBALL)
+	$(ECHO_BEGIN)"Unpacking: $(LVGL_TARBALL) -> $(LVGL_UNPACKNAME)"
+	$(Q) $(UNPACK) $(LVGL_TARBALL)
+	$(Q) mv	lvgl-$(LVGL_VERSION) $(LVGL_UNPACKNAME)
+	$(Q) touch $(LVGL_UNPACKNAME)
+	$(ECHO_END)
+
+# Download and unpack tarball if no git repo found
+ifeq ($(wildcard $(LVGL_UNPACKNAME)/.git),)
+context:: $(LVGL_UNPACKNAME)
+
+distclean::
+	$(call DELDIR, $(LVGL_UNPACKNAME))
+	$(call DELFILE, $(LVGL_TARBALL))
 endif
 
 include $(APPDIR)/Application.mk

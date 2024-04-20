@@ -200,8 +200,7 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
       goto info_err;
     }
 
-  swap = malloc(geo.geo_sectorsize *
-                CONFIG_SYSTEM_COREDUMP_SWAPBUFFER_NUMS);
+  swap = malloc(geo.geo_sectorsize);
   if (swap == NULL)
     {
       printf("Malloc fail\n");
@@ -211,8 +210,7 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
   lseek(blkfd, 0, SEEK_SET);
   while (offset < info->size)
     {
-      readsize = read(blkfd, swap, geo.geo_sectorsize *
-                      CONFIG_SYSTEM_COREDUMP_SWAPBUFFER_NUMS);
+      readsize = read(blkfd, swap, geo.geo_sectorsize);
       if (readsize < 0)
         {
           printf("Read %s fail\n", CONFIG_BOARD_COREDUMP_BLKDEV_PATH);
