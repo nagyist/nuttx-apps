@@ -25,11 +25,14 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/sensors/ioctl.h>
-#include <nuttx/sensors/sensor.h>
+#ifdef __NuttX__
+#include <nuttx/uorb.h>
+#else
+#include <linux/uorb.h>
+#endif
 
 #include <sys/time.h>
-#include <debug.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <syslog.h>
@@ -38,16 +41,14 @@
  * Public Types
  ****************************************************************************/
 
-struct orb_metadata;
-typedef void (*orb_print_message)(FAR const struct orb_metadata *meta,
-                                  FAR const void *buffer);
-
 struct orb_metadata
 {
   FAR const char   *o_name;     /* Unique object name */
   uint16_t          o_size;     /* Object size */
 #ifdef CONFIG_DEBUG_UORB
-  orb_print_message o_cb;       /* Function pointer of output topic message */
+  FAR const char   *o_format;   /* Format string used for structure input and
+                                 * output.
+                                 */
 #endif
 };
 
@@ -80,34 +81,42 @@ typedef uint64_t orb_abstime;
 #define ORB_USENSOR_PATH       "/dev/usensor"
 #define ORB_PATH_MAX           (NAME_MAX + 16)
 
-#ifdef CONFIG_UORB_ALERT
-#  define uorbpanic(fmt, ...)  _alert(fmt "\n", ##__VA_ARGS__)
+#ifdef CONFIG_UORB_STORAGE_DIR
+#define UORB_STORAGE_DIR       CONFIG_UORB_STORAGE_DIR
 #else
-#  define uorbpanic            _none
+#define UORB_STORAGE_DIR       "/data"
+#endif
+
+#define uorbnone(fmt, ...)     do { if (0) syslog(LOG_INFO, fmt, ##__VA_ARGS__); } while (0)
+
+#ifdef CONFIG_UORB_ALERT
+#  define uorbpanic(fmt, ...)  syslog(LOG_EMERGY, fmt "\n", ##__VA_ARGS__)
+#else
+#  define uorbpanic            uorbnone
 #endif
 
 #ifdef CONFIG_UORB_ERROR
-#  define uorberr(fmt, ...)    _err(fmt "\n", ##__VA_ARGS__)
+#  define uorberr(fmt, ...)    syslog(LOG_ERR, fmt "\n", ##__VA_ARGS__)
 #else
-#  define uorberr              _none
+#  define uorberr              uorbnone
 #endif
 
 #ifdef CONFIG_UORB_WARN
-#  define uorbwarn(fmt, ...)   _warn(fmt "\n", ##__VA_ARGS__)
+#  define uorbwarn(fmt, ...)   syslog(LOG_WARN, fmt "\n", ##__VA_ARGS__)
 #else
-#  define uorbwarn             _none
+#  define uorbwarn             uorbnone
 #endif
 
 #ifdef CONFIG_UORB_INFO
-#  define uorbinfo(fmt, ...)   _info(fmt "\n", ##__VA_ARGS__)
+#  define uorbinfo(fmt, ...)   syslog(LOG_INFO, fmt "\n", ##__VA_ARGS__)
 #else
-#  define uorbinfo             _none
+#  define uorbinfo             uorbnone
 #endif
 
 #ifdef CONFIG_DEBUG_UORB
 #  define uorbdebug(fmt, ...)  syslog(LOG_INFO, fmt "\n", ##__VA_ARGS__)
 #else
-#  define uorbdebug            _none
+#  define uorbdebug            uorbnone
 #endif
 
 #define uorbinfo_raw(fmt, ...) syslog(LOG_INFO, fmt "\n", ##__VA_ARGS__)
@@ -147,15 +156,15 @@ typedef uint64_t orb_abstime;
  * cb      The function pointer of output topic message.
  */
 #ifdef CONFIG_DEBUG_UORB
-#define ORB_DEFINE(name, structure, cb) \
+#define ORB_DEFINE(name, structure, format) \
   const struct orb_metadata g_orb_##name = \
   { \
     #name, \
     sizeof(structure), \
-    cb, \
+    format, \
   };
 #else
-#define ORB_DEFINE(name, structure, cb) \
+#define ORB_DEFINE(name, structure, format) \
   const struct orb_metadata g_orb_##name = \
   { \
     #name, \
@@ -720,6 +729,61 @@ int orb_group_count(FAR const struct orb_metadata *meta);
  ****************************************************************************/
 
 FAR const struct orb_metadata *orb_get_meta(FAR const char *name);
+
+#ifdef CONFIG_DEBUG_UORB
+/****************************************************************************
+ * Name: orb_scanf
+ *
+ * Description:
+ *   Convert string value to structure buffer.
+ *
+ * Input Parameters:
+ *   buf    Input string value.
+ *   format The uORB metadata.o_format.
+ *   data   Structure buffer pointer.
+ *
+ * Returned Value:
+ *   Zero (OK) or positive on success; a negated errno value on failure.
+ ****************************************************************************/
+
+int orb_sscanf(FAR const char *buf, FAR const char *format, FAR void *data);
+
+/****************************************************************************
+ * Name: orb_info
+ *
+ * Description:
+ *   Print sensor data.
+ *
+ * Input Parameters:
+ *   format The uORB metadata.o_format.
+ *   name   The uORB metadata.o_name.
+ *   data   Topic data that needs to be print.
+ *
+ * Returned Value:
+ *   Format string length on success, otherwise returns negative value.
+ ****************************************************************************/
+
+void orb_info(FAR const char *format, FAR const char *name,
+              FAR const void *data);
+
+/****************************************************************************
+ * Name: orb_fprintf
+ *
+ * Description:
+ *   Print sensor data to file.
+ *
+ * Input Parameters:
+ *   stream  file handle.
+ *   format  The uORB metadata.o_format.
+ *   data    Topic data that needs to be print.
+ *
+ * Returned Value:
+ *   String length on success, otherwise returns negative value.
+ ****************************************************************************/
+
+int orb_fprintf(FAR FILE *stream, FAR const char *format,
+                FAR const void *data);
+#endif
 
 #ifdef __cplusplus
 }

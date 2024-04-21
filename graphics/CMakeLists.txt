@@ -17,6 +17,5 @@
 # the License.
 #
 # ##############################################################################
-nuttx_add_subdirectory()
 
 nuttx_generate_kconfig(MENUDESC "Graphics Support")
