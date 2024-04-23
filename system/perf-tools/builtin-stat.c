@@ -102,15 +102,64 @@ static void print_counters(FAR struct evlist_s *evlist,
   printf("\n %ld.%09ld seconds time elapsed\n", ts->tv_sec, ts->tv_nsec);
 }
 
-static int check_event(FAR const char *evstr)
+static int check_raw_event(FAR char *evstr)
+{
+  char buf[PERF_STAT_DEFAULT_MAX_EVSTR];
+  int evnum = 0;
+  int cnum = 0;
+  int i;
+  int len = strlen(evstr);
+
+  if (len == 1)
+    {
+      return 0;
+    }
+
+  for (i = 0; i <= len; i++)
+    {
+      if (evstr[i] == ',' || evstr[i] == '\0')
+        {
+          if (strncmp(evstr + cnum, "r", 1))
+            {
+              return 0;
+            }
+
+          memset(buf, 0, sizeof(buf));
+          if (i - cnum > sizeof(buf))
+            {
+              printf("The event name is too long, %d\n", i - cnum);
+              return 0;
+            }
+
+          strncpy(buf, evstr + cnum + 1, i - cnum - 1);
+          if (strlen(buf) == 0)
+            {
+              return 0;
+            }
+
+          if (strspn(buf, "0123456789abcdefABCDEF") != strlen(buf))
+            {
+              return 0;
+            }
+
+          cnum = i + 1;
+          evnum++;
+        }
+    }
+
+  return evnum;
+}
+
+static int check_event(FAR char *evstr)
 {
   char buf[PERF_STAT_DEFAULT_MAX_EVSTR];
   int evnum = 0;
   int cnum = 0;
   int i;
   int j;
+  int len = strlen(evstr);
 
-  for (i = 0; i <= strlen(evstr); i++)
+  for (i = 0; i <= len; i++)
     {
       if (evstr[i] == ',' || evstr[i] == '\0')
         {
@@ -143,7 +192,31 @@ static int check_event(FAR const char *evstr)
   return evnum;
 }
 
-static int set_specified_attributes(FAR const char *evstr,
+static int set_specified_raw_attributes(FAR char *evstr,
+                      FAR struct perf_event_attr_s *attrs)
+{
+  char *ptr = evstr;
+  int evnum = 0;
+
+  for (ptr++; ; ptr += 2)
+    {
+      attrs[evnum].type = PERF_TYPE_RAW;
+      attrs[evnum].config = strtol(ptr, &ptr, 16);
+      attrs[evnum].size = sizeof(struct perf_event_attr_s);
+      attrs[evnum].disabled = 1;
+      attrs[evnum].inherit = 1;
+      if (*ptr == '\0')
+        {
+          break;
+        }
+
+      evnum++;
+    }
+
+  return 0;
+}
+
+static int set_specified_attributes(FAR char *evstr,
                       FAR struct perf_event_attr_s *attrs)
 {
   char buf[PERF_STAT_DEFAULT_MAX_EVSTR];
@@ -151,8 +224,9 @@ static int set_specified_attributes(FAR const char *evstr,
   int cnum = 0;
   int i;
   int j;
+  int len = strlen(evstr);
 
-  for (i = 0; i <= strlen(evstr); i++)
+  for (i = 0; i <= len; i++)
     {
       if (evstr[i] == ',' || evstr[i] == '\0')
         {
@@ -186,8 +260,9 @@ static int set_specified_attributes(FAR const char *evstr,
 }
 
 static int add_specified_attributes(FAR struct evlist_s *evlist,
-                                    FAR const char *evstr)
+                                    FAR char *evstr)
 {
+  int i;
   int status;
   int evnum = 0;
 
@@ -199,8 +274,18 @@ static int add_specified_attributes(FAR struct evlist_s *evlist,
   evnum = check_event(evstr);
   if (!evnum)
     {
-      printf("Event syntax error: %s\n", evstr);
-      return -EINVAL;
+      evnum = check_raw_event(evstr);
+      if (!evnum)
+        {
+          printf("Event syntax error: %s\n", evstr);
+          return -EINVAL;
+        }
+
+      status = PERF_TYPE_RAW;
+    }
+  else
+    {
+      status = PERF_TYPE_HARDWARE;
     }
 
   evlist->attrs = zalloc(evnum * sizeof(struct perf_event_attr_s));
@@ -210,11 +295,18 @@ static int add_specified_attributes(FAR struct evlist_s *evlist,
       return -ENOMEM;
     }
 
-  set_specified_attributes(evstr, evlist->attrs);
+  if (status == PERF_TYPE_RAW)
+    {
+      set_specified_raw_attributes(evstr, evlist->attrs);
+    }
+  else
+    {
+      set_specified_attributes(evstr, evlist->attrs);
+    }
 
   if (evlist->system_wide)
     {
-      for (int i = 0; i < CONFIG_SMP_NCPUS; i++)
+      for (i = 0; i < CONFIG_SMP_NCPUS; i++)
         {
           status = evlist_add_attrs(evlist, evlist->attrs, evnum, i);
         }
@@ -246,6 +338,7 @@ static int set_default_attributes(FAR int *config, int nr,
 
 static int add_default_attributes(FAR struct evlist_s *evlist)
 {
+  int i;
   int status = 0;
   int evnum = nitems(default_hw_config);
 
@@ -260,7 +353,7 @@ static int add_default_attributes(FAR struct evlist_s *evlist)
 
   if (evlist->system_wide)
     {
-      for (int i = 0; i < CONFIG_SMP_NCPUS; i++)
+      for (i = 0; i < CONFIG_SMP_NCPUS; i++)
         {
           status = evlist_add_attrs(evlist, evlist->attrs, evnum, i);
         }

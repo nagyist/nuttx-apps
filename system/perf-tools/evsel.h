@@ -48,6 +48,7 @@ struct evsel_s
 {
   struct perf_evsel_s core;
   FAR struct evlist_s *evlist;
+  FAR char *name;
 };
 
 #define DEFAULT_HW_CONFIG_NUM 4
@@ -63,7 +64,7 @@ extern int default_hw_config[DEFAULT_HW_CONFIG_NUM];
  * Public Function Prototypes
  ****************************************************************************/
 
-FAR const char *evsel_get_hw_name(uint64_t config);
+FAR const char *evsel_name(FAR struct evsel_s *evsel);
 FAR struct evsel_s *evsel_new(FAR struct perf_event_attr_s *attr);
 void evsel_delete(FAR struct evsel_s *evsel);
 int evsel_read_counter(FAR struct evsel_s *evsel,

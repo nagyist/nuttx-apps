@@ -72,14 +72,58 @@ static void perf_evsel_init(FAR struct perf_evsel_s *evsel,
  * Public Functions
  ****************************************************************************/
 
-FAR const char *evsel_get_hw_name(uint64_t config)
+int evsel_raw_name(FAR struct evsel_s *evsel, FAR char *buf,
+                              size_t size)
 {
+  return snprintf(buf, size, "r%" PRIx64, evsel->core.attr.config);
+}
+
+int evsel_hw_name(FAR struct evsel_s *evsel, FAR char *buf,
+                              size_t size)
+{
+  uint64_t config = evsel->core.attr.config;
+
   if (config < PERF_COUNT_HW_MAX && evsel_hw_names[config])
     {
-      return evsel_hw_names[config];
+      return snprintf(buf, size, "%s", evsel_hw_names[config]);
+    }
+  else
+    {
+      return snprintf(buf, size, "%s", "unknown-hardware");
+    }
+}
+
+FAR const char *evsel_name(FAR struct evsel_s *evsel)
+{
+  char buf[128];
+
+  if (!evsel)
+    {
+      goto out_unknown;
     }
 
-  return "unknown-hardware";
+  switch (evsel->core.attr.type)
+    {
+      case PERF_TYPE_HARDWARE:
+        evsel_hw_name(evsel, buf, sizeof(buf));
+        break;
+      case PERF_TYPE_RAW:
+        evsel_raw_name(evsel, buf, sizeof(buf));
+        break;
+      default:
+        snprintf(buf, sizeof(buf), "unknown attr type: %d",
+                  evsel->core.attr.type);
+        break;
+    }
+
+  evsel->name = strdup(buf);
+  if (evsel->name)
+    {
+      return evsel->name;
+    }
+
+out_unknown:
+  return "unknown";
 }
 
 void evsel_init(FAR struct evsel_s *evsel,

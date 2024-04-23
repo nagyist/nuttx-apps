@@ -128,15 +128,15 @@ int evlist_print_counters(FAR struct evlist_s *evlist)
   FAR struct perf_evsel_s *psel = NULL;
   FAR struct evsel_s *evsel = NULL;
   FAR struct list_node *node = NULL;
-  FAR uint64_t *count = NULL;
+  struct evlist_count_s *evcnt = NULL;
   int i = 0;
-  int j = 0;
 
+#if (CONFIG_SMP_NCPUS > 1)
   if (evlist->system_wide)
     {
       int num = evlist->core.nr_entries / CONFIG_SMP_NCPUS;
-      count = zalloc(evlist->core.nr_entries * sizeof(uint64_t) * 2);
-      if (!count)
+      evcnt = zalloc(num * sizeof(struct evlist_count_s));
+      if (!evcnt)
         {
           printf("Failed to allocate temporary storage!\n");
           return -ENOMEM;
@@ -146,31 +146,30 @@ int evlist_print_counters(FAR struct evlist_s *evlist)
         {
           psel = container_of(node, struct perf_evsel_s, node);
           evsel = container_of(psel, struct evsel_s, core);
-          count[i++] = evsel->core.count;
-          count[i++] = evsel->core.attr.config;
-        }
-
-      for (i = 0; i < num * 2; i += 2)
-        {
-          uint64_t counter = 0;
-          for (j = 0; j < CONFIG_SMP_NCPUS; j++)
+          evcnt[i % num].count += evsel->core.count;
+          if (i < num)
             {
-              counter += count[i + j * num * 2];
+              evcnt[i].name = evsel_name(evsel);
             }
 
-          printf("%10ld\t %s\n", counter, evsel_get_hw_name(count[i + 1]));
+          i++;
         }
 
-      free(count);
+      for (i = 0; i < num; i++)
+        {
+          printf("%10ld\t %s\n", evcnt[i].count, evcnt[i].name);
+        }
+
+      free(evcnt);
     }
   else
+#endif
     {
       list_for_every(&(evlist->core.entries), node)
         {
           psel = container_of(node, struct perf_evsel_s, node);
           evsel = container_of(psel, struct evsel_s, core);
-          printf("%10ld\t %s\n", evsel->core.count,
-                  evsel_get_hw_name(evsel->core.attr.config));
+          printf("%10ld\t %s\n", evsel->core.count, evsel_name(evsel));
         }
     }
 

@@ -55,6 +55,12 @@ struct evlist_s
   FAR struct perf_event_attr_s *attrs;
 };
 
+struct evlist_count_s
+{
+  uint64_t count;
+  FAR const char *name;
+};
+
 #define evlist_for_each_evsel(evlist, node, func, status) \
   do { \
     FAR struct perf_evsel_s *psel = NULL; \
