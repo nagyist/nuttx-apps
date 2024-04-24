@@ -534,10 +534,10 @@ static int ps_callback(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
                "%08lu "
 #endif
 #ifdef PS_SHOW_STACKSIZE
-               "%07lu "
+               "%06lu "
 #endif
 #ifdef PS_SHOW_STACKUSAGE
-               "%07lu "
+               "%06lu "
                "%3lu.%lu%%%c "
 #endif
 #ifdef NSH_HAVE_CPULOAD
@@ -620,6 +620,9 @@ int cmd_exec(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #ifndef CONFIG_NSH_DISABLE_PS
 int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
+  UNUSED(argc);
+  UNUSED(argv);
+
   nsh_output(vtbl, "%5s %5s "
 #ifdef CONFIG_SMP
                    "%3s "
@@ -661,20 +664,6 @@ int cmd_ps(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #endif
                     "COMMAND"
                     );
-
-  if (argc > 1)
-    {
-      int i;
-      for (i = 1; i < argc; i++)
-        {
-          struct dirent entry;
-          entry.d_type = DT_DIR;
-          strcpy(entry.d_name, argv[i]);
-          ps_callback(vtbl, CONFIG_NSH_PROC_MOUNTPOINT, &entry, NULL);
-        }
-
-      return 0;
-    }
 
   return nsh_foreach_direntry(vtbl, "ps", CONFIG_NSH_PROC_MOUNTPOINT,
                               ps_callback, NULL);
