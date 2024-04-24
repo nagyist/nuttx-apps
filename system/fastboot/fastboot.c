@@ -23,6 +23,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <nuttx/mtd/mtd.h>
 #include <nuttx/version.h>
 
 #include <errno.h>
@@ -32,12 +33,16 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <syslog.h>
+#include <unistd.h>
 
 #include <sys/boardctl.h>
 #include <sys/ioctl.h>
 #include <sys/param.h>
+#include <sys/stat.h>
 #include <sys/statfs.h>
 #include <sys/types.h>
+#include <sys/poll.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -64,6 +69,9 @@
                                      ((uint32_t)(p)[2] << 16) | \
                                      ((uint32_t)(p)[1] << 8) | \
                                      (uint32_t)(p)[0])
+
+#define fb_info(...)                syslog(LOG_INFO, ##__VA_ARGS__);
+#define fb_err(...)                 syslog(LOG_ERR, ##__VA_ARGS__);
 
 /****************************************************************************
  * Private types
@@ -104,10 +112,12 @@ struct fastboot_ctx_s
 {
   int usbdev_in;
   int usbdev_out;
+  int flash_fd;
   size_t download_max;
   size_t download_size;
   size_t download_offset;
   size_t total_imgsize;
+  int wait_ms;
   FAR void *download_buffer;
   FAR struct fastboot_var_s *varlist;
 };
@@ -220,10 +230,10 @@ static void fastboot_okay(FAR struct fastboot_ctx_s *context,
 
 static int fastboot_flash_open(FAR const char *name)
 {
-  int fd = open(name, O_RDWR);
+  int fd = open(name, O_RDWR | O_CLOEXEC);
   if (fd < 0)
     {
-      printf("Open %s error\n", name);
+      fb_err("Open %s error\n", name);
       return -errno;
     }
 
@@ -234,6 +244,7 @@ static void fastboot_flash_close(int fd)
 {
   if (fd >= 0)
     {
+      fsync(fd);
       close(fd);
     }
 }
@@ -247,14 +258,14 @@ static int fastboot_flash_write(int fd, off_t offset,
   offset = lseek(fd, offset, SEEK_SET);
   if (offset < 0)
     {
-      printf("Seek error:%d\n", errno);
+      fb_err("Seek error:%d\n", errno);
       return -errno;
     }
 
   ret = fastboot_write(fd, data, size);
   if (ret < 0)
     {
-      printf("Flash write error:%d\n", -ret);
+      fb_err("Flash write error:%d\n", -ret);
     }
 
   return ret;
@@ -272,7 +283,7 @@ static int ffastboot_flash_fill(int fd, off_t offset,
   buffer = malloc(blk_sz);
   if (buffer == NULL)
     {
-      printf("Flash bwrite malloc fail\n");
+      fb_err("Flash bwrite malloc fail\n");
       return -ENOMEM;
     }
 
@@ -296,7 +307,15 @@ out:
 
 static int fastboot_flash_erase(int fd)
 {
-  return OK;
+  int ret;
+
+  ret = ioctl(fd, MTDIOC_BULKERASE, 0);
+  if (ret < 0)
+    {
+      fb_err("Erase device failed\n");
+    }
+
+  return ret < 0 ? -errno : ret;
 }
 
 static int
@@ -368,7 +387,7 @@ fastboot_flash_program(FAR struct fastboot_ctx_s *context, int fd)
           case FASTBOOT_CHUNK_CRC32:
             break;
           default:
-            printf("Error chunk type:%d, skip\n", chunk->chunk_type);
+            fb_err("Error chunk type:%d, skip\n", chunk->chunk_type);
             break;
         }
     }
@@ -386,18 +405,20 @@ static void fastboot_flash(FAR struct fastboot_ctx_s *context,
                            FAR const char *arg)
 {
   char blkdev[PATH_MAX];
-  int fd;
 
   snprintf(blkdev, PATH_MAX, FASTBOOT_BLKDEV, arg);
 
-  fd = fastboot_flash_open(blkdev);
-  if (fd < 0)
+  if (context->flash_fd < 0)
     {
-      fastboot_fail(context, "Flash open failure");
-      return;
+      context->flash_fd = fastboot_flash_open(blkdev);
+      if (context->flash_fd < 0)
+        {
+          fastboot_fail(context, "Flash open failure");
+          return;
+        }
     }
 
-  if (fastboot_flash_program(context, fd) < 0)
+  if (fastboot_flash_program(context, context->flash_fd) < 0)
     {
       fastboot_fail(context, "Image flash failure");
     }
@@ -406,17 +427,22 @@ static void fastboot_flash(FAR struct fastboot_ctx_s *context,
       fastboot_okay(context, "");
     }
 
-  fastboot_flash_close(fd);
+  if (context->total_imgsize == 0)
+    {
+      fastboot_flash_close(context->flash_fd);
+      context->flash_fd = -1;
+    }
 }
 
 static void fastboot_erase(FAR struct fastboot_ctx_s *context,
                            FAR const char *arg)
 {
   char blkdev[PATH_MAX];
+  int ret;
   int fd;
 
   snprintf(blkdev, PATH_MAX, FASTBOOT_BLKDEV, arg);
-  printf("Erase %s\n", blkdev);
+  fb_info("Erase %s\n", blkdev);
 
   fd = fastboot_flash_open(blkdev);
   if (fd < 0)
@@ -425,7 +451,32 @@ static void fastboot_erase(FAR struct fastboot_ctx_s *context,
       return;
     }
 
-  if (fastboot_flash_erase(fd) < 0)
+  ret = fastboot_flash_erase(fd);
+  if (ret == -ENOTTY)
+    {
+      struct stat sb;
+
+      ret = fstat(fd, &sb);
+      if (ret >= 0)
+        {
+          memset(context->download_buffer, 0xff, context->download_max);
+
+          while (sb.st_size > 0)
+            {
+              size_t len = MIN(sb.st_size, context->download_max);
+
+              ret = fastboot_write(fd, context->download_buffer, len);
+              if (ret < 0)
+                {
+                  break;
+                }
+
+              sb.st_size -= len;
+            }
+        }
+    }
+
+  if (ret < 0)
     {
       fastboot_fail(context, "Flash erase failure");
     }
@@ -456,7 +507,7 @@ static void fastboot_download(FAR struct fastboot_ctx_s *context,
   ret = fastboot_write(context->usbdev_out, response, strlen(response));
   if (ret < 0)
     {
-      printf("Reponse error [%d]\n", -ret);
+      fb_err("Reponse error [%d]\n", -ret);
       return;
     }
 
@@ -468,7 +519,7 @@ static void fastboot_download(FAR struct fastboot_ctx_s *context,
                                 download, len);
       if (r < 0)
         {
-          printf("fastboot_download usb read error\n");
+          fb_err("fastboot_download usb read error\n");
           return;
         }
 
@@ -511,7 +562,10 @@ static void fastboot_reboot(FAR struct fastboot_ctx_s *context,
                             FAR const char *arg)
 {
 #ifdef CONFIG_BOARDCTL_RESET
+  fastboot_okay(context, "");
   boardctl(BOARDIOC_RESET, BOARDIOC_SOFTRESETCAUSE_USER_REBOOT);
+#else
+  fastboot_fail(context, "Operation not supported");
 #endif
 }
 
@@ -519,12 +573,28 @@ static void fastboot_reboot_bootloader(FAR struct fastboot_ctx_s *context,
                                        FAR const char *arg)
 {
 #ifdef CONFIG_BOARDCTL_RESET
+  fastboot_okay(context, "");
   boardctl(BOARDIOC_RESET, BOARDIOC_SOFTRESETCAUSE_ENTER_BOOTLOADER);
+#else
+  fastboot_fail(context, "Operation not supported");
 #endif
 }
 
 static void fastboot_command_loop(FAR struct fastboot_ctx_s *context)
 {
+  if (context->wait_ms > 0)
+    {
+      struct pollfd fds[1];
+
+      fds[0].fd = context->usbdev_in;
+      fds[0].events = POLLIN;
+
+      if (poll(fds, 1, context->wait_ms) <= 0)
+        {
+          return;
+        }
+    }
+
   while (1)
     {
       char buffer[FASTBOOT_MSG_LEN];
@@ -535,7 +605,7 @@ static void fastboot_command_loop(FAR struct fastboot_ctx_s *context)
                                 buffer, FASTBOOT_MSG_LEN);
       if (r < 0)
         {
-          printf("USB read error\n");
+          fb_err("USB read error\n");
           break;
         }
 
@@ -565,14 +635,17 @@ static void fastboot_publish(FAR struct fastboot_ctx_s *context,
   FAR struct fastboot_var_s *var;
 
   var = malloc(sizeof(*var));
-  if (var)
+  if (var == NULL)
     {
-      var->name = name;
-      var->string = string;
-      var->data = data;
-      var->next = context->varlist;
-      context->varlist = var;
+      fb_err("ERROR: Could not allocate the memory.\n");
+      return;
     }
+
+  var->name = name;
+  var->string = string;
+  var->data = data;
+  var->next = context->varlist;
+  context->varlist = var;
 }
 
 static void fastboot_create_publish(FAR struct fastboot_ctx_s *context)
@@ -603,38 +676,91 @@ static void fastboot_free_publish(FAR struct fastboot_ctx_s *context)
 
 int main(int argc, FAR char **argv)
 {
-  FAR struct fastboot_ctx_s context;
+  struct fastboot_ctx_s context;
   FAR void *buffer = NULL;
   char usbdev[32];
   int ret = OK;
 
+#ifdef CONFIG_FASTBOOTD_USB_BOARDCTL
+  struct boardioc_usbdev_ctrl_s ctrl;
+#  ifdef CONFIG_USBDEV_COMPOSITE
+    uint8_t dev = BOARDIOC_USBDEV_COMPOSITE;
+#  else
+    uint8_t dev = BOARDIOC_USBDEV_FASTBOOT;
+#  endif
+  FAR void *handle;
+
+  ctrl.usbdev   = dev;
+  ctrl.action   = BOARDIOC_USBDEV_INITIALIZE;
+  ctrl.instance = 0;
+  ctrl.config   = 0;
+  ctrl.handle   = NULL;
+
+  ret = boardctl(BOARDIOC_USBDEV_CONTROL, (uintptr_t)&ctrl);
+  if (ret < 0)
+    {
+      fb_err("boardctl(BOARDIOC_USBDEV_CONTROL) failed: %d\n", ret);
+      return ret;
+    }
+
+  ctrl.usbdev   = dev;
+  ctrl.action   = BOARDIOC_USBDEV_CONNECT;
+  ctrl.instance = 0;
+  ctrl.config   = 0;
+  ctrl.handle   = &handle;
+
+  ret = boardctl(BOARDIOC_USBDEV_CONTROL, (uintptr_t)&ctrl);
+  if (ret < 0)
+    {
+      fb_err("boardctl(BOARDIOC_USBDEV_CONTROL) failed: %d\n", ret);
+      return ret;
+    }
+#endif /* FASTBOOTD_USB_BOARDCTL */
+
+  if (argc > 1)
+    {
+      if (strcmp(argv[1], "-h") == 0)
+        {
+          fb_err("Usage: fastbootd [wait_ms]\n");
+          return 0;
+        }
+
+      context.wait_ms = atoi(argv[1]);
+    }
+  else
+    {
+      context.wait_ms = 0;
+    }
+
   buffer = malloc(CONFIG_SYSTEM_FASTBOOTD_DOWNLOAD_MAX);
   if (buffer == NULL)
     {
-      printf("ERROR: Could not allocate the memory.\n");
+      fb_err("ERROR: Could not allocate the memory.\n");
       return -ENOMEM;
     }
 
   snprintf(usbdev, sizeof(usbdev), "%s/ep%d",
            FASTBOOT_USBDEV, FASTBOOT_EP_BULKOUT_IDX + 1);
-  context.usbdev_in = open(usbdev, O_RDONLY);
+  context.usbdev_in = open(usbdev, O_RDONLY | O_CLOEXEC);
   if (context.usbdev_in < 0)
     {
-      printf("open [%s] error\n", usbdev);
+      fb_err("open [%s] error\n", usbdev);
       ret = -errno;
       goto err_with_mem;
     }
 
   snprintf(usbdev, sizeof(usbdev), "%s/ep%d",
            FASTBOOT_USBDEV, FASTBOOT_EP_BULKIN_IDX + 1);
-  context.usbdev_out = open(usbdev, O_WRONLY);
+  context.usbdev_out = open(usbdev, O_WRONLY | O_CLOEXEC);
   if (context.usbdev_out < 0)
     {
-      printf("open [%s] error\n", usbdev);
+      fb_err("open [%s] error\n", usbdev);
       ret = -errno;
       goto err_with_in;
     }
 
+  context.varlist         = NULL;
+  context.flash_fd        = -1;
   context.download_buffer = buffer;
   context.download_size   = 0;
   context.download_offset = 0;

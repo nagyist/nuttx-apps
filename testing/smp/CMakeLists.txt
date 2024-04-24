@@ -22,10 +22,12 @@ if(CONFIG_TESTING_SMP)
   nuttx_add_application(
     NAME
     ${CONFIG_TESTING_SMP_PROGNAME}
-    SRCS
-    smp_main.c
+    PRIORITY
+    ${CONFIG_TESTING_SMP_PRIORITY}
     STACKSIZE
     ${CONFIG_TESTING_SMP_STACKSIZE}
-    PRIORITY
-    ${CONFIG_TESTING_SMP_PRIORITY})
+    MODULE
+    ${CONFIG_TESTING_SMP}
+    SRCS
+    smp_main.c)
 endif()
