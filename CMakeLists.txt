@@ -59,13 +59,16 @@ add_subdirectory(platform)
 add_subdirectory(sdr)
 add_subdirectory(system)
 add_subdirectory(testing)
-add_subdirectory(tools)
 add_subdirectory(wireless)
 
 # add examples and external at the end to allow library dependencies
 add_subdirectory(examples)
 if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/external)
   add_subdirectory(external)
+endif()
+
+if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/frameworks)
+  add_subdirectory(frameworks)
 endif()
 
 add_subdirectory(builtin) # must be last
