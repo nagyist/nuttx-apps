@@ -38,6 +38,10 @@ CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libpng
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libpng/libpng
 endif
 
+ifneq ($(CONFIG_LV_USE_LIBWEBP),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libwebp/libwebp/src/
+endif
+
 ifneq ($(CONFIG_LV_USE_LIBJPEG_TURBO),)
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libjpeg-turbo/libjpeg-turbo
 endif
