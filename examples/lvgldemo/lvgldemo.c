@@ -24,10 +24,9 @@
 
 #include <nuttx/config.h>
 #include <unistd.h>
-
 #include <sys/boardctl.h>
 
-#include <lvgl.h>
+#include <lvgl/lvgl.h>
 #include <lvgl/demos/lv_demos.h>
 #ifdef CONFIG_LV_USE_NUTTX_LIBUV
 #include <uv.h>
@@ -67,8 +66,7 @@
  ****************************************************************************/
 
 #ifdef CONFIG_LV_USE_NUTTX_LIBUV
-static void lv_nuttx_uv_loop(uv_loop_t *loop, lv_disp_t *disp,
-                             lv_indev_t *indev)
+static void lv_nuttx_uv_loop(uv_loop_t *loop, lv_nuttx_result_t *result)
 {
   lv_nuttx_uv_t uv_info;
   void *data;
@@ -77,8 +75,11 @@ static void lv_nuttx_uv_loop(uv_loop_t *loop, lv_disp_t *disp,
 
   lv_memset(&uv_info, 0, sizeof(uv_info));
   uv_info.loop = loop;
-  uv_info.disp = disp;
-  uv_info.indev = indev;
+  uv_info.disp = result->disp;
+  uv_info.indev = result->indev;
+#ifdef CONFIG_UINPUT_TOUCH
+  uv_info.uindev = result->utouch_indev;
+#endif
 
   data = lv_nuttx_uv_init(&uv_info);
   uv_run(loop, UV_RUN_DEFAULT);
@@ -110,7 +111,6 @@ int main(int argc, FAR char *argv[])
 
 #ifdef CONFIG_LV_USE_NUTTX_LIBUV
   uv_loop_t ui_loop;
-  lv_memzero(&ui_loop, sizeof(ui_loop));
 #endif
 
 #ifdef NEED_BOARDINIT
@@ -123,6 +123,11 @@ int main(int argc, FAR char *argv[])
   lv_init();
 
   lv_nuttx_dsc_init(&info);
+
+#ifdef CONFIG_LV_USE_NUTTX_LCD
+  info.fb_path = "/dev/lcd0";
+#endif
+
   lv_nuttx_init(&info, &result);
 
   if (result.disp == NULL)
@@ -141,12 +146,17 @@ int main(int argc, FAR char *argv[])
     }
 
 #ifdef CONFIG_LV_USE_NUTTX_LIBUV
-  lv_nuttx_uv_loop(&ui_loop, result.disp, result.indev);
+  lv_nuttx_uv_loop(&ui_loop, &result);
 #else
   while (1)
     {
-      lv_timer_handler();
-      usleep(10 * 1000);
+      uint32_t idle;
+      idle = lv_timer_handler();
+
+      /* Minimum sleep of 1ms */
+
+      idle = idle ? idle : 1;
+      usleep(idle * 1000);
     }
 #endif
 

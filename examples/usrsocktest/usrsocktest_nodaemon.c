@@ -95,7 +95,7 @@ TEST_SETUP(no_daemon)
 
 TEST_TEAR_DOWN(no_daemon)
 {
-  int unused_data ret;
+  int ret;
 
   if (sd >= 0)
     {

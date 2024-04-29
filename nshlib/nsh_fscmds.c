@@ -163,8 +163,8 @@ static int cp_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *srcpath,
 
   for (; ; )
     {
-      ssize_t nbyteswritten;
-      ssize_t nbytesread;
+      int nbytesread;
+      int nbyteswritten;
       FAR char *iobuffer = vtbl->iobuffer;
 
       nbytesread = read(rdfd, iobuffer, IOBUFFERSIZE);
@@ -413,7 +413,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
               details[0] = 'f';
             }
 #endif
-#ifdef CONFIG_FS_SHM
+#ifdef CONFIG_FS_SHMFS
           else if (S_ISSHM(buf.st_mode))
             {
               details[0] = 'h';
@@ -2101,20 +2101,21 @@ int cmd_readlink(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #ifdef NSH_HAVE_DIROPTS
 #ifndef CONFIG_NSH_DISABLE_RM
 
-static int unlink_recursive(FAR char *path, FAR struct stat *stat)
+static int unlink_recursive(FAR char *path)
 {
   struct dirent *d;
+  struct stat stat;
   size_t len;
   int ret;
   DIR *dp;
 
-  ret = lstat(path, stat);
+  ret = lstat(path, &stat);
   if (ret < 0)
     {
       return ret;
     }
 
-  if (!S_ISDIR(stat->st_mode))
+  if (!S_ISDIR(stat.st_mode))
     {
       return unlink(path);
     }
@@ -2139,7 +2140,7 @@ static int unlink_recursive(FAR char *path, FAR struct stat *stat)
         }
 
       snprintf(&path[len], PATH_MAX - len, "/%s", d->d_name);
-      ret = unlink_recursive(path, stat);
+      ret = unlink_recursive(path);
       if (ret < 0)
         {
           closedir(dp);
@@ -2159,63 +2160,29 @@ static int unlink_recursive(FAR char *path, FAR struct stat *stat)
 
 int cmd_rm(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
-  bool recursive = false;
-  bool force = false;
+  bool recursive = (strcmp(argv[1], "-r") == 0);
   FAR char *fullpath;
   char buf[PATH_MAX];
-  struct stat stat;
   int ret = ERROR;
-  int c;
 
-  while ((c = getopt(argc, argv, "rf")) != ERROR)
+  if (recursive && argc == 2)
     {
-      switch (c)
-        {
-          case 'r':
-            recursive = true;
-            break;
-          case 'f':
-            force = true;
-            break;
-          case '?':
-            nsh_output(vtbl, "Unknown option 0x%x\n", optopt);
-            return ret;
-          default:
-            nsh_error(vtbl, g_fmtargrequired, argv[0]);
-            return ret;
-        }
-    }
-
-  if (optind >= argc)
-    {
-      if (force)
-        {
-          ret = OK;
-        }
-      else
-        {
-          nsh_error(vtbl, g_fmtargrequired, argv[0]);
-        }
-
+      nsh_error(vtbl, g_fmtargrequired, argv[0]);
       return ret;
     }
 
-  fullpath = nsh_getfullpath(vtbl, argv[optind]);
+  fullpath = nsh_getfullpath(vtbl, recursive ? argv[2] : argv[1]);
+
   if (fullpath != NULL)
     {
       if (recursive)
         {
           strlcpy(buf, fullpath, PATH_MAX);
-          ret = unlink_recursive(buf, &stat);
+          ret = unlink_recursive(buf);
         }
       else
         {
           ret = unlink(fullpath);
-        }
-
-      if (force && errno == ENOENT)
-        {
-          ret = 0;
         }
 
       if (ret < 0)

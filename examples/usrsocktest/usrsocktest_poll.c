@@ -570,7 +570,7 @@ TEST_SETUP(poll)
 
 TEST_TEAR_DOWN(poll)
 {
-  int unused_data ret;
+  int ret;
   if (sd >= 0)
     {
       ret = close(sd);
