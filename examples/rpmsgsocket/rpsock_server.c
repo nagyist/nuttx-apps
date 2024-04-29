@@ -22,18 +22,18 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-
 #include <assert.h>
 #include <errno.h>
-#include <netpacket/rpmsg.h>
 #include <pthread.h>
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netpacket/rpmsg.h>
 
 /****************************************************************************
  * Private types
@@ -46,10 +46,10 @@ struct rpsock_arg_s
 };
 
 /****************************************************************************
- * Public Functions
+ * Private Functions
  ****************************************************************************/
 
-static void *rpsock_thread(pthread_addr_t pvarg)
+static void *rpsock_thread(void *pvarg)
 {
   struct rpsock_arg_s *args = pvarg;
   struct pollfd pfd;
@@ -238,7 +238,8 @@ static int rpsock_stream_server(int argc, char *argv[])
         }
 
       printf("server: try accept ...\n");
-      new = accept(listensd, (struct sockaddr *)&myaddr, &addrlen);
+      new = accept4(listensd, (struct sockaddr *)&myaddr, &addrlen,
+                    SOCK_CLOEXEC);
       if (new < 0)
           break;
 
@@ -250,8 +251,7 @@ static int rpsock_stream_server(int argc, char *argv[])
       args->fd       = new;
       args->nonblock = nonblock;
 
-      pthread_create(&thread, NULL, rpsock_thread,
-                     (pthread_addr_t)args);
+      pthread_create(&thread, NULL, rpsock_thread, args);
       pthread_detach(thread);
     }
 
@@ -348,9 +348,21 @@ static int rpsock_dgram_server(int argc, char *argv[])
   return 0;
 }
 
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: rpsock_server_main
+ *
+ * Description:
+ *   Main entry point for the rpsock_server example.
+ *
+ ****************************************************************************/
+
 int main(int argc, char *argv[])
 {
-  if (argc != 4 && argc != 5)
+  if (argc < 4)
     {
       printf("Usage: rpsock_server stream/dgram"
              " block/nonblock rp_name [rp_cpu]\n");
