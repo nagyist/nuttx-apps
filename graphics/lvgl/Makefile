@@ -25,49 +25,58 @@ include $(APPDIR)/Make.defs
 LVGL_DIR = .
 LVGL_DIR_NAME = lvgl
 
+SUFFIX := lvgl
+
+# Relax format check for LVGL to avoid errors on prinf() use
+
 -include ./lvgl/lvgl.mk
+
+-include ./ext/Makefile
+
+ifneq ($(CONFIG_LV_USE_LIBPNG),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libpng
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libpng/libpng
+endif
+
+ifneq ($(CONFIG_LV_USE_LIBJPEG_TURBO),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libjpeg-turbo/libjpeg-turbo
+endif
+
+ifneq ($(CONFIG_LV_USE_FFMPEG),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/ffmpeg/ffmpeg
+endif
+
+ifneq ($(CONFIG_LV_USE_RLOTTIE),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rlottie/rlottie/inc
+endif
+
+ifneq ($(CONFIG_LVX_USE_QRSCAN),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/quirc/quirc/lib
+endif
 
 ifneq ($(CONFIG_LV_ASSERT_HANDLER_INCLUDE), "")
 CFLAGS += "-DLV_ASSERT_HANDLER=ASSERT(0);"
 endif
 
-# Set up build configuration and environment
+ifeq ($(and $(CONFIG_LV_USE_PERF_MONITOR),$(CONFIG_SCHED_CPULOAD)),y)
+CFLAGS += "-DLV_SYSMON_GET_IDLE=lv_nuttx_get_idle"
+endif
 
-WD := ${shell echo $(CURDIR) | sed -e 's/ /\\ /g'}
+ifneq ($(CONFIG_LV_USE_PROFILER),)
+CFLAGS += "-DLV_PROFILER_BEGIN=sched_note_begin(NOTE_TAG_ALWAYS)"
+CFLAGS += "-DLV_PROFILER_END=sched_note_end(NOTE_TAG_ALWAYS)"
+endif
 
-CONFIG_GRAPH_LVGL_URL ?= "https://github.com/lvgl/lvgl/archive/refs/tags"
+ifneq ($(CONFIG_LV_GPU_G2D_INCLUDE_PATH),)
+CFLAGS += "-I$(addprefix $(strip $(INCDIR_PREFIX))$(APPDIR)/../,$(CONFIG_LV_GPU_G2D_INCLUDE_PATH))"
+endif
 
-LVGL_PATCHS ?= $(sort $(wildcard 000*.patch))
+ifeq ($(CONFIG_LV_USE_DRAW_VG_LITE),y)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../$(CONFIG_LV_DRAW_VG_LITE_INCLUDE)
 
-LVGL_VERSION = 9.1.0
-LVGL_TARBALL = v$(LVGL_VERSION).zip
-
-LVGL_UNPACKNAME = lvgl
-UNPACK ?= unzip -o $(if $(V),,-q)
-CURL ?= curl -L -O $(if $(V),,-Ss)
-
-LVGL_UNPACKDIR =  $(WD)/$(LVGL_UNPACKNAME)
-
-$(LVGL_TARBALL):
-	$(ECHO_BEGIN)"Downloading: $(LVGL_TARBALL)"
-	$(Q) $(CURL) $(CONFIG_GRAPH_LVGL_URL)/$(LVGL_TARBALL)
-	$(ECHO_END)
-
-$(LVGL_UNPACKNAME): $(LVGL_TARBALL)
-	$(ECHO_BEGIN)"Unpacking: $(LVGL_TARBALL) -> $(LVGL_UNPACKNAME)"
-	$(Q) $(UNPACK) $(LVGL_TARBALL)
-	$(Q) mv	lvgl-$(LVGL_VERSION) $(LVGL_UNPACKNAME)
-	$(Q) cat $(LVGL_PATCHS) | patch -s -N -d $(LVGL_UNPACKNAME) -p1
-	$(Q) touch $(LVGL_UNPACKNAME)
-	$(ECHO_END)
-
-# Download and unpack tarball if no git repo found
-ifeq ($(wildcard $(LVGL_UNPACKNAME)/.git),)
-context:: $(LVGL_UNPACKNAME)
-
-distclean::
-	$(call DELDIR, $(LVGL_UNPACKNAME))
-	$(call DELFILE, $(LVGL_TARBALL))
+# Disable optimization for vg_lite_path.c to avoid a compiler bug.
+# See: https://bugs.launchpad.net/gcc-arm-embedded/+bug/1982289
+$(CURDIR)/lvgl/src/draw/vg_lite/lv_vg_lite_path.c_CFLAGS += -O0
 endif
 
 include $(APPDIR)/Application.mk
