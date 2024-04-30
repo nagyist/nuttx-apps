@@ -44,40 +44,16 @@ void modprint(FAR const char *fmt, ...) printf_like(1, 2);
  * Private Function Prototypes
  ****************************************************************************/
 
-static void testfunc1(FAR const char *msg);
-static void testfunc2(FAR const char *msg);
-static void testfunc3(FAR const char *msg);
-static int module_uninitialize(FAR void *arg);
-
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
-static const char g_msg1[] = "Hello to you too!";
-static const char g_msg2[] = "Not so bad so far.";
-static const char g_msg3[] = "Yes, don't be a stranger!";
-
-static const struct symtab_s g_sotest_exports[6] =
-{
-  {
-    "testfunc1", (FAR const void *)testfunc1,
-  },
-  {
-    "testfunc2", (FAR const void *)testfunc2,
-  },
-  {
-    "testfunc3", (FAR const void *)testfunc3,
-  },
-  {
-    "g_msg1",    (FAR const void *)g_msg1,
-  },
-  {
-    "g_msg2",    (FAR const void *)g_msg2,
-  },
-  {
-    "g_msg3",    (FAR const void *)g_msg3,
-  },
-};
+__attribute__((visibility("default")))
+const char g_msg1[] = "Hello to you too!";
+__attribute__((visibility("default")))
+const char g_msg2[] = "Not so bad so far.";
+__attribute__((visibility("default")))
+const char g_msg3[] = "Yes, don't be a stranger!";
 
 /****************************************************************************
  * Private Functions
@@ -102,7 +78,8 @@ static void modprint(FAR const char *fmt, ...)
  * Name: testfunc1
  ****************************************************************************/
 
-static void testfunc1(FAR const char *msg)
+__attribute__((visibility("default")))
+void testfunc1(FAR const char *msg)
 {
   modprint("testfunc1: Hello, everyone!\n");
   modprint("   caller: %s\n", msg);
@@ -112,7 +89,8 @@ static void testfunc1(FAR const char *msg)
  * Name: testfunc2
  ****************************************************************************/
 
-static void testfunc2(FAR const char *msg)
+__attribute__((visibility("default")))
+void testfunc2(FAR const char *msg)
 {
   modprint("testfunc2: Hope you are having a great day!\n");
   modprint("   caller: %s\n", msg);
@@ -122,7 +100,8 @@ static void testfunc2(FAR const char *msg)
  * Name: testfunc3
  ****************************************************************************/
 
-static void testfunc3(FAR const char *msg)
+__attribute__((visibility("default")))
+void testfunc3(FAR const char *msg)
 {
   modprint("testfunc3: Let's talk again very soon\n");
   modprint("   caller: %s\n", msg);
@@ -132,10 +111,10 @@ static void testfunc3(FAR const char *msg)
  * Name: module_uninitialize
  ****************************************************************************/
 
-static int module_uninitialize(FAR void *arg)
+__attribute__((destructor))
+static void module_uninitialize(void)
 {
-  modprint("module_uninitialize: arg=%p\n", arg);
-  return OK;
+  modprint("module_uninitialize\n");
 }
 
 /****************************************************************************
@@ -150,14 +129,8 @@ static int module_uninitialize(FAR void *arg)
  *
  ****************************************************************************/
 
-int module_initialize(FAR struct mod_info_s *modinfo)
+__attribute__((constructor))
+static void module_initialize(void)
 {
-  modprint("module_initialize:\n");
-
-  modinfo->uninitializer = module_uninitialize;
-  modinfo->arg           = NULL;
-  modinfo->exports       = g_sotest_exports;
-  modinfo->nexports      = 6;
-
-  return OK;
+  modprint("module_initialize\n");
 }
