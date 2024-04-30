@@ -3,6 +3,7 @@ cc_defaults {
     cflags: [
         "-DFAR=",
         "-DOK=0",
+        "-DCODE=",
         "-DERROR=-1",
         "-DCONFIG_DEBUG_UORB"
     ],
@@ -22,14 +23,16 @@ cc_library_headers {
 cc_library {
     name: "libuorb",
     srcs: [
-        "uORB/uORB.c",
+        "uORB/*.c",
         "sensor/*.c",
     ],
     cflags: [
         "-DFAR=",
+        "-DCODE=",
         "-DOK=0",
         "-DERROR=-1",
-        "-DCONFIG_DEBUG_UORB"
+        "-DCONFIG_DEBUG_UORB",
+        "-DCONFIG_UORB_LOOP_MAX_EVENTS=16"
     ],
     shared_libs: [
         "libnuttx_libc",
