@@ -58,7 +58,7 @@ struct nxscope_thr_env_s
  * Name: nxscope_cb_userid
  ****************************************************************************/
 
-int nxscope_cb_userid(FAR void *priv, uint8_t id, FAR uint8_t *buff)
+static int nxscope_cb_userid(FAR void *priv, uint8_t id, FAR uint8_t *buff)
 {
   UNUSED(priv);
 
@@ -71,7 +71,7 @@ int nxscope_cb_userid(FAR void *priv, uint8_t id, FAR uint8_t *buff)
  * Name: nxscope_cb_start
  ****************************************************************************/
 
-int nxscope_cb_start(FAR void *priv, bool start)
+static int nxscope_cb_start(FAR void *priv, bool start)
 {
   UNUSED(priv);
 
