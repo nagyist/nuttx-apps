@@ -28,10 +28,8 @@
 #include <cassert>
 #include <cstdio>
 
-#ifdef CONFIG_CXX_LOCALIZATION
 #include <fstream>
 #include <iostream>
-#endif
 #include <map>
 #include <string>
 #include <vector>
@@ -59,7 +57,7 @@ class Extend : public Base
 public:
   void printExtend(void)
   {
-    printf("extend\n");
+    std::cout << "extend" << std::endl;
   }
 };
 
@@ -106,7 +104,6 @@ private:
 // Name: test_ostream
 //***************************************************************************/
 
-#ifdef CONFIG_CXX_LOCALIZATION
 static void test_ofstream()
 {
   std::ofstream ttyOut;
@@ -131,13 +128,11 @@ static void test_ofstream()
       ttyOut.close();
     }
 }
-#endif
 
 //***************************************************************************
 // Name: test_iostream
 //***************************************************************************/
 
-#ifdef CONFIG_CXX_LOCALIZATION
 static void test_iostream()
 {
   std::cout << "Test iostream ================================" << std::endl;
@@ -145,7 +140,6 @@ static void test_iostream()
   std::cout << "Print an int: "  <<  190  <<  std::endl;
   std::cout << "Print a char: "  <<  'd'  <<  std::endl;
 }
-#endif
 
 //***************************************************************************
 // Name: test_stl
@@ -153,7 +147,7 @@ static void test_iostream()
 
 static void test_stl()
 {
-  printf("Test std::vector =============================\n");
+  std::cout << "Test std::vector =============================" << std::endl;
 
   std::vector<int> v1;
   assert(v1.empty());
@@ -169,7 +163,7 @@ static void test_stl()
   v1.pop_back();
   assert(v1.size() == 3);
 
-  printf("v1=%d %d %d\n", v1[0], v1[1], v1[2]);
+  std::cout << "v1=" << v1[0] << ' ' << v1[1] << ' ' << v1[2] << std::endl;
   assert(v1[2] == 3);
 
   std::vector<int> v2 = v1;
@@ -180,13 +174,13 @@ static void test_stl()
   std::vector<std::string>::iterator it;
   for (it = v3.begin(); it != v3.end(); ++it)
     {
-      printf("%s ", it->c_str());
+      std::cout << *it << ' ';
     }
 
-  printf("\n");
+  std::cout << std::endl;
   assert(v3[1] == "World");
 
-  printf("Test std::map ===============================\n");
+  std::cout << "Test std::map ================================" << std::endl;
 
   std::map<int, std::string> m1;
   m1[12] = "Hello";
@@ -202,17 +196,17 @@ static void test_stl()
 #if defined(CONFIG_LIBCXX) && __cplusplus >= 201703L
 auto test_stl2() -> void
 {
-  printf("Test C++17 features ==========================\n");
+  std::cout << "Test C++17 features ==========================" << std::endl;
 
   auto check = [](auto&& path)
     {
       if (File::open(path))
         {
-          printf("File %s exists!\n", path.data());
+          std::cout << "File " << path << " exists!" << std::endl;
         }
       else
         {
-          printf("File %s does not exist!\n", path.data());
+          std::cerr << "Invalid file! " << path << std::endl;
         }
     };
   std::array<std::string_view, 3> path_list{
@@ -230,7 +224,7 @@ auto test_stl2() -> void
 #ifdef CONFIG_CXX_RTTI
 static void test_rtti()
 {
-  printf("Test RTTI =============================\n");
+  std::cout << "Test RTTI ====================================" << std::endl;
   Base *a = new Base();
   Base *b = new Extend();
   assert(a);
@@ -255,14 +249,14 @@ static void test_rtti()
 #ifdef CONFIG_CXX_EXCEPTION
 static void test_exception()
 {
-  printf("Test Exception ===============================\n");
+  std::cout << "Test Exception ===============================" << std::endl;
   try
     {
       throw std::runtime_error("runtime error");
     }
   catch (std::runtime_error &e)
     {
-      printf("Catch Exception: %s\n", e.what());
+      std::cout << "Catch exception: " << e.what() << std::endl;
     }
 }
 #endif
@@ -277,10 +271,8 @@ static void test_exception()
 
 extern "C" int main(int argc, char *argv[])
 {
-#ifdef CONFIG_CXX_LOCALIZATION
   test_ofstream();
   test_iostream();
-#endif
   test_stl();
 #if defined(CONFIG_LIBCXX) && __cplusplus >= 201703L
   test_stl2();

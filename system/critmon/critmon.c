@@ -120,7 +120,7 @@ static int critmon_process_directory(FAR struct dirent *entryp)
   FAR char *maxcrit;
   FAR char *maxrun;
   FAR char *runtime;
-  FAR char *pos;
+  FAR char *endptr;
   FILE *stream;
   int len;
   int ret;
@@ -218,56 +218,53 @@ static int critmon_process_directory(FAR struct dirent *entryp)
    * Output Format:  X.XXXXXXXXX X.XXXXXXXXX X.XXXXXXXXX NNNNN <name>
    */
 
-  pos = critmon_isolate_value(g_critmon.line);
+  maxpreemp = g_critmon.line;
+  maxcrit   = strchr(g_critmon.line, ',');
 
-#if CONFIG_SCHED_CRITMONITOR_MAXTIME_PREEMPTION >= 0
-  maxpreemp = pos;
-  pos = strchr(pos, ',');
-  if (pos != NULL)
+  if (maxcrit != NULL)
     {
-      *pos++ = '\0';
-    }
-#else
-  maxpreemp = "None";
-#endif
+      *maxcrit++ = '\0';
 
-#if CONFIG_SCHED_CRITMONITOR_MAXTIME_CSECTION >= 0
-  maxcrit = pos;
-  pos = strchr(pos, ',');
-  if (pos != NULL)
-    {
-      *pos++ = '\0';
-    }
-#else
-  maxcrit = "None";
-#endif
+      maxrun = strchr(maxcrit, ',');
+      if (maxrun != NULL)
+        {
+          *maxrun++ = '\0';
 
-#if CONFIG_SCHED_CRITMONITOR_MAXTIME_THREAD >= 0
-  maxrun = pos;
-  pos = strchr(pos, ',');
-  if (pos != NULL)
-    {
-      *pos++ = '\0';
+          runtime = strchr(maxrun, ',');
+          if (runtime != NULL)
+            {
+              *runtime++ = '\0';
+              endptr = strchr(runtime, '\n');
+              if (endptr != NULL)
+                {
+                  *endptr = '\0';
+                }
+            }
+          else
+            {
+              runtime = "None";
+            }
+        }
+      else
+        {
+          maxrun = "None";
+          runtime = "None";
+        }
     }
-
-  runtime = pos;
-  pos = strchr(pos, ',');
-  if (pos != NULL)
+  else
     {
-      *pos++ = '\0';
+      maxcrit = "None";
+      maxrun  = "None";
+      runtime = "None";
     }
-#else
-  maxrun  = "None";
-  runtime = "None";
-#endif
 
   /* Finally, output the stack info that we gleaned from the procfs */
 
 #if CONFIG_TASK_NAME_SIZE > 0
-  printf("%-29s %-29s %-16s %-16s %-5s %s\n",
+  printf("%11s %11s %11s %-16s %-5s %s\n",
          maxpreemp, maxcrit, maxrun, runtime, entryp->d_name, name);
 #else
-  printf("%-29s %-29s %16s %16s %5s\n",
+  printf("%11s %11s %11s %16s %5s\n",
          maxpreemp, maxcrit, maxrun, runtime, entryp->d_name);
 #endif
 
@@ -323,7 +320,7 @@ static void critmon_global_crit(void)
   FAR char *cpu;
   FAR char *maxpreemp;
   FAR char *maxcrit;
-  FAR char *pos;
+  FAR char *endptr;
   FILE *stream;
   int errcode;
   int ret;
@@ -360,40 +357,36 @@ static void critmon_global_crit(void)
        * Output Format: X.XXXXXXXXX X.XXXXXXXXX       CPU X
        */
 
-      pos = critmon_isolate_value(g_critmon.line);
-      cpu = pos;
-      pos = strchr(pos, ',');
-      if (pos != NULL)
-        {
-          *pos++ = '\0';
-        }
+      cpu       = g_critmon.line;
+      maxpreemp = strchr(g_critmon.line, ',');
 
-#if CONFIG_SCHED_CRITMONITOR_MAXTIME_PREEMPTION >= 0
-      maxpreemp = pos;
-      pos = strchr(pos, ',');
-      if (pos != NULL)
+      if (maxpreemp != NULL)
         {
-          *pos++ = '\0';
+          *maxpreemp++ = '\0';
+          maxcrit = strchr(maxpreemp, ',');
+          if (maxcrit != NULL)
+            {
+              *maxcrit++ = '\0';
+              endptr = strchr(maxcrit, '\n');
+              if (endptr != NULL)
+                {
+                  *endptr = '\0';
+                }
+            }
+          else
+            {
+              maxcrit = "None";
+            }
         }
-#else
-      maxpreemp = "None";
-#endif
-
-#if CONFIG_SCHED_CRITMONITOR_MAXTIME_CSECTION >= 0
-      maxcrit = pos;
-      pos = strchr(pos, ',');
-      if (pos != NULL)
+      else
         {
-          *pos++ = '\0';
+          maxpreemp = "None";
+          maxcrit   = "None";
         }
-#else
-      maxcrit = "None";
-#endif
 
       /* Finally, output the stack info that we gleaned from the procfs */
 
-      printf("%-29s %-29s ---------------- ---------------- ----  "
-             "CPU %s\n",
+      printf("%11s %11s ----------- ---------------- ----  CPU %s\n",
               maxpreemp, maxcrit, cpu);
     }
 
@@ -417,11 +410,10 @@ static int critmon_list_once(void)
   /* Output a Header */
 
 #if CONFIG_TASK_NAME_SIZE > 0
-  printf("PRE-EMPTION CALLER            CSECTION CALLER               "
-         "RUN              TIME             PID   DESCRIPTION\n");
+  printf("PRE-EMPTION CSECTION    RUN         TIME             "
+         "PID   DESCRIPTION\n");
 #else
-  printf("PRE-EMPTION CALLER            CSECTION CALLER               "
-         "RUN              TIME             PID\n");
+  printf("PRE-EMPTION CSECTION    RUN         TIME             PID\n");
 #endif
 
   /* Should global usage first */
