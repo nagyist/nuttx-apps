@@ -25,10 +25,11 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
-#include <stdio.h>
 #include <sys/ioctl.h>
+#include <time.h>
 #include <unistd.h>
 
+#include <nuttx/streams.h>
 #include <uORB/uORB.h>
 
 /****************************************************************************
@@ -75,7 +76,7 @@ static int orb_advsub_open(FAR const struct orb_metadata *meta, int flags,
       reginfo.nbuffer = queue_size;
       reginfo.persist = !!(flags & SENSOR_PERSIST);
 
-      fd = open(ORB_USENSOR_PATH, O_WRONLY);
+      fd = open(ORB_USENSOR_PATH, O_WRONLY | O_CLOEXEC);
       if (fd < 0)
         {
           return fd;
@@ -257,6 +258,16 @@ int orb_get_interval(int fd, FAR unsigned *interval)
   return ret;
 }
 
+int orb_set_info(int fd, FAR const orb_info_t *info)
+{
+  return ioctl(fd, SNIOC_SET_INFO, (unsigned long)(uintptr_t)info);
+}
+
+int orb_get_info(int fd, FAR orb_info_t *info)
+{
+  return ioctl(fd, SNIOC_GET_INFO, (unsigned long)(uintptr_t)info);
+}
+
 int orb_set_batch_interval(int fd, unsigned batch_interval)
 {
   return ioctl(fd, SNIOC_BATCH, (unsigned long)batch_interval);
@@ -322,3 +333,33 @@ int orb_group_count(FAR const struct orb_metadata *meta)
 
   return instance;
 }
+
+#ifdef CONFIG_DEBUG_UORB
+int orb_sscanf(FAR const char *buf, FAR const char *format, FAR void *data)
+{
+  struct lib_meminstream_s meminstream;
+  int lastc;
+
+  lib_meminstream(&meminstream, buf, strlen(buf));
+  return lib_bscanf(&meminstream.common, &lastc, format, data);
+}
+
+void orb_info(FAR const char *format, FAR const char *name,
+              FAR const void *data)
+{
+  struct va_format vaf;
+
+  vaf.fmt = format;
+  vaf.va  = (va_list *)data;
+  uorbinfo_raw("%s(now:%" PRIu64 "):%pB", name, orb_absolute_time(), &vaf);
+}
+
+int orb_fprintf(FAR FILE *stream, FAR const char *format,
+                FAR const void *data)
+{
+  struct lib_stdoutstream_s stdoutstream;
+
+  lib_stdoutstream(&stdoutstream, stream);
+  return lib_bsprintf(&stdoutstream.common, format, data);
+}
+#endif
