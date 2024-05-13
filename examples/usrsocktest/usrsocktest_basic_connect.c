@@ -109,7 +109,7 @@ static void setup(FAR struct usrsocktest_daemon_conf_s *dconf)
 
 static void teardown(void)
 {
-  int unused_data ret;
+  int ret;
 
   if (sd >= 0)
     {
