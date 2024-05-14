@@ -437,8 +437,8 @@ MAINSRC += $(TLPIDIR)/tty/demo_SIGWINCH.c \
            $(TLPIDIR)/tty/no_echo.c \
            $(TLPIDIR)/tty/test_tty_functions.c
 # users_groups
-#MAINSRC += $(TLPIDIR)/users_groups/check_password.c
-MAINSRC += $(TLPIDIR)/users_groups/t_getpwent.c \
+MAINSRC += $(TLPIDIR)/users_groups/check_password.c \
+           $(TLPIDIR)/users_groups/t_getpwent.c \
            $(TLPIDIR)/users_groups/t_getpwnam_r.c
 # vdso
 MAINSRC += $(TLPIDIR)/vdso/gettimeofday.c
