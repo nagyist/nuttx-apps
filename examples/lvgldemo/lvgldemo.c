@@ -111,6 +111,7 @@ int main(int argc, FAR char *argv[])
 
 #ifdef CONFIG_LV_USE_NUTTX_LIBUV
   uv_loop_t ui_loop;
+  lv_memzero(&ui_loop, sizeof(ui_loop));
 #endif
 
 #ifdef NEED_BOARDINIT
@@ -150,13 +151,8 @@ int main(int argc, FAR char *argv[])
 #else
   while (1)
     {
-      uint32_t idle;
-      idle = lv_timer_handler();
-
-      /* Minimum sleep of 1ms */
-
-      idle = idle ? idle : 1;
-      usleep(idle * 1000);
+      lv_timer_handler();
+      usleep(10 * 1000);
     }
 #endif
 
