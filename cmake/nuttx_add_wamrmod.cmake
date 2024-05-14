@@ -62,8 +62,8 @@ function(nuttx_add_wamrmod)
       OUTPUT ${MOD_PDAT} ${MOD_BDAT}
       COMMAND ${CMAKE_COMMAND} -E echo "wamr_module_${mod}_register," >>
               ${WAMR_MODULE_LIST}
-      COMMAND ${CMAKE_COMMAND} -E echo "bool wamr_module_${mod}_register(void);" >>
-              ${WAMR_MODULE_PROTO}
+      COMMAND ${CMAKE_COMMAND} -E echo "bool wamr_module_${mod}_register(void);"
+              >> ${WAMR_MODULE_PROTO}
       COMMAND ${CMAKE_COMMAND} -E touch ${MOD_PDAT}
       COMMAND ${CMAKE_COMMAND} -E touch ${MOD_BDAT}
       WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}

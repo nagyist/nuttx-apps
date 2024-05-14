@@ -370,7 +370,7 @@ void orb_info(FAR const char *format, FAR const char *name,
   vaf.va  = (va_list *)data;
 
   lib_stdoutstream(&stdoutstream, stdout);
-  lib_sprintf(&stdoutstream.common, "%s(now:%" PRIu64 "):%pB\n",
+  lib_sprintf(&stdoutstream.common, "%s(now:%" PRIu64 "):%pB",
               name, orb_absolute_time(), &vaf);
 }
 
