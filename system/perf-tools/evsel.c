@@ -32,7 +32,62 @@
 #include "evsel.h"
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#define C(x)            PERF_COUNT_HW_CACHE_##x
+#define CACHE_READ      (1 << C(OP_READ))
+#define CACHE_WRITE     (1 << C(OP_WRITE))
+#define CACHE_PREFETCH  (1 << C(OP_PREFETCH))
+#define COP(x)          (1 << x)
+
+/****************************************************************************
+ * Private data
+ ****************************************************************************/
+
+/****************************************************************************
+ * cache operation stat
+ * L1I : Read and prefetch only
+ * ITLB and BPU : Read-only
+ ****************************************************************************/
+
+const unsigned long evsel_hw_cache_stat[C(MAX)] =
+{
+  [C(L1D)]  = (CACHE_READ | CACHE_WRITE | CACHE_PREFETCH),
+  [C(L1I)]  = (CACHE_READ | CACHE_PREFETCH),
+  [C(LL)]   = (CACHE_READ | CACHE_WRITE | CACHE_PREFETCH),
+  [C(DTLB)] = (CACHE_READ | CACHE_WRITE | CACHE_PREFETCH),
+  [C(ITLB)] = (CACHE_READ),
+  [C(BPU)]  = (CACHE_READ),
+  [C(NODE)] = (CACHE_READ | CACHE_WRITE | CACHE_PREFETCH),
+};
+
+FAR const char *evsel_hw_cache[PERF_COUNT_HW_CACHE_MAX] =
+{
+  [PERF_COUNT_HW_CACHE_L1D]  = "L1-dcache",
+  [PERF_COUNT_HW_CACHE_L1I]  = "L1-icache",
+  [PERF_COUNT_HW_CACHE_LL]   = "LLC",
+  [PERF_COUNT_HW_CACHE_DTLB] = "dTLB",
+  [PERF_COUNT_HW_CACHE_ITLB] = "iTLB",
+  [PERF_COUNT_HW_CACHE_BPU]  = "branch",
+  [PERF_COUNT_HW_CACHE_NODE] = "node",
+};
+
+FAR const char *evsel_hw_cache_op[PERF_COUNT_HW_CACHE_OP_MAX] =
+{
+  [PERF_COUNT_HW_CACHE_OP_READ]     = "load",
+  [PERF_COUNT_HW_CACHE_OP_WRITE]    = "store",
+  [PERF_COUNT_HW_CACHE_OP_PREFETCH] = "prefetch",
+};
+
+const char *evsel_hw_cache_result[PERF_COUNT_HW_CACHE_RESULT_MAX] =
+{
+  [PERF_COUNT_HW_CACHE_RESULT_ACCESS] = "refs",
+  [PERF_COUNT_HW_CACHE_RESULT_MISS]   = "misses",
+};
+
+/****************************************************************************
+ * Public data
  ****************************************************************************/
 
 FAR const char *const evsel_hw_names[PERF_COUNT_HW_MAX] =
@@ -72,6 +127,161 @@ static void perf_evsel_init(FAR struct perf_evsel_s *evsel,
  * Public Functions
  ****************************************************************************/
 
+int parse_aliases(FAR const char *str,
+                  FAR const char *const names[],
+                  int size, FAR int *longest)
+{
+  int n;
+  int i;
+
+  *longest = -1;
+  for (i = 0; i < size; i++)
+    {
+      n = strlen(names[i]);
+      if (n > *longest && !strncasecmp(str, names[i], n))
+        {
+          *longest = n;
+        }
+
+      if (*longest > 0)
+        {
+          return i;
+        }
+    }
+
+  return -1;
+}
+
+int parse_hw_cache_events(FAR const char *name, FAR uint64_t *config)
+{
+  int len;
+  int cache_type = -1;
+  int cache_op = -1;
+  int cache_result = -1;
+  const char *str = name;
+  const char *name_end = &name[strlen(name) + 1];
+
+  cache_type = parse_aliases(str, evsel_hw_cache,
+                             PERF_COUNT_HW_CACHE_MAX, &len);
+  if (cache_type == -1)
+    {
+      return -EINVAL;
+    }
+
+  str += len + 1;
+  if (str < name_end)
+    {
+      cache_op = parse_aliases(str, evsel_hw_cache_op,
+                               PERF_COUNT_HW_CACHE_OP_MAX, &len);
+      if (cache_op >= 0)
+        {
+          if (!evsel_is_cache_op_valid(cache_type, cache_op))
+            {
+              return -EINVAL;
+            }
+
+          str += len + 1;
+        }
+      else
+        {
+          return -EINVAL;
+        }
+    }
+
+  if (str < name_end)
+    {
+      cache_result = parse_aliases(str, evsel_hw_cache_result,
+                                   PERF_COUNT_HW_CACHE_RESULT_MAX, &len);
+      if (cache_result < 0)
+        {
+          return -EINVAL;
+        }
+    }
+
+  if (cache_op == -1)
+    {
+      cache_op = PERF_COUNT_HW_CACHE_OP_READ;
+    }
+
+  if (cache_result == -1)
+    {
+      cache_result = PERF_COUNT_HW_CACHE_RESULT_ACCESS;
+    }
+
+  if (config)
+    {
+      *config = cache_type | (cache_op << 8) | (cache_result << 16);
+    }
+
+  return 0;
+}
+
+int evsel_hw_cache_type_op_res_name(uint8_t type, uint8_t op, uint8_t result,
+                                    FAR char *bf, size_t size)
+{
+  if (result)
+    {
+      return snprintf(bf, size, "%s-%s-%s", evsel_hw_cache[type],
+                       evsel_hw_cache_op[op],
+                       evsel_hw_cache_result[result]);
+    }
+
+  return snprintf(bf, size, "%s-%s", evsel_hw_cache[type],
+                       evsel_hw_cache_op[op]);
+}
+
+bool evsel_is_cache_op_valid(uint8_t type, uint8_t op)
+{
+  if (evsel_hw_cache_stat[type] & COP(op))
+    {
+      return true;
+    }
+  else
+    {
+      return false;
+    }
+}
+
+int evsel_hw_cache_name(FAR struct evsel_s *evsel, FAR char *buf,
+                              size_t size)
+{
+  uint64_t config = evsel->core.attr.config;
+  uint8_t op;
+  uint8_t result;
+  uint8_t type = (config >>  0) & 0xff;
+  const char *err = "unknown-ext-hardware-cache-type";
+
+  if (type >= PERF_COUNT_HW_CACHE_MAX)
+    {
+      goto out_err;
+    }
+
+  op = (config >>  8) & 0xff;
+  err = "unknown-ext-hardware-cache-op";
+  if (op >= PERF_COUNT_HW_CACHE_OP_MAX)
+    {
+      goto out_err;
+    }
+
+  result = (config >> 16) & 0xff;
+  err = "unknown-ext-hardware-cache-result";
+  if (result >= PERF_COUNT_HW_CACHE_RESULT_MAX)
+    {
+      goto out_err;
+    }
+
+  err = "invalid-cache";
+  if (!evsel_is_cache_op_valid(type, op))
+    {
+      goto out_err;
+    }
+
+  return evsel_hw_cache_type_op_res_name(type, op, result, buf, size);
+
+out_err:
+  return snprintf(buf, size, "%s", err);
+}
+
 int evsel_raw_name(FAR struct evsel_s *evsel, FAR char *buf,
                               size_t size)
 {
@@ -106,6 +316,9 @@ FAR const char *evsel_name(FAR struct evsel_s *evsel)
     {
       case PERF_TYPE_HARDWARE:
         evsel_hw_name(evsel, buf, sizeof(buf));
+        break;
+      case PERF_TYPE_HW_CACHE:
+        evsel_hw_cache_name(evsel, buf, sizeof(buf));
         break;
       case PERF_TYPE_RAW:
         evsel_raw_name(evsel, buf, sizeof(buf));
@@ -164,7 +377,6 @@ int evsel_read_counter(FAR struct evsel_s *evsel,
 
   if (read(evsel->core.evfd, &count, sizeof(count)) < 0)
     {
-      printf("Read perf event data failed!\n");
       return -EINVAL;
     }
 
@@ -179,7 +391,6 @@ int evsel_open(FAR struct evsel_s *evsel, FAR struct evlist_s *evlist)
                                      evsel->core.cpu, -1, O_CLOEXEC);
   if (evsel->core.evfd < 0)
     {
-      printf("Perf event open failed! event_fd = %d\n", evsel->core.evfd);
       return -ENOENT;
     }
 

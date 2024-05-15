@@ -59,11 +59,20 @@ struct evsel_s
 
 FAR extern const char *const evsel_hw_names[PERF_COUNT_HW_MAX];
 extern int default_hw_config[DEFAULT_HW_CONFIG_NUM];
+FAR extern const char *evsel_hw_cache[PERF_COUNT_HW_CACHE_MAX];
+FAR extern const char *evsel_hw_cache_op[PERF_COUNT_HW_CACHE_OP_MAX];
+FAR extern const char *evsel_hw_cache_result[PERF_COUNT_HW_CACHE_RESULT_MAX];
 
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 
+int parse_hw_cache_events(FAR const char *name, FAR uint64_t *config);
+int evsel_hw_cache_type_op_res_name(uint8_t type, uint8_t op, uint8_t result,
+                                    FAR char *bf, size_t size);
+bool evsel_is_cache_op_valid(uint8_t type, uint8_t op);
+int evsel_hw_cache_name(FAR struct evsel_s *evsel, FAR char *buf,
+                              size_t size);
 FAR const char *evsel_name(FAR struct evsel_s *evsel);
 FAR struct evsel_s *evsel_new(FAR struct perf_event_attr_s *attr);
 void evsel_delete(FAR struct evsel_s *evsel);

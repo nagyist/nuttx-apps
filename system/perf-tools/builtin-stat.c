@@ -150,7 +150,40 @@ static int check_raw_event(FAR char *evstr)
   return evnum;
 }
 
-static int check_event(FAR char *evstr)
+static int check_hw_cache_event(FAR char *evstr)
+{
+  char buf[PERF_STAT_DEFAULT_MAX_EVSTR];
+  int evnum = 0;
+  int cnum = 0;
+  int i;
+  int len = strlen(evstr);
+
+  for (i = 0; i <= len; i++)
+    {
+      if (evstr[i] == ',' || evstr[i] == '\0')
+        {
+          memset(buf, 0, sizeof(buf));
+          if (i - cnum > sizeof(buf))
+            {
+              printf("The event name is too long, %d\n", i - cnum);
+              return 0;
+            }
+
+          strncpy(buf, evstr + cnum, i - cnum);
+          if (parse_hw_cache_events(buf, NULL) < 0)
+            {
+              return 0;
+            }
+
+          cnum = i + 1;
+          evnum++;
+        }
+    }
+
+  return evnum;
+}
+
+static int check_hw_event(FAR char *evstr)
 {
   char buf[PERF_STAT_DEFAULT_MAX_EVSTR];
   int evnum = 0;
@@ -192,6 +225,34 @@ static int check_event(FAR char *evstr)
   return evnum;
 }
 
+static int check_event(FAR char *evstr, FAR int *evnum)
+{
+  *evnum = check_hw_event(evstr);
+  if (!(*evnum))
+    {
+      *evnum = check_hw_cache_event(evstr);
+      if (!(*evnum))
+        {
+          *evnum = check_raw_event(evstr);
+          if (!(*evnum))
+            {
+              printf("Event syntax error: %s\n", evstr);
+              return -EINVAL;
+            }
+
+          return PERF_TYPE_RAW;
+        }
+      else
+        {
+          return PERF_TYPE_HW_CACHE;
+        }
+    }
+  else
+    {
+      return PERF_TYPE_HARDWARE;
+    }
+}
+
 static int set_specified_raw_attributes(FAR char *evstr,
                       FAR struct perf_event_attr_s *attrs)
 {
@@ -216,7 +277,43 @@ static int set_specified_raw_attributes(FAR char *evstr,
   return 0;
 }
 
-static int set_specified_attributes(FAR char *evstr,
+static int set_specified_hw_cache_attributes(FAR char *evstr,
+                         FAR struct perf_event_attr_s *attrs)
+{
+  char buf[PERF_STAT_DEFAULT_MAX_EVSTR];
+  uint64_t config;
+  int evnum = 0;
+  int cnum = 0;
+  int i;
+  int len = strlen(evstr);
+
+  for (i = 0; i <= len; i++)
+    {
+      if (evstr[i] == ',' || evstr[i] == '\0')
+        {
+          memset(buf, 0, sizeof(buf));
+          if (i - cnum > sizeof(buf))
+            {
+              printf("The event name is too long, %d\n", i - cnum);
+              return -EINVAL;
+            }
+
+          strncpy(buf, evstr + cnum, i - cnum);
+          parse_hw_cache_events(buf, &config);
+          attrs[evnum].type = PERF_TYPE_HW_CACHE;
+          attrs[evnum].config = config;
+          attrs[evnum].size = sizeof(struct perf_event_attr_s);
+          attrs[evnum].disabled = 1;
+          attrs[evnum].inherit = 1;
+          cnum = i + 1;
+          evnum++;
+        }
+    }
+
+  return 0;
+}
+
+static int set_specified_hw_attributes(FAR char *evstr,
                       FAR struct perf_event_attr_s *attrs)
 {
   char buf[PERF_STAT_DEFAULT_MAX_EVSTR];
@@ -271,21 +368,10 @@ static int add_specified_attributes(FAR struct evlist_s *evlist,
       return -EINVAL;
     }
 
-  evnum = check_event(evstr);
-  if (!evnum)
+  status = check_event(evstr, &evnum);
+  if (status < 0)
     {
-      evnum = check_raw_event(evstr);
-      if (!evnum)
-        {
-          printf("Event syntax error: %s\n", evstr);
-          return -EINVAL;
-        }
-
-      status = PERF_TYPE_RAW;
-    }
-  else
-    {
-      status = PERF_TYPE_HARDWARE;
+      return -EINVAL;
     }
 
   evlist->attrs = zalloc(evnum * sizeof(struct perf_event_attr_s));
@@ -295,13 +381,17 @@ static int add_specified_attributes(FAR struct evlist_s *evlist,
       return -ENOMEM;
     }
 
-  if (status == PERF_TYPE_RAW)
+  if (status == PERF_TYPE_HARDWARE)
+    {
+      set_specified_hw_attributes(evstr, evlist->attrs);
+    }
+  else if (status == PERF_TYPE_HW_CACHE)
+    {
+      set_specified_hw_cache_attributes(evstr, evlist->attrs);
+    }
+  else if (status == PERF_TYPE_RAW)
     {
       set_specified_raw_attributes(evstr, evlist->attrs);
-    }
-  else
-    {
-      set_specified_attributes(evstr, evlist->attrs);
     }
 
   if (evlist->system_wide)

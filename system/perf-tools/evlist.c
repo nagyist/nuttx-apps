@@ -128,17 +128,16 @@ int evlist_print_counters(FAR struct evlist_s *evlist)
   FAR struct perf_evsel_s *psel = NULL;
   FAR struct evsel_s *evsel = NULL;
   FAR struct list_node *node = NULL;
+#if (CONFIG_SMP_NCPUS > 1)
   struct evlist_count_s *evcnt = NULL;
   int i = 0;
 
-#if (CONFIG_SMP_NCPUS > 1)
   if (evlist->system_wide)
     {
       int num = evlist->core.nr_entries / CONFIG_SMP_NCPUS;
       evcnt = zalloc(num * sizeof(struct evlist_count_s));
       if (!evcnt)
         {
-          printf("Failed to allocate temporary storage!\n");
           return -ENOMEM;
         }
 
