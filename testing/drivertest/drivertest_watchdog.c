@@ -42,8 +42,6 @@
 #include <stdint.h>
 #include <cmocka.h>
 #include <time.h>
-
-#include <nuttx/arch.h>
 #include <nuttx/timers/watchdog.h>
 
 /****************************************************************************

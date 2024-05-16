@@ -29,9 +29,6 @@
 if(CONFIG_APPS_DIR)
   # add apps cmake modules
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
-  include(nuttx_add_aidl)
-  include(nuttx_add_jidl)
-  include(nuttx_add_makefile)
   include(nuttx_add_luamod)
   include(nuttx_add_wamrmod)
   nuttx_add_library(apps)
@@ -66,25 +63,14 @@ add_subdirectory(platform)
 add_subdirectory(sdr)
 add_subdirectory(system)
 add_subdirectory(testing)
+add_subdirectory(tools)
 add_subdirectory(videoutils)
 add_subdirectory(wireless)
 
-if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/tests/CMakeLists.txt)
-  add_subdirectory(tests)
-endif()
-
 # add examples and external at the end to allow library dependencies
 add_subdirectory(examples)
-if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/external/CMakeLists.txt)
+if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/external)
   add_subdirectory(external)
-endif()
-
-if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/frameworks/CMakeLists.txt)
-  add_subdirectory(frameworks)
-endif()
-
-if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/vendor/CMakeLists.txt)
-  add_subdirectory(vendor)
 endif()
 
 add_subdirectory(builtin) # must be last

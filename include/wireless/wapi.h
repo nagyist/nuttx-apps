@@ -991,7 +991,6 @@ int wapi_get_pmksa(int sock, FAR const char *ifname,
  *
  * Description:
  *   wapi extension interface for privatization method.
- *   cmd should be definded in wireless_priv.h before use.
  *
  ****************************************************************************/
 

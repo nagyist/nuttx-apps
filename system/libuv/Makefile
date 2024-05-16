@@ -19,7 +19,6 @@
 ############################################################################
 
 include $(APPDIR)/Make.defs
--include ./ext/Makefile
 
 LIBUV_PATCHS ?= $(sort $(wildcard 000*.patch))
 
@@ -28,6 +27,7 @@ LIBUV_UNPACK   = libuv
 LIBUV_TARBALL  = v$(LIBUV_VERSION).zip
 LIBUV_URL_BASE = https://github.com/libuv/libuv/archive/refs/tags
 LIBUV_URL      = $(LIBUV_URL_BASE)/$(LIBUV_TARBALL)
+
 
 $(LIBUV_TARBALL):
 	@echo "Downloading: $(LIBUV_TARBALL)"
@@ -48,13 +48,20 @@ $(LIBUV_UNPACK)/.patch: $(LIBUV_UNPACK)
 CFLAGS += -I$(LIBUV_UNPACK)/src
 CFLAGS += -I$(LIBUV_UNPACK)/src/unix
 CFLAGS += -I$(LIBUV_UNPACK)/test
-CFLAGS += -Wno-shadow -Wno-dangling-pointer
+CFLAGS += -Wno-shadow
 CFLAGS += -DDEF_THREADPOOL_SIZE=CONFIG_LIBUV_THREADPOOL_SIZE
 CFLAGS += -DDEF_THREADPOOL_STACKSIZE=CONFIG_LIBUV_THREAD_STACKSIZE
 CFLAGS += -DDEF_THREADPOOL_PRIORITY=CONFIG_LIBUV_THREADPOOL_PRIORITY
 CFLAGS += -DMAX_EPOLL_EVENTS=CONFIG_LIBUV_MAX_EPOLL_EVENTS
 CFLAGS += -DPREP_EVENT_SIZE=CONFIG_LIBUV_PREP_EVENT_SIZE
-CFLAGS += -DDEF_STREAM_READ_BUF_SIZE=CONFIG_LIBUV_STREAM_READ_BUF_SIZE
+
+ifeq ($(GCCVER),)
+  export GCCVER = $(shell $(CC) --version | grep gcc | sed -r 's/.* ([0-9]+\.[0-9]+).*/\1/' | cut -d'.' -f1)
+endif
+
+ifeq ($(GCCVER),12)
+  CFLAGS += -Wno-dangling-pointer
+endif
 
 VPATH += $(LIBUV_UNPACK)/src
 VPATH += $(LIBUV_UNPACK)/src/unix
@@ -97,7 +104,9 @@ CSRCS += pipe.c
 CSRCS += fs.c
 CSRCS += fs-poll.c
 CSRCS += timer.c
+ifneq ($(CONFIG_LIBC_EXECFUNCS),)
 CSRCS += process-spawn.c
+endif
 CSRCS += sysinfo-loadavg.c
 CSRCS += sysinfo-memory.c
 
