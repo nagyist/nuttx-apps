@@ -127,9 +127,7 @@ static int foc_handler_run(FAR struct foc_motor_b16_s *motor,
 
   /* Get FOC handler state */
 
-  foc_handler_state_b16(&motor->handler,
-                        &motor->foc_state,
-                        &motor->mod_state);
+  foc_handler_state_b16(&motor->handler, &motor->foc_state);
 
   return ret;
 }
@@ -228,12 +226,12 @@ static void foc_fixed16_nxscope(FAR struct foc_nxscope_s *nxs,
   nxscope_put_vb16(&nxs->nxs, i++, ptr, 1);
 #endif
 #if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VEL)
-  ptr = (FAR b16_t *)&motor->vel_el;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 1);
+#  warning not supported yet
+  i++;
 #endif
 #if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VM)
-  ptr = (FAR b16_t *)&motor->vel_mech;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 1);
+#  warning not supported yet
+  i++;
 #endif
 #if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VBUS)
   ptr = (FAR b16_t *)&motor->vbus;
@@ -253,29 +251,11 @@ static void foc_fixed16_nxscope(FAR struct foc_nxscope_s *nxs,
 #endif
 #if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_DQREF)
   ptr = (FAR b16_t *)&motor->dq_ref;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 2);
+  nxscope_put_vb16_t(&nxs->nxs, i++, ptr, 2);
 #endif
 #if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_VDQCOMP)
   ptr = (FAR b16_t *)&motor->vdq_comp;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 2);
-#endif
-#if (CONFIG_EXAMPLES_FOC_NXSCOPE_CFG & FOC_NXSCOPE_SVM3)
-  b16_t svm3_tmp[4];
-
-  /* Convert sector to b16_t.
-   * Normally, a sector value is an integer in the range 1-6 but we convert
-   * it to b16_t and range to 0.1-0.6. This is to send the entire SVM3 state
-   * as b16_t array and scale the sector value closer to PWM duty values
-   * (range 0.0 to 0.5) which makes it easier to visualize the data later.
-   */
-
-  svm3_tmp[0] = b16mulb16(itob16(motor->mod_state.sector), ftob16(0.1f));
-  svm3_tmp[1] = motor->mod_state.d_u;
-  svm3_tmp[2] = motor->mod_state.d_v;
-  svm3_tmp[3] = motor->mod_state.d_w;
-
-  ptr = svm3_tmp;
-  nxscope_put_vb16(&nxs->nxs, i++, ptr, 4);
+  nxscope_put_vb16_t(&nxs->nxs, i++, ptr, 2);
 #endif
 
   nxscope_unlock(&nxs->nxs);
@@ -295,8 +275,10 @@ int foc_fixed16_thr(FAR struct foc_ctrl_env_s *envp)
   struct foc_mq_s         handle;
   struct foc_motor_b16_s  motor;
   struct foc_device_s     dev;
+  int                     time = 0;
   int                     ret  = OK;
 
+  UNUSED(time);
   DEBUGASSERT(envp);
 
   PRINTFV("foc_fixed_thr, id=%d\n", envp->id);
@@ -323,10 +305,9 @@ int foc_fixed16_thr(FAR struct foc_ctrl_env_s *envp)
       goto errout;
     }
 
-  /* Store data from device */
+  /* Get PWM max duty */
 
   motor.pwm_duty_max = FOCDUTY_TO_FIXED16(dev.info.hw_cfg.pwm_max);
-  motor.iphase_adc = b16idiv(dev.info.hw_cfg.iphase_scale, 100000);
 
   /* Start with motor free */
 
@@ -340,19 +321,7 @@ int foc_fixed16_thr(FAR struct foc_ctrl_env_s *envp)
 
   while (motor.mq.quit == false)
     {
-      if (motor.mq.start == true)
-        {
-          /* Get FOC device state */
-
-          ret = foc_dev_state_get(&dev);
-          if (ret < 0)
-            {
-              PRINTF("ERROR: foc_dev_state_get failed %d!\n", ret);
-              goto errout;
-            }
-        }
-
-      PRINTFV("foc_fixed16_thr %d %d\n", envp->id, motor.time);
+      PRINTFV("foc_fixed16_thr %d %d\n", envp->id, time);
 
       /* Handle mqueue */
 
@@ -387,129 +356,119 @@ int foc_fixed16_thr(FAR struct foc_ctrl_env_s *envp)
             }
 
           motor.startstop = false;
-
-          /* Start from the beginning of the control loop */
-
-          continue;
         }
 
-      /* Ignore control logic if controller not started yet */
+      /* Run control logic if controller started */
 
-      if (motor.mq.start == false)
+      if (motor.mq.start == true)
         {
-          usleep(1000);
-          continue;
-        }
+          /* Get FOC device state */
+
+          ret = foc_dev_state_get(&dev);
+          if (ret < 0)
+            {
+              PRINTF("ERROR: foc_dev_state_get failed %d!\n", ret);
+              goto errout;
+            }
 
 #ifdef CONFIG_EXAMPLES_FOC_STATE_USE_MODEL_PMSM
-      /* Get model state */
+          /* Get model state */
 
-      ret = foc_model_state_get(&motor, &dev);
-      if (ret < 0)
-        {
-          PRINTF("ERROR: foc_model_state_get failed %d!\n", ret);
-          goto errout;
-        }
+          ret = foc_model_state_get(&motor, &dev);
+          if (ret < 0)
+            {
+              PRINTF("ERROR: foc_model_state_get failed %d!\n", ret);
+              goto errout;
+            }
 #endif
 
-      /* Handle controller state */
+          /* Handle controller state */
 
-      ret = foc_dev_state_handle(&dev, &motor.fault);
-      if (ret < 0)
-        {
-          PRINTF("ERROR: foc_dev_state_handle failed %d!\n", ret);
-          goto errout;
-        }
+          ret = foc_dev_state_handle(&dev, &motor.fault);
+          if (ret < 0)
+            {
+              PRINTF("ERROR: foc_dev_state_handle failed %d!\n", ret);
+              goto errout;
+            }
 
-      /* Get motor state */
+          /* Get motor state */
 
-      ret = foc_motor_get(&motor);
-      if (ret < 0)
-        {
-          PRINTF("ERROR: foc_motor_get failed %d!\n", ret);
-          goto errout;
-        }
+          ret = foc_motor_get(&motor);
+          if (ret < 0)
+            {
+              PRINTF("ERROR: foc_motor_get failed %d!\n", ret);
+              goto errout;
+            }
 
-      /* Motor control */
+          /* Motor control */
 
-      ret = foc_motor_control(&motor);
-      if (ret < 0)
-        {
-          PRINTF("ERROR: foc_motor_control failed %d!\n", ret);
-          goto errout;
-        }
+          ret = foc_motor_control(&motor);
+          if (ret < 0)
+            {
+              PRINTF("ERROR: foc_motor_control failed %d!\n", ret);
+              goto errout;
+            }
 
-      /* Run FOC */
+          /* Run FOC */
 
-      ret = foc_handler_run(&motor, &dev);
-      if (ret < 0)
-        {
-          PRINTF("ERROR: foc_handler_run failed %d!\n", ret);
-          goto errout;
-        }
+          ret = foc_handler_run(&motor, &dev);
+          if (ret < 0)
+            {
+              PRINTF("ERROR: foc_handler_run failed %d!\n", ret);
+              goto errout;
+            }
 
 #ifdef FOC_STATE_PRINT_PRE
-      /* Print state if configured */
+          /* Print state if configured */
 
-      if (motor.time % FOC_STATE_PRINT_PRE == 0)
-        {
-          foc_state_print(&motor);
-        }
+          if (time % FOC_STATE_PRINT_PRE == 0)
+            {
+              foc_state_print(&motor);
+            }
 #endif
 
 #ifdef CONFIG_EXAMPLES_FOC_STATE_USE_MODEL_PMSM
-      /* Feed FOC model with data */
+          /* Feed FOC model with data */
 
-      foc_model_run_b16(&motor.model,
-                        ftob16(FOC_MODEL_LOAD),
-                        &motor.foc_state.vab);
+          foc_model_run_b16(&motor.model,
+                            ftob16(FOC_MODEL_LOAD),
+                            &motor.foc_state.vab);
 #endif
 
-      /* Set FOC device parameters */
+          /* Set FOC device parameters */
 
-      ret = foc_dev_params_set(&dev);
-      if (ret < 0)
-        {
-          PRINTF("ERROR: foc_dev_params_set failed %d!\n", ret);
-          goto errout;
-        }
+          ret = foc_dev_params_set(&dev);
+          if (ret < 0)
+            {
+              PRINTF("ERROR: foc_dev_params_set failed %d!\n", ret);
+              goto errout;
+            }
 
 #ifdef CONFIG_EXAMPLES_FOC_NXSCOPE
-      /* Capture nxscope samples */
+          /* Capture nxscope samples */
 
-      if (motor.time % CONFIG_EXAMPLES_FOC_NXSCOPE_PRESCALER == 0)
-        {
-          foc_fixed16_nxscope(envp->nxs, &motor, &dev);
-        }
+          if (time % CONFIG_EXAMPLES_FOC_NXSCOPE_PRESCALER == 0)
+            {
+              foc_fixed16_nxscope(envp->nxs, &motor, &dev);
+            }
 #endif
 
-#ifdef CONFIG_EXAMPLES_FOC_NXSCOPE_CONTROL
-      /* Handle nxscope work */
+          /* Terminate control thread */
 
-      if (motor.time % CONFIG_EXAMPLES_FOC_NXSCOPE_WORK_PRESCALER == 0)
-        {
-          foc_nxscope_work(envp->nxs);
+          if (motor.ctrl_state == FOC_CTRL_STATE_TERMINATE)
+            {
+              PRINTF("TERMINATE CTRL THREAD\n");
+              goto errout;
+            }
         }
-#endif
-
-      /* Terminate control thread */
-
-      if (motor.ctrl_state == FOC_CTRL_STATE_TERMINATE)
+      else
         {
-          PRINTF("TERMINATE CTRL THREAD\n");
-          goto errout;
+          usleep(1000);
         }
 
       /* Increase counter */
 
-      motor.time += 1;
-
-#ifdef CONFIG_EXAMPLES_FOC_PERF
-      if (dev.perf.max_changed)
-        {
-          PRINTF_PERF("max=%" PRId32 "\n", dev.perf.max);
-        }
-#endif
+      time += 1;
     }
 
 errout:
