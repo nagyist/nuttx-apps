@@ -42,9 +42,6 @@ if(CONFIG_GRAPHICS_LVGL)
           ""
           TEST_COMMAND
           ""
-      PATCH_COMMAND
-        patch -p1 -s -d ${CMAKE_CURRENT_LIST_DIR}/lvgl <
-        ${CMAKE_CURRENT_LIST_DIR}/0001-fix-demo-fix-compile-warning.patch
       DOWNLOAD_NO_PROGRESS true
       TIMEOUT 30)
 
@@ -74,6 +71,49 @@ if(CONFIG_GRAPHICS_LVGL)
     target_compile_definitions(lvgl PRIVATE "LV_ASSERT_HANDLER=ASSERT(0)\;")
   endif()
 
-  # allow to include via lvgl/lvgl.h
-  target_include_directories(lvgl PUBLIC ${CMAKE_CURRENT_LIST_DIR})
+  if(CONFIG_LV_USE_FREETYPE)
+    if(NOT CONFIG_LIB_FREETYPE)
+      message(WARNING "LIB_FREETYPE is not enabled")
+    endif()
+    target_link_libraries(lvgl PRIVATE freetype)
+    nuttx_add_dependencies(TARGET lvgl DEPENDS freetype)
+  endif()
+
+  if(CONFIG_LV_USE_LIBPNG)
+    if(NOT CONFIG_LIB_PNG)
+      message(WARNING "LIB_PNG is not enabled")
+    endif()
+    target_link_libraries(lvgl PRIVATE png_static)
+    nuttx_add_dependencies(TARGET lvgl DEPENDS png_static)
+  endif()
+
+  if(CONFIG_LV_USE_LIBWEBP)
+    if(NOT CONFIG_LIB_WEBP)
+      message(WARNING "LIB_WEBP is not enabled")
+    endif()
+    target_link_libraries(lvgl PRIVATE webpdecoder)
+    nuttx_add_dependencies(TARGET lvgl DEPENDS webpdecoder)
+  endif()
+
+  if(CONFIG_LV_USE_FFMPEG)
+    message(FATAL_ERROR "FFMPEG is not supported yet")
+  endif()
+
+  if(CONFIG_LV_USE_RLOTTIE)
+    message(FATAL_ERROR "RLOTTIE is not supported yet")
+  endif()
+
+  if(CONFIG_LV_USE_LIBJPEG_TURBO)
+    if(NOT CONFIG_LIB_JPEG_TURBO)
+      message(WARNING "LIB_JPEG_TURBO is not enabled")
+    endif()
+    target_link_libraries(lvgl PRIVATE turbojpeg-static)
+    nuttx_add_dependencies(TARGET lvgl DEPENDS turbojpeg-static)
+  endif()
+
+  set_property(
+    TARGET nuttx
+    APPEND
+    PROPERTY NUTTX_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}
+             ${CMAKE_CURRENT_LIST_DIR}/lvgl)
 endif()
