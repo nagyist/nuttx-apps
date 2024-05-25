@@ -29,9 +29,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <setjmp.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
 #include <cmocka.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>

@@ -461,7 +461,7 @@ TEST_SETUP(no_block_recv)
 
 TEST_TEAR_DOWN(no_block_recv)
 {
-  int unused_data ret;
+  int ret;
   if (sd >= 0)
     {
       ret = close(sd);
