@@ -138,7 +138,7 @@ int main(int argc, FAR char *argv[])
           goto errout;
         }
 
-      printf("pid %d's current affinity mask: %x\n", pid, cpuset);
+      printf("pid %d's current affinity mask: 0x%" PRIx32 "\n", pid, cpuset);
     }
   else
     {
