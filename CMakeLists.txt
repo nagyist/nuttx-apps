@@ -28,6 +28,7 @@
 
 if(CONFIG_APPS_DIR)
   include(nuttx_add_aidl)
+  include(nuttx_call_apps_makefile)
   nuttx_add_library(apps)
   if(NOT EXISTS {NUTTX_APPS_BINDIR}/dummy.c)
     file(TOUCH ${NUTTX_APPS_BINDIR}/dummy.c)
