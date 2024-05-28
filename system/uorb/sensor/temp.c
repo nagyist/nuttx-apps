@@ -29,12 +29,20 @@
  ****************************************************************************/
 
 #ifdef CONFIG_DEBUG_UORB
-static const char sensor_temp_format[] =
-  "timestamp:%" PRIu64 ",temperature:%hf";
+static void print_sensor_temp_message(FAR const struct orb_metadata *meta,
+                                      FAR const void *buffer)
+{
+  FAR const struct sensor_temp *message = buffer;
+  const orb_abstime now = orb_absolute_time();
+
+  uorbinfo_raw("%s:\ttimestamp: %" PRIu64 " (%" PRIu64 " us ago) "
+               "temperature: %.4f", meta->o_name, message->timestamp,
+               now - message->timestamp, message->temperature);
+}
 #endif
 
 /****************************************************************************
  * Public Data
  ****************************************************************************/
 
-ORB_DEFINE(sensor_temp, struct sensor_temp, sensor_temp_format);
+ORB_DEFINE(sensor_temp, struct sensor_temp, print_sensor_temp_message);
