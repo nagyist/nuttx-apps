@@ -20,14 +20,7 @@
 
 if(CONFIG_TESTING_OSTEST)
 
-  set(SRCS
-      getopt.c
-      libc_memmem.c
-      restart.c
-      sigprocmask.c
-      sighand.c
-      signest.c
-      sighelper.c)
+  set(SRCS getopt.c restart.c sigprocmask.c sighand.c signest.c sighelper.c)
 
   if(CONFIG_DEV_NULL)
     list(APPEND SRCS dev_null.c)
@@ -83,7 +76,7 @@ if(CONFIG_TESTING_OSTEST)
       list(APPEND SRCS specific.c)
     endif()
 
-    if(NOT CONFIG_PTHREAD_CLEANUP_STACKSIZE EQUAL 0)
+    if(NOT CONFIG_TLS_NCLEANUP EQUAL 0)
       list(APPEND SRCS pthread_cleanup.c)
     endif()
 
@@ -129,7 +122,7 @@ if(CONFIG_TESTING_OSTEST)
     endif()
   endif()
 
-  if(CONFIG_ARCH_HAVE_FORK)
+  if(CONFIG_ARCH_HAVE_VFORK)
     if(CONFIG_SCHED_WAITPID)
       list(APPEND SRCS vfork.c)
     endif()
@@ -143,8 +136,7 @@ if(CONFIG_TESTING_OSTEST)
     list(APPEND SRCS smp_call.c)
   endif()
 
-  target_sources(apps PRIVATE ${SRCS})
-
-  nuttx_add_application(NAME ostest SRCS ostest_main.c)
+  set(OSTEST_SRCS ostest_main.c ${SRCS})
+  nuttx_add_application(NAME ostest SRCS ${OSTEST_SRCS})
 
 endif()
