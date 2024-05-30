@@ -145,8 +145,7 @@ void nettest_server(void)
 
   printf("server: Accepting connections on port %d\n",
          CONFIG_EXAMPLES_NETTEST_SERVER_PORTNO);
-  acceptsd = accept4(listensd, (struct sockaddr *)&myaddr, &addrlen,
-                     SOCK_CLOEXEC);
+  acceptsd = accept(listensd, (struct sockaddr *)&myaddr, &addrlen);
   if (acceptsd < 0)
     {
       printf("server: accept failure: %d\n", errno);
