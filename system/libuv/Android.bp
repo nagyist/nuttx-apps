@@ -1,5 +1,6 @@
 cc_library_static {
     name: "libuv",
+    min_sdk_version: "33",
 
     srcs: [
         "libuv/src/fs-poll.c",
@@ -52,6 +53,11 @@ cc_library_static {
         "-Wno-missing-field-initializers",
         "-Wno-unused-parameter",
         "-Wno-sometimes-uninitialized",
+    ],
+
+    apex_available : [
+        "//apex_available:platform",
+        "com.android.btservices",
     ],
 }
 
