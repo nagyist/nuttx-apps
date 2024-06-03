@@ -9,11 +9,13 @@ cc_defaults {
         "libuorb",
         "libcutils"
     ],
+    proprietary: true,
 }
 
 cc_library_headers {
     name: "libuorb_headers",
     export_include_dirs: ["."],
+    proprietary: true,
 }
 
 cc_library {
@@ -27,6 +29,7 @@ cc_library {
         "-DOK=0",
         "-DERROR=-1"
     ],
+    proprietary: true,
 }
 
 cc_binary {
