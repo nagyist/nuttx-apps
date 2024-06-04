@@ -29,6 +29,12 @@ cc_library {
         "-DOK=0",
         "-DERROR=-1"
     ],
+    shared_libs: [
+        "libnuttx_libc",
+    ],
+    header_libs: [
+        "nuttx_libc_headers"
+    ],
     proprietary: true,
 }
 
