@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/examples/tiff/tiff_main.c
+ * apps/graphics/tiff/tiff_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -33,13 +33,10 @@
 /****************************************************************************
  * Pre-Processor Definitions
  ****************************************************************************/
-
 /* Configuration ************************************************************/
-
-/* This is a simple unit test for the TIFF creation library at
- * apps/graphic/tiff.
- * It is configured to work in the Linux user-mode simulation and
- * has not been tested in any other environment.
+/* This is a simple unit test for the TIFF creation library at apps/graphic/tiff.
+ * It is configured to work in the Linux user-mode simulation and has not been
+ * tested in any other environment.
  *
  * Other configuration options:
  *
@@ -91,7 +88,7 @@
 int main(int argc, FAR char *argv[])
 {
   struct tiff_info_s info;
-  uint8_t strip[3 * 256];
+  uint8_t strip[3*256];
   uint8_t *ptr;
   int green;
   int blue;
@@ -147,6 +144,5 @@ int main(int argc, FAR char *argv[])
       printf("tiff_finalize() failed: %d\n", ret);
       exit(1);
     }
-
   return 0;
 }

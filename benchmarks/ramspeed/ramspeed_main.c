@@ -64,17 +64,6 @@
       } \
   } while (0)
 
-  #define HAS_IRQ_CONTROL !defined(CONFIG_BUILD_KERNEL) && \
-                          !defined(CONFIG_BUILD_PROTECTED)
-
-  #if HAS_IRQ_CONTROL
-  #  define ENABLE_IRQ(flags) leave_critical_section(flags);
-  #  define DISABLE_IRQ(flags) flags=enter_critical_section();
-  #else
-  #  define ENABLE_IRQ(flags) (void)flags;
-  #  define DISABLE_IRQ(flags) (void)flags;
-  #endif
-
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -87,6 +76,7 @@ struct ramspeed_s
   uint8_t value;
   uint32_t repeat_num;
   bool irq_disable;
+  bool allocate_rw_address;
 };
 
 /****************************************************************************
@@ -115,10 +105,8 @@ static void show_usage(FAR const char *progname, int exitcode)
          " [default value: 0x00].\n");
   printf("  -n <decimal-repeat num> number of repetitions"
          " [default value: 100].\n");
-  #if HAS_IRQ_CONTROL
   printf("  -i turn off interrupts while testing"
          " [default value: false].\n");
-  #endif
   exit(exitcode);
 }
 
@@ -130,7 +118,6 @@ static void parse_commandline(int argc, FAR char **argv,
                               FAR struct ramspeed_s *info)
 {
   int ch;
-  bool allocate_rw_address = false;
 
   memset(info, 0, sizeof(struct ramspeed_s));
   info->repeat_num = 100;
@@ -146,7 +133,7 @@ static void parse_commandline(int argc, FAR char **argv,
       switch (ch)
         {
           case 'a':
-            allocate_rw_address = true;
+            info->allocate_rw_address = true;
             break;
           case 'r':
             OPTARG_TO_VALUE(info->src, const void *, 16);
@@ -175,11 +162,9 @@ static void parse_commandline(int argc, FAR char **argv,
               }
 
             break;
-          #if HAS_IRQ_CONTROL
           case 'i':
             info->irq_disable = true;
             break;
-          #endif
           case '?':
             printf(RAMSPEED_PREFIX "Unknown option: %c\n", (char)optopt);
             show_usage(argv[0], EXIT_FAILURE);
@@ -187,17 +172,45 @@ static void parse_commandline(int argc, FAR char **argv,
         }
     }
 
-  if (allocate_rw_address)
-    {
-      info->dest = malloc(info->size);
-      info->src = malloc(info->size);
-    }
-
-  if (info->dest == NULL || info->src == NULL || info->size == 0)
+  if ((info->dest == NULL && !info->allocate_rw_address) || info->size == 0)
     {
       printf(RAMSPEED_PREFIX "Missing required arguments\n");
-      show_usage(argv[0], EXIT_FAILURE);
+      goto out;
     }
+  else
+    {
+      /* We need to automatically apply for memory */
+
+      printf(RAMSPEED_PREFIX "Allocate RW buffers on heap\n");
+      info->dest = malloc(info->size);
+      if (info->dest == NULL)
+        {
+          printf(RAMSPEED_PREFIX "Dest Alloc Memory Failed!\n");
+          goto out;
+        }
+
+      info->src = malloc(info->size);
+      if (info->src == NULL)
+        {
+          printf(RAMSPEED_PREFIX "Src Alloc Memory Failed!\n");
+          goto out;
+        }
+    }
+
+  /* Print info */
+
+  printf(RAMSPEED_PREFIX "Write address: %p\n", info->dest);
+  printf(RAMSPEED_PREFIX "Read address: %p\n", info->src);
+  printf(RAMSPEED_PREFIX "Size: %zu bytes\n", info->size);
+  printf(RAMSPEED_PREFIX "Value: 0x%02x\n", info->value);
+  printf(RAMSPEED_PREFIX "Repeat number: %" PRIu32 "\n", info->repeat_num);
+  printf(RAMSPEED_PREFIX "Interrupts disabled: %s\n",
+         info->irq_disable ? "true" : "false");
+
+  return;
+
+out:
+    show_usage(argv[0], EXIT_FAILURE);
 }
 
 /****************************************************************************
@@ -207,10 +220,10 @@ static void parse_commandline(int argc, FAR char **argv,
 static uint32_t get_timestamp(void)
 {
   struct timespec ts;
-  uint32_t ms;
+  uint32_t us;
   clock_gettime(CLOCK_MONOTONIC, &ts);
-  ms = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
-  return ms;
+  us = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
+  return us;
 }
 
 /****************************************************************************
@@ -366,7 +379,7 @@ static void internal_memset(FAR void *dst, uint8_t v, size_t len)
 static void print_rate(FAR const char *name, uint64_t bytes,
                        uint32_t cost_time)
 {
-  uint32_t rate;
+  double rate;
   if (cost_time == 0)
     {
       printf(RAMSPEED_PREFIX
@@ -375,10 +388,10 @@ static void print_rate(FAR const char *name, uint64_t bytes,
       return;
     }
 
-  rate = bytes * 1000 / cost_time / 1024;
+  rate = (double)bytes / 1024 / (cost_time / 1000000.0);
   printf(RAMSPEED_PREFIX
-         "%s Rate = %" PRIu32 " KB/s\t[cost: %" PRIu32 "ms]\n",
-         name, rate, cost_time);
+         "%s Rate = %.3f KB/s\t[cost: %.3f ms]\n",
+         name, rate, cost_time / 1000.0f);
 }
 
 /****************************************************************************
@@ -415,7 +428,7 @@ static void memcpy_speed_test(FAR void *dest, FAR const void *src,
 
       if (irq_disable)
         {
-          DISABLE_IRQ(flags);
+          flags = enter_critical_section();
         }
 
       start_time = get_timestamp();
@@ -438,7 +451,7 @@ static void memcpy_speed_test(FAR void *dest, FAR const void *src,
 
       if (irq_disable)
         {
-          ENABLE_IRQ(flags);
+          leave_critical_section(flags);
         }
 
       print_rate("system memcpy():\t", total_size, cost_time_system);
@@ -480,7 +493,7 @@ static void memset_speed_test(FAR void *dest, uint8_t value,
 
       if (irq_disable)
         {
-          DISABLE_IRQ(flags);
+          flags = enter_critical_section();
         }
 
       start_time = get_timestamp();
@@ -503,7 +516,7 @@ static void memset_speed_test(FAR void *dest, uint8_t value,
 
       if (irq_disable)
         {
-          ENABLE_IRQ(flags);
+          leave_critical_section(flags);
         }
 
       print_rate("system memset():\t", total_size, cost_time_system);
@@ -525,13 +538,24 @@ int main(int argc, FAR char *argv[])
 
   parse_commandline(argc, argv, &ramspeed);
 
-  memcpy_speed_test(ramspeed.dest, ramspeed.src,
-                    ramspeed.size, ramspeed.repeat_num,
-                    ramspeed.irq_disable);
+  if (ramspeed.src != NULL)
+    {
+      memcpy_speed_test(ramspeed.dest, ramspeed.src,
+                        ramspeed.size, ramspeed.repeat_num,
+                        ramspeed.irq_disable);
+    }
 
   memset_speed_test(ramspeed.dest, ramspeed.value,
                     ramspeed.size, ramspeed.repeat_num,
                     ramspeed.irq_disable);
+
+  /* Check if alloc from heap? */
+
+  if (ramspeed.allocate_rw_address)
+    {
+      free(ramspeed.dest);
+      free((void *)ramspeed.src);
+    }
 
   return EXIT_SUCCESS;
 }
