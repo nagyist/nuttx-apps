@@ -21,7 +21,7 @@
 if(CONFIG_EXAMPLES_TELNETD)
   nuttx_add_application(
     NAME
-    example_telnetd
+    telnetd
     PRIORITY
     ${CONFIG_EXAMPLES_TELNETD_DAEMONPRIO}
     STACKSIZE
