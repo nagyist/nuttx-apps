@@ -3,7 +3,8 @@ cc_defaults {
     cflags: [
         "-DFAR=",
         "-DOK=0",
-        "-DERROR=-1"
+        "-DERROR=-1",
+        "-DCONFIG_DEBUG_UORB"
     ],
     shared_libs: [
         "libuorb",
@@ -27,13 +28,17 @@ cc_library {
     cflags: [
         "-DFAR=",
         "-DOK=0",
-        "-DERROR=-1"
+        "-DERROR=-1",
+        "-DCONFIG_DEBUG_UORB"
     ],
     shared_libs: [
         "libnuttx_libc",
     ],
     header_libs: [
         "nuttx_libc_headers"
+    ],
+    defaults: [
+        "nuttx_libc_defaults"
     ],
     proprietary: true,
 }
