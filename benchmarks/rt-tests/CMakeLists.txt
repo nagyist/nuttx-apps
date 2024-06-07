@@ -19,6 +19,7 @@ if(CONFIG_BENCHMARK_RTTESTS)
   list(
     APPEND
     CFLAGS
+    -Irt-tests/src/include
     -Wno-maybe-uninitialized
     -Wno-unused-variable
     -Wno-unused-function
@@ -39,5 +40,5 @@ if(CONFIG_BENCHMARK_RTTESTS)
     COMPILE_FLAGS
     ${CFLAGS}
     SRCS
-    rttests/src/cyclictest/cyclictest.c)
+    rt-tests/src/cyclictest/cyclictest.c)
 endif()

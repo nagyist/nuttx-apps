@@ -26,8 +26,9 @@ PRIORITY  = $(CONFIG_BENCHMARK_RTTESTS_PRIORITY)
 STACKSIZE = $(CONFIG_BENCHMARK_RTTESTS_STACKSIZE)
 MODULE    = $(CONFIG_BENCHMARK_RTTESTS)
 
-MAINSRC   = rttests/src/cyclictest/cyclictest.c
+MAINSRC   = rt-tests/src/cyclictest/cyclictest.c
 
+CFLAGS   += -Irt-tests/src/include
 CFLAGS   += -Wno-maybe-uninitialized -Wno-unused-variable -Wno-unused-function
 CFLAGS   += -Wno-unused-but-set-variable -Wno-shadow -Wno-stringop-truncation
 CFLAGS   += -Wno-strict-prototypes

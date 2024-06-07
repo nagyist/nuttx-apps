@@ -15,5 +15,5 @@
 #
 
 ifneq ($(CONFIG_BENCHMARK_RTTESTS),)
-CONFIGURED_APPS += $(APPDIR)/benchmarks/rttests
+CONFIGURED_APPS += $(APPDIR)/benchmarks/rt-tests
 endif
