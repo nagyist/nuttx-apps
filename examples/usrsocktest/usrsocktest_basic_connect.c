@@ -109,18 +109,18 @@ static void setup(FAR struct usrsocktest_daemon_conf_s *dconf)
 
 static void teardown(void)
 {
-  int unused_data ret;
+  int ret;
 
   if (sd >= 0)
     {
       ret = close(sd);
-      assert(ret >= 0);
+      TEST_ASSERT_TRUE(ret >= 0);
     }
 
   if (started)
     {
       ret = usrsocktest_daemon_stop();
-      assert(ret == OK);
+      TEST_ASSERT_EQUAL(OK, ret);
     }
 }
 
