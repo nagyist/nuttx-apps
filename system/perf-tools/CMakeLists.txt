@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/system/mdio/CMakeLists.txt
+# apps/system/perf-tools/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,6 +18,24 @@
 #
 # ##############################################################################
 
-if(CONFIG_SYSTEM_MDIO)
-  nuttx_add_application(MODULE ${CONFIG_SYSTEM_MDIO} NAME mdio SRCS mdio_main.c)
+if(CONFIG_PERF_TOOLS)
+  nuttx_add_application(
+    MODULE
+    ${CONFIG_PERF_TOOLS}
+    NAME
+    perf
+    STACKSIZE
+    ${CONFIG_PERF_TOOLS_STACKSIZE}
+    PRIORITY
+    ${CONFIG_PERF_TOOLS_PRIORITY}
+    SRCS
+    perf.c
+    builtin-help.c
+    builtin-list.c
+    builtin-record.c
+    builtin-stat.c
+    builtin-version.c
+    evlist.c
+    evsel.c
+    parse-options.c)
 endif()
