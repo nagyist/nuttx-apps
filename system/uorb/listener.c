@@ -623,12 +623,7 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
           fds[i].events = POLLIN;
         }
 
-      if (nb_msgs == 1)
-        {
-          listener_print(tmp->object.meta, fd);
-          orb_unsubscribe(fd);
-        }
-      else if (interval != 0)
+      if (interval != 0)
         {
           orb_set_interval(fd, (unsigned)interval);
 
@@ -639,13 +634,6 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
         }
 
       i++;
-    }
-
-  if (nb_msgs == 1)
-    {
-      free(fds);
-      free(recv_msgs);
-      return;
     }
 
   if (record)
