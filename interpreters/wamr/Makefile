@@ -44,6 +44,8 @@ endif
 
 ifeq ($(CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX),y)
 
+# When the loadable module configuration is enabled,we need to use CELFFLAGS
+$(WAMR_UNPACK)/product-mini/platforms/nuttx/main.c_CELFFLAGS = -Dwasm_runtime_full_init=wamr_custom_init
 $(WAMR_UNPACK)/product-mini/platforms/nuttx/main.c_CFLAGS = -Dwasm_runtime_full_init=wamr_custom_init
 
 CSRCS += wamr_custom_init.c libc_nuttx.c
