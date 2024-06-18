@@ -19,6 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_SYSTEM_FLASH_ERASEALL)
-  nuttx_add_application(MODULE ${CONFIG_SYSTEM_FLASH_ERASEALL} NAME
-                        flash_eraseall SRCS flash_eraseall_main.c)
+  nuttx_add_application(NAME flash_eraseall)
 endif()
