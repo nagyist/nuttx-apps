@@ -228,9 +228,9 @@ MAINSRC += $(TLPIDIR)/proc/bad_longjmp.c \
            $(TLPIDIR)/proc/longjmp.c \
            $(TLPIDIR)/proc/mem_segments.c \
            $(TLPIDIR)/proc/modify_env.c \
-           $(TLPIDIR)/proc/necho.c
-#          $(TLPIDIR)/proc/setenv.c
-MAINSRC += $(TLPIDIR)/proc/setjmp_vars.c \
+           $(TLPIDIR)/proc/necho.c \
+           $(TLPIDIR)/proc/setenv.c \
+           $(TLPIDIR)/proc/setjmp_vars.c \
            $(TLPIDIR)/proc/t_getenv.c
 # proccred
 #MAINSRC += $(TLPIDIR)/proccred/idshow.c
