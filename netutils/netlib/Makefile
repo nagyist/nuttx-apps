@@ -74,9 +74,6 @@ endif
 ifeq ($(CONFIG_NETLINK_ROUTE),y)
 CSRCS += netlib_getnbtab.c
 endif
-ifeq ($(CONFIG_NET_IPTABLES),y)
-CSRCS += netlib_ip6tables.c
-endif
 endif
 
 # Device support
