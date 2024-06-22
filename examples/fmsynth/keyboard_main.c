@@ -79,6 +79,7 @@ struct key_convert_s
  * Private Function Prototypes
  ****************************************************************************/
 
+extern int board_external_amp_mute_control(bool en);
 static void app_dequeue_cb(unsigned long arg,
                            FAR struct ap_buffer_s *apb);
 static void app_complete_cb(unsigned long arg);
@@ -90,7 +91,6 @@ static void app_user_cb(unsigned long arg,
  ****************************************************************************/
 
 static struct kbd_s g_kbd;
-static bool g_running = true;
 
 static struct nxaudio_callbacks_s cbs =
 {
@@ -191,10 +191,7 @@ static void app_dequeue_cb(unsigned long arg,
                                       NULL, 0);
     }
 
-  if (g_running)
-    {
-      nxaudio_enqbuffer(&kbd->nxaudio, apb);
-    }
+  nxaudio_enqbuffer(&kbd->nxaudio, apb);
 }
 
 /****************************************************************************
@@ -376,11 +373,11 @@ int main(int argc, FAR char *argv[])
   int i;
   int ret;
   int key;
+  bool running = true;
   pthread_t pid;
   struct app_options appopt;
   int key_idx;
 
-  g_running = true;
   if (configure_option(&appopt, argc, argv) != OK)
     {
       print_help(argv[0]);
@@ -417,7 +414,7 @@ int main(int argc, FAR char *argv[])
   printf("Start %s\n", argv[0]);
   print_keyusage();
 
-  while (g_running)
+  while (running)
     {
       key = getchar();
       if (key != EOF)
@@ -425,7 +422,7 @@ int main(int argc, FAR char *argv[])
           switch (key)
             {
               case 'q':
-                g_running = false;
+                running = false;
                 break;
 
               default:
@@ -440,6 +437,8 @@ int main(int argc, FAR char *argv[])
             }
         }
     }
+
+  board_external_amp_mute_control(true);
 
   nxaudio_stop(&g_kbd.nxaudio);
   pthread_join(pid, NULL);
