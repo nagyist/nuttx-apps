@@ -18,7 +18,6 @@
 #
 # ##############################################################################
 
-if(CONFIG_SYSTEM_HOSTNAME)
-  nuttx_add_application(MODULE ${CONFIG_SYSTEM_HOSTNAME} NAME hostname SRCS
-                        hostname_main.c)
+if(CONFIG_EXAMPLES_MM)
+  nuttx_add_application(NAME mm)
 endif()

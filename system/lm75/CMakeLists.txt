@@ -19,15 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_SYSTEM_LM75)
-  nuttx_add_application(
-    MODULE
-    ${CONFIG_SYSTEM_LM75}
-    NAME
-    lm75
-    STACKSIZE
-    ${CONFIG_SYSTEM_LM75_STACKSIZE}
-    PRIORITY
-    ${CONFIG_SYSTEM_LM75_PRIORITY}
-    SRCS
-    lm75.c)
+  nuttx_add_application(NAME lm75)
 endif()

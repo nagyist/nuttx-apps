@@ -19,32 +19,5 @@
 # ##############################################################################
 
 if(CONFIG_SYSTEM_HEX2BIN)
-  if(CONFIG_SYSTEM_HEX2BIN_BUILTIN)
-    nuttx_add_application(
-      MODULE
-      ${CONFIG_SYSTEM_HEX2BIN}
-      NAME
-      hex2bin
-      STACKSIZE
-      ${CONFIG_SYSTEM_HEX2BIN_STACKSIZE}
-      PRIORITY
-      ${CONFIG_SYSTEM_HEX2BIN_PRIORITY}
-      SRCS
-      hex2bin_main.c)
-  endif()
-
-  if(CONFIG_SYSTEM_HEX2MEM_BUILTIN)
-    nuttx_add_application(
-      MODULE
-      ${CONFIG_SYSTEM_HEX2BIN}
-      NAME
-      hex2mem
-      STACKSIZE
-      ${CONFIG_SYSTEM_HEX2MEM_PRIORITY}
-      PRIORITY
-      ${CONFIG_SYSTEM_HEX2MEM_STACKSIZE}
-      SRCS
-      hex2mem_main.c)
-  endif()
-
+  nuttx_add_application(NAME hex2bin)
 endif()
