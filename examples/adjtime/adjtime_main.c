@@ -148,7 +148,7 @@ int main(int argc, FAR char *argv[])
   parse_args(&delta, argc, argv);
 
   printf("Delta time is %ld seconds and %ld micro seconds.\n",
-         (long)delta.tv_sec, delta.tv_usec);
+         delta.tv_sec, delta.tv_usec);
 
   /* Call adjtime function. */
 
@@ -160,7 +160,7 @@ int main(int argc, FAR char *argv[])
   else
     {
       printf("Returned olddelta is %ld seconds and %ld micro seconds.\n",
-             (long)olddelta.tv_sec, olddelta.tv_usec);
+             olddelta.tv_sec, olddelta.tv_usec);
     }
 
   return ret;

@@ -19,33 +19,15 @@
 # ##############################################################################
 
 if(CONFIG_SYSTEM_IPTABLES)
-
-  target_sources(apps PRIVATE iptables_utils.c)
-
   nuttx_add_application(
     MODULE
     ${CONFIG_SYSTEM_IPTABLES}
     NAME
-    iptables
+    ${CONFIG_SYSTEM_IPTABLES_PROGNAME}
     STACKSIZE
     ${CONFIG_SYSTEM_IPTABLES_STACKSIZE}
     PRIORITY
     ${CONFIG_SYSTEM_IPTABLES_PRIORITY}
     SRCS
     iptables.c)
-
-  if(CONFIG_SYSTEM_IP6TABLES)
-    nuttx_add_application(
-      MODULE
-      ${CONFIG_SYSTEM_IP6TABLES}
-      NAME
-      ip6tables
-      STACKSIZE
-      ${CONFIG_SYSTEM_IPTABLES_STACKSIZE}
-      PRIORITY
-      ${CONFIG_SYSTEM_IPTABLES_PRIORITY}
-      SRCS
-      ip6tables.c)
-  endif()
-
 endif()
