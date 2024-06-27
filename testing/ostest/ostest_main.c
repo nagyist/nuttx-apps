@@ -364,8 +364,7 @@ static int user_main(int argc, char *argv[])
       check_test_memory_usage();
 #endif
 
-#if !defined(CONFIG_DISABLE_PTHREAD) && \
-    (defined(CONFIG_SCHED_LPWORK) || defined(CONFIG_SCHED_HPWORK))
+#if !defined(CONFIG_DISABLE_PTHREAD) && defined(CONFIG_SCHED_WORKQUEUE)
       /* Check work queues */
 
       printf("\nuser_main: wqueue test\n");
