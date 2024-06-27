@@ -54,7 +54,7 @@ static int nsh_script_redirect(FAR struct nsh_vtbl_s *vtbl,
       fd = open(CONFIG_NSH_SCRIPT_REDIRECT_PATH, 0666);
       if (fd > 0)
         {
-          nsh_redirect(vtbl, 0, fd, save);
+          nsh_redirect(vtbl, fd, save);
         }
     }
 
@@ -111,7 +111,7 @@ int nsh_script(FAR struct nsh_vtbl_s *vtbl, FAR const FAR char *cmd,
 
       /* Open the file containing the script */
 
-      vtbl->np.np_fd = open(fullpath, O_RDOK);
+      vtbl->np.np_fd = open(fullpath, O_RDOK | O_CLOEXEC);
       if (vtbl->np.np_fd < 0)
         {
           if (log)
