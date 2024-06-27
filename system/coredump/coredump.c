@@ -216,6 +216,10 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
           printf("Read %s fail\n", CONFIG_BOARD_COREDUMP_BLKDEV_PATH);
           break;
         }
+      else
+        {
+          break;
+        }
 
       writesize = write(dumpfd, swap, readsize);
       if (writesize != readsize)
@@ -227,7 +231,16 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
       offset += writesize;
     }
 
-  printf("Coredump finish [%s][%zu]\n", dumppath, info->size);
+  if (offset < info->size)
+    {
+      printf("Coredump error [%s] need [%zu], but just get %zu\n",
+             dumppath, info->size, offset);
+    }
+  else
+    {
+      printf("Coredump finish [%s][%zu]\n", dumppath, info->size);
+    }
+
   info->magic = 0;
   lseek(blkfd, (geo.geo_nsectors - 1) * geo.geo_sectorsize, SEEK_SET);
   write(blkfd, info, geo.geo_sectorsize);
