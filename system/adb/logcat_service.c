@@ -24,6 +24,7 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 
 #include <nuttx/syslog/ramlog.h>
 #include <unistd.h>
@@ -66,7 +67,9 @@ static void logcat_on_kick(struct adb_service_s *service)
   logcat_service_t *svc = container_of(service, logcat_service_t, service);
   if (!svc->wait_ack)
     {
-      uv_poll_start(&svc->poll, UV_READABLE, logcat_on_data_available);
+      int ret;
+      ret = uv_poll_start(&svc->poll, UV_READABLE, logcat_on_data_available);
+      assert(ret == 0);
     }
 }
 
@@ -88,9 +91,12 @@ static void close_cb(uv_handle_t *handle)
 static void logcat_on_close(struct adb_service_s *service)
 {
   int fd;
+  int ret;
   logcat_service_t *svc = container_of(service, logcat_service_t, service);
 
-  uv_fileno((uv_handle_t *)&svc->poll, &fd);
+  ret = uv_fileno((uv_handle_t *)&svc->poll, &fd);
+  assert(ret == 0);
+
   close(fd);
   uv_close((uv_handle_t *)&svc->poll, close_cb);
 }
@@ -175,7 +181,9 @@ exit_stop_service:
 
 adb_service_t * logcat_service(adb_client_t *client, const char *params)
 {
+  int fd;
   int ret;
+
   logcat_service_t *service =
       (logcat_service_t *)malloc(sizeof(logcat_service_t));
 
@@ -189,17 +197,25 @@ adb_service_t * logcat_service(adb_client_t *client, const char *params)
 
   /* TODO parse params string to extract logcat parameters */
 
-  ret = open(CONFIG_SYSLOG_DEVPATH, O_RDONLY | O_CLOEXEC);
-
-  if (ret < 0)
+  fd = open(CONFIG_SYSLOG_DEVPATH, O_RDONLY | O_CLOEXEC);
+  if (fd < 0)
     {
       adb_err("failed to open %s (%d)\n", CONFIG_SYSLOG_DEVPATH, errno);
       free(service);
       return NULL;
     }
 
+  ret = ioctl(fd, PIPEIOC_POLLINTHRD, 1);
+  if (ret < 0)
+    {
+      adb_err("failed to control %s (%d)\n", CONFIG_SYSLOG_DEVPATH, errno);
+      close(fd);
+      free(service);
+      return NULL;
+    }
+
   uv_handle_t *handle = adb_uv_get_client_handle(client);
-  ret = uv_poll_init(handle->loop, &service->poll, ret);
+  ret = uv_poll_init(handle->loop, &service->poll, fd);
   assert(ret == 0);
 
   service->poll.data = client;
