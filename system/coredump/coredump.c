@@ -240,7 +240,7 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
           printf("Read %s fail\n", CONFIG_BOARD_COREDUMP_BLKDEV_PATH);
           break;
         }
-      else
+      else if (readsize == 0)
         {
           break;
         }
