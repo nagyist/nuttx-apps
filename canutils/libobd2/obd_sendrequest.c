@@ -82,12 +82,12 @@ int obd_send_request(FAR struct obd_dev_s *dev, uint8_t opmode, uint8_t pid)
 
   if (extended)
     {
-      dev->can_txmsg.cm_hdr.ch_id = OBD_PID_STD_REQUEST; /* MSG ID for PID Request */
+      dev->can_txmsg.cm_hdr.ch_id     = OBD_PID_STD_REQUEST; /* MSG ID for PID Request */
     }
   else
     {
 #ifdef CONFIG_CAN_EXTID
-      dev->can_txmsg.cm_hdr.ch_id = OBD_PID_EXT_REQUEST; /* MSG ID for PID Request */
+      dev->can_txmsg.cm_hdr.ch_id     = OBD_PID_EXT_REQUEST; /* MSG ID for PID Request */
 #endif
     }
 
@@ -96,7 +96,7 @@ int obd_send_request(FAR struct obd_dev_s *dev, uint8_t opmode, uint8_t pid)
 #ifdef CONFIG_CAN_EXTID
   dev->can_txmsg.cm_hdr.ch_extid  = extended;            /* Standard/Extend mode   */
 #endif
-  dev->can_txmsg.cm_hdr.ch_tcf    = 0;
+  dev->can_txmsg.cm_hdr.ch_unused = 0;                   /* Unused                 */
 
   /* Single Frame with two bytes data */
 

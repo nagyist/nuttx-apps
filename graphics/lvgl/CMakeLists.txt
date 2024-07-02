@@ -42,6 +42,9 @@ if(CONFIG_GRAPHICS_LVGL)
           ""
           TEST_COMMAND
           ""
+      PATCH_COMMAND
+        patch -p1 -s -d ${CMAKE_CURRENT_LIST_DIR}/lvgl <
+        ${CMAKE_CURRENT_LIST_DIR}/0001-fix-demo-fix-compile-warning.patch
       DOWNLOAD_NO_PROGRESS true
       TIMEOUT 30)
 
@@ -114,10 +117,6 @@ if(CONFIG_GRAPHICS_LVGL)
     nuttx_add_dependencies(TARGET lvgl DEPENDS turbojpeg-static)
   endif()
 
-  if(NOT ${CONFIG_LV_OPTLEVEL} STREQUAL "")
-    add_compile_options(${CONFIG_LV_OPTLEVEL})
-  endif()
-
   set_property(
     TARGET nuttx
     APPEND
@@ -128,7 +127,5 @@ if(CONFIG_GRAPHICS_LVGL)
     TARGET nuttx
     APPEND
     PROPERTY NUTTX_COMPILE_OPTIONS -DLV_USE_DEV_VERSION=1)
-
-  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ext)
 
 endif()
