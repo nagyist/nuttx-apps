@@ -61,6 +61,7 @@ add_subdirectory(platform)
 add_subdirectory(sdr)
 add_subdirectory(system)
 add_subdirectory(testing)
+add_subdirectory(videoutils)
 add_subdirectory(wireless)
 
 # add examples and external at the end to allow library dependencies
