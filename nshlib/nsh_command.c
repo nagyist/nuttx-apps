@@ -188,7 +188,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #ifndef CONFIG_NSH_DISABLE_DD
   CMD_MAP("dd",       cmd_dd,       3, 7,
     "if=<infile> of=<outfile> [bs=<sectsize>] [count=<sectors>] "
-    "[skip=<sectors>] [seek=<sectors>] [verify] [conv=<nocreat,notrunc>]"),
+    "[skip=<sectors>] [seek=<sectors>] [verify]"),
 #endif
 
 #if defined(CONFIG_NET) && defined(CONFIG_NET_ROUTE) && !defined(CONFIG_NSH_DISABLE_DELROUTE)
@@ -456,6 +456,7 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #if defined(CONFIG_BOARDCTL_POWEROFF) && !defined(CONFIG_NSH_DISABLE_POWEROFF)
   CMD_MAP("poweroff", cmd_poweroff, 1, 2, NULL),
+  CMD_MAP("quit", cmd_poweroff, 1, 2, NULL),
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_PRINTF
@@ -469,8 +470,7 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_PS
-  CMD_MAP("ps",       cmd_ps,       1, CONFIG_NSH_MAXARGUMENTS,
-    "<-heap> <pid1 pid2 ...>"),
+  CMD_MAP("ps",       cmd_ps,       1, 1, NULL),
 #endif
 
 #ifdef CONFIG_NET_UDP
@@ -498,9 +498,14 @@ static const struct cmdmap_s g_cmdmap[] =
   CMD_MAP("resetcause", cmd_reset_cause, 1, 1, NULL),
 #endif
 
+#if defined(CONFIG_BOARDCTL_IRQ_AFFINITY) && !defined(CONFIG_NSH_DISABLE_IRQ_AFFINITY)
+  CMD_MAP("irqaff", cmd_irq_affinity, 3, 3,
+    "irqaff [IRQ Number] [Core Mask]"),
+#endif
+
 #ifdef NSH_HAVE_DIROPTS
 #  ifndef CONFIG_NSH_DISABLE_RM
-  CMD_MAP("rm",       cmd_rm,       2, 3, "[-rf] <file-path>"),
+  CMD_MAP("rm",       cmd_rm,       2, 3, "[-r] <file-path>"),
 #  endif
 #endif
 
@@ -585,11 +590,6 @@ static const struct cmdmap_s g_cmdmap[] =
           3, CONFIG_NSH_MAXARGUMENTS, "<expression>"),
 #endif
 
-#if !defined(CONFIG_NSH_DISABLE_TOP) && defined(NSH_HAVE_CPULOAD)
-  CMD_MAP("top",       cmd_top,       1, 5,
-          "[ -n <num> ][ -d <delay>] [ -p <pidlist>] [-h]"),
-#endif
-
 #ifndef CONFIG_NSH_DISABLE_TIME
   CMD_MAP("time",     cmd_time,     2, 2, "\"<command>\""),
 #endif
@@ -662,10 +662,6 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #ifndef CONFIG_NSH_DISABLE_XD
   CMD_MAP("xd",       cmd_xd,       3, 3, "<hex-address> <byte-count>"),
-#endif
-#if !defined(CONFIG_NSH_DISABLE_WAIT) && defined(CONFIG_SCHED_WAITPID)
-  CMD_MAP("wait",     cmd_wait,     1, CONFIG_NSH_MAXARGUMENTS,
-          "pid1 [pid2 [pid3] ...]"),
 #endif
   CMD_MAP(NULL,       NULL,         1, 1, NULL)
 };
@@ -1256,7 +1252,6 @@ int nsh_command(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char *argv[])
     }
 
   ret = handler(vtbl, argc, argv);
-  vtbl->np.np_lastpid = getpid();
   return ret;
 }
 
