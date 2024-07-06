@@ -156,7 +156,7 @@ if(CONFIG_MATTER)
     list(APPEND nuttx_include_dirs ${include_dirs})
   endif()
   list(APPEND nuttx_include_dirs ${NUTTX_DIR}/include
-       ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/include_arch)
+       ${CMAKE_BINARY_DIR}/include)
   list(APPEND nuttx_include_dirs ${NUTTX_APPS_BINDIR}/include/mbedtls)
 
   set(MATTER_INCDIR
