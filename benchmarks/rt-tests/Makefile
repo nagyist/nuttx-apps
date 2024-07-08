@@ -27,6 +27,7 @@ STACKSIZE = $(CONFIG_BENCHMARK_RTTESTS_STACKSIZE)
 MODULE    = $(CONFIG_BENCHMARK_RTTESTS)
 
 MAINSRC   = rt-tests/src/cyclictest/cyclictest.c
+CSRCS     = rt-tests/src/lib/rt-error.c rt-tests/src/lib/histogram.c
 
 CFLAGS   += -Irt-tests/src/include
 CFLAGS   += -Wno-maybe-uninitialized -Wno-unused-variable -Wno-unused-function

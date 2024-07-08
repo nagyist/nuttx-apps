@@ -16,6 +16,9 @@
 
 if(CONFIG_BENCHMARK_RTTESTS)
 
+  list(APPEND SRCS rt-tests/src/cyclictest/cyclictest.c
+       rt-tests/src/lib/rt-error.c rt-tests/src/lib/histogram.c)
+
   list(
     APPEND
     CFLAGS
@@ -40,5 +43,5 @@ if(CONFIG_BENCHMARK_RTTESTS)
     COMPILE_FLAGS
     ${CFLAGS}
     SRCS
-    rt-tests/src/cyclictest/cyclictest.c)
+    ${SRCS})
 endif()
