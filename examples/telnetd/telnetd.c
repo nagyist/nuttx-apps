@@ -159,9 +159,8 @@ int telnetd_session(int argc, char *argv[])
 {
   char line[128];
 
-  printf("Device Configuration over Telnet\n");
-  printf("You can add functions to setup your device\n");
-  printf("Type '?' and press <enter> for help\n");
+  printf("uIP command shell -- NuttX style\n");
+  printf("Type '?' and return for help\n");
 
   for (; ; )
     {

@@ -22,12 +22,12 @@ if(CONFIG_TESTING_OSTEST)
 
   set(SRCS
       getopt.c
-      libc_memmem.c
       restart.c
       sigprocmask.c
       sighand.c
       signest.c
-      sighelper.c)
+      sighelper.c
+      wdog.c)
 
   if(CONFIG_DEV_NULL)
     list(APPEND SRCS dev_null.c)
@@ -83,7 +83,7 @@ if(CONFIG_TESTING_OSTEST)
       list(APPEND SRCS specific.c)
     endif()
 
-    if(NOT CONFIG_PTHREAD_CLEANUP_STACKSIZE EQUAL 0)
+    if(NOT CONFIG_TLS_NCLEANUP EQUAL 0)
       list(APPEND SRCS pthread_cleanup.c)
     endif()
 
@@ -129,7 +129,7 @@ if(CONFIG_TESTING_OSTEST)
     endif()
   endif()
 
-  if(CONFIG_ARCH_HAVE_FORK)
+  if(CONFIG_ARCH_HAVE_VFORK)
     if(CONFIG_SCHED_WAITPID)
       list(APPEND SRCS vfork.c)
     endif()
