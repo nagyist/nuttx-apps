@@ -16,13 +16,21 @@
 
 if(CONFIG_BENCHMARK_RTTESTS)
 
-  list(APPEND SRCS rt-tests/src/cyclictest/cyclictest.c
-       rt-tests/src/lib/rt-error.c rt-tests/src/lib/histogram.c)
+  list(
+    APPEND
+    SRCS
+    rt-tests/src/cyclictest/cyclictest.c
+    rt-tests/src/lib/rt-error.c
+    rt-tests/src/lib/histogram.c
+    rt-tests/src/lib/rt-utils.c
+    rt-tests/src/lib/rt-numa.c)
 
   list(
     APPEND
     CFLAGS
     -Irt-tests/src/include
+    -I.
+    -DVERSION=0.1
     -Wno-maybe-uninitialized
     -Wno-unused-variable
     -Wno-unused-function

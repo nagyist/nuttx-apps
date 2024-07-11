@@ -22,11 +22,11 @@ config BENCHMARK_RTTESTS
 if BENCHMARK_RTTESTS
 
 config BENCHMARK_RTTESTS_PRIORITY
-	int "OS profiling task priority"
-	default 100
+	int "RT-Tests task priority"
+	default 200
 
 config BENCHMARK_RTTESTS_STACKSIZE
-	int "OS profiling stack size"
+	int "RT-Tests stack size"
 	default DEFAULT_TASK_STACKSIZE
 
 endif
