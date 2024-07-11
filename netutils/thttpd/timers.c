@@ -57,20 +57,20 @@
  * Private Data
  ****************************************************************************/
 
-static timer *timers[HASH_SIZE];
-static timer *free_timers;
+static Timer *timers[HASH_SIZE];
+static Timer *free_timers;
 
 /****************************************************************************
  * Public Data
  ****************************************************************************/
 
-clientdata junkclientdata;
+ClientData JunkClientData;
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-static unsigned int hash(timer *tmr)
+static unsigned int hash(Timer *tmr)
 {
   /* We can hash on the trigger time, even though it can change over the
    * life of a timer via the periodic bit.
@@ -82,11 +82,11 @@ static unsigned int hash(timer *tmr)
           (unsigned int)tmr->time.tv_usec) % HASH_SIZE;
 }
 
-static void l_add(timer *tmr)
+static void l_add(Timer *tmr)
 {
   int h = tmr->hash;
-  register timer *tmr2;
-  register timer *tmr2prev;
+  register Timer *tmr2;
+  register Timer *tmr2prev;
 
   tmr2 = timers[h];
   if (tmr2 == NULL)
@@ -139,7 +139,7 @@ static void l_add(timer *tmr)
     }
 }
 
-static void l_remove(timer *tmr)
+static void l_remove(Timer *tmr)
 {
   int h = tmr->hash;
 
@@ -158,7 +158,7 @@ static void l_remove(timer *tmr)
     }
 }
 
-static void l_resort(timer *tmr)
+static void l_resort(Timer *tmr)
 {
   /* Remove the timer from its old list. */
 
@@ -189,10 +189,10 @@ void tmr_init(void)
   free_timers = NULL;
 }
 
-timer *tmr_create(struct timeval *now, timerproc *timer_proc,
-                  clientdata client_data, long msecs, int periodic)
+Timer *tmr_create(struct timeval *now, TimerProc *timer_proc,
+                  ClientData client_data, long msecs, int periodic)
 {
-  timer *tmr;
+  Timer *tmr;
 
   if (free_timers != NULL)
     {
@@ -201,7 +201,7 @@ timer *tmr_create(struct timeval *now, timerproc *timer_proc,
     }
   else
     {
-      tmr = (timer *)httpd_malloc(sizeof(timer));
+      tmr = (Timer*)httpd_malloc(sizeof(Timer));
       if (!tmr)
         {
           return NULL;
@@ -244,7 +244,7 @@ long tmr_mstimeout(struct timeval *now)
   int gotone;
   long msecs;
   long m;
-  register timer *tmr;
+  register Timer *tmr;
 
   gotone = 0;
   msecs  = 0;
@@ -288,8 +288,8 @@ long tmr_mstimeout(struct timeval *now)
 void tmr_run(struct timeval *now)
 {
   int h;
-  timer *tmr;
-  timer *next;
+  Timer *tmr;
+  Timer *next;
 
   for (h = 0; h < HASH_SIZE; ++h)
     {
@@ -331,7 +331,7 @@ void tmr_run(struct timeval *now)
     }
 }
 
-void tmr_cancel(timer *tmr)
+void tmr_cancel(Timer *tmr)
 {
   /* Remove it from its active list. */
 
@@ -346,13 +346,13 @@ void tmr_cancel(timer *tmr)
 
 void tmr_cleanup(void)
 {
-  timer *tmr;
+  Timer *tmr;
 
   while (free_timers != NULL)
     {
       tmr = free_timers;
       free_timers = tmr->next;
-      httpd_free((void *)tmr);
+      httpd_free((void*)tmr);
     }
 }
 

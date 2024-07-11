@@ -33,7 +33,7 @@
 
 #include <nuttx/wqueue.h>
 
-#ifdef CONFIG_SCHED_WORKQUEUE
+#if defined(CONFIG_SCHED_LPWORK) || defined(CONFIG_SCHED_HPWORK)
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -74,25 +74,16 @@ static void count_worker(FAR void *arg)
 
 static FAR void *tester(FAR void *arg)
 {
-  FAR void **val = arg;
-  struct work_s work;
+  int interval = (intptr_t)arg;
   int i;
+  struct work_s work;
 
   memset(&work, 0, sizeof(work));
   for (i = 0; i < TEST_COUNT; i++)
     {
-      if (val[1] != NULL)
-        {
-          work_queue_wq(val[1], &work, empty_worker, NULL, 0);
-          work_cancel_wq(val[1], &work);
-        }
-      else
-        {
-          work_queue((int)(uintptr_t)val[0], &work, empty_worker, NULL, 0);
-          work_cancel((int)(uintptr_t)val[0], &work);
-        }
-
-      usleep((int)(uintptr_t)val[2]);
+      work_queue(TEST_QUEUE, &work, empty_worker, NULL, 0);
+      work_cancel(TEST_QUEUE, &work);
+      usleep(interval);
     }
 
   usleep(SLEEP_TIME); /* Wait for workers to run. */
@@ -101,7 +92,6 @@ static FAR void *tester(FAR void *arg)
 
 static FAR void *verifier(FAR void *arg)
 {
-  FAR void **val = arg;
   sem_t sem;
   sem_t call_sem;
   int call_count;
@@ -114,28 +104,13 @@ static FAR void *verifier(FAR void *arg)
 
   /* Queue sleep worker. */
 
-  if (val[1] != NULL)
-    {
-      work_queue_wq(val[1], &work[0], sleep_worker, &sem, 0);
-    }
-  else
-    {
-      work_queue((int)(uintptr_t)val[0], &work[0], sleep_worker, &sem, 0);
-    }
+  work_queue(TEST_QUEUE, &work[0], sleep_worker, &sem, 0);
 
-  /* Queue count workers when qid is busy. */
+  /* Queue count workers when TEST_QUEUE is busy. */
 
   for (i = 1; i <= VERIFY_COUNT; i++)
     {
-      if (val[1] != NULL)
-        {
-          work_queue_wq(val[1], &work[i], count_worker, &call_sem, 0);
-        }
-      else
-        {
-          work_queue((int)(uintptr_t)val[0], &work[i],
-                     count_worker, &call_sem, 0);
-        }
+      work_queue(TEST_QUEUE, &work[i], count_worker, &call_sem, 0);
     }
 
   /* Wait for sleep worker to run. */
@@ -163,14 +138,12 @@ static FAR void *verifier(FAR void *arg)
   return NULL;
 }
 
-static void run_once(int qid, FAR void *wq, int interval,
-                     int priority_test, int priority_verify)
+static void run_once(int interval, int priority_test, int priority_verify)
 {
   pthread_t thread;
   pthread_attr_t attr;
   struct sched_param sparam;
   int status;
-  FAR void *val[3];
 
   status = pthread_attr_init(&attr);
   if (status != 0)
@@ -190,10 +163,8 @@ static void run_once(int qid, FAR void *wq, int interval,
              "status=%d\n", status);
     }
 
-  val[0] = (FAR void *)(uintptr_t)qid;
-  val[1] = wq;
-  val[2] = (FAR void *)(uintptr_t)interval;
-  status = pthread_create(&thread, &attr, tester, val);
+  status = pthread_create(&thread, &attr, tester,
+                          (FAR void *)(intptr_t)interval);
   if (status != 0)
     {
       printf("wqueue_test: pthread_create failed for tester, "
@@ -225,9 +196,7 @@ static void run_once(int qid, FAR void *wq, int interval,
              "status=%d\n", status);
     }
 
-  val[0] = (FAR void *)(uintptr_t)qid;
-  val[1] = wq;
-  status = pthread_create(&thread, &attr, verifier, val);
+  status = pthread_create(&thread, &attr, verifier, NULL);
   if (status != 0)
     {
       printf("wqueue_test: pthread_create failed for verifier, "
@@ -242,7 +211,11 @@ static void run_once(int qid, FAR void *wq, int interval,
     }
 }
 
-void wqueue_priority_test(int qid, FAR void *wq, int prio)
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+void wqueue_test(void)
 {
   int interval;
   int priority_test;
@@ -250,50 +223,18 @@ void wqueue_priority_test(int qid, FAR void *wq, int prio)
 
   for (interval = 0; interval <= 1; interval++)
     {
-      for (priority_test  = prio - 1;
-           priority_test <= prio + 1;
+      for (priority_test  = TEST_QUEUE_PRIORITY - 1;
+           priority_test <= TEST_QUEUE_PRIORITY + 1;
            priority_test++)
         {
-          for (priority_verify  = prio - 1;
-               priority_verify <= prio + 1;
+          for (priority_verify  = TEST_QUEUE_PRIORITY - 1;
+               priority_verify <= TEST_QUEUE_PRIORITY + 1;
                priority_verify++)
             {
-              run_once(qid, wq, interval, priority_test, priority_verify);
+              run_once(interval, priority_test, priority_verify);
             }
         }
     }
 }
 
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-void wqueue_test(void)
-{
-  FAR void *wq;
-  int i;
-
-#ifdef CONFIG_SCHED_HPWORK
-  printf("wqueue_test: HPWORK\n");
-  wqueue_priority_test(HPWORK, NULL, CONFIG_SCHED_HPWORKPRIORITY);
-  printf("wqueue_test: HPWORK done\n");
-#endif
-
-#ifdef CONFIG_SCHED_LPWORK
-  printf("wqueue_test: LPWORK\n");
-  wqueue_priority_test(LPWORK, NULL, CONFIG_SCHED_LPWORKPRIORITY);
-  printf("wqueue_test: HPWORK done\n");
-#endif
-
-  for (i = 1; i < 3; i++)
-    {
-      printf("wqueue_test: test %d\n", i);
-      wq = work_queue_create("test", 100, 2048, i);
-      DEBUGASSERT(wq != NULL);
-      wqueue_priority_test(0, wq, 100);
-      work_queue_free(wq);
-      printf("wqueue_test: test %d done\n", i);
-    }
-}
-
-#endif /* CONFIG_SCHED_WORKQUEUE */
+#endif /* CONFIG_SCHED_LPWORK || CONFIG_SCHED_HPWORK */
