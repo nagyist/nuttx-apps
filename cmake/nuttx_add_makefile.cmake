@@ -38,6 +38,15 @@ add_custom_target(
   DEPENDS mkdeps)
 
 function(generate_common_defs)
+  get_property(
+    EXTRA_INCLUDE_DIRS
+    TARGET nuttx
+    PROPERTY NUTTX_INCLUDE_DIRECTORIES)
+  set(EXTRA_INCLUDE_FLAG "")
+  foreach(extra_path ${EXTRA_INCLUDE_DIRS})
+    set(EXTRA_INCLUDE_FLAG "${EXTRA_INCLUDE_FLAG} -I ${extra_path}")
+  endforeach()
+
   # cmake-format: off
   set(MAKE_DEFS
     [=[
@@ -51,6 +60,7 @@ function(generate_common_defs)
       INCDIR := @CMAKE_BINARY_DIR@/bin/incdir
       MKDEP  := @CMAKE_BINARY_DIR@/bin/mkdeps
       EXTRAFLAGS := -I @CMAKE_BINARY_DIR@/include
+      EXTRAFLAGS += @EXTRA_INCLUDE_FLAG@
       DEPCONFIG := @CMAKE_BINARY_DIR@/.config
 
       include @CMAKE_BINARY_DIR@/.config
