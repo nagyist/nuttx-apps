@@ -182,17 +182,17 @@ TEST_SETUP(basic_setsockopt)
 
 TEST_TEAR_DOWN(basic_setsockopt)
 {
-  int ret;
+  int unused_data ret;
   if (sd >= 0)
     {
       ret = close(sd);
-      TEST_ASSERT_TRUE(ret >= 0);
+      assert(ret >= 0);
     }
 
   if (started)
     {
       ret = usrsocktest_daemon_stop();
-      TEST_ASSERT_EQUAL(ret, OK);
+      assert(ret == OK);
     }
 }
 
