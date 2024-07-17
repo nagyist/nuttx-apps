@@ -7,8 +7,11 @@ cc_defaults {
         "-DERROR=-1",
         "-DCONFIG_DEBUG_UORB"
     ],
-    shared_libs: [
+    static_libs: [
         "libuorb",
+        "libnuttx_libc",
+    ],
+    shared_libs: [
         "libcutils"
     ],
     proprietary: true,
@@ -20,7 +23,7 @@ cc_library_headers {
     proprietary: true,
 }
 
-cc_library {
+cc_library_static {
     name: "libuorb",
     srcs: [
         "uORB/*.c",
@@ -34,7 +37,7 @@ cc_library {
         "-DCONFIG_DEBUG_UORB",
         "-DCONFIG_UORB_LOOP_MAX_EVENTS=16"
     ],
-    shared_libs: [
+    static_libs: [
         "libnuttx_libc",
     ],
     header_libs: [
