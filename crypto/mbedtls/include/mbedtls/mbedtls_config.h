@@ -394,6 +394,9 @@
 #ifdef CONFIG_MBEDTLS_BIGNUM_ALT
 #define MBEDTLS_BIGNUM_ALT
 #endif
+#ifdef CONFIG_MBEDTLS_PSA_CRYPTODEV_ALT
+#define MBEDTLS_PSA_CRYPTODEV_ALT
+#endif
 /* #define MBEDTLS_XTEA_ALT
  */
 
@@ -1435,7 +1438,9 @@
  *          but the driver interfaces may change without notice.
  */
 
-/* #define MBEDTLS_PSA_CRYPTO_DRIVERS */
+#ifdef CONFIG_MBEDTLS_PSA_CRYPTO_DRIVERS
+#define MBEDTLS_PSA_CRYPTO_DRIVERS
+#endif
 
 /** \def MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
  *
@@ -3411,8 +3416,9 @@
  * Requires: MBEDTLS_PSA_CRYPTO_C, MBEDTLS_PSA_CRYPTO_STORAGE_C
  *
  */
-
-/* #define MBEDTLS_PSA_CRYPTO_SE_C */
+#ifdef CONFIG_MBEDTLS_PSA_CRYPTO_SE_C
+#define MBEDTLS_PSA_CRYPTO_SE_C
+#endif
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_STORAGE_C
@@ -3441,6 +3447,20 @@
  */
 #ifdef CONFIG_MBEDTLS_PSA_ITS_FILE_C
 #define MBEDTLS_PSA_ITS_FILE_C
+#endif
+
+/**
+ * \def PSA_ITS_STORAGE_PREFIX
+ *
+ * Allows storing the key files in a directory other than the
+ * current directory.
+ *
+ * Module:  library/psa_its_file.c
+ *
+ * Requires: MBEDTLS_PSA_ITS_FILE_C
+ */
+#ifdef CONFIG_PSA_ITS_STORAGE_PREFIX
+#define PSA_ITS_STORAGE_PREFIX CONFIG_PSA_ITS_STORAGE_PREFIX
 #endif
 
 /**

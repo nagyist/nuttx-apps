@@ -336,6 +336,11 @@ config MBEDTLS_PK_RSA_ALT_SUPPORT
 	bool "Support external private RSA keys (eg from a HSM) in the PK layer."
 	default y
 
+config MBEDTLS_PSA_CRYPTO_DRIVERS
+	bool "Enable support for the experimental PSA crypto driver interface."
+	depends on MBEDTLS_PSA_CRYPTO_C
+	default n
+
 config MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
 	bool "Make the PSA Crypto module use an external random generator provided by a driver, instead of Mbed TLS's entropy and DRBG modules."
 	depends on DEV_RANDOM
@@ -513,9 +518,19 @@ config MBEDTLS_PSA_CRYPTO_STORAGE_C
 	depends on MBEDTLS_PSA_CRYPTO_C
 	default y
 
+config MBEDTLS_PSA_CRYPTO_SE_C
+	bool  "Enable dynamic secure element support in the Platform Security Architecture cryptography API."
+	depends on MBEDTLS_PSA_CRYPTO_C && MBEDTLS_PSA_CRYPTO_STORAGE_C
+	default n
+
 config MBEDTLS_PSA_ITS_FILE_C
 	bool "Enable the emulation of the Platform Security Architecture Internal Trusted Storage (PSA ITS) over files."
 	default y
+
+config PSA_ITS_STORAGE_PREFIX
+	string "Allows storing the key files in a directory other than the current directory."
+	depends on MBEDTLS_PSA_ITS_FILE_C
+	default ""
 
 config MBEDTLS_RIPEMD160_C
 	bool "Enable the RIPEMD-160 hash algorithm."
@@ -624,6 +639,12 @@ config MBEDTLS_BIGNUM_ALT
 	bool "Enable Mbedt TLS Bignum module alted by nuttx mpi"
 	select MBEDTLS_ALT
 	default n
+
+config MBEDTLS_PSA_CRYPTODEV_ALT
+	bool "Enable secure element of Platform Security Architecture API alted by nuttx crypto"
+	depends on MBEDTLS_PSA_CRYPTO_SE_C
+	select MBEDTLS_ALT
+	default y
 
 endif # CRYPTO_CRYPTODEV
 
