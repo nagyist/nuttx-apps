@@ -64,9 +64,12 @@ add_subdirectory(platform)
 add_subdirectory(sdr)
 add_subdirectory(system)
 add_subdirectory(testing)
-add_subdirectory(tests)
 add_subdirectory(videoutils)
 add_subdirectory(wireless)
+
+if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/tests/CMakeLists.txt)
+  add_subdirectory(tests)
+endif()
 
 # add examples and external at the end to allow library dependencies
 add_subdirectory(examples)
