@@ -30,7 +30,7 @@ MODULE = $(CONFIG_TESTING_OSTEST)
 # NuttX OS Test
 
 CSRCS   = getopt.c restart.c sigprocmask.c sighand.c signest.c
-CSRCS  += sighelper.c wdog.c
+CSRCS  += sighelper.c
 MAINSRC = ostest_main.c
 
 ifeq ($(CONFIG_DEV_NULL),y)
@@ -135,6 +135,10 @@ endif
 
 ifeq ($(CONFIG_SMP_CALL),y)
 CSRCS += smp_call.c
+endif
+
+ifeq ($(CONFIG_BUILD_FLAT),y)
+CSRCS += wdog.c
 endif
 
 include $(APPDIR)/Application.mk
