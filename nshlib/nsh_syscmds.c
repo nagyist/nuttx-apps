@@ -615,7 +615,7 @@ static int cmd_rpmsg_help(FAR struct nsh_vtbl_s *vtbl, int argc,
                           FAR char **argv)
 {
   nsh_output(vtbl, "%s <panic|dump> <path>\n", argv[0]);
-  nsh_output(vtbl, "%s ping <path> <times> <length> <ack> "
+  nsh_output(vtbl, "%s ping <path> <times> <length> <cmd> "
              "<period(ms)>\n\n", argv[0]);
   nsh_output(vtbl, "<times>      Times of rptun ping.\n");
   nsh_output(vtbl, "<length>     The length of each ping packet.\n");
@@ -624,7 +624,7 @@ static int cmd_rpmsg_help(FAR struct nsh_vtbl_s *vtbl, int argc,
   nsh_output(vtbl, "             Bit0 - Request need ack or not.\n");
   nsh_output(vtbl, "             Bit1 - Check the data or not.\n");
   nsh_output(vtbl, "             Bit2 - Random length or not.\n");
-  nsh_output(vtbl, "             Bit3~7 - Request or response or other"
+  nsh_output(vtbl, "             Bit4~7 - Request or response or other"
                                           "command for future use.\n");
   nsh_output(vtbl, "<period(ms)> Rpmsg ping period (ms) \n");
   nsh_output(vtbl, "<path>       Rpmsg device path.\n\n");
