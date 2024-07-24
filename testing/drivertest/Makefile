@@ -29,7 +29,7 @@ MAINSRC  += drivertest_simple.c
 PROGNAME += cmocka_driver_simple
 endif
 
-ifeq ($(CONFIG_BCH),y)
+ifeq ($(CONFIG_BCH)$(CONFIG_BUILD_FLAT),yy)
 CFLAGS += ${INCDIR_PREFIX}${TOPDIR}/fs
 PROGNAME += cmocka_driver_block
 MAINSRC  += drivertest_block.c
@@ -71,11 +71,6 @@ MAINSRC  += drivertest_pwm.c
 PROGNAME += cmocka_driver_pwm
 endif
 
-ifneq ($(CONFIG_WATCHDOG),)
-MAINSRC  += drivertest_watchdog.c
-PROGNAME += cmocka_driver_watchdog
-endif
-
 ifneq ($(CONFIG_ADC),)
 MAINSRC  += drivertest_adc.c
 PROGNAME += cmocka_driver_adc
@@ -86,6 +81,14 @@ ifneq ($(CONFIG_SENSORS_BMI160),)
 MAINSRC  += drivertest_i2c_spi.c
 PROGNAME += cmocka_driver_i2c_spi
 endif
+endif
+
+ifneq ($(CONFIG_I2C_DRIVER)$(CONFIG_I2C_SLAVE_DRIVER),)
+MAINSRC  += drivertest_i2c_write.c
+PROGNAME += cmocka_driver_i2c_write
+
+MAINSRC  += drivertest_i2c_read.c
+PROGNAME += cmocka_driver_i2c_read
 endif
 
 ifneq ($(CONFIG_DEV_GPIO),)
@@ -108,6 +111,11 @@ MAINSRC  += drivertest_audio.c
 PROGNAME += cmocka_driver_audio
 endif
 
+ifneq ($(CONFIG_CPUFREQ),)
+MAINSRC  += drivertest_cpufreq.c
+PROGNAME += cmocka_driver_cpufreq
+endif
+
 ifneq ($(CONFIG_VIDEO_FB),)
 MAINSRC  += drivertest_framebuffer.c
 PROGNAME += cmocka_driver_framebuffer
@@ -123,9 +131,25 @@ MAINSRC  += drivertest_regulator.c
 PROGNAME += cmocka_driver_regulator
 endif
 
-ifneq ($(CONFIG_LV_USE_TOUCHPAD_INTERFACE),)
+ifneq ($(CONFIG_LV_USE_NUTTX_TOUCHSCREEN),)
 MAINSRC  += drivertest_touchpanel.c
 PROGNAME += cmocka_driver_touchpanel
+endif
+
+ifeq ($(CONFIG_ARCH_CHIP_MPS2_AN500),y)
+ifeq ($(CONFIG_ARCH_IRQPRIO),y)
+MAINSRC  += drivertest_mps2.c
+PROGNAME += cmocka_driver_mps2
+endif
+endif
+
+ifeq ($(CONFIG_PM),y)
+MAINSRC  += drivertest_pm.c
+PROGNAME += cmocka_driver_pm
+ifeq ($(CONFIG_SMP),y)
+MAINSRC  += drivertest_pm_smp.c
+PROGNAME += cmocka_driver_pm_smp
+endif
 endif
 
 ifneq ($(CONFIG_PM_RUNTIME),)
