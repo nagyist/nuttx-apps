@@ -31,6 +31,7 @@ typedef struct cryptodev_context_s
   int fd;
   struct session_op session;
   struct crypt_op crypt;
+  struct crypt_kop cryptk;
 }
 cryptodev_context_t;
 
@@ -41,5 +42,7 @@ void cryptodev_free(FAR cryptodev_context_t *ctx);
 int cryptodev_get_session(FAR cryptodev_context_t *ctx);
 void cryptodev_free_session(FAR cryptodev_context_t *ctx);
 int cryptodev_crypt(FAR cryptodev_context_t *ctx);
+
+int cryptodev_cryptk(FAR cryptodev_context_t *ctx);
 
 #endif /* __APPS_CRYPTO_MBEDTLS_INCLUDE_DEV_ALT_H */
