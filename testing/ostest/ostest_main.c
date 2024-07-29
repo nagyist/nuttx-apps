@@ -260,6 +260,12 @@ static int user_main(int argc, char *argv[])
   getopt_test();
   check_test_memory_usage();
 
+  /* Test misc libc functions. */
+
+  printf("\nuser_main: libc tests\n");
+  memmem_test();
+  check_test_memory_usage();
+
   /* If retention of child status is enable, then suppress it for this task.
    * This task may produce many, many children (especially if
    * CONFIG_TESTING_OSTEST_LOOPS) and it does not harvest their exit status.
@@ -364,7 +370,8 @@ static int user_main(int argc, char *argv[])
       check_test_memory_usage();
 #endif
 
-#if !defined(CONFIG_DISABLE_PTHREAD) && defined(CONFIG_SCHED_WORKQUEUE)
+#if !defined(CONFIG_DISABLE_PTHREAD) && \
+    (defined(CONFIG_SCHED_LPWORK) || defined(CONFIG_SCHED_HPWORK))
       /* Check work queues */
 
       printf("\nuser_main: wqueue test\n");
@@ -463,7 +470,7 @@ static int user_main(int argc, char *argv[])
       pthread_rwlock_cancel_test();
       check_test_memory_usage();
 
-#if CONFIG_TLS_NCLEANUP > 0
+#if CONFIG_PTHREAD_CLEANUP_STACKSIZE > 0
       /* Verify pthread cancellation cleanup handlers */
 
       printf("\nuser_main: pthread_cleanup test\n");
@@ -514,12 +521,6 @@ static int user_main(int argc, char *argv[])
     !defined(CONFIG_BUILD_KERNEL)
       printf("\nuser_main: signal action test\n");
       suspend_test();
-      check_test_memory_usage();
-#endif
-
-#ifdef CONFIG_BUILD_FLAT
-      printf("\nuser_main: wdog test\n");
-      wdog_test();
       check_test_memory_usage();
 #endif
 
@@ -589,7 +590,8 @@ static int user_main(int argc, char *argv[])
       check_test_memory_usage();
 #endif
 
-#if defined(CONFIG_ARCH_HAVE_VFORK) && defined(CONFIG_SCHED_WAITPID)
+#if defined(CONFIG_ARCH_HAVE_FORK) && defined(CONFIG_SCHED_WAITPID) && \
+   !defined(CONFIG_ARCH_SIM)
 #ifndef CONFIG_BUILD_KERNEL
       printf("\nuser_main: vfork() test\n");
       vfork_test();
