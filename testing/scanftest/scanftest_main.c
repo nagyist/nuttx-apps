@@ -1083,11 +1083,8 @@ int main(int argc, FAR char *argv[])
   double d2;
   FAR FILE *fp;
 
-  int tests_ok = 0;
-  int tests_err = 0;
-
   FAR const char *teststring = "teststring a";
-  FAR const char *fname = CONFIG_TESTING_SCANFTEST_FNAME;
+  FAR const char *fname = "/mnt/fs/test.txt";
 
   /* Test that scanf() can recognize percent-signs in the input. ** Test that
    * integer converters skip white-space. ** Test that "%i" can scan a single
@@ -1132,24 +1129,20 @@ int main(int argc, FAR char *argv[])
 
                   if (strcmp(s1, teststring) != 0)
                     {
-                      tests_err += 1;
                       printf("Error %s != %s.\n", teststring, s1);
                     }
                   else
                     {
-                      tests_ok += 1;
                       printf("Test PASSED.\n");
                     }
                 }
               else
                 {
-                  tests_err += 1;
                   printf("Error opening %s for read.\n", fname);
                 }
             }
           else
             {
-              tests_err += 1;
               printf("Error opening %s for write.\n", fname);
             }
         }
@@ -1178,7 +1171,6 @@ int main(int argc, FAR char *argv[])
                 }
               else
                 {
-                  tests_err += 1;
                   printf("Error opening %s for write.\n", fname);
                   break;
                 }
@@ -1328,12 +1320,7 @@ int main(int argc, FAR char *argv[])
 
           if (ok)
             {
-              tests_ok += 1;
               printf("Test #%u PASSED.\n", t + 1);
-            }
-          else
-            {
-              tests_err += 1;
             }
         }
     }
@@ -1470,16 +1457,9 @@ int main(int argc, FAR char *argv[])
 
       if (ok)
         {
-          tests_ok += 1;
           printf("Test #%u PASSED.\n", t + 1);
         }
-      else
-        {
-          tests_err += 1;
-        }
     }
-
-  printf("Scanf tests done... OK: %d, FAILED: %d\n", tests_ok, tests_err);
 
   return OK;
 }
