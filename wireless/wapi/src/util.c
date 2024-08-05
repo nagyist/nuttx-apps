@@ -275,12 +275,6 @@ FAR const char *wapi_ioctl_command_name(int cmd)
     case SIOCSIWPTAPRIO:
       return "SIOCSIWPTAPRIO";
 
-    case SIOCSIWPMKSA:
-      return "SIOCSIWPMKSA";
-
-    case SIOCGIWPMKSA:
-      return "SIOCGIWPMKSA";
-
     default:
       snprintf(g_ioctl_command_namebuf, WAPI_IOCTL_COMMAND_NAMEBUFSIZ,
                "0x%x", cmd);
@@ -511,7 +505,7 @@ int wapi_save_config(FAR const char *ifname,
       goto errout;
     }
 
-  fd = open(confname, O_RDWR | O_CREAT | O_TRUNC, 0644);
+  fd = open(confname, O_RDWR | O_CREAT | O_TRUNC);
   if (fd < 0)
     {
       ret = -errno;
