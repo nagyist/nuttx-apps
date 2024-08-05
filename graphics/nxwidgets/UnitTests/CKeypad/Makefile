@@ -1,5 +1,5 @@
 #################################################################################
-# apps/graphics/nxwidgets/UnitTests/CKeypad/Makefile
+# apps/graphics/nxwidgets/UnitTests/CKeyPad/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with

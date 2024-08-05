@@ -95,12 +95,12 @@ TEST_SETUP(no_daemon)
 
 TEST_TEAR_DOWN(no_daemon)
 {
-  int ret;
+  int unused_data ret;
 
   if (sd >= 0)
     {
       ret = close(sd);
-      TEST_ASSERT_TRUE(ret >= 0);
+      assert(ret >= 0);
     }
 }
 
