@@ -31,8 +31,6 @@ CSRCS     = rt-tests/src/lib/rt-error.c rt-tests/src/lib/histogram.c
 CSRCS    += rt-tests/src/lib/rt-utils.c rt-tests/src/lib/rt-numa.c
 
 CFLAGS   += -Irt-tests/src/include -I. -DVERSION=0.1
-CFLAGS   += -Wno-maybe-uninitialized -Wno-unused-variable -Wno-unused-function
-CFLAGS   += -Wno-unused-but-set-variable -Wno-shadow -Wno-stringop-truncation
-CFLAGS   += -Wno-strict-prototypes
+CFLAGS   += -w -DRTTESTS_PRIORITY=$(CONFIG_BENCHMARK_RTTESTS_PRIORITY)+1
 
 include $(APPDIR)/Application.mk

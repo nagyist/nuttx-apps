@@ -31,13 +31,8 @@ if(CONFIG_BENCHMARK_RTTESTS)
     -Irt-tests/src/include
     -I.
     -DVERSION=0.1
-    -Wno-maybe-uninitialized
-    -Wno-unused-variable
-    -Wno-unused-function
-    -Wno-unused-but-set-variable
-    -Wno-shadow
-    -Wno-stringop-truncation
-    -Wno-strict-prototypes)
+    -w
+    -DRTTESTS_PRIORITY=${CONFIG_BENCHMARK_RTTESTS_PRIORITY}+1)
 
   nuttx_add_application(
     NAME
