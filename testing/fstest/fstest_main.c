@@ -89,10 +89,6 @@ struct fstest_ctx_s
   struct mallinfo mmprevious;
   struct mallinfo mmafter;
 };
-
-static int tests_ok = 0;
-static int tests_err = 0;
-
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
@@ -597,18 +593,19 @@ static inline int fstest_rdfile(FAR struct fstest_ctx_s *ctx,
   uint32_t crc;
   int fd;
 
+  if (file->deleted)
+    {
+      return ERROR;
+    }
+
   /* Open the file for reading */
 
   fd = open(file->name, O_RDONLY);
   if (fd < 0)
     {
-      if (!file->deleted)
-        {
-          printf("ERROR: Failed to open file for reading: %d\n", errno);
-          printf("  File name: %s\n", file->name);
-          printf("  File size: %zd\n", file->len);
-        }
-
+      printf("ERROR: Failed to open file for reading: %d\n", errno);
+      printf("  File name: %s\n", file->name);
+      printf("  File size: %zd\n", file->len);
       return ERROR;
     }
 
@@ -972,8 +969,6 @@ int main(int argc, FAR char *argv[])
   int loop_num;
   int option;
 
-  tests_ok = tests_err = 0;
-
   ctx = malloc(sizeof(struct fstest_ctx_s));
   if (ctx == NULL)
     {
@@ -1107,7 +1102,6 @@ int main(int argc, FAR char *argv[])
       ret = fstest_delfiles(ctx);
       if (ret < 0)
         {
-          tests_err += 1;
           printf("ERROR: Failed to delete files\n");
           printf("  Number of files: %d\n", ctx->nfiles);
           printf("  Number deleted:  %d\n", ctx->ndeleted);
@@ -1116,7 +1110,6 @@ int main(int argc, FAR char *argv[])
         }
       else
         {
-          tests_ok += 1;
           printf("Deleted some files\n");
           printf("  Number of files: %d\n", ctx->nfiles);
           printf("  Number deleted:  %d\n", ctx->ndeleted);
@@ -1136,7 +1129,6 @@ int main(int argc, FAR char *argv[])
       ret = fstest_verifyfs(ctx);
       if (ret < 0)
         {
-          tests_err += 1;
           printf("ERROR: Failed to verify files\n");
           printf("  Number of files: %d\n", ctx->nfiles);
           printf("  Number deleted:  %d\n", ctx->ndeleted);
@@ -1145,7 +1137,6 @@ int main(int argc, FAR char *argv[])
         }
       else
         {
-          tests_ok += 1;
 #if CONFIG_TESTING_FSTEST_VERBOSE != 0
           printf("Verified!\n");
           printf("  Number of files: %d\n", ctx->nfiles);
@@ -1158,19 +1149,19 @@ int main(int argc, FAR char *argv[])
       ret = statfs(ctx->mountdir, &buf);
       if (ret < 0)
         {
-          printf("ERROR: statfs failed: %d\n", errno);
-          free(ctx);
-          exit(ret);
+           printf("ERROR: statfs failed: %d\n", errno);
+           free(ctx);
+           exit(ret);
         }
       else
         {
-          printf("File System:\n");
-          printf("  Block Size:      %lu\n", (unsigned long)buf.f_bsize);
-          printf("  No. Blocks:      %lu\n", (unsigned long)buf.f_blocks);
-          printf("  Free Blocks:     %ld\n", (long)buf.f_bfree);
-          printf("  Avail. Blocks:   %ld\n", (long)buf.f_bavail);
-          printf("  No. File Nodes:  %ld\n", (long)buf.f_files);
-          printf("  Free File Nodes: %ld\n", (long)buf.f_ffree);
+           printf("File System:\n");
+           printf("  Block Size:      %lu\n", (unsigned long)buf.f_bsize);
+           printf("  No. Blocks:      %lu\n", (unsigned long)buf.f_blocks);
+           printf("  Free Blocks:     %ld\n", (long)buf.f_bfree);
+           printf("  Avail. Blocks:   %ld\n", (long)buf.f_bavail);
+           printf("  No. File Nodes:  %ld\n", (long)buf.f_files);
+           printf("  Free File Nodes: %ld\n", (long)buf.f_ffree);
         }
 
       /* Perform garbage collection, integrity checks */
@@ -1192,9 +1183,6 @@ int main(int argc, FAR char *argv[])
   free(ctx->fileimage);
   free(ctx->files);
   free(ctx);
-
-  printf("File system tests done... OK: %d, FAILED: %d\n", tests_ok,
-                                                           tests_err);
 
 #ifdef CONFIG_TESTING_FSTEST_POWEROFF
   /* Power down. This is useful when used with the simulator and gcov,

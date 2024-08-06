@@ -37,11 +37,10 @@ if(CONFIG_NSH_LIBRARY)
     nsh_mmcmds.c
     nsh_timcmds.c
     nsh_envcmds.c
-    nsh_prompt.c
     nsh_syscmds.c
     nsh_dbgcmds.c)
 
-  list(APPEND CSRCS nsh_session.c)
+  list(APPEND CSRCS nsh_session.c nsh_spawn.c)
 
   if(CONFIG_NSH_CONSOLE_LOGIN)
     list(APPEND CSRCS nsh_login.c)
@@ -96,6 +95,10 @@ if(CONFIG_NSH_LIBRARY)
 
   if(NOT CONFIG_NSH_DISABLESCRIPT)
     list(APPEND CSRCS nsh_test.c)
+  endif()
+
+  if(NOT CONFIG_NSH_DISABLE_WAIT)
+    list(APPEND CSRCS nsh_wait.c)
   endif()
 
   if(CONFIG_USBDEV)
