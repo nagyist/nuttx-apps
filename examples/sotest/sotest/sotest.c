@@ -48,12 +48,9 @@ void modprint(FAR const char *fmt, ...) printf_like(1, 2);
  * Private Data
  ****************************************************************************/
 
-__attribute__((visibility("default")))
-const char g_msg1[] = "Hello to you too!";
-__attribute__((visibility("default")))
-const char g_msg2[] = "Not so bad so far.";
-__attribute__((visibility("default")))
-const char g_msg3[] = "Yes, don't be a stranger!";
+visibility_default const char g_msg1[] = "Hello to you too!";
+visibility_default const char g_msg2[] = "Not so bad so far.";
+visibility_default const char g_msg3[] = "Yes, don't be a stranger!";
 
 /****************************************************************************
  * Private Functions
@@ -78,8 +75,7 @@ static void modprint(FAR const char *fmt, ...)
  * Name: testfunc1
  ****************************************************************************/
 
-__attribute__((visibility("default")))
-void testfunc1(FAR const char *msg)
+visibility_default void testfunc1(FAR const char *msg)
 {
   modprint("testfunc1: Hello, everyone!\n");
   modprint("   caller: %s\n", msg);
@@ -89,8 +85,7 @@ void testfunc1(FAR const char *msg)
  * Name: testfunc2
  ****************************************************************************/
 
-__attribute__((visibility("default")))
-void testfunc2(FAR const char *msg)
+visibility_default void testfunc2(FAR const char *msg)
 {
   modprint("testfunc2: Hope you are having a great day!\n");
   modprint("   caller: %s\n", msg);
@@ -100,8 +95,7 @@ void testfunc2(FAR const char *msg)
  * Name: testfunc3
  ****************************************************************************/
 
-__attribute__((visibility("default")))
-void testfunc3(FAR const char *msg)
+visibility_default void testfunc3(FAR const char *msg)
 {
   modprint("testfunc3: Let's talk again very soon\n");
   modprint("   caller: %s\n", msg);
@@ -111,8 +105,7 @@ void testfunc3(FAR const char *msg)
  * Name: module_uninitialize
  ****************************************************************************/
 
-__attribute__((destructor))
-static void module_uninitialize(void)
+destructor_function static void module_uninitialize(void)
 {
   modprint("module_uninitialize\n");
 }
@@ -129,8 +122,7 @@ static void module_uninitialize(void)
  *
  ****************************************************************************/
 
-__attribute__((constructor))
-static void module_initialize(void)
+constructor_fuction static void module_initialize(void)
 {
   modprint("module_initialize\n");
 }

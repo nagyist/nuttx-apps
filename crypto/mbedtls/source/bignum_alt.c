@@ -30,10 +30,10 @@
 #include <sys/ioctl.h>
 #include <sys/param.h>
 #include <sys/types.h>
-#include <mbedtls/bignum.h>
-#include <mbedtls/platform.h>
 #include <nuttx/math/math_ioctl.h>
 #include <nuttx/math/mpi.h>
+#include "mbedtls/bignum.h"
+#include "mbedtls/platform.h"
 
 #define MBEDTLS_ROUNDUP(v, size) (((v) + (size - 1)) & ~(size - 1))
 
@@ -47,7 +47,7 @@ void mbedtls_mpi_to_mpiparam(FAR struct mpiparam *a,
 {
   a->n = A->n * sizeof(mbedtls_mpi_uint);
   a->s = A->s;
-  a->p = (uint8_t *)A->p;
+  a->p = (FAR uint8_t *)A->p;
 }
 
 static inline
@@ -56,7 +56,7 @@ void mpiparam_to_mbedtls_mpi(FAR mbedtls_mpi *A,
 {
   A->n = a->n / sizeof(mbedtls_mpi_uint);
   A->s = a->s;
-  A->p = (mbedtls_mpi_uint *)a->p;
+  A->p = (FAR mbedtls_mpi_uint *)a->p;
 }
 
 /****************************************************************************
@@ -66,7 +66,7 @@ void mpiparam_to_mbedtls_mpi(FAR mbedtls_mpi *A,
 int mbedtls_mpi_add_mpi(FAR mbedtls_mpi *X, FAR const mbedtls_mpi *A,
                         FAR const mbedtls_mpi *B)
 {
-  int ret = 0;
+  int ret;
   int fd;
   struct mpi_calc_s mpi;
 
@@ -96,7 +96,7 @@ int mbedtls_mpi_add_mpi(FAR mbedtls_mpi *X, FAR const mbedtls_mpi *A,
 int mbedtls_mpi_sub_mpi(FAR mbedtls_mpi *X, FAR const mbedtls_mpi *A,
                         FAR const mbedtls_mpi *B)
 {
-  int ret = 0;
+  int ret;
   int fd;
   struct mpi_calc_s mpi;
 
@@ -126,7 +126,7 @@ int mbedtls_mpi_sub_mpi(FAR mbedtls_mpi *X, FAR const mbedtls_mpi *A,
 int mbedtls_mpi_mul_mpi(FAR mbedtls_mpi *X, FAR const mbedtls_mpi *A,
                         FAR const mbedtls_mpi *B)
 {
-  int ret = 0;
+  int ret;
   int fd;
   struct mpi_calc_s mpi;
 
@@ -156,7 +156,7 @@ int mbedtls_mpi_mul_mpi(FAR mbedtls_mpi *X, FAR const mbedtls_mpi *A,
 int mbedtls_mpi_div_mpi(FAR mbedtls_mpi *Q, FAR mbedtls_mpi *R,
                         FAR const mbedtls_mpi *A, FAR const mbedtls_mpi *B)
 {
-  int ret = 0;
+  int ret;
   int fd;
   struct mpi_calc_s mpi;
 
@@ -187,7 +187,7 @@ int mbedtls_mpi_div_mpi(FAR mbedtls_mpi *Q, FAR mbedtls_mpi *R,
 int mbedtls_mpi_mod_mpi(FAR mbedtls_mpi *R, FAR const mbedtls_mpi *A,
                         FAR const mbedtls_mpi *B)
 {
-  int ret = 0;
+  int ret;
   int fd;
   struct mpi_calc_s mpi;
 
@@ -216,7 +216,7 @@ int mbedtls_mpi_exp_mod(FAR mbedtls_mpi *X, FAR const mbedtls_mpi *A,
                         FAR const mbedtls_mpi *E, FAR const mbedtls_mpi *N,
                         FAR mbedtls_mpi *)
 {
-  int ret = 0;
+  int ret;
   int fd;
   struct mpi_calc_s mpi;
 
@@ -245,7 +245,7 @@ int mbedtls_mpi_exp_mod(FAR mbedtls_mpi *X, FAR const mbedtls_mpi *A,
 int mbedtls_mpi_gcd(FAR mbedtls_mpi *G, FAR const mbedtls_mpi *A,
                     FAR const mbedtls_mpi *B)
 {
-  int ret = 0;
+  int ret;
   int fd;
   struct mpi_calc_s mpi;
 
@@ -273,7 +273,7 @@ int mbedtls_mpi_gcd(FAR mbedtls_mpi *G, FAR const mbedtls_mpi *A,
 int mbedtls_mpi_inv_mod(FAR mbedtls_mpi *X, FAR const mbedtls_mpi *A,
                         FAR const mbedtls_mpi *N)
 {
-  int ret = 0;
+  int ret;
   int fd;
   struct mpi_calc_s mpi;
 

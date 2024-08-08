@@ -337,8 +337,7 @@ config MBEDTLS_PK_RSA_ALT_SUPPORT
 	default y
 
 config MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
-	bool "Make the PSA Crypto module use an external random generator provided by a driver,\
- instead of Mbed TLS's entropy and DRBG modules."
+	bool "Make the PSA Crypto module use an external random generator provided by a driver, instead of Mbed TLS's entropy and DRBG modules."
 	depends on DEV_RANDOM
 	default n
 
@@ -560,7 +559,7 @@ config MBEDTLS_SSL_TLS1_3_TICKET_NONCE_LENGTH
 	int "Size in bytes of a ticket nonce."
 	default 32
 
-config MBEDTLS_SSL_TLS1_3_TICKET_NONCE_LENGTH
+config MBEDTLS_SSL_TLS1_3_DEFAULT_NEW_SESSION_TICKETS
 	int "Default number of NewSessionTicket messages to be sent by a TLS 1.3 server after handshake completion."
 	default 1
 

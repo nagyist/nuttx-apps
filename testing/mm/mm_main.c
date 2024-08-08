@@ -119,22 +119,10 @@ static const int g_alignment2[NTEST_ALLOCS / 2] =
 
 static FAR void       *g_allocs[NTEST_ALLOCS];
 static struct mallinfo g_alloc_info;
-int allow_malloc_faill = 0;
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
-
-static bool is_oversize(int size)
-{
-  if (allow_malloc_faill || size < 0)
-    {
-      return 0;
-    }
-
-  unsigned long threshold = g_alloc_info.mxordblk * 3 / 4;
-  return threshold < size;
-}
 
 static void mm_showmallinfo(void)
 {
@@ -161,22 +149,17 @@ static void do_mallocs(FAR void **mem, FAR const int *size,
   for (i = 0; i < n; i++)
     {
       j = seq[i];
-      int allocsize = MM_ALIGN_UP(size[j] + MM_SIZEOF_ALLOCNODE);
       if (!mem[j])
         {
-          printf("(%d)Allocating %d bytes\n", i, allocsize);
-          if (is_oversize(allocsize))
-            {
-              printf("(%d)The allocated memory exceeds the threshold,\
-                      skipping\n", i);
-              continue;
-            }
+          printf("(%d)Allocating %d bytes\n", i,  size[j]);
 
           mem[j] = malloc(size[j]);
           printf("(%d)Memory allocated at %p\n", i, mem[j]);
 
           if (mem[j] == NULL)
             {
+              int allocsize = MM_ALIGN_UP(size[j] + MM_SIZEOF_ALLOCNODE);
+
               fprintf(stderr, "(%d)malloc failed for allocsize=%d\n",
                       i, allocsize);
 
@@ -213,15 +196,6 @@ static void do_reallocs(FAR void **mem, FAR const int *oldsize,
   for (i = 0; i < n; i++)
     {
       j = seq[i];
-      int allocsize = MM_ALIGN_UP(newsize[j] + MM_SIZEOF_ALLOCNODE) -
-                      MM_ALIGN_UP(oldsize[j] + MM_SIZEOF_ALLOCNODE);
-      if (is_oversize(allocsize))
-        {
-          printf("(%d)The reallocs memory exceeds the threshold,\
-                  skipping\n", i);
-          continue;
-        }
-
       printf("(%d)Re-allocating at %p from %d to %d bytes\n",
              i, mem[j], oldsize[j], newsize[j]);
 
@@ -239,6 +213,8 @@ static void do_reallocs(FAR void **mem, FAR const int *oldsize,
 
       if (ptr == NULL)
         {
+          int allocsize = MM_ALIGN_UP(newsize[j] + MM_SIZEOF_ALLOCNODE);
+
           fprintf(stderr,
                   "(%d)realloc failed for allocsize=%d\n", i, allocsize);
           if (allocsize > g_alloc_info.mxordblk)
@@ -273,22 +249,17 @@ static void do_memaligns(FAR void **mem,
   for (i = 0; i < n; i++)
     {
       j = seq[i];
-      int allocsize = MM_ALIGN_UP(size[j] + MM_SIZEOF_ALLOCNODE) +
-                                      2 * align[i];
       printf("(%d)Allocating %d bytes aligned to 0x%08x\n",
              i,  size[j], align[i]);
-      if (is_oversize(allocsize))
-        {
-          printf("(%d)The reallocs memory exceeds the threshold,\
-                  skipping\n", i);
-          continue;
-        }
 
       mem[j] = memalign(align[i], size[j]);
       printf("(%d)Memory allocated at %p\n", i, mem[j]);
 
       if (mem[j] == NULL)
         {
+          int allocsize = MM_ALIGN_UP(size[j] + MM_SIZEOF_ALLOCNODE) +
+                                      2 * align[i];
+
           fprintf(stderr,
                   "(%d)memalign failed for allocsize=%d\n", i, allocsize);
           if (allocsize > g_alloc_info.mxordblk)
@@ -340,11 +311,36 @@ static void do_frees(FAR void **mem, FAR const int *size,
     }
 }
 
-static int mm_stress_test(int delay, int prio, int maxsize)
+static int mm_stress_test(int argc, FAR char *argv[])
 {
   FAR unsigned char *tmp;
+  int delay = 1;
+  int prio = 0;
   int size;
   int i;
+  int maxsize = 1024;
+
+  while ((i = getopt(argc, argv, "d:p:s:")) != ERROR)
+    {
+      if (i == 'd')
+        {
+          delay = atoi(optarg);
+        }
+      else if (i == 'p')
+        {
+          prio = atoi(optarg);
+        }
+      else if (i == 's')
+        {
+          maxsize = atoi(optarg);
+        }
+      else
+        {
+          printf("Unrecognized option: '%c'\n", i);
+          return -EINVAL;
+        }
+    }
+
   if (prio != 0)
     {
       struct sched_param param;
@@ -384,58 +380,9 @@ static int mm_stress_test(int delay, int prio, int maxsize)
 
 int main(int argc, FAR char *argv[])
 {
-  int stress_test_mode = 0;
-  int delay = 1;
-  int prio = 0;
-  int i;
-  int maxsize = 1024;
-  allow_malloc_faill = 0;
-
-  while ((i = getopt(argc, argv, "mfd:p:s:")) != ERROR)
+  if (argc > 1)
     {
-      switch (i)
-        {
-          case 'm':
-            {
-              stress_test_mode = 1;
-              break;
-            }
-
-          case 'f':
-            {
-              allow_malloc_faill = 1;
-              break;
-            }
-
-          case 'd':
-            {
-              delay = atoi(optarg);
-              break;
-            }
-
-          case 'p':
-            {
-              prio = atoi(optarg);
-              break;
-            }
-
-          case 's':
-            {
-              maxsize = atoi(optarg);
-              break;
-            }
-
-          default:
-            {
-              printf("Unrecognized option: '%c'\n", i);
-              return -EINVAL;
-            }
-        }
-    }
-
-  if (stress_test_mode)
-    {
-      return mm_stress_test(delay, prio, maxsize);
+      return mm_stress_test(argc, argv);
     }
 
   mm_showmallinfo();

@@ -327,7 +327,8 @@ static void blktest_cachesize_write(FAR void **state)
 
   if (size > pre->geo.erasesize * pre->geo.neraseblocks)
     {
-      printf("Warning: Total block size too small, need larger than %ld\n",
+      printf("Warning: Total block size too small,"
+             "need larger than %" PRId32 "\n",
              size);
       return;
     }

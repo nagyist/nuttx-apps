@@ -46,10 +46,6 @@ WAMR_NEED_CUSTOM_INIT = n
 
 # Check if we need to build custom init code
 
-ifeq ($(CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX),y)
-WAMR_NEED_CUSTOM_INIT = y
-endif
-
 ifeq ($(CONFIG_INTERPRETERS_WAMR_EXTERNAL_MODULE_REGISTRY),y)
 WAMR_NEED_CUSTOM_INIT = y
 endif
@@ -60,19 +56,6 @@ ifeq ($(WAMR_NEED_CUSTOM_INIT),y)
 $(WAMR_UNPACK)/product-mini/platforms/nuttx/main.c_CFLAGS = -Dwasm_runtime_full_init=wamr_custom_init
 $(WAMR_UNPACK)/product-mini/platforms/nuttx/main.c_CELFFLAGS = -Dwasm_runtime_full_init=wamr_custom_init
 CSRCS += wamr_custom_init.c
-endif
-
-ifeq ($(CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX),y)
-CSRCS += libc_nuttx.c
-
-GLUECSRCS = syscall_glue.c libc_glue.c libm_glue.c
-CSVSRCS = $(TOPDIR)/syscall/syscall.csv $(TOPDIR)/libs/libc/libc.csv $(TOPDIR)/libs/libm/libm.csv
-
-$(GLUECSRCS): $(CSVSRCS) $(APPDIR)/tools/mkwamrglue.py
-	$(Q) $(APPDIR)/tools/mkwamrglue.py -i $(TOPDIR)/syscall/syscall.csv -o syscall_glue.c
-	$(Q) $(APPDIR)/tools/mkwamrglue.py -i $(TOPDIR)/libs/libc/libc.csv -o libc_glue.c
-	$(Q) $(APPDIR)/tools/mkwamrglue.py -i $(TOPDIR)/libs/libm/libm.csv -o libm_glue.c
-
 endif
 
 $(WAMR_TARBALL):

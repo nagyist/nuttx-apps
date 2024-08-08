@@ -59,7 +59,7 @@ class Extend : public Base
 public:
   void printExtend(void)
   {
-    printf("extend\n");
+    std::printf("extend\n");
   }
 };
 
@@ -153,7 +153,7 @@ static void test_iostream()
 
 static void test_stl()
 {
-  printf("Test std::vector =============================\n");
+  std::printf("Test std::vector =============================\n");
 
   std::vector<int> v1;
   assert(v1.empty());
@@ -169,7 +169,7 @@ static void test_stl()
   v1.pop_back();
   assert(v1.size() == 3);
 
-  printf("v1=%d %d %d\n", v1[0], v1[1], v1[2]);
+  std::printf("v1=%d %d %d\n", v1[0], v1[1], v1[2]);
   assert(v1[2] == 3);
 
   std::vector<int> v2 = v1;
@@ -180,13 +180,13 @@ static void test_stl()
   std::vector<std::string>::iterator it;
   for (it = v3.begin(); it != v3.end(); ++it)
     {
-      printf("%s ", it->c_str());
+      std::printf("%s ", it->c_str());
     }
 
-  printf("\n");
+  std::printf("\n");
   assert(v3[1] == "World");
 
-  printf("Test std::map ===============================\n");
+  std::printf("Test std::map ===============================\n");
 
   std::map<int, std::string> m1;
   m1[12] = "Hello";
@@ -202,17 +202,17 @@ static void test_stl()
 #if defined(CONFIG_LIBCXX) && __cplusplus >= 201703L
 auto test_stl2() -> void
 {
-  printf("Test C++17 features ==========================\n");
+  std::printf("Test C++17 features ==========================\n");
 
   auto check = [](auto&& path)
     {
       if (File::open(path))
         {
-          printf("File %s exists!\n", path.data());
+          std::printf("File %s exists!\n", path.data());
         }
       else
         {
-          printf("File %s does not exist!\n", path.data());
+          std::printf("File %s does not exist!\n", path.data());
         }
     };
   std::array<std::string_view, 3> path_list{
@@ -255,14 +255,14 @@ static void test_rtti()
 #ifdef CONFIG_CXX_EXCEPTION
 static void test_exception()
 {
-  printf("Test Exception ===============================\n");
+  std::printf("Test Exception ===============================\n");
   try
     {
       throw std::runtime_error("runtime error");
     }
   catch (std::runtime_error &e)
     {
-      printf("Catch Exception: %s\n", e.what());
+      std::printf("Catch Exception: %s\n", e.what());
     }
 }
 #endif

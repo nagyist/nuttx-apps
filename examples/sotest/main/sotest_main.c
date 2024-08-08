@@ -134,7 +134,8 @@ int main(int argc, FAR char *argv[])
 
   for (; desc.minor <= CONFIG_EXAMPLES_SOTEST_DEVMINOR_MAX; desc.minor++)
     {
-      printf("main: Registering romdisk at /dev/ram%d\n", desc.minor);
+      syslog(LOG_INFO, "main: Registering romdisk at /dev/ram%d\n",
+             desc.minor);
 
       ret = boardctl(BOARDIOC_ROMDISK, (uintptr_t)&desc);
       if (ret >= 0)
@@ -154,8 +155,8 @@ int main(int argc, FAR char *argv[])
   /* Mount the file system */
 
   sprintf(devname, SOTEST_DEVPATH_FMT, desc.minor);
-  printf("main: Mounting ROMFS filesystem at target=%s with source=%s\n",
-         BINDIR, devname);
+  syslog(LOG_INFO, "main: Mounting ROMFS filesystem at "
+         "target=%s with source=%s\n", BINDIR, devname);
 
   ret = mount(devname, BINDIR, "romfs", MS_RDONLY,
               NULL);
@@ -176,7 +177,7 @@ int main(int argc, FAR char *argv[])
   handle1 = dlopen(BINDIR "/modprint", RTLD_NOW | RTLD_LOCAL);
   if (handle1 == NULL)
     {
-      fprintf(stderr, "ERROR: dlopen(/modprint) failed\n");
+      fprintf(stderr, "ERROR: dlopen(%s/modprint) failed\n", BINDIR);
       exit(EXIT_FAILURE);
     }
 #endif
@@ -186,7 +187,7 @@ int main(int argc, FAR char *argv[])
   handle2 = dlopen(BINDIR "/sotest", RTLD_NOW | RTLD_LOCAL);
   if (handle2 == NULL)
     {
-      fprintf(stderr, "ERROR: dlopen(/sotest) failed\n");
+      fprintf(stderr, "ERROR: dlopen(%s/sotest) failed\n", BINDIR);
       exit(EXIT_FAILURE);
     }
 

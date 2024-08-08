@@ -89,6 +89,7 @@ if(CONFIG_CRYPTO_MBEDTLS)
     if(CONFIG_MBEDTLS_MD5_ALT)
       list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/md5_alt.c)
     endif()
+
     if(CONFIG_MBEDTLS_POLY1305_ALT)
       list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/poly1305_alt.c)
     endif()
@@ -112,6 +113,7 @@ if(CONFIG_CRYPTO_MBEDTLS)
     if(CONFIG_MBEDTLS_BIGNUM_ALT)
       list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/bignum_alt.c)
     endif()
+
   endif()
 
   # ############################################################################
@@ -119,7 +121,6 @@ if(CONFIG_CRYPTO_MBEDTLS)
   # ############################################################################
 
   set(INCDIR ${CMAKE_CURRENT_LIST_DIR}/include ${MBEDTLS_DIR}/include)
-
   # ############################################################################
   # Library Configuration
   # ############################################################################
@@ -128,6 +129,10 @@ if(CONFIG_CRYPTO_MBEDTLS)
     TARGET nuttx
     APPEND
     PROPERTY NUTTX_INCLUDE_DIRECTORIES ${INCDIR})
+  set_property(
+    TARGET nuttx
+    APPEND
+    PROPERTY NUTTX_CXX_INCLUDE_DIRECTORIES ${INCDIR})
 
   nuttx_add_library(mbedtls STATIC)
   target_sources(mbedtls PRIVATE ${CSRCS})

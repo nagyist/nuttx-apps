@@ -40,8 +40,7 @@
  * Name: modprint
  ****************************************************************************/
 
-__attribute__((visibility("default")))
-void modprint(FAR const char *fmt, ...)
+visibility_default void modprint(FAR const char *fmt, ...)
 {
   va_list ap;
 

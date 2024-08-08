@@ -158,8 +158,8 @@ static const struct cmdmap_s g_cmdmap[] =
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_CAT
-  CMD_MAP("cat",      cmd_cat,      2, CONFIG_NSH_MAXARGUMENTS,
-    "<path> [<path> [<path> ...]]"),
+  CMD_MAP("cat",      cmd_cat,      1, CONFIG_NSH_MAXARGUMENTS,
+    "[<path> [<path> [<path> ...]]]"),
 #endif
 
 #ifndef CONFIG_DISABLE_ENVIRON
@@ -310,6 +310,10 @@ static const struct cmdmap_s g_cmdmap[] =
   CMD_MAP("kill",     cmd_kill,     2, 3, "[-<signal>] <pid>"),
 #endif
 
+#if defined(CONFIG_FS_PROCFS) && !defined(CONFIG_NSH_DISABLE_PKILL)
+  CMD_MAP("pkill",     cmd_pkill,     2, 3, "[-<signal>] <name>"),
+#endif
+
 #ifndef CONFIG_DISABLE_MOUNTPOINT
 #  if defined(CONFIG_DEV_LOOP) && !defined(CONFIG_NSH_DISABLE_LOSETUP)
   CMD_MAP("losetup",  cmd_losetup,  3, 6,
@@ -456,6 +460,7 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #if defined(CONFIG_BOARDCTL_POWEROFF) && !defined(CONFIG_NSH_DISABLE_POWEROFF)
   CMD_MAP("poweroff", cmd_poweroff, 1, 2, NULL),
+  CMD_MAP("quit", cmd_poweroff, 1, 2, NULL),
 #endif
 
 #ifndef CONFIG_NSH_DISABLE_PRINTF
@@ -496,6 +501,11 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #if defined(CONFIG_BOARDCTL_RESET_CAUSE) && !defined(CONFIG_NSH_DISABLE_RESET_CAUSE)
   CMD_MAP("resetcause", cmd_reset_cause, 1, 1, NULL),
+#endif
+
+#if defined(CONFIG_BOARDCTL_IRQ_AFFINITY) && !defined(CONFIG_NSH_DISABLE_IRQ_AFFINITY)
+  CMD_MAP("irqaff", cmd_irq_affinity, 3, 3,
+    "irqaff [IRQ Number] [Core Mask]"),
 #endif
 
 #ifdef NSH_HAVE_DIROPTS
@@ -668,7 +678,8 @@ static const struct cmdmap_s g_cmdmap[] =
 #ifndef CONFIG_NSH_DISABLE_XD
   CMD_MAP("xd",       cmd_xd,       3, 3, "<hex-address> <byte-count>"),
 #endif
-#if !defined(CONFIG_NSH_DISABLE_WAIT) && defined(CONFIG_SCHED_WAITPID)
+#if !defined(CONFIG_NSH_DISABLE_WAIT) && defined(CONFIG_SCHED_WAITPID) && \
+    !defined(CONFIG_DISABLE_PTHREAD)
   CMD_MAP("wait",     cmd_wait,     1, CONFIG_NSH_MAXARGUMENTS,
           "pid1 [pid2 [pid3] ...]"),
 #endif
@@ -895,7 +906,7 @@ static inline void help_builtins(FAR struct nsh_vtbl_s *vtbl)
 
   char line[HELP_LINELEN + HELP_TABSIZE + 1];
 
-  static const char *g_builtin_prompt = "\nBuiltin Apps:\n";
+  static FAR const char *const g_builtin_prompt = "\nBuiltin Apps:\n";
 
   /* Count the number of built-in commands and get the optimal column width */
 
