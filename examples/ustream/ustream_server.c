@@ -132,8 +132,7 @@ int main(int argc, char *argv[])
     }
 #endif
 
-  acceptsd = accept4(listensd, (struct sockaddr *)&myaddr, &addrlen,
-                     SOCK_CLOEXEC);
+  acceptsd = accept(listensd, (struct sockaddr *)&myaddr, &addrlen);
   if (acceptsd < 0)
     {
       printf("server: accept failure: %d\n", errno);
