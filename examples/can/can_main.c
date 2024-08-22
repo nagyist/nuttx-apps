@@ -333,7 +333,7 @@ int main(int argc, FAR char *argv[])
 #ifdef CONFIG_CAN_EXTID
       txmsg.cm_hdr.ch_extid  = extended;
 #endif
-      txmsg.cm_hdr.ch_unused = 0;
+      txmsg.cm_hdr.ch_tcf = 0;
 
       for (i = 0; i < msgdlc; i++)
         {

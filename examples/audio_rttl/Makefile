@@ -19,6 +19,7 @@
 ############################################################################
 
 include $(APPDIR)/Make.defs
+-include $(SDKDIR)/Make.defs
 
 # Audio application info
 
@@ -29,5 +30,14 @@ STACKSIZE = $(CONFIG_EXAMPLES_AUDIO_SOUND_STACKSIZE)
 # Audio Example
 
 MAINSRC = audio_rttl.cxx
+
+# Audio Example paths
+
+AUDIODIR = $(SDKDIR)$(DELIM)modules$(DELIM)audio
+
+# Audio Example flags
+
+CXXFLAGS += ${INCDIR_PREFIX}"$(AUDIODIR)"
+CXXFLAGS += -D_POSIX
 
 include $(APPDIR)/Application.mk
