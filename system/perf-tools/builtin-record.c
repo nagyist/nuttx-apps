@@ -332,6 +332,7 @@ int perf_record_handle(FAR struct evlist_s *evlist,
   struct cmd_record_s record;
   pid_t child_pid = -1;
   int status = 0;
+  int remain_ms = stat_args->sec * 1000;
 
   memset(&record, 0, sizeof(struct cmd_record_s));
   g_record_done = 0;
@@ -374,17 +375,19 @@ int perf_record_handle(FAR struct evlist_s *evlist,
     {
       pid_t pid;
 
-      if (child_pid > 0 && (pid = waitpid(child_pid, &status, WNOHANG)) > 0)
-        {
-          mmap_read(&record);
-          break;
-        }
-
       if (mmap_read(&record) < 0)
         {
           break;
         }
 
+      if ((stat_args->sec > 0 && remain_ms <= 0) ||
+          (child_pid > 0 &&
+          (pid = waitpid(child_pid, &status, WNOHANG)) > 0))
+        {
+          break;
+        }
+
+      remain_ms -= 100;
       status = poll(record.fds, record.nr_fds, 100);
 
       if (status < 0)

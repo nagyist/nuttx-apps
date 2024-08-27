@@ -485,6 +485,10 @@ int perf_stat_handle(FAR struct evlist_s *evlist,
           return status;
         }
     }
+  else if (stat_args->sec > 0)
+    {
+      sleep(stat_args->sec);
+    }
 
   evlist_for_each_evsel(evlist, node, evsel_read_counter, status);
 
