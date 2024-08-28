@@ -59,6 +59,11 @@ static void cm_usage(void)
         "matches C pattern\n"
         " -f, --output-path use xml report instead of standard "
         "output\n"
+        " -d, --shuffle-seed shuffling test sequence,between "
+        "0 and 99999,\n"
+        "                   when seed is 0,use time(NULL) as "
+        "the seed for \n"
+        "                   the random number generator\n"
         "Example: cmocka --suite mm|sched "
         "--test Test* --skip TestNuttxMm0[123]\n\n";
     printf("%s", mesg);
@@ -95,6 +100,7 @@ int main(int argc, FAR char *argv[])
   FAR char *suite = NULL;
   FAR char *skip = NULL;
   FAR char *xml_path = NULL;
+  FAR char *shuffle_seed = NULL;
   int num_bypass = 1;
   int ret;
   int i;
@@ -123,6 +129,11 @@ int main(int argc, FAR char *argv[])
                || strcmp("-f", argv[i]) == 0)
         {
           xml_path = argv[++i];
+        }
+      else if (strcmp("--shuffle-seed", argv[i]) == 0
+               || strcmp("-d", argv[i]) == 0)
+        {
+          shuffle_seed = argv[++i];
         }
       else if (strcmp("--test", argv[i]) == 0 || strcmp("-t", argv[i]) == 0)
         {
@@ -161,6 +172,11 @@ int main(int argc, FAR char *argv[])
           cmocka_set_message_output(CM_OUTPUT_XML);
         }
 
+      if (shuffle_seed != NULL)
+        {
+          setenv("CMOCKA_SHUFFLE_SEED", shuffle_seed, 1);
+        }
+
       cmocka_set_test_filter(testcase);
       cmocka_set_skip_filter(skip);
     }
@@ -182,7 +198,7 @@ int main(int argc, FAR char *argv[])
         }
 
       bypass[0] = (FAR char *)builtin->name;
-      ret = exec_builtin(builtin->name, bypass, NULL, NULL, 0);
+      ret = exec_builtin(builtin->name, bypass, NULL, 0);
       if (ret >= 0)
         {
           waitpid(ret, &ret, WUNTRACED);
