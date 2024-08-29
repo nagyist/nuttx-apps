@@ -97,10 +97,10 @@ struct memorystress_node_s
 
 struct memorystress_context_s
 {
-  FAR struct memorystress_node_s *node_array;
-  FAR struct memorystress_config_s *config;
-  FAR pthread_t *threads;
+  struct memorystress_node_s *node_array;
+  struct memorystress_config_s *config;
   struct memorystress_error_s error;
+  pthread_t *threads;
   uint32_t sleep_us;
   size_t nthreads;
   bool debug;
@@ -476,11 +476,11 @@ static void init(FAR struct memorystress_context_s *context, int argc,
  * Name: memorystress_thread
  ****************************************************************************/
 
-FAR void *memorystress_thread(FAR void *arg)
+FAR void *memorystress_thread(void *arg)
 {
   FAR struct memorystress_context_s *context;
 
-  context = (FAR struct memorystress_context_s *)arg;
+  context = (struct memorystress_context_s *)arg;
   while (memorystress_iter(context))
     {
       usleep(context->sleep_us);

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/include/interpreters/minibasic.h
+ * apps/interpreters/minibasic/basic.c
  *
  *   Copyright (C) 2016 Gregory Nutt. All rights reserved.
  *
