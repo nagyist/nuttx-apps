@@ -150,7 +150,7 @@ int parse_stat_options(int argc, FAR char **argv,
         }
     }
 
-  stat_args->sec = PERF_DEFAULT_RUN_TIME;
+  stat_args->sec = 0;
   stat_args->cmd = argv[optind];
   stat_args->cmd_args = &argv[optind];
 
@@ -166,6 +166,7 @@ int parse_stat_options(int argc, FAR char **argv,
     {
       if (!strcmp(stat_args->cmd, "sleep"))
         {
+          stat_args->sec = PERF_DEFAULT_RUN_TIME;
           if (stat_args->type == STAT_ARGS_NONE)
             {
               stat_args->cpu = -1;
