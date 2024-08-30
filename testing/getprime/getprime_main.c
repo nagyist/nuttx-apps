@@ -23,6 +23,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <nuttx/clock.h>
 
 #include <assert.h>
 #include <pthread.h>
@@ -102,7 +103,8 @@ static FAR void *thread_func(FAR void *param)
   printf("thread #%d finished, found %d primes, last one was %d\n",
          no, count, last);
 
-  return NULL;
+  pthread_exit(NULL);
+  return NULL; /* To keep some compilers happy */
 }
 
 /****************************************************************************
@@ -140,14 +142,6 @@ static void get_prime_in_parallel(int n)
   printf("Set thread policy to SCHED_FIFO\n");
 #endif
 
-  /* Zero threads, do work from main thread instead. */
-
-  if (n == 0)
-    {
-        arg[0] = n;
-        thread_func((FAR void *)&arg[0]);
-    }
-
   for (i = 0; i < n; i++)
     {
       arg[i] = i;
@@ -165,20 +159,6 @@ static void get_prime_in_parallel(int n)
     }
 
   printf("Done\n");
-  UNUSED(status);
-}
-
-/****************************************************************************
- * Name: usage
- ****************************************************************************/
-
-static void usage(void)
-{
-    printf("\nUsage: getprime [<num_threads>]\n");
-    printf("\nWhere:\n");
-    printf("  <num_threads> is integer from 0 to %d (default 1).\n",
-           MAX_THREADS);
-    exit(0);
 }
 
 /****************************************************************************
@@ -200,14 +180,9 @@ int main(int argc, FAR char *argv[])
   if (argc == 2)
     {
       n = (int)strtol(argv[1], &endp, 10);
-      if (argv[1] == endp || n < 0 || n > MAX_THREADS)
-        {
-            usage();
-        }
-    }
-  else if (argc > 2)
-    {
-      usage();
+      ASSERT(argv[1] != endp);
+
+      ASSERT(0 < n && n <= MAX_THREADS);
     }
 
   clock_gettime(CLOCK_REALTIME, &ts0);
