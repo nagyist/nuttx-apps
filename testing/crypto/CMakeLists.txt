@@ -103,4 +103,32 @@ if(CONFIG_TESTING_CRYPTO)
       hash.c)
   endif()
 
+  if(CONFIG_TESTING_CRYPTO_ECDH)
+    nuttx_add_application(
+      NAME
+      dhm
+      PRIORITY
+      ${CONFIG_TESTING_CRYPTO_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_CRYPTO_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_CRYPTO}
+      SRCS
+      dhm.c)
+  endif()
+
+  if(CONFIG_TESTING_CRYPTO_RSA)
+    nuttx_add_application(
+      NAME
+      rsa
+      PRIORITY
+      ${CONFIG_TESTING_CRYPTO_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_CRYPTO_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_CRYPTO}
+      SRCS
+      rsa.c)
+  endif()
+
 endif()

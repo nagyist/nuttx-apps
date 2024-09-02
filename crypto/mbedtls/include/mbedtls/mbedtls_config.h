@@ -359,8 +359,11 @@
  * #define MBEDTLS_CCM_ALT
  * #define MBEDTLS_CHACHA20_ALT
  * #define MBEDTLS_CHACHAPOLY_ALT
- * #define MBEDTLS_CMAC_ALT
- * #define MBEDTLS_DES_ALT
+ */
+#ifdef CONFIG_MBEDTLS_CMAC_ALT
+#define MBEDTLS_CMAC_ALT
+#endif
+/* #define MBEDTLS_DES_ALT
  * #define MBEDTLS_DHM_ALT
  * #define MBEDTLS_ECJPAKE_ALT
  * #define MBEDTLS_GCM_ALT
@@ -371,9 +374,13 @@
 #ifdef CONFIG_MBEDTLS_MD5_ALT
 #define MBEDTLS_MD5_ALT
 #endif
-/* #define MBEDTLS_POLY1305_ALT
- * #define MBEDTLS_RIPEMD160_ALT
- * #define MBEDTLS_RSA_ALT
+#ifdef CONFIG_MBEDTLS_POLY1305_ALT
+#define MBEDTLS_POLY1305_ALT
+#endif
+#ifdef CONFIG_MBEDTLS_RIPEMD160_ALT
+#define MBEDTLS_RIPEMD160_ALT
+#endif
+/* #define MBEDTLS_RSA_ALT
  */
 #ifdef CONFIG_MBEDTLS_SHA1_ALT
 #define MBEDTLS_SHA1_ALT
@@ -383,6 +390,9 @@
 #endif
 #ifdef CONFIG_MBEDTLS_SHA512_ALT
 #define MBEDTLS_SHA512_ALT
+#endif
+#ifdef CONFIG_MBEDTLS_BIGNUM_ALT
+#define MBEDTLS_BIGNUM_ALT
 #endif
 /* #define MBEDTLS_XTEA_ALT
  */
@@ -981,21 +991,6 @@
 #endif
 
 /**
- * \def MBEDTLS_X509_CRT_POOL
- *
- * Enable X.509 certificate pool.
- *
- * Module:  library/x509_crt_pool.c
- *
- * Requires: MBEDTLS_THREADING_C
- *
- * This module is required for X.509 certificate pool.
- */
-#ifdef CONFIG_MBEDTLS_X509_CRT_POOL
-#define MBEDTLS_X509_CRT_POOL
-#endif
-
-/**
  * \def MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
  *
  * Enable the RSA-only based ciphersuite modes in SSL / TLS.
@@ -1462,7 +1457,9 @@
  * \note This option is experimental and may be removed without notice.
  */
 
-/* #define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG */
+#ifdef CONFIG_MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+#define MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
+#endif
 
 /**
  * \def MBEDTLS_PSA_CRYPTO_SPM
@@ -3837,6 +3834,21 @@
  * This module is required for X.509 certificate parsing.
  */
 #define MBEDTLS_X509_CRT_PARSE_C
+
+/**
+ * \def MBEDTLS_X509_CRT_POOL
+ *
+ * Enable X.509 certificate pool.
+ *
+ * Module:  library/x509_crt_pool.c
+ *
+ * Requires: MBEDTLS_THREADING_C
+ *
+ * This module is required for X.509 certificate pool.
+ */
+#ifdef CONFIG_MBEDTLS_X509_CRT_POOL
+#define MBEDTLS_X509_CRT_POOL
+#endif
 
 /**
  * \def MBEDTLS_X509_CRL_PARSE_C
