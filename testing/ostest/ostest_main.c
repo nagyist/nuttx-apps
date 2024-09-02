@@ -603,7 +603,7 @@ static int user_main(int argc, char *argv[])
 #endif
 #endif
 
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) && defined(CONFIG_BUILD_FLAT)
       printf("\nuser_main: smp call test\n");
       smp_call_test();
 #endif

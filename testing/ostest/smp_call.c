@@ -29,6 +29,7 @@
 
 #include <nuttx/sched.h>
 
+#if defined(CONFIG_SMP) && defined(CONFIG_BUILD_FLAT)
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
@@ -140,3 +141,4 @@ void smp_call_test(void)
 
   printf("smp_call_test: Test success\n");
 }
+#endif
