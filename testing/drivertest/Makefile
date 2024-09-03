@@ -29,7 +29,7 @@ MAINSRC  += drivertest_simple.c
 PROGNAME += cmocka_driver_simple
 endif
 
-ifeq ($(CONFIG_BCH)$(CONFIG_BUILD_FLAT),yy)
+ifeq ($(CONFIG_BCH),y)
 CFLAGS += ${INCDIR_PREFIX}${TOPDIR}/fs
 PROGNAME += cmocka_driver_block
 MAINSRC  += drivertest_block.c
@@ -69,6 +69,11 @@ endif
 ifneq ($(CONFIG_PWM),)
 MAINSRC  += drivertest_pwm.c
 PROGNAME += cmocka_driver_pwm
+endif
+
+ifneq ($(CONFIG_WATCHDOG),)
+MAINSRC  += drivertest_watchdog.c
+PROGNAME += cmocka_driver_watchdog
 endif
 
 ifneq ($(CONFIG_ADC),)
@@ -111,11 +116,6 @@ MAINSRC  += drivertest_audio.c
 PROGNAME += cmocka_driver_audio
 endif
 
-ifneq ($(CONFIG_CPUFREQ),)
-MAINSRC  += drivertest_cpufreq.c
-PROGNAME += cmocka_driver_cpufreq
-endif
-
 ifneq ($(CONFIG_VIDEO_FB),)
 MAINSRC  += drivertest_framebuffer.c
 PROGNAME += cmocka_driver_framebuffer
@@ -143,13 +143,9 @@ PROGNAME += cmocka_driver_mps2
 endif
 endif
 
-ifeq ($(CONFIG_PM),y)
+ifneq ($(CONFIG_PM),)
 MAINSRC  += drivertest_pm.c
 PROGNAME += cmocka_driver_pm
-ifeq ($(CONFIG_SMP),y)
-MAINSRC  += drivertest_pm_smp.c
-PROGNAME += cmocka_driver_pm_smp
-endif
 endif
 
 ifneq ($(CONFIG_PM_RUNTIME),)

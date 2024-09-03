@@ -22,7 +22,6 @@
  * Included Files
  ****************************************************************************/
 
-#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <poll.h>
@@ -126,9 +125,6 @@ int main(int argc, FAR char **argv)
           case 'd':
             memset(codec.devname, 0, sizeof(codec.devname));
             snprintf(codec.devname, sizeof(codec.devname), "%s", optarg);
-
-            printf("nxcodec device name: %s\n", codec.devname);
-
             break;
 
           case 's' :
@@ -140,10 +136,6 @@ int main(int argc, FAR char **argv)
                                 codec.capture.format.fmt.pix.width;
             codec.output.format.fmt.pix.height =
                                 codec.capture.format.fmt.pix.height;
-            printf("nxcodec size: %lux%lu\n",
-                   codec.output.format.fmt.pix.width,
-                   codec.output.format.fmt.pix.height);
-
             break;
 
           case 'h':
@@ -164,12 +156,6 @@ int main(int argc, FAR char **argv)
                 codec.output.format.fmt.pix.pixelformat =
                                     v4l2_fourcc(cc[0], cc[1], cc[2], cc[3]);
               }
-
-            printf("nxcodec input  file: %s, format %c%c%c%c - %"PRIu32"\n",
-                   codec.output.filename,
-                   cc[0], cc[1], cc[2], cc[3],
-                   codec.output.format.fmt.pix.pixelformat);
-
             break;
 
           case 'o':
@@ -183,12 +169,6 @@ int main(int argc, FAR char **argv)
                 codec.capture.format.fmt.pix.pixelformat =
                                      v4l2_fourcc(cc[0], cc[1], cc[2], cc[3]);
               }
-
-            printf("nxcodec output file: %s, format %c%c%c%c - %"PRIu32"\n",
-                   codec.capture.filename,
-                   cc[0], cc[1], cc[2], cc[3],
-                   codec.capture.format.fmt.pix.pixelformat);
-
             break;
 
           default:
@@ -200,20 +180,14 @@ int main(int argc, FAR char **argv)
   ret = nxcodec_init(&codec);
   if (ret < 0)
     {
-      printf("nxcodec init failed: %d\n", ret);
       return ret;
     }
-
-  printf("nxcodec init DONE.\n");
 
   ret = nxcodec_start(&codec);
   if (ret < 0)
     {
-      printf("nxcodec start failed: %d\n", ret);
       goto end0;
     }
-
-  printf("nxcodec started.\n");
 
   while (1)
     {
@@ -229,7 +203,6 @@ int main(int argc, FAR char **argv)
         {
           if (nxcodec_context_dequeue_frame(&codec.capture) < 0)
             {
-              printf("nxcodec dequeue frame failed: %s\n", strerror(errno));
               break;
             }
         }
@@ -238,14 +211,12 @@ int main(int argc, FAR char **argv)
         {
           if (nxcodec_context_enqueue_frame(&codec.output) < 0)
             {
-              printf("nxcodec enqueue frame failed: %s\n", strerror(errno));
               break;
             }
         }
     }
 
   nxcodec_stop(&codec);
-  printf("nxcodec stop DONE.\n");
 
 end0:
   nxcodec_uninit(&codec);

@@ -91,6 +91,10 @@
 
 int getopt_test(void);
 
+/* libc_memmem.c ************************************************************/
+
+int memmem_test(void);
+
 /* setvbuf.c ****************************************************************/
 
 #ifndef CONFIG_STDIO_DISABLE_BUFFERING
@@ -205,10 +209,6 @@ void signest_test(void);
 
 void suspend_test(void);
 
-/* wdog.c *******************************************************************/
-
-void wdog_test(void);
-
 /* posixtimers.c ************************************************************/
 
 void timer_test(void);
@@ -262,7 +262,7 @@ void sched_lock_test(void);
 
 /* vfork.c ******************************************************************/
 
-#if defined(CONFIG_ARCH_HAVE_VFORK) && defined(CONFIG_SCHED_WAITPID)
+#if defined(CONFIG_ARCH_HAVE_FORK) && defined(CONFIG_SCHED_WAITPID)
 int vfork_test(void);
 #endif
 
@@ -272,7 +272,7 @@ void setjmp_test(void);
 
 /* smp_call.c ***************************************************************/
 
-#ifdef CONFIG_SMP
+#ifdef CONFIG_SMP_CALL
 void smp_call_test(void);
 #endif
 
@@ -286,6 +286,12 @@ int sem_nfreeholders(void);
 #else
 #  define sem_enumholders(sem)
 #  define sem_nfreeholders()
+#endif
+
+/* nxevent.c ****************************************************************/
+
+#if defined(CONFIG_SCHED_EVENTS) && defined(CONFIG_BUILD_FLAT)
+void nxevent_test(void);
 #endif
 
 #endif /* __APPS_TESTING_OSTEST_OSTEST_H */

@@ -22,13 +22,13 @@ include $(APPDIR)/Make.defs
 
 # Network packet socket example
 
-PROGNAME = netpkt netpkt_ethercat
+PROGNAME = netpkt
 PRIORITY = SCHED_PRIORITY_DEFAULT
 STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE = $(CONFIG_EXAMPLES_NETPKT)
 
 # MDIO tool
 
-MAINSRC = netpkt_main.c netpkt_ethercat.c
+MAINSRC = netpkt_main.c
 
 include $(APPDIR)/Application.mk

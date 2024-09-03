@@ -22,18 +22,17 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/list.h>
+
 #include <ctype.h>
 #include <errno.h>
 #include <dirent.h>
-#include <inttypes.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/queue.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -45,7 +44,6 @@
 
 #define ORB_MAX_PRINT_NAME 32
 #define ORB_TOP_WAIT_TIME  1000
-#define ORB_DATA_DIR       "/data/uorb/"
 
 /****************************************************************************
  * Private Types
@@ -53,15 +51,11 @@
 
 struct listen_object_s
 {
-  SLIST_ENTRY(listen_object_s) node; /* Node of object info list */
-
-  struct orb_object object; /* Object id */
-  orb_abstime timestamp;    /* Time of lastest generation */
-  unsigned long generation; /* Latest generation */
-  FAR FILE *file;
+  struct list_node  node;         /* Node of object info list */
+  struct orb_object object;       /* Object id */
+  orb_abstime       timestamp;    /* Time of lastest generation  */
+  unsigned long     generation;   /* Latest generation */
 };
-
-SLIST_HEAD(listen_list_s, listen_object_s);
 
 /****************************************************************************
  * Private Function Prototypes
@@ -69,24 +63,20 @@ SLIST_HEAD(listen_list_s, listen_object_s);
 
 static int listener_get_state(FAR struct orb_object *object,
                               FAR struct orb_state *state);
-static int listener_add_object(FAR struct listen_list_s *objlist,
+static int listener_add_object(FAR struct list_node *objlist,
                                FAR struct orb_object *object);
-static void listener_delete_object_list(FAR struct listen_list_s *objlist);
-static int listener_generate_object_list(FAR struct listen_list_s *objlist,
+static void listener_delete_object_list(FAR struct list_node *objlist);
+static int listener_generate_object_list(FAR struct list_node *objlist,
                                          FAR const char *filter);
 static int listener_print(FAR const struct orb_metadata *meta, int fd);
-static void listener_monitor(FAR struct listen_list_s *objlist,
-                             int nb_objects, float topic_rate,
-                             int topic_latency, int nb_msgs,
-                             int timeout, bool record);
-static int listener_update(FAR struct listen_list_s *objlist,
+static void listener_monitor(FAR struct list_node *objlist, int nb_objects,
+                             float topic_rate, int topic_latency,
+                             int nb_msgs, int timeout);
+static int listener_update(FAR struct list_node *objlist,
                            FAR struct orb_object *object);
-static void listener_top(FAR struct listen_list_s *objlist,
+static void listener_top(FAR struct list_node *objlist,
                          FAR const char *filter,
                          bool only_once);
-static int listener_create_dir(FAR char *dir, size_t size);
-static int listener_record(FAR const struct orb_metadata *meta, int fd,
-                           FAR FILE *file);
 
 /****************************************************************************
  * Private Data
@@ -124,7 +114,6 @@ listener <command> [arguments...]\n\
  Commands:\n\
 \t<topics_name> Topic name. Multi name are separated by ','\n\
 \t[-h       ]  Listener commands help\n\
-\t[-f       ]  Record uorb data to file\n\
 \t[-n <val> ]  Number of messages, default: 0\n\
 \t[-r <val> ]  Subscription rate (unlimited if 0), default: 0\n\
 \t[-b <val> ]  Subscription maximum report latency in us(unlimited if 0),\n\
@@ -133,45 +122,6 @@ listener <command> [arguments...]\n\
 \t[-T       ]  Top, continuously print updating objects\n\
 \t[-l       ]  Top only execute once.\n\
   ");
-}
-
-/****************************************************************************
- * Name: creat_record_path
- *
- * Input Parameters:
- *   path   The path of the storage file.
- *
- * Description:
- *   Create the path where files are stored by default.
- *
- * Returned Value:
- *   0 on success, otherwise negative errno.
- ****************************************************************************/
-
-static int listener_create_dir(FAR char *dir, size_t size)
-{
-  FAR struct tm *tm_info;
-  time_t t;
-
-  time(&t);
-  tm_info = gmtime(&t);
-
-  if (0 == strftime(dir, size, ORB_DATA_DIR "%Y%m%d%H%M%S/", tm_info))
-    {
-      return -EINVAL;
-    }
-
-  if (access(ORB_DATA_DIR, F_OK) != 0)
-    {
-      mkdir(ORB_DATA_DIR, 0777);
-    }
-
-  if (access(dir, F_OK) != 0)
-    {
-      mkdir(dir, 0777);
-    }
-
-  return OK;
 }
 
 /****************************************************************************
@@ -194,7 +144,7 @@ static int listener_get_state(FAR struct orb_object *object,
   int ret;
   int fd;
 
-  fd = orb_open(object->meta->o_name, object->instance, O_DIRECT);
+  fd = orb_open(object->meta->o_name, object->instance, 0);
   if (fd < 0)
     {
       return fd;
@@ -219,7 +169,7 @@ static int listener_get_state(FAR struct orb_object *object,
  *   0 on success, otherwise return negative errno.
  ****************************************************************************/
 
-static int listener_add_object(FAR struct listen_list_s *objlist,
+static int listener_add_object(FAR struct list_node *objlist,
                                FAR struct orb_object *object)
 {
   FAR struct listen_object_s *tmp;
@@ -237,8 +187,7 @@ static int listener_add_object(FAR struct listen_list_s *objlist,
   tmp->object.instance = object->instance;
   tmp->timestamp       = orb_absolute_time();
   tmp->generation      = ret < 0 ? 0 : state.generation;
-  tmp->file            = NULL;
-  SLIST_INSERT_HEAD(objlist, tmp, node);
+  list_add_tail(objlist, &tmp->node);
   return 0;
 }
 
@@ -256,7 +205,7 @@ static int listener_add_object(FAR struct listen_list_s *objlist,
  *   0 on success.
  ****************************************************************************/
 
-static int listener_update(FAR struct listen_list_s *objlist,
+static int listener_update(FAR struct list_node *objlist,
                            FAR struct orb_object *object)
 {
   FAR struct listen_object_s *old = NULL;
@@ -265,7 +214,7 @@ static int listener_update(FAR struct listen_list_s *objlist,
 
   /* Check wether object already exist in old list */
 
-  SLIST_FOREACH(tmp, objlist, node)
+  list_for_every_entry(objlist, tmp, struct listen_object_s, node)
     {
       if (tmp->object.meta == object->meta &&
           tmp->object.instance == object->instance)
@@ -339,18 +288,18 @@ static int listener_update(FAR struct listen_list_s *objlist,
  *   None.
  ****************************************************************************/
 
-static void listener_delete_object_list(FAR struct listen_list_s *objlist)
+static void listener_delete_object_list(FAR struct list_node *objlist)
 {
   FAR struct listen_object_s *tmp;
+  FAR struct listen_object_s *next;
 
-  while (!SLIST_EMPTY(objlist))
+  list_for_every_entry_safe(objlist, tmp, next, struct listen_object_s, node)
     {
-      tmp = SLIST_FIRST(objlist);
-      SLIST_REMOVE_HEAD(objlist, node);
+      list_delete(&tmp->node);
       free(tmp);
     }
 
-  SLIST_INIT(objlist);
+  list_initialize(objlist);
 }
 
 /****************************************************************************
@@ -368,7 +317,7 @@ static void listener_delete_object_list(FAR struct listen_list_s *objlist)
  *   Negative errno on failure.
  ****************************************************************************/
 
-static int listener_generate_object_list(FAR struct listen_list_s *objlist,
+static int listener_generate_object_list(FAR struct list_node *objlist,
                                          FAR const char *filter)
 {
   FAR struct dirent *entry;
@@ -515,44 +464,10 @@ static int listener_print(FAR const struct orb_metadata *meta, int fd)
 
   ret = orb_copy(meta, fd, buffer);
 #ifdef CONFIG_DEBUG_UORB
-  if (ret == OK && meta->o_format != NULL)
+  if (ret == OK && meta->o_cb != NULL)
     {
-      orb_info(meta->o_format, meta->o_name, buffer);
+      meta->o_cb(meta, buffer);
     }
-#endif
-
-  return ret;
-}
-
-/****************************************************************************
- * Name: listener_record
- *
- * Description:
- *   record topic data.
- *
- * Input Parameters:
- *   meta   The uORB metadata.
- *   fd     Subscriber handle.
- *   file   Save file handle.
- *
- * Returned Value:
- *   0 on success copy, otherwise -1
- ****************************************************************************/
-
-static int listener_record(FAR const struct orb_metadata *meta, int fd,
-                           FAR FILE *file)
-{
-  char buffer[meta->o_size];
-  int ret;
-
-  ret = orb_copy(meta, fd, buffer);
-#ifdef CONFIG_DEBUG_UORB
-  if (ret == OK && meta->o_format != NULL)
-    {
-      ret = orb_fprintf(file, meta->o_format, buffer);
-    }
-#else
-  (void)file;
 #endif
 
   return ret;
@@ -576,20 +491,17 @@ static int listener_record(FAR const struct orb_metadata *meta, int fd,
  *   None
  ****************************************************************************/
 
-static void listener_monitor(FAR struct listen_list_s *objlist,
-                             int nb_objects, float topic_rate,
-                             int topic_latency, int nb_msgs,
-                             int timeout, bool record)
+static void listener_monitor(FAR struct list_node *objlist, int nb_objects,
+                             float topic_rate, int topic_latency,
+                             int nb_msgs, int timeout)
 {
   FAR struct pollfd *fds;
-  char path[PATH_MAX];
   FAR int *recv_msgs;
   float interval = topic_rate ? (1000000 / topic_rate) : 0;
   int nb_recv_msgs = 0;
-  FAR char *dir;
   int i = 0;
 
-  FAR struct listen_object_s *tmp;
+  struct listen_object_s *tmp;
 
   fds = malloc(nb_objects * sizeof(struct pollfd));
   if (!fds)
@@ -606,7 +518,7 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
 
   /* Prepare pollfd for all objects */
 
-  SLIST_FOREACH(tmp, objlist, node)
+  list_for_every_entry(objlist, tmp, struct listen_object_s, node)
     {
       int fd;
 
@@ -636,34 +548,6 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
       i++;
     }
 
-  if (record)
-    {
-      listener_create_dir(path, sizeof(path));
-      dir = path + strlen(path);
-
-      SLIST_FOREACH(tmp, objlist, node)
-        {
-          sprintf(dir, "%s%d.csv", tmp->object.meta->o_name,
-                  tmp->object.instance);
-          tmp->file = fopen(path, "w");
-          if (tmp->file != NULL)
-            {
-#ifdef CONFIG_DEBUG_UORB
-              fprintf(tmp->file, "%s,%d,%d,%s\n", tmp->object.meta->o_format,
-                      tmp->object.meta->o_size, tmp->object.instance,
-                      tmp->object.meta->o_name);
-#endif
-
-              uorbinfo_raw("creat file:[%s]", path);
-            }
-          else
-            {
-              uorbinfo_raw("file creat failed!meta name:%s,instance:%d",
-                           tmp->object.meta->o_name, tmp->object.instance);
-            }
-        }
-    }
-
   /* Loop poll and print recieved messages */
 
   while ((!nb_msgs || nb_recv_msgs < nb_msgs) && !g_should_exit)
@@ -671,28 +555,15 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
       if (poll(&fds[0], nb_objects, timeout * 1000) > 0)
         {
           i = 0;
-          SLIST_FOREACH(tmp, objlist, node)
+          list_for_every_entry(objlist, tmp, struct listen_object_s, node)
             {
               if (fds[i].revents & POLLIN)
                 {
                   nb_recv_msgs++;
                   recv_msgs[i]++;
-
-                  if (tmp->file != NULL)
+                  if (listener_print(tmp->object.meta, fds[i].fd) != 0)
                     {
-                      if (listener_record(tmp->object.meta, fds[i].fd,
-                                          tmp->file) < 0)
-                        {
-                          uorberr("Listener record %s data failed!",
-                                  tmp->object.meta->o_name);
-                        }
-                    }
-                  else
-                    {
-                      if (listener_print(tmp->object.meta, fds[i].fd) != 0)
-                        {
-                          uorberr("Listener callback failed");
-                        }
+                      uorberr("Listener callback failed");
                     }
 
                   if (nb_msgs && nb_recv_msgs >= nb_msgs)
@@ -713,7 +584,7 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
     }
 
   i = 0;
-  SLIST_FOREACH(tmp, objlist, node)
+  list_for_every_entry(objlist, tmp, struct listen_object_s, node)
     {
       if (fds[i].fd < 0)
         {
@@ -731,12 +602,6 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
           uorbinfo_raw("Object name:%s%d, recieved:%d",
                        tmp->object.meta->o_name, tmp->object.instance,
                        recv_msgs[i]);
-        }
-
-      if (tmp->file != NULL)
-        {
-          fflush(tmp->file);
-          fclose(tmp->file);
         }
 
       i++;
@@ -764,20 +629,7 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
  *   None.
  ****************************************************************************/
 
-static size_t listen_length(FAR struct listen_list_s *objlist)
-{
-  struct listen_object_s *tmp;
-  size_t count = 0;
-
-  SLIST_FOREACH(tmp, objlist, node)
-    {
-      count++;
-    }
-
-  return count;
-}
-
-static void listener_top(FAR struct listen_list_s *objlist,
+static void listener_top(FAR struct list_node *objlist,
                          FAR const char *filter,
                          bool only_once)
 {
@@ -811,7 +663,7 @@ static void listener_top(FAR struct listen_list_s *objlist,
           uorbinfo_raw("\033[H"); /* move cursor to top left corner */
         }
 
-      uorbinfo_raw("\033[K" "current objects: %zu", listen_length(objlist));
+      uorbinfo_raw("\033[K" "current objects: %zu", list_length(objlist));
       uorbinfo_raw("\033[K" "%-*s INST #SUB RATE #Q SIZE",
                    ORB_MAX_PRINT_NAME - 2, "NAME");
 
@@ -831,7 +683,6 @@ static void listener_top(FAR struct listen_list_s *objlist,
 
 static void exit_handler(int signo)
 {
-  (void)signo;
   g_should_exit = true;
 }
 
@@ -841,14 +692,13 @@ static void exit_handler(int signo)
 
 int main(int argc, FAR char *argv[])
 {
+  struct list_node objlist;
   FAR struct listen_object_s *tmp;
-  struct listen_list_s objlist;
   float topic_rate = 0;
   int topic_latency = 0;
   int nb_msgs       = 0;
   int timeout       = 5;
   bool top          = false;
-  bool record       = false;
   bool only_once    = false;
   FAR char *filter  = NULL;
   int ret;
@@ -862,7 +712,7 @@ int main(int argc, FAR char *argv[])
 
   /* Pasrse Argument */
 
-  while ((ch = getopt(argc, argv, "r:b:n:t:Tflh")) != EOF)
+  while ((ch = getopt(argc, argv, "r:b:n:t:Tlh")) != EOF)
     {
       switch (ch)
       {
@@ -898,12 +748,6 @@ int main(int argc, FAR char *argv[])
             }
           break;
 
-#ifdef CONFIG_DEBUG_UORB
-        case 'f':
-          record = true;
-          break;
-#endif
-
         case 'T':
           top = true;
           break;
@@ -925,7 +769,7 @@ int main(int argc, FAR char *argv[])
 
   /* Alloc list and exec command */
 
-  SLIST_INIT(&objlist);
+  list_initialize(&objlist);
   ret = listener_generate_object_list(&objlist, filter);
   if (ret <= 0)
     {
@@ -939,7 +783,7 @@ int main(int argc, FAR char *argv[])
   else
     {
       uorbinfo_raw("\nMointor objects num:%d", ret);
-      SLIST_FOREACH(tmp, &objlist, node)
+      list_for_every_entry(&objlist, tmp, struct listen_object_s, node)
         {
           uorbinfo_raw("object_name:%s, object_instance:%d",
                        tmp->object.meta->o_name,
@@ -947,7 +791,7 @@ int main(int argc, FAR char *argv[])
         }
 
       listener_monitor(&objlist, ret, topic_rate, topic_latency,
-                       nb_msgs, timeout, record);
+                       nb_msgs, timeout);
     }
 
   listener_delete_object_list(&objlist);
