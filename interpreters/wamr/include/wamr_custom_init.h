@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/interpreters/wamr/wamr_custom_init.h
+ * apps/interpreters/wamr/include/wamr_custom_init.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -33,7 +33,14 @@
  * Public Functions Prototypes
  ****************************************************************************/
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 bool wamr_custom_init(RuntimeInitArgs *init_args);
+#ifdef __cplusplus
+}
+#endif
 bool wamr_libc_nuttx_register(void);
 
 #endif /* __WAMR_CUSTOM_INIT_H */
