@@ -21,7 +21,6 @@ import binascii
 import datetime
 import io
 import os
-import signal
 import sys
 import termios
 
@@ -800,7 +799,9 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--maxretry", type=int, default=RETRIESMAX,
+        "--maxretry",
+        type=int,
+        default=RETRIESMAX,
         help="This opthin set max retry for transmission",
     )
 
@@ -840,9 +841,7 @@ if __name__ == "__main__":
         )
     else:
         sbrb = ymodem(
-            debug=args.debug,
-            customsize=args.kblocksize * 1024,
-            maxretry=args.maxretry
+            debug=args.debug, customsize=args.kblocksize * 1024, maxretry=args.maxretry
         )
 
     if len(args.filelist) == 0:

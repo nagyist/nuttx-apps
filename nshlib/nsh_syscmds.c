@@ -25,7 +25,6 @@
 #include <nuttx/config.h>
 
 #include <nuttx/power/pm.h>
-#include <nuttx/rpmsg/rpmsg.h>
 #include <nuttx/rptun/rptun.h>
 #include <nuttx/streams.h>
 #include <sys/boardctl.h>
@@ -522,6 +521,32 @@ int cmd_reset_cause(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #endif
 
 /****************************************************************************
+ * Name: cmd_irq_affinity
+ ****************************************************************************/
+
+#if defined(CONFIG_BOARDCTL_IRQ_AFFINITY) && !defined(CONFIG_NSH_DISABLE_IRQ_AFFINITY)
+int cmd_irq_affinity(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
+{
+  unsigned int affinity[2];
+
+  if (argc == 3)
+    {
+      affinity[0] = strtoul(argv[1], NULL, 0);
+      affinity[1] = strtoul(argv[2], NULL, 0);
+
+      if (affinity[1] == 0)
+        {
+          affinity[1] = 0x1;
+        }
+
+      return boardctl(BOARDIOC_IRQ_AFFINITY, (uintptr_t)affinity);
+    }
+
+  return ERROR;
+}
+#endif
+
+/****************************************************************************
  * Name: cmd_rpmsg
  ****************************************************************************/
 
@@ -557,7 +582,7 @@ static int cmd_rpmsg_once(FAR struct nsh_vtbl_s *vtbl,
 
       ping.times = atoi(argv[3]);
       ping.len   = atoi(argv[4]);
-      ping.cmd   = atoi(argv[5]);
+      ping.ack   = atoi(argv[5]);
       ping.sleep = atoi(argv[6]);
 
       cmd = RPMSGIOC_PING;
@@ -615,18 +640,18 @@ static int cmd_rpmsg_help(FAR struct nsh_vtbl_s *vtbl, int argc,
                           FAR char **argv)
 {
   nsh_output(vtbl, "%s <panic|dump> <path>\n", argv[0]);
-  nsh_output(vtbl, "%s ping <path> <times> <length> <cmd> "
+#ifdef CONFIG_RPMSG_PING
+  nsh_output(vtbl, "%s ping <path> <times> <length> <ack> "
              "<period(ms)>\n\n", argv[0]);
-  nsh_output(vtbl, "<times>      Times of rptun ping.\n");
+  nsh_output(vtbl, "<times>      Number of ping operations.\n");
   nsh_output(vtbl, "<length>     The length of each ping packet.\n");
-  nsh_output(vtbl, "<cmd>        Whether the peer acknowlege or "
+  nsh_output(vtbl, "<ack>        Whether the peer acknowlege or "
              "check data.\n");
-  nsh_output(vtbl, "             Bit0 - Request need ack or not.\n");
-  nsh_output(vtbl, "             Bit1 - Check the data or not.\n");
-  nsh_output(vtbl, "             Bit2 - Random length or not.\n");
-  nsh_output(vtbl, "             Bit4~7 - Request or response or other"
-                                          "command for future use.\n");
-  nsh_output(vtbl, "<period(ms)> Rpmsg ping period (ms) \n");
+  nsh_output(vtbl, "             0 - No acknowledge and check.\n");
+  nsh_output(vtbl, "             1 - Acknowledge, no data check.\n");
+  nsh_output(vtbl, "             2 - Acknowledge and data check.\n");
+  nsh_output(vtbl, "<sleep(ms)>  Sleep interval between two operations.\n");
+#endif
   nsh_output(vtbl, "<path>       Rpmsg device path.\n\n");
   return OK;
 }
@@ -742,8 +767,8 @@ int cmd_uname(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   FAR const char *str;
   struct lib_memoutstream_s stream;
-  char buf[sizeof(struct utsname)];
   struct utsname info;
+  struct utsname output;
   unsigned int set;
   int option;
   bool badarg;
@@ -834,8 +859,7 @@ int cmd_uname(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   /* Process each option */
 
   first = true;
-  lib_memoutstream(&stream, buf, sizeof(buf));
-
+  lib_memoutstream(&stream, (FAR char *)&output, sizeof(output));
   for (i = 0; set != 0; i++)
     {
       unsigned int mask = (1 << i);

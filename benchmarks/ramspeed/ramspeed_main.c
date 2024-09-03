@@ -64,6 +64,17 @@
       } \
   } while (0)
 
+  #define HAS_IRQ_CONTROL !defined(CONFIG_BUILD_KERNEL) && \
+                          !defined(CONFIG_BUILD_PROTECTED)
+
+  #if HAS_IRQ_CONTROL
+  #  define ENABLE_IRQ(flags) leave_critical_section(flags);
+  #  define DISABLE_IRQ(flags) flags=enter_critical_section();
+  #else
+  #  define ENABLE_IRQ(flags) (void)flags;
+  #  define DISABLE_IRQ(flags) (void)flags;
+  #endif
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -105,8 +116,10 @@ static void show_usage(FAR const char *progname, int exitcode)
          " [default value: 0x00].\n");
   printf("  -n <decimal-repeat num> number of repetitions"
          " [default value: 100].\n");
+  #if HAS_IRQ_CONTROL
   printf("  -i turn off interrupts while testing"
          " [default value: false].\n");
+  #endif
   exit(exitcode);
 }
 
@@ -137,26 +150,15 @@ static void parse_commandline(int argc, FAR char **argv,
             break;
           case 'r':
             OPTARG_TO_VALUE(info->src, const void *, 16);
-            if (((uintptr_t)info->src & ALIGN_MASK) != 0)
-              {
-                printf(RAMSPEED_PREFIX "<read-adress> must align\n");
-                exit(EXIT_FAILURE);
-              }
-
             break;
           case 'w':
             OPTARG_TO_VALUE(info->dest, void *, 16);
-            if (((uintptr_t)info->src & ALIGN_MASK) != 0)
-              {
-                printf(RAMSPEED_PREFIX "<write-adress> must align\n");
-                exit(EXIT_FAILURE);
-              }
             break;
           case 's':
             OPTARG_TO_VALUE(info->size, size_t, 10);
             if (info->size < 32)
               {
-                printf(RAMSPEED_PREFIX "<size> must >= 32\n");
+                printf(RAMSPEED_PREFIX "<size> must >= 32");
                 exit(EXIT_FAILURE);
               }
 
@@ -173,9 +175,11 @@ static void parse_commandline(int argc, FAR char **argv,
               }
 
             break;
+          #if HAS_IRQ_CONTROL
           case 'i':
             info->irq_disable = true;
             break;
+          #endif
           case '?':
             printf(RAMSPEED_PREFIX "Unknown option: %c\n", (char)optopt);
             show_usage(argv[0], EXIT_FAILURE);
@@ -183,23 +187,13 @@ static void parse_commandline(int argc, FAR char **argv,
         }
     }
 
-  if (!info->allocate_rw_address && info->dest == NULL)
+  if ((info->dest == NULL && !info->allocate_rw_address) || info->size == 0)
     {
-      /* We allow only set write address to test memset only.
-       * But if need test read by specific address, need write address also.
-       */
-
-      printf(RAMSPEED_PREFIX "Required Address Failed\n");
+      printf(RAMSPEED_PREFIX "Missing required arguments\n");
       goto out;
     }
-  else if (info->allocate_rw_address)
+  else
     {
-      if (info->size == 0)
-        {
-          printf(RAMSPEED_PREFIX "Required Size Failed\n");
-          goto out;
-        }
-
       /* We need to automatically apply for memory */
 
       printf(RAMSPEED_PREFIX "Allocate RW buffers on heap\n");
@@ -449,7 +443,7 @@ static void memcpy_speed_test(FAR void *dest, FAR const void *src,
 
       if (irq_disable)
         {
-          flags = enter_critical_section();
+          DISABLE_IRQ(flags);
         }
 
       start_time = get_timestamp();
@@ -472,7 +466,7 @@ static void memcpy_speed_test(FAR void *dest, FAR const void *src,
 
       if (irq_disable)
         {
-          leave_critical_section(flags);
+          ENABLE_IRQ(flags);
         }
 
       print_rate("system memcpy():\t", total_size, cost_time_system);
@@ -514,7 +508,7 @@ static void memset_speed_test(FAR void *dest, uint8_t value,
 
       if (irq_disable)
         {
-          flags = enter_critical_section();
+          DISABLE_IRQ(flags);
         }
 
       start_time = get_timestamp();
@@ -537,7 +531,7 @@ static void memset_speed_test(FAR void *dest, uint8_t value,
 
       if (irq_disable)
         {
-          leave_critical_section(flags);
+          ENABLE_IRQ(flags);
         }
 
       print_rate("system memset():\t", total_size, cost_time_system);
