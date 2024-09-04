@@ -61,6 +61,7 @@ struct stat_args_s
   FAR char **cmd_args;
   int cmd_nr;
   int sec;
+  uint64_t sample_period;
 };
 
 #define OPT_ARGUMENT(l, h) \

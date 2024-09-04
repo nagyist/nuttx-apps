@@ -102,10 +102,6 @@ struct cmd_record_s
 
 static volatile int g_record_done = 0;
 
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
 static struct sw_event events_map[] =
 {
   {PERF_COUNT_SW_CPU_CLOCK, "cpu-clock", false},
@@ -113,9 +109,50 @@ static struct sw_event events_map[] =
   {PERF_COUNT_SW_CONTEXT_SWITCHES, "cs", false},
 };
 
+static const char record_usage[] =
+  "perf record [<options>] [<command>]";
+
+static const struct option_s record_options[] =
+{
+  OPT_STRING('a', "all-cpus", "system-wide collection from all CPUs"),
+  OPT_STRING('c', "count <n>", "event period to sample (us)"),
+  OPT_STRING('C', "cpu <cpu>", "list of cpus to monitor in system-wide"),
+  OPT_STRING('e', "event <event>",
+             "event selector. use 'perf list' to list available events"),
+  OPT_STRING('p', "pid <pid>", "stat events on existing process id"),
+};
+
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+static void record_cmds_help(int sname)
+{
+  unsigned int i = 0;
+  unsigned int longest = 0;
+
+  printf("\n Usage: %s\n\n", record_usage);
+
+  for (i = 0; i < nitems(record_options); i++)
+    {
+      if (longest < strlen(record_options[i].long_name))
+        {
+          longest = strlen(record_options[i].long_name);
+        }
+    }
+
+  for (i = 0; i < nitems(record_options); i++)
+    {
+      if (!sname || sname == record_options[i].short_name)
+        {
+          printf("   -%c, --%-*s   %s\n", record_options[i].short_name,
+                                  longest, record_options[i].long_name,
+                                  record_options[i].help);
+        }
+    }
+
+  printf("\n");
+}
 
 static int do_write(int fd, void *buf, size_t size)
 {
@@ -303,7 +340,7 @@ static int evsel_record_start(FAR struct perf_evsel_s *evsel,
           PERF_FORMAT_ID;
   attr->sample_type = PERF_SAMPLE_ID;
   attr->sample_type  |= PERF_SAMPLE_IP | PERF_SAMPLE_TID;
-  attr->sample_period = 1000;
+  attr->sample_period = evlist->sample_period;
   attr->disabled = 1;
   attr->inherit = 1;
 
@@ -537,6 +574,7 @@ int cmd_record(int argc, FAR const char **argv)
   status = parse_stat_options(argc, (char **)argv, &stat_args);
   if (status || stat_args.type == STAT_ARGS_HELP)
     {
+      record_cmds_help(0);
       return status;
     }
 
@@ -548,6 +586,16 @@ int cmd_record(int argc, FAR const char **argv)
 
   evlist->sec = stat_args.sec;
   evlist->type = stat_args.type;
+
+  if (stat_args.sample_period)
+    {
+      evlist->sample_period = stat_args.sample_period * NSEC_PER_TICK;
+    }
+  else
+    {
+      evlist->sample_period = 10 * NSEC_PER_TICK;
+    }
+
   if (stat_args.pid == -1 && stat_args.cpu == -1)
     {
       evlist->system_wide = true;

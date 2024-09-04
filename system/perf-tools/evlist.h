@@ -52,6 +52,7 @@ struct evlist_s
   bool system_wide;
   bool defult_attrs;
   FAR struct perf_event_attr_s *attrs;
+  uint64_t sample_period;
 };
 
 struct evlist_count_s

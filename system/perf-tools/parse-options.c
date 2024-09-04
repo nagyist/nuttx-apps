@@ -58,7 +58,7 @@ int parse_stat_options(int argc, FAR char **argv,
 
   stat_args->cmd_nr = argc;
 
-  while ((opt = getopt(argc, argv, ":aC:p:e:")) != -1)
+  while ((opt = getopt(argc, argv, ":aC:p:e:c:")) != -1)
     {
       switch (opt)
         {
@@ -144,6 +144,9 @@ int parse_stat_options(int argc, FAR char **argv,
             break;
           case 'h':
             stat_args->type = STAT_ARGS_HELP;
+            break;
+          case 'c':
+            stat_args->sample_period = check_and_atoi(optarg);
             break;
           default:
             return -EINVAL;
