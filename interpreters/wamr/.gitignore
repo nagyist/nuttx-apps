@@ -1,5 +1,3 @@
 *.zip
 wamr
 wasm-micro-runtime-*
-wamr_external_module_list.h
-wamr_external_module_proto.h

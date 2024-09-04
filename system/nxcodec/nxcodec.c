@@ -114,6 +114,13 @@ int nxcodec_init(FAR nxcodec_t *codec)
       goto err0;
     }
 
+  if (codec->output.fdesc.pixelformat !=
+      codec->output.format.fmt.pix.pixelformat)
+    {
+      ret = -EINVAL;
+      goto err0;
+    }
+
   codec->output.format.type = codec->output.type;
 
   ret = nxcodec_context_set_format(&codec->output);
@@ -129,6 +136,13 @@ int nxcodec_init(FAR nxcodec_t *codec)
       printf("Failed to open output file %s \n", codec->output.filename);
       ret = -errno;
       goto err0;
+    }
+
+  if (codec->capture.fdesc.pixelformat !=
+      codec->capture.format.fmt.pix.pixelformat)
+    {
+      ret = -EINVAL;
+      goto err1;
     }
 
   codec->capture.format.type = codec->capture.type;
