@@ -20,16 +20,18 @@
 
 if(CONFIG_SYSTEM_SPITOOL)
   nuttx_add_application(
+    MODULE
+    ${CONFIG_SYSTEM_SPITOOL}
     NAME
     ${CONFIG_SPITOOL_PROGNAME}
+    STACKSIZE
+    ${CONFIG_SPITOOL_STACKSIZE}
+    PRIORITY
+    ${CONFIG_SPITOOL_PRIORITY}
     SRCS
     spi_main.c
     spi_bus.c
     spi_devif.c
     spi_exch.c
-    spi_common.c
-    STACKSIZE
-    ${CONFIG_SPITOOL_STACKSIZE}
-    PRIORITY
-    ${CONFIG_SPITOOL_PRIORITY})
+    spi_common.c)
 endif()

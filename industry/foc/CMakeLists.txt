@@ -23,9 +23,7 @@ if(CONFIG_INDUSTRY_FOC)
   set(CSRCS foc_utils.c)
 
   if(CONFIG_INDUSTRY_FOC_FLOAT)
-    list(
-      APPEND
-      CSRCS
+    list(APPEND CSRCS
       float/foc_ramp.c
       float/foc_handler.c
       float/foc_angle.c
@@ -87,16 +85,10 @@ if(CONFIG_INDUSTRY_FOC)
     if(CONFIG_INDUSTRY_FOC_VELOCITY_OPLL)
       list(APPEND CSRCS float/foc_vel_opll.c)
     endif()
-
-    if(CONFIG_INDUSTRY_FOC_FEEDFORWARD)
-      list(APPEND CSRCS float/foc_feedforward.c)
-    endif()
   endif()
 
   if(CONFIG_INDUSTRY_FOC_FIXED16)
-    list(
-      APPEND
-      CSRCS
+    list(APPEND CSRCS
       fixed16/foc_ramp.c
       fixed16/foc_handler.c
       fixed16/foc_angle.c
@@ -157,10 +149,6 @@ if(CONFIG_INDUSTRY_FOC)
 
     if(CONFIG_INDUSTRY_FOC_VELOCITY_OPLL)
       list(APPEND CSRCS fixed16/foc_vel_opll.c)
-    endif()
-
-    if(CONFIG_INDUSTRY_FOC_FEEDFORWARD)
-      list(APPEND CSRCS fixed16/foc_feedforward.c)
     endif()
   endif()
 
