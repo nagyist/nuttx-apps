@@ -486,10 +486,6 @@ static void test_case_wdog_04(FAR void **state)
       assert_return_code(ret, OK);
     }
 
-  /* Prevent the os entering pm then turn off watchdog. */
-
-  up_udelay(2 * wdg_state->timeout * 1000);
-
   /* Test capture. */
 
   ret = sem_init(&g_semaphore, 0, 0);
@@ -498,6 +494,10 @@ static void test_case_wdog_04(FAR void **state)
   watchdog_capture.newhandler = capture_callback;
   ret = ioctl(dev_fd, WDIOC_CAPTURE, &watchdog_capture);
   assert_return_code(ret, OK);
+
+  /* Prevent the os entering pm then turn off watchdog. */
+
+  up_udelay(2 * wdg_state->timeout * 1000);
 
   sem_wait(&g_semaphore);
   sem_destroy(&g_semaphore);
