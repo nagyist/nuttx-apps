@@ -112,19 +112,14 @@ static int dhcp_obtain_statefuladdr(FAR const char *ifname)
 {
   struct dhcpc_state ds;
   FAR void *handle;
-  int ret;
   uint8_t mac[IFHWADDRLEN];
 
-#ifdef CONFIG_NET_ETHERNET
-  ret = netlib_getmacaddr(ifname, mac);
+  int ret = netlib_getmacaddr(ifname, mac);
   if (ret < 0)
     {
       nerr("ERROR: get MAC address failed for '%s' : %d\n", ifname, ret);
       return ret;
     }
-#else
-  bzero(mac, sizeof(mac));
-#endif
 
   /* Set up the DHCPC modules */
 

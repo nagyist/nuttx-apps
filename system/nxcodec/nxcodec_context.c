@@ -265,29 +265,11 @@ int nxcodec_context_dequeue_frame(FAR nxcodec_context_t *ctx)
 int nxcodec_context_get_format(FAR nxcodec_context_t *ctx)
 {
   FAR nxcodec_t *codec = nxcodec_context_to_nxcodec(ctx);
-  struct v4l2_fmtdesc fdesc;
-  int ret;
 
-  fdesc.type = ctx->type;
+  memset(&ctx->fdesc, 0, sizeof(ctx->fdesc));
+  ctx->fdesc.type = ctx->type;
 
-  while (true)
-    {
-      ret = ioctl(codec->fd, VIDIOC_ENUM_FMT, &fdesc);
-      if (ret < 0)
-        {
-          return -errno;
-        }
-
-      if (fdesc.pixelformat == ctx->format.fmt.pix.pixelformat)
-        {
-          break;
-        }
-
-      fdesc.index++;
-    }
-
-  ctx->format.type = ctx->type;
-  return ioctl(codec->fd, VIDIOC_TRY_FMT, &ctx->format) < 0 ? -errno : 0;
+  return ioctl(codec->fd, VIDIOC_ENUM_FMT, &ctx->fdesc) < 0 ? -errno : 0;
 }
 
 int nxcodec_context_set_format(FAR nxcodec_context_t *ctx)
