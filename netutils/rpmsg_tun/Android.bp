@@ -1,0 +1,17 @@
+cc_binary {
+    name: "rpmsg_tun_client",
+    srcs: [
+        "rpmsg_tun_client.c",
+        "rpmsg_tun_util.c",
+        ],
+    proprietary: true,
+}
+
+cc_binary {
+    name: "rpmsg_tun_server",
+    srcs: [
+        "rpmsg_tun_server.c",
+        "rpmsg_tun_util.c",
+        ],
+    proprietary: true,
+}
