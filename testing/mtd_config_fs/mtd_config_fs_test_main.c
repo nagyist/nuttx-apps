@@ -47,9 +47,10 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* Configuration ************************************************************/
 #define NVS_ALIGN_SIZE                  CONFIG_MTD_WRITE_ALIGN_SIZE
 #define NVS_ALIGN_UP(x)                 (((x) + NVS_ALIGN_SIZE - 1) & ~(NVS_ALIGN_SIZE - 1))
+
+/* Configuration ************************************************************/
 
 #define TEST_KEY1       "testkey1"
 #define TEST_KEY2       "testkey2"
@@ -524,7 +525,7 @@ static void test_nvs_corrupt_expire(struct mtdnvs_ctx_s *ctx)
     }
 
   padding_size = NVS_ALIGN_UP(sizeof(TEST_KEY1) + sizeof(TEST_DATA1))
-                - sizeof(TEST_KEY1) - sizeof(TEST_DATA1);
+    - sizeof(TEST_KEY1) - sizeof(TEST_DATA1);
   for (i = 0; i < padding_size; i++)
     {
       ret = write(mtd_fd, &erase_value, sizeof(erase_value));
@@ -725,7 +726,7 @@ static void test_nvs_corrupted_write(struct mtdnvs_ctx_s *ctx)
     }
 
   padding_size = NVS_ALIGN_UP(sizeof(key1) + sizeof(wr_buf_1))
-                - sizeof(key1) - sizeof(wr_buf_1);
+    - sizeof(key1) - sizeof(wr_buf_1);
   for (i = 0; i < padding_size; i++)
     {
       ret = write(mtd_fd, &erase_value, sizeof(erase_value));
