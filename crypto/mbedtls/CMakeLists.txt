@@ -70,6 +70,11 @@ if(CONFIG_CRYPTO_MBEDTLS)
 
   file(GLOB CSRCS ${MBEDTLS_DIR}/library/*.c)
 
+  if(CONFIG_MBEDTLS_ENTROPY_HARDWARE_ALT
+     OR CONFIG_MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG)
+    list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/entropy_alt.c)
+  endif()
+
   if(CONFIG_MBEDTLS_ALT)
     list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/dev_alt.c)
 
@@ -77,8 +82,19 @@ if(CONFIG_CRYPTO_MBEDTLS)
       list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/aes_alt.c)
     endif()
 
+    if(CONFIG_MBEDTLS_CMAC_ALT)
+      list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/cmac_alt.c)
+    endif()
+
     if(CONFIG_MBEDTLS_MD5_ALT)
       list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/md5_alt.c)
+    endif()
+    if(CONFIG_MBEDTLS_POLY1305_ALT)
+      list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/poly1305_alt.c)
+    endif()
+
+    if(CONFIG_MBEDTLS_RIPEMD160_ALT)
+      list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/ripemd160_alt.c)
     endif()
 
     if(CONFIG_MBEDTLS_SHA1_ALT)
@@ -93,6 +109,9 @@ if(CONFIG_CRYPTO_MBEDTLS)
       list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/sha512_alt.c)
     endif()
 
+    if(CONFIG_MBEDTLS_BIGNUM_ALT)
+      list(APPEND CSRCS ${CMAKE_CURRENT_LIST_DIR}/source/bignum_alt.c)
+    endif()
   endif()
 
   # ############################################################################
@@ -100,6 +119,7 @@ if(CONFIG_CRYPTO_MBEDTLS)
   # ############################################################################
 
   set(INCDIR ${CMAKE_CURRENT_LIST_DIR}/include ${MBEDTLS_DIR}/include)
+
   # ############################################################################
   # Library Configuration
   # ############################################################################
@@ -108,10 +128,6 @@ if(CONFIG_CRYPTO_MBEDTLS)
     TARGET nuttx
     APPEND
     PROPERTY NUTTX_INCLUDE_DIRECTORIES ${INCDIR})
-  set_property(
-    TARGET nuttx
-    APPEND
-    PROPERTY NUTTX_CXX_INCLUDE_DIRECTORIES ${INCDIR})
 
   nuttx_add_library(mbedtls STATIC)
   target_sources(mbedtls PRIVATE ${CSRCS})

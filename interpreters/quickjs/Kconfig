@@ -47,4 +47,34 @@ config INTERPRETERS_QUICKJS_EXT_HOOK
 		Since minimal interpreter only support 'console.log',
 		you can export custom module by implement init/destory hook.
 
+config INTERPRETERS_QUICKJS_DEBUG
+	bool "QuickJS interpreter debug support"
+	default n
+	---help---
+		Enable this if you want js debugger support.
+config MEMORY_LEAK_TRACK
+	bool "QuickJS interpreter memory leak track support"
+	default n
+	---help---
+		Enable this if you want js debugger support.
+
+config INTERPRETERS_QUICKJS_CONFIG_TOOL
+	bool "QuickJS interpreter config tool support"
+	default n
+	---help---
+		Enable this if you want js config tool support.
+
+config INTERPRETERS_QUICKJS_EXPORT_API
+	bool "Export API to WAMR"
+	default n
+
+config INTERPRETERS_QUICKJS_HEAPDUMP
+	bool "Enable QUICKJS_HEAPDUMP"
+	select INTERPRETERS_QUICKJS_DEBUG
+	default n
+
+config INTERPRETERS_QUICKJS_CPUPROFILING
+	bool "Enable QUICKJS_CPUPROFILING"
+	default n
+
 endif # INTERPRETERS_QUICKJS
