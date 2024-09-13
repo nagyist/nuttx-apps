@@ -68,6 +68,7 @@
  ****************************************************************************/
 
 void ble_hci_sock_ack_handler(FAR void *param);
+void ble_hci_sock_init(void);
 void ble_hci_sock_set_device(int dev);
 
 /****************************************************************************
@@ -269,6 +270,7 @@ int main(int argc, FAR char *argv[])
 #endif
 
   nimble_port_init();
+  ble_hci_sock_init();
 
   /* Initialize services */
 

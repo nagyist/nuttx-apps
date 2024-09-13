@@ -103,48 +103,6 @@ if(CONFIG_TESTING_CRYPTO)
       hash.c)
   endif()
 
-  if(CONFIG_TESTING_CRYPTO_CRC32)
-    nuttx_add_application(
-      NAME
-      crc32
-      PRIORITY
-      ${CONFIG_TESTING_CRYPTO_PRIORITY}
-      STACKSIZE
-      ${CONFIG_TESTING_CRYPTO_STACKSIZE}
-      MODULE
-      ${CONFIG_TESTING_CRYPTO}
-      SRCS
-      crc32.c)
-  endif()
-
-  if(CONFIG_TESTING_CRYPTO_AES_CMAC)
-    nuttx_add_application(
-      NAME
-      aescmac
-      PRIORITY
-      ${CONFIG_TESTING_CRYPTO_PRIORITY}
-      STACKSIZE
-      ${CONFIG_TESTING_CRYPTO_STACKSIZE}
-      MODULE
-      ${CONFIG_TESTING_CRYPTO}
-      SRCS
-      aescmac.c)
-  endif()
-
-  if(CONFIG_TESTING_CRYPTO_ECDSA)
-    nuttx_add_application(
-      NAME
-      ecdsa
-      PRIORITY
-      ${CONFIG_TESTING_CRYPTO_PRIORITY}
-      STACKSIZE
-      ${CONFIG_TESTING_CRYPTO_STACKSIZE}
-      MODULE
-      ${CONFIG_TESTING_CRYPTO}
-      SRCS
-      ecdsa.c)
-  endif()
-
   if(CONFIG_TESTING_CRYPTO_ECDH)
     nuttx_add_application(
       NAME
