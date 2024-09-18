@@ -37,7 +37,7 @@
 #include <string>
 
 #ifndef NULL
-#  define NULL ((void*)0L)
+# define NULL ((void*)0L)
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
@@ -154,7 +154,7 @@ void CThingSayer::ThrowThing(void)
 void CThingSayer::ThrowMyThing(const char *czSayThis = NULL)
 {
   cout << "CThingSayer::ThrowMyThing: I am now throwing an MyException (with reason)." << endl;
-  throw MyException(string(czSayThis));
+  throw MyException(tring(czSayThis));
 }
 
 /////////////////////////////////////////////////////////////////////////////

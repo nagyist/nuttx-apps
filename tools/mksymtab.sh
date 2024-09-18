@@ -21,45 +21,21 @@
 
 export LC_ALL=C
 
-usage() {
-  if [ $# -ne 0 ]; then
-    echo "ERROR: $@"
-  fi
-  echo -e "\nUsage: $0 <imagedirpath> [symtabprefix] [-a additionalsymbolspath]"
-  exit 1
-}
+usage="Usage: $0 <imagedirpath> [symtabprefix [additionalsymbolspath]]"
 
 # Check for the required directory path
 
 dir=$1
 if [ -z "$dir" ]; then
-  usage "Missing <imagedirpath>"
+  echo "ERROR: Missing <imagedirpath>"
+  echo ""
+  echo $usage
+  exit 1
 fi
 
 # Get the symbol table prefix
 
-if [ "x${2:0:1}" != "x-" ]; then
-  prefix=$2
-  OPTIND=3
-else
-  OPTIND=2
-fi
-
-# Parse remaining arguments
-
-while getopts a: opt; do
-  case $opt in
-    a)
-      addlist="${addlist[@]} $OPTARG"
-      ;;
-    \?)
-      usage
-  esac
-done
-
-if [ $OPTIND != $(($# + 1)) ]; then
-  usage "Arguments remaining: \"${@:$OPTIND}\""
-fi
+prefix=$2
 
 # Extract all of the undefined symbols from the ELF files and create a
 # list of sorted, unique undefined variable names.
@@ -83,16 +59,20 @@ if [ -z "$varlist" ]; then
   fi
 fi
 
-for addsym in ${addlist[@]}; do
-  if [ -f $addsym ]; then
-    varlist="${varlist}\n$(cat $addsym | grep -v "^,.*")"
-  elif [ -d $addsym ]; then
-    varlist="${varlist}\n$(find $addsym -type f | xargs cat | grep -v "^,.*")"
-  else
-    usage
-  fi
-  varlist=$(echo -e "${varlist}" | sort -u)
-done
+if [ $# -gt 2 ]; then
+  shift 2
+  for add_sym in $@; do
+    if [ -f $add_sym ]; then
+      varlist="${varlist}\n$(cat $add_sym | grep -v "^,.*")"
+    elif [ -d $add_sym ]; then
+      varlist="${varlist}\n$(find $add_sym -type f | xargs cat | grep -v "^,.*")"
+    else
+      echo $usage
+      exit 1
+    fi
+    varlist=$(echo -e "${varlist}" | sort -u)
+  done
+fi
 
 # Now output the symbol table as a structure in a C source file.  All
 # undefined symbols are declared as void* types.  If the toolchain does

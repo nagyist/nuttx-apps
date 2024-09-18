@@ -26,18 +26,12 @@
 
 #include <nuttx/sched.h>
 #include <sys/wait.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <pthread.h>
 
 #include "nsh.h"
 #include "nsh_console.h"
 
-#if !defined(CONFIG_NSH_DISABLE_WAIT) && defined(CONFIG_SCHED_WAITPID) && \
-    !defined(CONFIG_DISABLE_PTHREAD)
-
-static const char g_groupid[] = "Group:";
+#if !defined(CONFIG_NSH_DISABLE_WAIT) && defined(CONFIG_SCHED_WAITPID)
 
 /****************************************************************************
  * Public Functions
@@ -62,86 +56,47 @@ static const char g_groupid[] = "Group:";
 
 int cmd_wait(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
-  FAR char *nextline;
-  FAR char *line;
-  char buf[128];
-  char path[32];
+  FAR struct tcb_s *ptcb;
+  FAR struct tcb_s *ctcb;
   int status = 0;
   int ret = OK;
-  pid_t self;
-  pid_t tid;
-  int fd;
-  int i;
+  pid_t pid;
 
   if (argc == 1)
     {
       return OK;
     }
 
-  self = getpid();
-  for (i = 1; i < argc; i++)
+  ptcb = nxsched_self();
+  for (int i = 1; i < argc; i++)
     {
-      tid = atoi(argv[i]);
-      if (tid == 0)
+      pid = atoi(argv[i]);
+      if (pid == 0)
         {
           continue;
         }
 
-      snprintf(path, sizeof(path), "/proc/%d/status", tid);
-      fd = open(path, O_RDONLY);
-      if (fd < 0)
+      ctcb = nxsched_get_tcb(pid);
+      if (ctcb == NULL)
         {
-          nsh_error(vtbl, g_fmtcmdfailed, argv[0], "wait", NSH_ERRNO);
           continue;
         }
 
-      ret = read(fd, buf, sizeof(buf) - 1);
+      if (ctcb->group == ptcb->group)
+        {
+          ret = pthread_join(pid, (FAR pthread_addr_t *)&status);
+        }
+      else
+        {
+          ret = waitpid(pid, &status, 0);
+        }
+
       if (ret < 0)
         {
-          nsh_error(vtbl, g_fmtcmdfailed, argv[0], "wait", NSH_ERRNO);
-          close(fd);
+          nsh_error(vtbl, g_fmtcmdfailed,
+                    argv[0], "wait", NSH_ERRNO);
           continue;
         }
-
-      close(fd);
-      nextline = buf;
-      do
-        {
-          line = nextline;
-          for (nextline++;
-               *nextline != '\0' && *nextline != '\n';
-               nextline++);
-
-          if (*nextline == '\n')
-            {
-              *nextline++ = '\0';
-            }
-          else
-            {
-              nextline = NULL;
-            }
-
-          if (strncmp(line, g_groupid, sizeof(g_groupid) - 1) == 0)
-            {
-              if (atoi(line + sizeof(g_groupid)) == self)
-                {
-                  ret = pthread_join(tid, (FAR pthread_addr_t *)&status);
-                }
-              else
-                {
-                  ret = waitpid(tid, &status, 0);
-                }
-
-              if (ret < 0)
-                {
-                  nsh_error(vtbl, g_fmtcmdfailed,
-                            argv[0], "wait", NSH_ERRNO);
-                }
-
-              break;
-            }
-        }
-      while (nextline != NULL);
     }
 
   return ret < 0 ? ret : status;
