@@ -19,6 +19,7 @@
 # ##############################################################################
 
 if(CONFIG_TESTING_KASAN)
-  set(CFLAGS -Wno-error -Wno-use-after-free)
+  set(CFLAGS -Wno-error -Wno-use-after-free -Wno-array-bounds
+             -Wno-free-nonheap-object -Wno-stringop-overflow "-O0")
   nuttx_add_application(NAME kasantest COMPILE_FLAGS ${CFLAGS} SRCS kasantest.c)
 endif()
