@@ -30,6 +30,7 @@ CSRCS = quickjs.c libregexp.c libbf.c libunicode.c cutils.c
 
 VERSION=\"$(QUICKJS_VERSION)\"
 
+CFLAGS += -Dmp_add=qjs_mp_add -Dmp_sub=qjs_mp_sub -Dmp_mul=qjs_mp_mul
 CFLAGS += -DCONFIG_VERSION=$(VERSION) -Wno-shadow
 CFLAGS += -Wno-array-bounds -I$(QUICKJS_UNPACK)
 CFLAGS += -D__linux__ -include alloca.h
@@ -48,6 +49,29 @@ endif
 ifeq ($(CONFIG_INTERPRETERS_QUICKJS_BIGNUM),y)
 CFLAGS += -DCONFIG_BIGNUM
 CSRCS  += qjscalc.c
+endif
+
+ifeq ($(CONFIG_INTERPRETERS_QUICKJS_CPUPROFILING),y)
+CFLAGS += -DCONFIG_QUICKJS_CPUPROFILING
+CSRCS  += profile_utils.c
+endif
+
+ifeq ($(CONFIG_INTERPRETERS_QUICKJS_HEAPDUMP),y)
+CFLAGS += -DCONFIG_QUICKJS_HEAPDUMP
+CSRCS  += profile_utils.c
+endif
+
+ifeq ($(CONFIG_INTERPRETERS_QUICKJS_DEBUG),y)
+CSRCS  += quickjs-debugger.c
+CSRCS  += quickjs-memorydump.c
+endif
+
+ifeq ($(CONFIG_INTERPRETERS_QUICKJS_CONFIG_TOOL),y)
+CFLAGS += -DQUICKJS_CONFIG_TOOL
+endif
+
+ifneq ($(CONFIG_INTERPRETERS_QUICKJS_EXPORT_API),y)
+CFLAGS += -DDISABLE_EXPORT_API
 endif
 
 VPATH += $(QUICKJS_UNPACK)

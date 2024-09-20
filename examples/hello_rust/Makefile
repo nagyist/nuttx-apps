@@ -31,6 +31,6 @@ MODULE    = $(CONFIG_EXAMPLES_HELLO_RUST)
 
 MAINSRC = hello_rust_main.rs
 
-RUSTFLAGS += -C panic=abort -O
+RUSTFLAGS += -C panic=abort
 
 include $(APPDIR)/Application.mk

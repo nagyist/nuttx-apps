@@ -19,23 +19,7 @@
 
 # Get the input parameter list
 
-USAGE="
-
-DESCRIPTION:
-
-  Preparing folder 'import/' using the export package from NuttX kernel
-  build.
-
-USAGE: $0 [-d] [-z] [-l <ext>] -x <export-package>
-
-Where:
-
-  -d enable debugging output
-  -h show this help message
-  -l <ext> extension of library file (default is .a)
-  -x <export-package> export package file name
-  -z expect gzip compressed tar ball
-"
+USAGE="USAGE: $0 [-d] [-z] [-l <ext>] -x <export-path>"
 unset EXPORT
 unset TGZ
 LIBEXT=.a
@@ -57,7 +41,7 @@ while [ ! -z "$1" ]; do
 			TGZ=y
 			;;
 		-h )
-			echo "$USAGE"
+			echo $USAGE
 			exit 0
 			;;
 		* )
