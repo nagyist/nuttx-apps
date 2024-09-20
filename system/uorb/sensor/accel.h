@@ -35,7 +35,5 @@
 
 ORB_DECLARE(sensor_accel);
 ORB_DECLARE(sensor_accel_uncal);
-ORB_DECLARE(sensor_linear_accel);
-ORB_DECLARE(sensor_linear_accel_uncal);
 
 #endif

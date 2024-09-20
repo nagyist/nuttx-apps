@@ -20,7 +20,14 @@
 
 if(CONFIG_TESTING_OSTEST)
 
-  set(SRCS getopt.c restart.c sigprocmask.c sighand.c signest.c sighelper.c)
+  set(SRCS
+      getopt.c
+      libc_memmem.c
+      restart.c
+      sigprocmask.c
+      sighand.c
+      signest.c
+      sighelper.c)
 
   if(CONFIG_DEV_NULL)
     list(APPEND SRCS dev_null.c)
@@ -122,7 +129,7 @@ if(CONFIG_TESTING_OSTEST)
     endif()
   endif()
 
-  if(CONFIG_ARCH_HAVE_VFORK)
+  if(CONFIG_ARCH_HAVE_FORK)
     if(CONFIG_SCHED_WAITPID)
       list(APPEND SRCS vfork.c)
     endif()
@@ -132,12 +139,12 @@ if(CONFIG_TESTING_OSTEST)
     list(APPEND SRCS setjmp.c)
   endif()
 
-  if(CONFIG_SMP)
+  if(CONFIG_SMP_CALL)
     list(APPEND SRCS smp_call.c)
   endif()
 
-  if(CONFIG_BUILD_FLAT)
-    list(APPEND SRCS wdog.c)
+  if(CONFIG_SCHED_EVENTS AND CONFIG_BUILD_FLAT)
+    list(APPEND SRCS nxevent.c)
   endif()
 
   set(OSTEST_SRCS ostest_main.c ${SRCS})

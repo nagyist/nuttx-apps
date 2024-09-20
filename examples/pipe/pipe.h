@@ -48,8 +48,7 @@
  * Public Function Prototypes
  ****************************************************************************/
 
-extern int transfer_test(int fdin, int fdout,
-                         int boost_reader, int boost_writer);
+extern int transfer_test(int fdin, int fdout);
 extern int interlock_test(void);
 extern int redirection_test(void);
 

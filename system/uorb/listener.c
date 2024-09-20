@@ -22,10 +22,11 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/list.h>
+
 #include <ctype.h>
 #include <errno.h>
 #include <dirent.h>
-#include <inttypes.h>
 #include <poll.h>
 #include <signal.h>
 #include <stdio.h>
@@ -33,7 +34,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
-#include <sys/queue.h>
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -53,15 +53,12 @@
 
 struct listen_object_s
 {
-  SLIST_ENTRY(listen_object_s) node; /* Node of object info list */
-
-  struct orb_object object; /* Object id */
-  orb_abstime timestamp;    /* Time of lastest generation */
-  unsigned long generation; /* Latest generation */
-  FAR FILE *file;
+  struct list_node  node;         /* Node of object info list */
+  struct orb_object object;       /* Object id */
+  orb_abstime       timestamp;    /* Time of lastest generation  */
+  unsigned long     generation;   /* Latest generation */
+  FAR FILE         *file;
 };
-
-SLIST_HEAD(listen_list_s, listen_object_s);
 
 /****************************************************************************
  * Private Function Prototypes
@@ -69,19 +66,18 @@ SLIST_HEAD(listen_list_s, listen_object_s);
 
 static int listener_get_state(FAR struct orb_object *object,
                               FAR struct orb_state *state);
-static int listener_add_object(FAR struct listen_list_s *objlist,
+static int listener_add_object(FAR struct list_node *objlist,
                                FAR struct orb_object *object);
-static void listener_delete_object_list(FAR struct listen_list_s *objlist);
-static int listener_generate_object_list(FAR struct listen_list_s *objlist,
+static void listener_delete_object_list(FAR struct list_node *objlist);
+static int listener_generate_object_list(FAR struct list_node *objlist,
                                          FAR const char *filter);
 static int listener_print(FAR const struct orb_metadata *meta, int fd);
-static void listener_monitor(FAR struct listen_list_s *objlist,
-                             int nb_objects, float topic_rate,
-                             int topic_latency, int nb_msgs,
-                             int timeout, bool record);
-static int listener_update(FAR struct listen_list_s *objlist,
+static void listener_monitor(FAR struct list_node *objlist, int nb_objects,
+                             float topic_rate, int topic_latency,
+                             int nb_msgs, int timeout, bool record);
+static int listener_update(FAR struct list_node *objlist,
                            FAR struct orb_object *object);
-static void listener_top(FAR struct listen_list_s *objlist,
+static void listener_top(FAR struct list_node *objlist,
                          FAR const char *filter,
                          bool only_once);
 static int listener_create_dir(FAR char *dir, size_t size);
@@ -194,7 +190,7 @@ static int listener_get_state(FAR struct orb_object *object,
   int ret;
   int fd;
 
-  fd = orb_open(object->meta->o_name, object->instance, O_DIRECT);
+  fd = orb_open(object->meta->o_name, object->instance, 0);
   if (fd < 0)
     {
       return fd;
@@ -219,7 +215,7 @@ static int listener_get_state(FAR struct orb_object *object,
  *   0 on success, otherwise return negative errno.
  ****************************************************************************/
 
-static int listener_add_object(FAR struct listen_list_s *objlist,
+static int listener_add_object(FAR struct list_node *objlist,
                                FAR struct orb_object *object)
 {
   FAR struct listen_object_s *tmp;
@@ -238,7 +234,7 @@ static int listener_add_object(FAR struct listen_list_s *objlist,
   tmp->timestamp       = orb_absolute_time();
   tmp->generation      = ret < 0 ? 0 : state.generation;
   tmp->file            = NULL;
-  SLIST_INSERT_HEAD(objlist, tmp, node);
+  list_add_tail(objlist, &tmp->node);
   return 0;
 }
 
@@ -256,7 +252,7 @@ static int listener_add_object(FAR struct listen_list_s *objlist,
  *   0 on success.
  ****************************************************************************/
 
-static int listener_update(FAR struct listen_list_s *objlist,
+static int listener_update(FAR struct list_node *objlist,
                            FAR struct orb_object *object)
 {
   FAR struct listen_object_s *old = NULL;
@@ -265,7 +261,7 @@ static int listener_update(FAR struct listen_list_s *objlist,
 
   /* Check wether object already exist in old list */
 
-  SLIST_FOREACH(tmp, objlist, node)
+  list_for_every_entry(objlist, tmp, struct listen_object_s, node)
     {
       if (tmp->object.meta == object->meta &&
           tmp->object.instance == object->instance)
@@ -339,18 +335,18 @@ static int listener_update(FAR struct listen_list_s *objlist,
  *   None.
  ****************************************************************************/
 
-static void listener_delete_object_list(FAR struct listen_list_s *objlist)
+static void listener_delete_object_list(FAR struct list_node *objlist)
 {
   FAR struct listen_object_s *tmp;
+  FAR struct listen_object_s *next;
 
-  while (!SLIST_EMPTY(objlist))
+  list_for_every_entry_safe(objlist, tmp, next, struct listen_object_s, node)
     {
-      tmp = SLIST_FIRST(objlist);
-      SLIST_REMOVE_HEAD(objlist, node);
+      list_delete(&tmp->node);
       free(tmp);
     }
 
-  SLIST_INIT(objlist);
+  list_initialize(objlist);
 }
 
 /****************************************************************************
@@ -368,7 +364,7 @@ static void listener_delete_object_list(FAR struct listen_list_s *objlist)
  *   Negative errno on failure.
  ****************************************************************************/
 
-static int listener_generate_object_list(FAR struct listen_list_s *objlist,
+static int listener_generate_object_list(FAR struct list_node *objlist,
                                          FAR const char *filter)
 {
   FAR struct dirent *entry;
@@ -551,8 +547,6 @@ static int listener_record(FAR const struct orb_metadata *meta, int fd,
     {
       ret = orb_fprintf(file, meta->o_format, buffer);
     }
-#else
-  (void)file;
 #endif
 
   return ret;
@@ -576,10 +570,9 @@ static int listener_record(FAR const struct orb_metadata *meta, int fd,
  *   None
  ****************************************************************************/
 
-static void listener_monitor(FAR struct listen_list_s *objlist,
-                             int nb_objects, float topic_rate,
-                             int topic_latency, int nb_msgs,
-                             int timeout, bool record)
+static void listener_monitor(FAR struct list_node *objlist, int nb_objects,
+                             float topic_rate, int topic_latency,
+                             int nb_msgs, int timeout, bool record)
 {
   FAR struct pollfd *fds;
   char path[PATH_MAX];
@@ -606,7 +599,7 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
 
   /* Prepare pollfd for all objects */
 
-  SLIST_FOREACH(tmp, objlist, node)
+  list_for_every_entry(objlist, tmp, struct listen_object_s, node)
     {
       int fd;
 
@@ -641,7 +634,7 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
       listener_create_dir(path, sizeof(path));
       dir = path + strlen(path);
 
-      SLIST_FOREACH(tmp, objlist, node)
+      list_for_every_entry(objlist, tmp, struct listen_object_s, node)
         {
           sprintf(dir, "%s%d.csv", tmp->object.meta->o_name,
                   tmp->object.instance);
@@ -671,7 +664,7 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
       if (poll(&fds[0], nb_objects, timeout * 1000) > 0)
         {
           i = 0;
-          SLIST_FOREACH(tmp, objlist, node)
+          list_for_every_entry(objlist, tmp, struct listen_object_s, node)
             {
               if (fds[i].revents & POLLIN)
                 {
@@ -713,7 +706,7 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
     }
 
   i = 0;
-  SLIST_FOREACH(tmp, objlist, node)
+  list_for_every_entry(objlist, tmp, struct listen_object_s, node)
     {
       if (fds[i].fd < 0)
         {
@@ -764,20 +757,7 @@ static void listener_monitor(FAR struct listen_list_s *objlist,
  *   None.
  ****************************************************************************/
 
-static size_t listen_length(FAR struct listen_list_s *objlist)
-{
-  struct listen_object_s *tmp;
-  size_t count = 0;
-
-  SLIST_FOREACH(tmp, objlist, node)
-    {
-      count++;
-    }
-
-  return count;
-}
-
-static void listener_top(FAR struct listen_list_s *objlist,
+static void listener_top(FAR struct list_node *objlist,
                          FAR const char *filter,
                          bool only_once)
 {
@@ -811,7 +791,7 @@ static void listener_top(FAR struct listen_list_s *objlist,
           uorbinfo_raw("\033[H"); /* move cursor to top left corner */
         }
 
-      uorbinfo_raw("\033[K" "current objects: %zu", listen_length(objlist));
+      uorbinfo_raw("\033[K" "current objects: %zu", list_length(objlist));
       uorbinfo_raw("\033[K" "%-*s INST #SUB RATE #Q SIZE",
                    ORB_MAX_PRINT_NAME - 2, "NAME");
 
@@ -831,7 +811,6 @@ static void listener_top(FAR struct listen_list_s *objlist,
 
 static void exit_handler(int signo)
 {
-  (void)signo;
   g_should_exit = true;
 }
 
@@ -841,8 +820,8 @@ static void exit_handler(int signo)
 
 int main(int argc, FAR char *argv[])
 {
+  struct list_node objlist;
   FAR struct listen_object_s *tmp;
-  struct listen_list_s objlist;
   float topic_rate = 0;
   int topic_latency = 0;
   int nb_msgs       = 0;
@@ -925,7 +904,7 @@ int main(int argc, FAR char *argv[])
 
   /* Alloc list and exec command */
 
-  SLIST_INIT(&objlist);
+  list_initialize(&objlist);
   ret = listener_generate_object_list(&objlist, filter);
   if (ret <= 0)
     {
@@ -939,7 +918,7 @@ int main(int argc, FAR char *argv[])
   else
     {
       uorbinfo_raw("\nMointor objects num:%d", ret);
-      SLIST_FOREACH(tmp, &objlist, node)
+      list_for_every_entry(&objlist, tmp, struct listen_object_s, node)
         {
           uorbinfo_raw("object_name:%s, object_instance:%d",
                        tmp->object.meta->o_name,
