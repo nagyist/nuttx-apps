@@ -5,6 +5,7 @@
 
 menuconfig TESTING_GPU
 	tristate "GPU Test"
+	select LIBC_PRINT_EXTENSION
 	default n
 
 if TESTING_GPU
