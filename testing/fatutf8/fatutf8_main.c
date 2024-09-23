@@ -145,7 +145,7 @@ int main(int argc, FAR char *argv[])
     {
       printf("open successful\n");
 
-      len = read(fd, buf, sizeof(buf) - 1);
+      len = read(fd, buf, sizeof(buf));
 
       if (len >= 0)
         {

@@ -127,14 +127,6 @@ ifeq ($(CONFIG_MBEDTLS_MD5_ALT),y)
 CSRCS += $(APPDIR)/crypto/mbedtls/source/md5_alt.c
 endif
 
-ifeq ($(CONFIG_MBEDTLS_POLY1305_ALT),y)
-CSRCS += $(APPDIR)/crypto/mbedtls/source/poly1305_alt.c
-endif
-
-ifeq ($(CONFIG_MBEDTLS_RIPEMD160_ALT),y)
-CSRCS += $(APPDIR)/crypto/mbedtls/source/ripemd160_alt.c
-endif
-
 ifeq ($(CONFIG_MBEDTLS_SHA1_ALT),y)
 CSRCS += $(APPDIR)/crypto/mbedtls/source/sha1_alt.c
 endif
@@ -145,10 +137,6 @@ endif
 
 ifeq ($(CONFIG_MBEDTLS_SHA512_ALT),y)
 CSRCS += $(APPDIR)/crypto/mbedtls/source/sha512_alt.c
-endif
-
-ifeq ($(CONFIG_MBEDTLS_BIGNUM_ALT),y)
-CSRCS += $(APPDIR)/crypto/mbedtls/source/bignum_alt.c
 endif
 
 endif

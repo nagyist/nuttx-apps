@@ -26,9 +26,7 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <sys/ioctl.h>
-#include <time.h>
 #include <unistd.h>
-#include <string.h>
 
 #include <nuttx/streams.h>
 #include <uORB/uORB.h>
@@ -229,16 +227,6 @@ int orb_get_state(int fd, FAR struct orb_state *state)
   return ret;
 }
 
-int orb_get_events(int fd, FAR unsigned int *events)
-{
-  if (!events)
-    {
-      return -EINVAL;
-    }
-
-  return ioctl(fd, SNIOC_GET_EVENTS, (unsigned long)(uintptr_t)events);
-}
-
 int orb_check(int fd, FAR bool *updated)
 {
   return ioctl(fd, SNIOC_UPDATED, (unsigned long)(uintptr_t)updated);
@@ -249,11 +237,6 @@ int orb_ioctl(int fd, int cmd, unsigned long arg)
   return ioctl(fd, cmd, arg);
 }
 
-int orb_flush(int fd)
-{
-  return ioctl(fd, SNIOC_FLUSH, 0);
-}
-
 int orb_set_interval(int fd, unsigned interval)
 {
   return ioctl(fd, SNIOC_SET_INTERVAL, (unsigned long)interval);
@@ -261,27 +244,17 @@ int orb_set_interval(int fd, unsigned interval)
 
 int orb_get_interval(int fd, FAR unsigned *interval)
 {
-  struct sensor_ustate_s tmp;
+  struct sensor_state_s tmp;
   int ret;
 
-  ret = ioctl(fd, SNIOC_GET_USTATE, (unsigned long)(uintptr_t)&tmp);
+  ret = ioctl(fd, SNIOC_GET_STATE, (unsigned long)(uintptr_t)&tmp);
   if (ret < 0)
     {
       return ret;
     }
 
-  *interval = tmp.interval;
+  *interval = tmp.min_interval;
   return ret;
-}
-
-int orb_set_info(int fd, FAR const orb_info_t *info)
-{
-  return ioctl(fd, SNIOC_SET_INFO, (unsigned long)(uintptr_t)info);
-}
-
-int orb_get_info(int fd, FAR orb_info_t *info)
-{
-  return ioctl(fd, SNIOC_GET_INFO, (unsigned long)(uintptr_t)info);
 }
 
 int orb_set_batch_interval(int fd, unsigned batch_interval)
@@ -291,16 +264,16 @@ int orb_set_batch_interval(int fd, unsigned batch_interval)
 
 int orb_get_batch_interval(int fd, FAR unsigned *batch_interval)
 {
-  struct sensor_ustate_s tmp;
+  struct sensor_state_s tmp;
   int ret;
 
-  ret = ioctl(fd, SNIOC_GET_USTATE, (unsigned long)(uintptr_t)&tmp);
+  ret = ioctl(fd, SNIOC_GET_STATE, (unsigned long)(uintptr_t)&tmp);
   if (ret < 0)
     {
       return ret;
     }
 
-  *batch_interval = tmp.latency;
+  *batch_interval = tmp.min_latency;
   return ret;
 }
 
@@ -363,15 +336,11 @@ int orb_sscanf(FAR const char *buf, FAR const char *format, FAR void *data)
 void orb_info(FAR const char *format, FAR const char *name,
               FAR const void *data)
 {
-  struct lib_stdoutstream_s stdoutstream;
   struct va_format vaf;
 
   vaf.fmt = format;
   vaf.va  = (va_list *)data;
-
-  lib_stdoutstream(&stdoutstream, stdout);
-  lib_sprintf(&stdoutstream.common, "%s(now:%" PRIu64 "):%pB\n",
-              name, orb_absolute_time(), &vaf);
+  uorbinfo_raw("%s(now:%" PRIu64 "):%pB", name, orb_absolute_time(), &vaf);
 }
 
 int orb_fprintf(FAR FILE *stream, FAR const char *format,

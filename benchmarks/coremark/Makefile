@@ -39,7 +39,6 @@ VPATH += $(COREMARK_UNPACKNAME)$(DELIM)posix
 DEPPATH += --dep-path $(COREMARK_UNPACKNAME)
 DEPPATH += --dep-path $(COREMARK_UNPACKNAME)$(DELIM)posix
 
-CFLAGS += -Dcrc16=coremark_crc16
 CFLAGS += -Wno-strict-prototypes -Wno-undef
 
 ifeq ($(CONFIG_COREMARK_MULTITHREAD_OVERRIDE),y)
@@ -84,11 +83,6 @@ CFLAGS += ${DEFINE_PREFIX}ITERATIONS=$(CONFIG_COREMARK_ITERATIONS_COUNT)
 else
 CFLAGS += ${DEFINE_PREFIX}ITERATIONS=0
 endif
-
-CFLAGS += ${DEFINE_PREFIX}crcu8=coremark_crcu8
-CFLAGS += ${DEFINE_PREFIX}crcu16=coremark_crcu16
-CFLAGS += ${DEFINE_PREFIX}crcu32=coremark_crcu32
-CFLAGS += ${DEFINE_PREFIX}crc16=coremark_crc16
 
 CSRCS += core_list_join.c
 CSRCS += core_matrix.c
