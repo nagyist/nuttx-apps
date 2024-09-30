@@ -37,11 +37,10 @@ if(CONFIG_NSH_LIBRARY)
     nsh_mmcmds.c
     nsh_timcmds.c
     nsh_envcmds.c
-    nsh_prompt.c
     nsh_syscmds.c
     nsh_dbgcmds.c)
 
-  list(APPEND CSRCS nsh_session.c)
+  list(APPEND CSRCS nsh_session.c nsh_spawn.c)
 
   if(CONFIG_NSH_CONSOLE_LOGIN)
     list(APPEND CSRCS nsh_login.c)

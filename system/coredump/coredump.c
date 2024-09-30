@@ -34,12 +34,20 @@
 #include <getopt.h>
 #include <stdio.h>
 
-#include <nuttx/binfmt/binfmt.h>
-#include <nuttx/streams.h>
+#include <nuttx/sched.h>
+#include <nuttx/coredump.h>
 
 /****************************************************************************
  * Private Types
  ****************************************************************************/
+
+#ifdef CONFIG_BOARD_COREDUMP_COMPRESSION
+#  define COREDUMP_FILE_SUFFIX ".lzf"
+#else
+#  define COREDUMP_FILE_SUFFIX ".core"
+#endif
+
+#define COREDUMP_FILE_SUFFIX_LEN (sizeof(COREDUMP_FILE_SUFFIX) - 1)
 
 typedef CODE void (*dumpfile_cb_t)(FAR char *path, FAR const char *filename,
                                    FAR void *arg);
@@ -53,6 +61,22 @@ typedef CODE void (*dumpfile_cb_t)(FAR char *path, FAR const char *filename,
  ****************************************************************************/
 
 #ifdef CONFIG_BOARD_COREDUMP_BLKDEV
+
+static bool dumpfile_is_valid(FAR const char *name)
+{
+  FAR const char *suffix;
+  size_t name_len;
+
+  name_len = strlen(name);
+  if (name_len < COREDUMP_FILE_SUFFIX_LEN)
+    {
+      return false;
+    }
+
+  suffix = name + name_len - COREDUMP_FILE_SUFFIX_LEN;
+  return !!memcmp(suffix, COREDUMP_FILE_SUFFIX, COREDUMP_FILE_SUFFIX_LEN);
+}
+
 static int dumpfile_iterate(FAR char *path, dumpfile_cb_t cb, FAR void *arg)
 {
   FAR struct dirent *entry;
@@ -71,7 +95,7 @@ static int dumpfile_iterate(FAR char *path, dumpfile_cb_t cb, FAR void *arg)
 
   while ((entry = readdir(dir)) != NULL)
     {
-      if (entry->d_type == DT_REG && !strncmp(entry->d_name, "core-", 5))
+      if (entry->d_type == DT_REG && dumpfile_is_valid(entry->d_name))
         {
           cb(path, entry->d_name, arg);
         }
@@ -101,10 +125,15 @@ static void dumpfile_delete(FAR char *path, FAR const char *filename,
                             FAR void *arg)
 {
   FAR char *dumppath = arg;
+  int ret;
 
   sprintf(dumppath, "%s/%s", path, filename);
   printf("Remove %s\n", dumppath);
-  remove(dumppath);
+  ret = remove(dumppath);
+  if (ret < 0)
+    {
+      printf("Remove %s fail\n", dumppath);
+    }
 }
 
 /****************************************************************************
@@ -114,16 +143,16 @@ static void dumpfile_delete(FAR char *path, FAR const char *filename,
 static void coredump_restore(FAR char *savepath, size_t maxfile)
 {
   FAR struct coredump_info_s *info;
-  unsigned char *swap;
   char dumppath[PATH_MAX];
+  unsigned char *swap;
   struct geometry geo;
   ssize_t writesize;
   ssize_t readsize;
-  struct tm *dtime;
   size_t offset = 0;
   size_t max = 0;
   int dumpfd;
   int blkfd;
+  off_t off;
   int ret;
 
   blkfd = open(CONFIG_BOARD_COREDUMP_BLKDEV_PATH, O_RDWR);
@@ -144,8 +173,20 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
       goto blkfd_err;
     }
 
-  lseek(blkfd, (geo.geo_nsectors - 1) * geo.geo_sectorsize, SEEK_SET);
-  read(blkfd, info, geo.geo_sectorsize);
+  off = lseek(blkfd, (geo.geo_nsectors - 1) * geo.geo_sectorsize, SEEK_SET);
+  if (off < 0)
+    {
+      printf("Seek %s fail\n", CONFIG_BOARD_COREDUMP_BLKDEV_PATH);
+      goto info_err;
+    }
+
+  readsize = read(blkfd, info, geo.geo_sectorsize);
+  if (readsize != geo.geo_sectorsize)
+    {
+      printf("Read %s fail\n", CONFIG_BOARD_COREDUMP_BLKDEV_PATH);
+      goto info_err;
+    }
+
   if (info->magic != COREDUMP_MAGIC)
     {
       printf("%s coredump not found!\n", CONFIG_BOARD_COREDUMP_BLKDEV_PATH);
@@ -168,22 +209,9 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
     }
 
   ret = snprintf(dumppath, sizeof(dumppath),
-                 "%s/core-%s", savepath,
-                 info->name.version);
-  dtime = localtime(&info->time);
-  if (dtime)
-    {
-      ret += snprintf(dumppath + ret, sizeof(dumppath) - ret,
-                      "-%d-%d-%d-%d-%d", dtime->tm_mon + 1,
-                      dtime->tm_mday, dtime->tm_hour,
-                      dtime->tm_min, dtime->tm_sec);
-    }
-
-#ifdef CONFIG_BOARD_COREDUMP_COMPRESSION
-  ret += snprintf(dumppath + ret, sizeof(dumppath) - ret, ".lzf");
-#else
-  ret += snprintf(dumppath + ret, sizeof(dumppath) - ret, ".core");
-#endif
+                 "%s/%.16s-%x"COREDUMP_FILE_SUFFIX,
+                 savepath, info->name.version,
+                 (unsigned int)info->time.tv_sec);
 
   while (ret--)
     {
@@ -200,7 +228,8 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
       goto info_err;
     }
 
-  swap = malloc(geo.geo_sectorsize);
+  swap = malloc(geo.geo_sectorsize *
+                CONFIG_SYSTEM_COREDUMP_SWAPBUFFER_NUMS);
   if (swap == NULL)
     {
       printf("Malloc fail\n");
@@ -210,10 +239,15 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
   lseek(blkfd, 0, SEEK_SET);
   while (offset < info->size)
     {
-      readsize = read(blkfd, swap, geo.geo_sectorsize);
+      readsize = read(blkfd, swap, geo.geo_sectorsize *
+                      CONFIG_SYSTEM_COREDUMP_SWAPBUFFER_NUMS);
       if (readsize < 0)
         {
           printf("Read %s fail\n", CONFIG_BOARD_COREDUMP_BLKDEV_PATH);
+          break;
+        }
+      else if (readsize == 0)
+        {
           break;
         }
 
@@ -227,10 +261,31 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
       offset += writesize;
     }
 
-  printf("Coredump finish [%s][%zu]\n", dumppath, info->size);
+  if (offset < info->size)
+    {
+      printf("Coredump error [%s] need [%zu], but just get %zu\n",
+             dumppath, info->size, offset);
+    }
+  else
+    {
+      printf("Coredump finish [%s][%zu]\n", dumppath, info->size);
+    }
+
   info->magic = 0;
-  lseek(blkfd, (geo.geo_nsectors - 1) * geo.geo_sectorsize, SEEK_SET);
-  write(blkfd, info, geo.geo_sectorsize);
+  off = lseek(blkfd, (geo.geo_nsectors - 1) * geo.geo_sectorsize, SEEK_SET);
+  if (off < 0)
+    {
+      printf("Seek %s fail\n", CONFIG_BOARD_COREDUMP_BLKDEV_PATH);
+      goto swap_err;
+    }
+
+  writesize = write(blkfd, info, geo.geo_sectorsize);
+  if (writesize != geo.geo_sectorsize)
+    {
+      printf("Write %s fail\n", CONFIG_BOARD_COREDUMP_BLKDEV_PATH);
+    }
+
+swap_err:
   free(swap);
 fd_err:
   close(dumpfd);
@@ -248,6 +303,7 @@ blkfd_err:
 
 static int coredump_now(int pid, FAR char *filename)
 {
+  FAR const struct memory_region_s *region;
   FAR struct lib_stdoutstream_s *outstream;
   FAR struct lib_hexdumpstream_s *hstream;
 #ifdef CONFIG_BOARD_COREDUMP_COMPRESSION
@@ -300,8 +356,15 @@ static int coredump_now(int pid, FAR char *filename)
   /* Initialize hex output stream */
 
   lib_stdoutstream(outstream, file);
-  lib_hexdumpstream(hstream, (FAR void *)outstream);
-  stream = hstream;
+  if (file == stdout)
+    {
+      lib_hexdumpstream(hstream, (FAR void *)outstream);
+      stream = hstream;
+    }
+  else
+    {
+      stream = outstream;
+    }
 
 #ifdef CONFIG_BOARD_COREDUMP_COMPRESSION
 
@@ -314,7 +377,8 @@ static int coredump_now(int pid, FAR char *filename)
 
   /* Do core dump */
 
-  core_dump(NULL, stream, pid);
+  region = alloc_memory_region(CONFIG_BOARD_MEMORY_RANGE);
+  coredump(region, stream, pid);
   setlogmask(logmask);
 #  ifdef CONFIG_BOARD_COREDUMP_COMPRESSION
   printf("Finish coredump (Compression Enabled).\n");
@@ -326,6 +390,11 @@ static int coredump_now(int pid, FAR char *filename)
   if (filename != NULL)
     {
       fclose(file);
+    }
+
+  if (region != NULL)
+    {
+      free_memory_region(region);
     }
 
   return 0;

@@ -20,23 +20,6 @@
 
 if(CONFIG_BENCHMARK_COREMARK_PRO)
 
-  set(COREMARKAPP_DIR ${CMAKE_CURRENT_LIST_DIR}/coremark-pro)
-
-  if(NOT EXISTS ${COREMARKAPP_DIR})
-    FetchContent_Declare(
-      coremark_fetch
-      URL https://github.com/eembc/coremark-pro/archive/refs/heads/main.zip
-          SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/coremark-pro BINARY_DIR
-          ${CMAKE_BINARY_DIR}/apps/benchmarks/coremark/coremark-pro
-      DOWNLOAD_NO_PROGRESS true
-      TIMEOUT 30)
-
-    FetchContent_GetProperties(coremark_fetch)
-    if(NOT coremark_fetch_POPULATED)
-      FetchContent_Populate(coremark_fetch)
-    endif()
-  endif()
-
   nuttx_add_library(coremark_pro STATIC)
 
   set(CSRCS

@@ -656,9 +656,9 @@ TEST_TEAR_DOWN(wake_with_signal)
       if (tid[i] != -1)
         {
           ret = pthread_cancel(tid[i]);
-          TEST_ASSERT_EQUAL(ret, OK);
+          assert(ret == OK);
           ret = pthread_join(tid[i], NULL);
-          TEST_ASSERT_EQUAL(ret, OK);
+          assert(ret == OK);
         }
 
       if (test_sd[i] != -1)

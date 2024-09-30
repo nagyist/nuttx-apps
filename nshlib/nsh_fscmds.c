@@ -516,6 +516,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
       if ((lsflags & LSFLAGS_SIZE) != 0)
         {
+#ifdef CONFIG_HAVE_FLOAT
           if (lsflags & LSFLAGS_HUMANREADBLE && buf.st_size >= KB)
             {
               if (buf.st_size >= GB)
@@ -532,6 +533,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
                 }
             }
           else
+#endif
             {
               nsh_output(vtbl, "%12" PRIdOFF, buf.st_size);
             }
@@ -789,25 +791,6 @@ int cmd_cat(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 
           nsh_freefullpath(fullpath);
         }
-    }
-
-  if (argc == 1)
-    {
-      char *buf = malloc(BUFSIZ);
-
-      /* Dump from input */
-
-      while (true)
-        {
-          ssize_t n = nsh_read(vtbl, buf, BUFSIZ);
-
-          if (n == 0)
-            break;
-
-          nsh_write(vtbl, buf, n);
-        }
-
-      free(buf);
     }
 
   return ret;
@@ -1535,10 +1518,11 @@ int cmd_ls(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
             lsflags |= LSFLAGS_SIZE;
             break;
 
+#ifdef CONFIG_HAVE_FLOAT
           case 'h':
             lsflags |= LSFLAGS_HUMANREADBLE;
             break;
-
+#endif
           case '?':
           default:
             nsh_error(vtbl, g_fmtarginvalid, argv[0]);
