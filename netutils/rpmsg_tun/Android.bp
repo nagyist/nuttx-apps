@@ -4,6 +4,9 @@ cc_binary {
         "rpmsg_tun_client.c",
         "rpmsg_tun_util.c",
         ],
+    init_rc: [
+        "init.rpmsg_tun_client.rc",
+    ],
     proprietary: true,
 }
 
