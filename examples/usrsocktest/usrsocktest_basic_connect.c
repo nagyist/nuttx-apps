@@ -114,13 +114,13 @@ static void teardown(void)
   if (sd >= 0)
     {
       ret = close(sd);
-      TEST_ASSERT_TRUE(ret >= 0);
+      assert(ret >= 0);
     }
 
   if (started)
     {
       ret = usrsocktest_daemon_stop();
-      TEST_ASSERT_EQUAL(OK, ret);
+      assert(ret == OK);
     }
 }
 

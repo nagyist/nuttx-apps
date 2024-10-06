@@ -101,7 +101,7 @@ static int send_actpdn_command(FAR struct alt1250_s *dev,
   set_container_response(container, USOCKET_REP_RESPONSE(usock), idx);
   set_container_postproc(container, postproc_actpdn, 0);
 
-  return altdevice_send_command(dev, dev->altfd, container, usock_result);
+  return altdevice_send_command(dev->altfd, container, usock_result);
 }
 
 /****************************************************************************
@@ -124,7 +124,7 @@ static int send_radio_command(FAR struct alt1250_s *dev,
   set_container_postproc(container,
                     on ? postproc_radioon : postproc_radiooff, 0);
 
-  return altdevice_send_command(dev, dev->altfd, container, usock_result);
+  return altdevice_send_command(dev->altfd, container, usock_result);
 }
 
 /****************************************************************************
@@ -369,7 +369,7 @@ int send_reportnet_command(FAR struct alt1250_s *dev,
   set_container_response(container, USOCKET_REP_RESPONSE(usock), idx);
   set_container_postproc(container, func, priv);
 
-  return altdevice_send_command(dev, dev->altfd, container, usock_result);
+  return altdevice_send_command(dev->altfd, container, usock_result);
 }
 
 /****************************************************************************
@@ -391,11 +391,7 @@ int usockreq_ioctl_ifreq(FAR struct alt1250_s *dev,
   *usock_result = OK;
   *usock_xid = request->head.xid;
 
-  if (!dev->usock_enable)
-    {
-      *usock_result = -ENOTTY;
-    }
-  else if (if_req->ifr_flags & IFF_UP)
+  if (if_req->ifr_flags & IFF_UP)
     {
       ret = do_ifup(dev, req, usock_result, usock_xid, ackinfo);
     }

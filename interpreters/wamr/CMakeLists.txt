@@ -47,41 +47,83 @@ if(CONFIG_INTERPRETERS_WAMR)
 
   nuttx_add_library(wamr STATIC)
 
+  set_property(
+    TARGET nuttx
+    APPEND
+    PROPERTY NUTTX_INCLUDE_DIRECTORIES
+             ${CMAKE_CURRENT_SOURCE_DIR}/wamr/core/iwasm/include)
+
   include(${WAMR_DIR}/product-mini/platforms/nuttx/CMakeLists.txt)
   target_sources(wamr PRIVATE ${WAMR_SOURCES})
   target_compile_options(wamr PRIVATE ${WAMR_CFLAGS})
   # the WAMR_INCDIRS and WAMR_DEFINITIONS already exist in the directory domain
-  nuttx_add_application(
-    MODULE
-    ${CONFIG_INTERPRETERS_WAMR}
-    NAME
-    iwasm
-    STACKSIZE
-    ${CONFIG_INTERPRETERS_WAMR_STACKSIZE}
-    PRIORITY
-    ${CONFIG_INTERPRETERS_WAMR_PRIORITY}
-    SRCS
-    ${WAMR_DIR}/product-mini/platforms/nuttx/main.c
-    COMPILE_FLAGS
-    ${WAMR_CFLAGS}
-    DEFINITIONS
-    ${WAMR_DEFINITIONS}
-    INCLUDE_DIRECTORIES
-    ${WAMR_INCDIRS}
-    DEPENDS
-    wamr)
+  if(CONFIG_INTERPRETERS_IWASM_TASK)
+    nuttx_add_application(
+      MODULE
+      ${CONFIG_INTERPRETERS_WAMR}
+      NAME
+      iwasm
+      STACKSIZE
+      ${CONFIG_INTERPRETERS_WAMR_STACKSIZE}
+      PRIORITY
+      ${CONFIG_INTERPRETERS_WAMR_PRIORITY}
+      SRCS
+      ${WAMR_DIR}/product-mini/platforms/nuttx/main.c
+      COMPILE_FLAGS
+      ${WAMR_CFLAGS}
+      DEFINITIONS
+      ${WAMR_DEFINITIONS}
+      INCLUDE_DIRECTORIES
+      ${WAMR_INCDIRS}
+      DEPENDS
+      wamr)
+  endif()
 
-  if(CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX
-     OR CONFIG_INTERPRETERS_WAMR_EXTERNAL_MODULE_REGISTRY)
+  if(CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX OR CONFIG_INTERPRETERS_WAMR_EXTERNAL_MODULE_REGISTRY)
     nuttx_append_source_file_properties(
       ${WAMR_DIR}/product-mini/platforms/nuttx/main.c COMPILE_FLAGS
       -Dwasm_runtime_full_init=wamr_custom_init)
     target_sources(wamr PRIVATE wamr_custom_init.c)
   endif()
 
+  if(CONFIG_INTERPRETERS_WAMR_EXTERNAL_MODULE_REGISTRY)
+  set_property(
+    TARGET nuttx
+    APPEND
+    PROPERTY NUTTX_INCLUDE_DIRECTORIES
+             ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  endif()
+
   # Add ${CMAKE_BINARY_DIR}/wamrmod to the include directories
   if(CONFIG_INTERPRETERS_WAMR_EXTERNAL_MODULE_REGISTRY)
     target_include_directories(wamr PRIVATE ${CMAKE_BINARY_DIR}/wamrmod)
+  endif()
+
+  if(CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX)
+    target_sources(wamr PRIVATE libc_nuttx.c)
+
+    set(GLUECSRCS
+        ${CMAKE_CURRENT_BINARY_DIR}/syscall_glue.c
+        ${CMAKE_CURRENT_BINARY_DIR}/libc_glue.c
+        ${CMAKE_CURRENT_BINARY_DIR}/libm_glue.c)
+
+    add_custom_command(
+      OUTPUT ${GLUECSRCS}
+      COMMAND
+        ${NUTTX_DIR}/tools/mkwamrglue.py -i ${NUTTX_DIR}/syscall/syscall.csv -o
+        ${CMAKE_CURRENT_BINARY_DIR}/syscall_glue.c
+      COMMAND
+        ${NUTTX_DIR}/tools/mkwamrglue.py -i ${NUTTX_DIR}/libs/libc/libc.csv -o
+        ${CMAKE_CURRENT_BINARY_DIR}/libc_glue.c
+      COMMAND
+        ${NUTTX_DIR}/tools/mkwamrglue.py -i ${NUTTX_DIR}/libs/libm/libm.csv -o
+        ${CMAKE_CURRENT_BINARY_DIR}/libm_glue.c
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+      DEPENDS ${NUTTX_DIR}/tools/mkwamrglue.py ${NUTTX_DIR}/syscall/syscall.csv
+              ${NUTTX_DIR}/libs/libc/libc.csv ${NUTTX_DIR}/libs/libm/libm.csv
+      VERBATIM
+      COMMENT "WAMR:Gen and Updating ${GLUECSRCS}")
+    target_sources(wamr PRIVATE ${GLUECSRCS})
   endif()
 
 endif()

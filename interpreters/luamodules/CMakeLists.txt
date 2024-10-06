@@ -1,4 +1,3 @@
-# ##############################################################################
 # apps/interpreters/luamodules/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor

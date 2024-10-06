@@ -67,6 +67,14 @@ bool wamr_custom_init(RuntimeInitArgs *init_args)
 
   /* Add extra init hook here */
 
+#ifdef CONFIG_INTERPRETERS_WAMR_LIBC_NUTTX
+  ret = wamr_libc_nuttx_register();
+  if (!ret)
+    {
+      return ret;
+    }
+#endif
+
 #ifdef CONFIG_INTERPRETERS_WAMR_EXTERNAL_MODULE_REGISTRY
   for (int i = 0; i < nitems(g_wamr_modules); i++)
     {
