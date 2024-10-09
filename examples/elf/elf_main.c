@@ -62,16 +62,16 @@
 #  error "You must not disable mountpoints via CONFIG_DISABLE_MOUNTPOINT in your configuration file"
 #endif
 
-#ifndef CONFIG_EXAMPLES_ELF_DEVMINOR
-#  define CONFIG_EXAMPLES_ELF_DEVMINOR 0
-#endif
-
 #if defined(CONFIG_EXAMPLES_ELF_ROMFS)
 /* Describe the ROMFS file system */
 
 #  define SECTORSIZE   512
 #  define NSECTORS(b)  (((b) + SECTORSIZE - 1) / SECTORSIZE)
 #  define MOUNTPT      "/mnt/elf/romfs"
+
+#  ifndef CONFIG_EXAMPLES_ELF_DEVMINOR
+#    define CONFIG_EXAMPLES_ELF_DEVMINOR 0
+#  endif
 
 #elif defined(CONFIG_EXAMPLES_ELF_CROMFS)
 /* Describe the CROMFS file system */

@@ -52,14 +52,8 @@ if(CONFIG_LIBSODIUM)
   # Flags
   # ############################################################################
 
-  set(CFLAGS
-      -DDEV_MODE
-      -DCONFIGURED=1
-      -Wno-unused-function
-      -Wno-undef
-      -Wno-unused-variable
-      -Wno-deprecated-declarations
-      -Wno-shadow)
+  set(CFLAGS -Wno-unused-function -Wno-undef -Wno-unused-variable
+             -Wno-deprecated-declarations -Wno-shadow)
 
   # ############################################################################
   # Sources

@@ -157,15 +157,15 @@ int main(int argc, FAR char *argv[])
 
   uint32_t n_leds = atoi(argv[2]);
 
-  char devname[50];
-  snprintf(devname, sizeof(devname), "/dev/rmt%d", ch_idx);
-  fd = open(devname, O_WRONLY);
+  char dev_name[50];
+  snprintf(dev_name, 50, "/dev/rmt%d", ch_idx);
+  fd = open(dev_name, O_WRONLY);
   if (fd < 0)
     {
       fprintf(stderr,
               "%s: open %s failed: %d\n",
               argv[0],
-              devname,
+              dev_name,
               errno);
       goto errout_with_dev;
     }
