@@ -30,4 +30,9 @@ MAINSRC  += rpmsgmtd.c
 PROGNAME += cmocka_rpmsgmtdtest
 endif
 
+ifneq ($(CONFIG_TESTING_RPMSGBLK),)
+MAINSRC  += rpmsgblk.c
+PROGNAME += cmocka_rpmsgblktest
+endif
+
 include $(APPDIR)/Application.mk

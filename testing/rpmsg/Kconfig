@@ -9,7 +9,6 @@ config TESTING_RPMSG
 	---help---
 		Enable cmocka rpmsg test
 
-
 if TESTING_RPMSG
 	config TESTING_RPMSG_PRIORITY
 		int "cmocka rpmsgtest task priority"
@@ -26,4 +25,10 @@ if TESTING_RPMSG
 		---help---
 			Enable cmocka rpmsgmtd test
 
+	config TESTING_RPMSGBLK
+		tristate "cmocka rpmsgblk test"
+		default y
+		depends on BUILD_FLAT && (BLK_RPMSG_SERVER || BLK_RPMSG)
+		---help---
+			Enable cmocka rpmsgblk test
 endif

@@ -25,4 +25,9 @@ if(CONFIG_TESTING_RPMSG)
                           rpmsgmtd.c)
   endif()
 
+  if(CONFIG_TESTING_RPMSGBLK)
+    nuttx_add_application(NAME rpmsgblk MODULE ${CONFIG_TESTING_RPMSGBLK} SRCS
+                          rpmsgblk.c)
+  endif()
+
 endif()
