@@ -184,8 +184,9 @@ static int mmap_read(FAR struct cmd_record_s *rec)
       ssize_t len;
       uint8_t buffer[512];
       int ret;
+      int used_len = circbuf_used(cbuf);
 
-      while (cbuf && circbuf_used(cbuf))
+      while (cbuf && used_len > 0)
         {
           len = circbuf_read(cbuf, buffer, 512);
           if (len < 0)
@@ -199,6 +200,7 @@ static int mmap_read(FAR struct cmd_record_s *rec)
               return ret;
             }
 
+          used_len -= len;
           rec->data_size += len;
         }
     }
@@ -458,11 +460,19 @@ int perf_record_handle(FAR struct evlist_s *evlist,
     }
 
 finish:
-  perf_data_write_header(&record, evlist);
   list_for_every_entry(&evlist->core.entries, evsel,
                        struct perf_evsel_s, node)
     {
-      evsel_count_end((FAR struct evsel_s *)evsel, evlist);
+      evsel_disable((FAR struct evsel_s *)evsel, evlist);
+    }
+
+  mmap_read(&record);
+  perf_data_write_header(&record, evlist);
+
+  list_for_every_entry(&evlist->core.entries, evsel,
+                       struct perf_evsel_s, node)
+    {
+      evsel_close((FAR struct evsel_s *)evsel, evlist);
     }
 
   close(record.out_fd);
