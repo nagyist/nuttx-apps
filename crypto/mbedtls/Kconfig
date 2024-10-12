@@ -72,10 +72,6 @@ config MBEDTLS_SSL_DTLS_CLIENT_PORT_REUSE
 	depends on MBEDTLS_SSL_DTLS_HELLO_VERIFY
 	default y
 
-config MBEDTLS_BLOWFISH_C
-	bool "Enable the Blowfish block cipher."
-	default n
-
 config MBEDTLS_CAMELLIA_C
 	bool "Enable the Camellia block cipher."
 	default y
@@ -337,8 +333,7 @@ config MBEDTLS_PK_RSA_ALT_SUPPORT
 	default y
 
 config MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG
-	bool "Make the PSA Crypto module use an external random generator provided by a driver,\
- instead of Mbed TLS's entropy and DRBG modules."
+	bool "Make the PSA Crypto module use an external random generator provided by a driver, instead of Mbed TLS's entropy and DRBG modules."
 	depends on DEV_RANDOM
 	default n
 
@@ -407,10 +402,6 @@ config MBEDTLS_AESCE_C
 	bool "Enable AES cryptographic extension support on 64-bit Arm."
 	depends on MBEDTLS_HAVE_ASM
 	default y
-
-config MBEDTLS_ARC4_C
-	bool "Enable the ARCFOUR stream cipher."
-	default n
 
 config MBEDTLS_ARIA_C
 	bool "Enable the ARIA block cipher."
@@ -560,7 +551,7 @@ config MBEDTLS_SSL_TLS1_3_TICKET_NONCE_LENGTH
 	int "Size in bytes of a ticket nonce."
 	default 32
 
-config MBEDTLS_SSL_TLS1_3_TICKET_NONCE_LENGTH
+config MBEDTLS_SSL_TLS1_3_DEFAULT_NEW_SESSION_TICKETS
 	int "Default number of NewSessionTicket messages to be sent by a TLS 1.3 server after handshake completion."
 	default 1
 

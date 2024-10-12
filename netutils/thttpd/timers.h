@@ -65,34 +65,34 @@ typedef union
   void *p;
   int   i;
   long  l;
-} clientdata;
+} ClientData;
 
-/* The Timerproc gets called when the timer expires.  It gets passed
+/* The TimerProc gets called when the timer expires.  It gets passed
  * the ClientData associated with the timer, and a timeval in case
  * it wants to schedule another timer.
  */
 
-typedef void timerproc(clientdata client_data, struct timeval *nowp);
+typedef void TimerProc(ClientData client_data, struct timeval *nowp);
 
 /* The Timer struct. */
 
-typedef struct timerstruct
+typedef struct TimerStruct
 {
-  timerproc          *timer_proc;
-  clientdata          client_data;
+  TimerProc          *timer_proc;
+  ClientData          client_data;
   long                msecs;
   int                 periodic;
   struct timeval      time;
-  struct timerstruct *prev;
-  struct timerstruct *next;
+  struct TimerStruct *prev;
+  struct TimerStruct *next;
   int hash;
-} timer;
+} Timer;
 
 /****************************************************************************
  * Public Data
  ****************************************************************************/
 
-extern clientdata junkclientdata;       /* For use when you don't care */
+extern ClientData JunkClientData;       /* For use when you don't care */
 
 /****************************************************************************
  * Public Function Prototypes
@@ -103,11 +103,11 @@ extern clientdata junkclientdata;       /* For use when you don't care */
 extern void tmr_init(void);
 
 /* Set up a timer, either periodic or one-shot.
- * Returns (timer *)0 on errors.
+ * Returns (Timer *)0 on errors.
  */
 
-extern timer *tmr_create(struct timeval *nowp, timerproc *timer_proc,
-                         clientdata client_data, long msecs, int periodic);
+extern Timer *tmr_create(struct timeval *nowp, TimerProc *timer_proc,
+                         ClientData client_data, long msecs, int periodic);
 
 /* Returns a timeout in milliseconds indicating how long until the next timer
  * triggers.  You can just put the call to this routine right in your poll().
@@ -126,7 +126,7 @@ extern void tmr_run(struct timeval *nowp);
  * descheduled when they run, so you don't have to call this on them.
  */
 
-extern void tmr_cancel(timer *timer);
+extern void tmr_cancel(Timer *timer);
 
 /* Clean up the timers package, freeing any unused storage. */
 
