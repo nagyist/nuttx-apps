@@ -163,6 +163,8 @@ if(CONFIG_NETUTILS_NETLIB)
     list(APPEND SRCS netlib_checkipconnectivity.c netlib_checkifconnectivity.c)
   endif()
 
+  list(APPEND SRCS netlib_checkhttpconnectivity.c)
+
   target_sources(apps PRIVATE ${SRCS})
 
 endif()
