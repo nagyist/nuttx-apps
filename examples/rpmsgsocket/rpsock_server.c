@@ -22,21 +22,18 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-
 #include <assert.h>
 #include <errno.h>
-#include <netpacket/rpmsg.h>
 #include <pthread.h>
 #include <poll.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netpacket/rpmsg.h>
 
 /****************************************************************************
  * Private types
@@ -52,16 +49,16 @@ struct rpsock_arg_s
  * Private Functions
  ****************************************************************************/
 
-static FAR void *rpsock_thread(FAR void *pvarg)
+static void *rpsock_thread(void *pvarg)
 {
-  FAR struct rpsock_arg_s *args = pvarg;
+  struct rpsock_arg_s *args = pvarg;
   struct pollfd pfd;
   char buf[255];
   ssize_t ret;
 
   while (1)
     {
-      FAR char *tmp;
+      char *tmp;
       int snd;
 
       if (args->nonblock)
@@ -155,7 +152,7 @@ static FAR void *rpsock_thread(FAR void *pvarg)
   return NULL;
 }
 
-static int rpsock_stream_server(int argc, FAR char *argv[])
+static int rpsock_stream_server(int argc, char *argv[])
 {
   struct sockaddr_rpmsg myaddr;
   bool nonblock = false;
@@ -202,7 +199,7 @@ static int rpsock_stream_server(int argc, FAR char *argv[])
 
   printf("server: bind cpu %s, name %s ...\n",
           myaddr.rp_cpu, myaddr.rp_name);
-  ret = bind(listensd, (FAR struct sockaddr *)&myaddr, sizeof(myaddr));
+  ret = bind(listensd, (struct sockaddr *)&myaddr, sizeof(myaddr));
   if (ret < 0)
     {
       printf("server: bind failure: %d\n", errno);
@@ -221,7 +218,7 @@ static int rpsock_stream_server(int argc, FAR char *argv[])
 
   while (1)
     {
-      FAR struct rpsock_arg_s *args;
+      struct rpsock_arg_s *args;
       pthread_t thread;
       struct pollfd pfd;
       int new;
@@ -241,7 +238,7 @@ static int rpsock_stream_server(int argc, FAR char *argv[])
         }
 
       printf("server: try accept ...\n");
-      new = accept4(listensd, (FAR struct sockaddr *)&myaddr, &addrlen,
+      new = accept4(listensd, (struct sockaddr *)&myaddr, &addrlen,
                     SOCK_CLOEXEC);
       if (new < 0)
           break;
@@ -268,10 +265,10 @@ errout_with_listensd:
   return -errno;
 }
 
-static int rpsock_dgram_server(int argc, FAR char *argv[])
+static int rpsock_dgram_server(int argc, char *argv[])
 {
   struct sockaddr_rpmsg myaddr;
-  FAR struct rpsock_arg_s *args;
+  struct rpsock_arg_s *args;
   bool nonblock = false;
   int fd;
   int ret;
@@ -315,8 +312,8 @@ static int rpsock_dgram_server(int argc, FAR char *argv[])
 
   printf("server: bind cpu %s, name %s ...\n",
           myaddr.rp_cpu, myaddr.rp_name);
-  ret = bind(fd, (FAR struct sockaddr *)&myaddr, sizeof(myaddr));
-  ret = connect(fd, (FAR struct sockaddr *)&myaddr, sizeof(myaddr));
+  ret = bind(fd, (struct sockaddr *)&myaddr, sizeof(myaddr));
+  ret = connect(fd, (struct sockaddr *)&myaddr, sizeof(myaddr));
   if (ret < 0 && errno == EINPROGRESS)
     {
       struct pollfd pfd;
@@ -363,7 +360,7 @@ static int rpsock_dgram_server(int argc, FAR char *argv[])
  *
  ****************************************************************************/
 
-int main(int argc, FAR char *argv[])
+int main(int argc, char *argv[])
 {
   if (argc < 4)
     {

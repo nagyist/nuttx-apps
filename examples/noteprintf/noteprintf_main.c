@@ -45,7 +45,17 @@
 
 int main(int argc, FAR char *argv[])
 {
-  char *str      = "sched note test";
+  struct binary
+    {
+      uint8_t val1;
+      uint8_t val2;
+    } binary =
+      {
+        .val1        = 0x01,
+        .val2        = 0x02
+      };
+
+  char *str      = "shced note test";
   int count      = 0;
   char c         = 1;
   short s        = 2;
@@ -70,7 +80,7 @@ int main(int argc, FAR char *argv[])
   while (1)
     {
       sched_note_printf(NOTE_TAG_ALWAYS,
-                        "sched note test count = %d.", count++);
+                        "shced note test count = %d.", count++);
       sched_note_mark(NOTE_TAG_ALWAYS, str);
       sched_note_printf(NOTE_TAG_ALWAYS, "%hhd", c);
       sched_note_printf(NOTE_TAG_ALWAYS, "%hd", s);

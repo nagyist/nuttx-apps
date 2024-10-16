@@ -11,7 +11,7 @@ if INTERPRETERS_WAMR
 
 config INTERPRETERS_WAMR_VERSION
 	string "WAMR Version"
-	default "WAMR-2.1.0"
+	default "WAMR-04-15-2021"
 	---help---
 		Version WAMR-09-29-2020 and later (include main) supported.
 
@@ -31,6 +31,10 @@ config INTERPRETERS_WAMR_STACKSIZE
 
 endif # INTERPRETERS_IWASM_TASK
 
+config INTERPRETERS_WAMR_USE_SIMPLE_LIBDYNTYPE
+	bool "Enable Simple Dyntype"
+	default n
+
 config INTERPRETERS_WAMR_AOT
 	bool "Enable AOT"
 	select ARCH_USE_TEXT_HEAP if ARCH_HAVE_TEXT_HEAP
@@ -47,19 +51,8 @@ config INTERPRETERS_WAMR_AOT_QUICK_ENTRY
 		signature.
 		Enable this option will increase the size of runtime, ~8KB.
 
-config INTERPRETERS_WAMR_AOT_STACK_FRAME
-	bool "Enable AOT stack frame"
-	default n
-	depends on INTERPRETERS_WAMR_AOT
-
-config INTERPRETERS_WAMR_AOT_WORD_ALIGN_READ
-	bool "Make WAMR AOT loader use word-aligned read"
-	default y if ARCH_HAVE_TEXT_HEAP_WORD_ALIGNED_READ
-	default n
-
-config INTERPRETERS_WAMR_MEM_DUAL_BUS_MIRROR
-	bool "Make WAMR AOT loader aware of separate instruction/data memory mapping"
-	default y if ARCH_HAVE_TEXT_HEAP_SEPARATE_DATA_ADDRESS
+config INTERPRETERS_WAMR_DYNAMIC_AOT_DEBUG
+	bool "Enable Dynamic AOT Debug Mode"
 	default n
 
 choice
@@ -77,10 +70,11 @@ config INTERPRETERS_NONE
 
 endchoice # Enable interpreter
 
-config INTERPRETERS_WAMR_DEBUG_AOT
-	bool "Enable debugger support for AOT modules"
+config INTERPRETERS_WAMR_GC
+	bool "Enable GC support"
 	default n
-	depends on INTERPRETERS_WAMR_AOT
+	---help---
+		Note: Only WAMR 2.0 support this option
 
 config INTERPRETERS_WAMR_DEBUG_INTERP
 	bool "Enable debugger support in the interpreter"
@@ -96,6 +90,15 @@ config INTERPRETERS_WAMR_DEBUG_INTERP
 config INTERPRETERS_WAMR_LOG
 	bool "Enable log"
 	default n
+
+config INTERPRETERS_WAMR_LIBC_NUTTX
+	bool "Bypass to NuttX libc"
+	default n
+
+config INTERPRETERS_WAMR_LIBC_NUTTX_POSIXMEMALIGN_MAP_SIZE
+	int "Map size for posix_memalign"
+	default 64
+	depends on INTERPRETERS_WAMR_LIBC_NUTTX
 
 config INTERPRETERS_WAMR_LIBC_BUILTIN
 	bool "Enable built-in libc"
@@ -133,10 +136,6 @@ config INTERPRETERS_WAMR_REF_TYPES
 	bool "Enable reference types support"
 	default n
 
-config INTERPRETERS_WAMR_GC
-	bool "Enable GC support"
-	default n
-
 config INTERPRETERS_WAMR_ENABLE_SPEC_TEST
 	bool "Enable spectest support"
 	default n
@@ -149,18 +148,10 @@ config INTERPRETERS_WAMR_TAIL_CALL
 
 config INTERPRETERS_WAMR_STACK_GUARD_SIZE
 	int "Custom stack guard size"
-	default 1024
+	default 0
 	---help---
-		Reserve some space in stack as guard to detect stack overflow.
-
-		Please consider this extra stack consumption when deciding the stack
-		size of your NuttX task on which you run WAMR.
-
-		The default value here (1024) was chosen to match the default value on
-		the majority of other platforms, including Linux. It also matches
-		the expections in the WAMR AoT compiler.
-		On the other hand, it might be a bit larger than what's strictly
-		necessary, especially for typical NuttX targets.
+		Reserve some space in stack as guard to detect stack overflow,
+		use stack base by default but may not safe enough.
 
 config INTERPRETERS_WAMR_THREAD_MGR
 	bool "Enable thread manager"
@@ -191,10 +182,6 @@ config INTERPRETERS_WAMR_BULK_MEMORY
 	bool "Enable bluk memory"
 	default n
 
-config INTERPRETERS_WAMR_ENABLE_EXCE_HANDLING
-	bool "Enable exception-handling"
-	default n
-
 config INTERPRETERS_WAMR_PERF_PROFILING
 	bool "Enable performance profiling"
 	default n
@@ -213,12 +200,7 @@ config INTERPRETERS_WAMR_DUMP_CALL_STACK
 
 config INTERPRETERS_WAMR_DISABLE_HW_BOUND_CHECK
 	bool "Disable hardware bound check"
-	default y
-	---help---
-		This option is currently a no-op because
-		NuttX doesn't have necessary functionalities.
-		That is, regardless of this setting, WAMR's HW bounds
-		check is not available for NuttX.
+	default n
 
 config INTERPRETERS_WAMR_LOAD_CUSTOM_SECTIONS
 	bool "Enable load custom section support"

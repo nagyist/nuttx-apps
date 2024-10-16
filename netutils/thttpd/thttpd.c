@@ -473,7 +473,7 @@ static void handle_send(struct connect_s *conn, struct timeval *tv)
 
           /* And update how much of the file we wrote */
 
-          conn->offset         += nread;
+          conn->offset         += nwritten;
           conn->hc->bytes_sent += nwritten;
           ninfo("Wrote %d bytes\n", nwritten);
         }

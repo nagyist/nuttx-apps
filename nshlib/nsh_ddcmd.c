@@ -232,9 +232,9 @@ static int dd_verify(FAR const char *infile, FAR const char *outfile,
         {
           char msg[32];
           snprintf(msg, sizeof(msg), "infile sector %d", sector);
-          nsh_dumpbuffer(vtbl, msg, dd->buffer, dd->nbytes);
+          nsh_dumpbuffer(dd->vtbl, msg, dd->buffer, dd->nbytes);
           snprintf(msg, sizeof(msg), "\noutfile sector %d", sector);
-          nsh_dumpbuffer(vtbl, msg, buffer, dd->nbytes);
+          nsh_dumpbuffer(dd->vtbl, msg, buffer, dd->nbytes);
           nsh_output(vtbl, "\n");
           ret = ERROR;
           break;
@@ -396,7 +396,7 @@ int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   if (dd.skip)
     {
       ret = lseek(dd.infd, dd.skip * dd.sectsize, SEEK_SET);
-      if (ret < 0)
+      if (ret < -1)
         {
           nsh_error(vtbl, g_fmtcmdfailed, g_dd, "skip lseek", NSH_ERRNO);
           ret = ERROR;
@@ -407,7 +407,7 @@ int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   if (dd.seek)
     {
       ret = lseek(dd.outfd, dd.seek * dd.sectsize, SEEK_SET);
-      if (ret < 0)
+      if (ret < -1)
         {
           nsh_error(vtbl, g_fmtcmdfailed, g_dd, "seek lseek", NSH_ERRNO);
           ret = ERROR;

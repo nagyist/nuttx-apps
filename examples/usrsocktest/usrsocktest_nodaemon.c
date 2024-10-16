@@ -100,7 +100,7 @@ TEST_TEAR_DOWN(no_daemon)
   if (sd >= 0)
     {
       ret = close(sd);
-      TEST_ASSERT_TRUE(ret >= 0);
+      assert(ret >= 0);
     }
 }
 

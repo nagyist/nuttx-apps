@@ -20,30 +20,6 @@
 
 if(CONFIG_BENCHMARK_DHRYSTONE)
 
-  set(DHRYSTONE_DIR ${CMAKE_CURRENT_LIST_DIR}/dhrystone)
-
-  if(NOT EXISTS ${DHRYSTONE_DIR})
-    FetchContent_Declare(
-      dhrystone_fetch
-      URL https://github.com/Keith-S-Thompson/dhrystone/archive/refs/heads/master.zip
-          SOURCE_DIR
-          ${CMAKE_CURRENT_LIST_DIR}/dhrystone
-          BINARY_DIR
-          ${CMAKE_BINARY_DIR}/apps/benchmarks/coremark/dhrystone
-      PATCH_COMMAND
-        patch -p0 -d ${CMAKE_CURRENT_LIST_DIR} <
-        ${CMAKE_CURRENT_LIST_DIR}/0001-dry2.2-Fix-malloc-type-mismatch.patch &&
-        patch -p0 -d ${CMAKE_CURRENT_LIST_DIR} <
-        ${CMAKE_CURRENT_LIST_DIR}/0002-dhrystone-fix-redefine-warning.patch
-      DOWNLOAD_NO_PROGRESS true
-      TIMEOUT 30)
-
-    FetchContent_GetProperties(dhrystone_fetch)
-    if(NOT dhrystone_fetch_POPULATED)
-      FetchContent_Populate(dhrystone_fetch)
-    endif()
-  endif()
-
   set(CFLAGS
       -DMSC_CLOCK -Wno-maybe-uninitialized -Wno-implicit-int
       -Wno-strict-prototypes -Wno-implicit-function-declaration

@@ -36,14 +36,6 @@
 #ifndef CONFIG_NSH_DISABLESCRIPT
 
 /****************************************************************************
- * Private Data
- ****************************************************************************/
-
-#ifdef CONFIG_ETC_ROMFS
-static bool g_nsh_script_initialized;
-#endif
-
-/****************************************************************************
  * Private Functions
  ****************************************************************************/
 
@@ -62,7 +54,7 @@ static int nsh_script_redirect(FAR struct nsh_vtbl_s *vtbl,
       fd = open(CONFIG_NSH_SCRIPT_REDIRECT_PATH, 0666);
       if (fd > 0)
         {
-          nsh_redirect(vtbl, 0, fd, save);
+          nsh_redirect(vtbl, fd, save);
         }
     }
 
@@ -235,14 +227,15 @@ int nsh_sysinitscript(FAR struct nsh_vtbl_s *vtbl)
 #ifdef CONFIG_ETC_ROMFS
 int nsh_initscript(FAR struct nsh_vtbl_s *vtbl)
 {
+  static bool initialized;
   bool already;
   int ret = OK;
 
-  /* Atomic test and set of the g_nsh_script_initialized flag */
+  /* Atomic test and set of the initialized flag */
 
   sched_lock();
-  already                  = g_nsh_script_initialized;
-  g_nsh_script_initialized = true;
+  already     = initialized;
+  initialized = true;
   sched_unlock();
 
   /* If we have not already executed the init script, then do so now */

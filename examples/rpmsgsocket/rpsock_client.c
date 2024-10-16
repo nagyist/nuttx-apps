@@ -22,25 +22,23 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/config.h>
-
 #include <errno.h>
-#include <inttypes.h>
-#include <netpacket/rpmsg.h>
 #include <poll.h>
 #include <pthread.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <string.h>
 #include <unistd.h>
+#include <inttypes.h>
 #include <sys/socket.h>
+#include <netpacket/rpmsg.h>
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define SYNCSIZE CONFIG_NET_RPMSG_RXBUF_SIZE
+#define SYNCSIZE 1024
 #define BUFSIZE  SYNCSIZE * 2
 #define BUFHEAD  64
 #ifndef ALIGN_UP
@@ -53,23 +51,23 @@
 
 struct rpsock_arg_s
 {
-  FAR char *inbuf;
-  FAR char *outbuf;
+  int  fd;
+  char *inbuf;
+  char *outbuf;
   bool nonblock;
   int  bufsize;
   int  check;
-  int  fd;
 };
 
 /****************************************************************************
- * Public Functions
+ * Private Functions
  ****************************************************************************/
 
-static FAR void *rpsock_send_thread(FAR void *pvarg)
+static void *rpsock_send_thread(void *pvarg)
 {
-  FAR struct rpsock_arg_s *args = pvarg;
-  FAR char *buf = args->outbuf;
+  struct rpsock_arg_s *args = pvarg;
   int bufsize = args->bufsize;
+  char *buf = args->outbuf;
   int fd = args->fd;
   int total = 0;
   ssize_t ret;
@@ -77,13 +75,13 @@ static FAR void *rpsock_send_thread(FAR void *pvarg)
 
   while (cnt < 2000)
     {
-      FAR volatile uint32_t *intp;
+      volatile uint32_t *intp;
       struct pollfd pfd;
-      FAR char *tmp;
+      char *tmp;
       int snd;
       int i;
 
-      intp = (FAR uint32_t *)buf;
+      intp = (uint32_t *)buf;
       for (i = 0; i < bufsize / sizeof(uint32_t); i++)
         {
           intp[i] = cnt * bufsize / sizeof(uint32_t) + i;
@@ -142,7 +140,7 @@ static FAR void *rpsock_send_thread(FAR void *pvarg)
   return NULL;
 }
 
-static int rpsock_unsync_test(FAR struct rpsock_arg_s *args)
+static int rpsock_unsync_test(struct rpsock_arg_s *args)
 {
   pthread_attr_t attr;
   pthread_t thread;
@@ -181,7 +179,7 @@ static int rpsock_unsync_test(FAR struct rpsock_arg_s *args)
       ret = recv(args->fd, args->inbuf, args->bufsize, 0);
       if (ret > 0)
         {
-          FAR uint32_t *intp;
+          uint32_t *intp;
           int checks;
           int i;
 
@@ -196,8 +194,8 @@ static int rpsock_unsync_test(FAR struct rpsock_arg_s *args)
           if (args->check && ret > 4)
             {
               checks = ret - (ALIGN_UP(total, 4) - total);
-              intp   = (FAR uint32_t *)(args->inbuf +
-                                        (ALIGN_UP(total, 4) - total));
+              intp   = (uint32_t *)(args->inbuf +
+                                    (ALIGN_UP(total, 4) - total));
 
               for (i = 0; i < checks / sizeof(uint32_t); i++)
                 {
@@ -228,14 +226,14 @@ static int rpsock_unsync_test(FAR struct rpsock_arg_s *args)
   return 0;
 }
 
-static int rpsock_stream_client(FAR char *argv[])
+static int rpsock_stream_client(char *argv[])
 {
   struct sockaddr_rpmsg myaddr;
   struct rpsock_arg_s args;
   bool nonblock = false;
   int cnt = 0;
-  FAR char *outbuf;
-  FAR char *inbuf;
+  char *outbuf;
+  char *inbuf;
   int sockfd;
   int ret;
 
@@ -281,7 +279,7 @@ static int rpsock_stream_client(FAR char *argv[])
   strlcpy(myaddr.rp_cpu, argv[4], RPMSG_SOCKET_CPU_SIZE);
 
   printf("client: Connecting to %s,%s...\n", myaddr.rp_cpu, myaddr.rp_name);
-  ret = connect(sockfd, (FAR struct sockaddr *)&myaddr, sizeof(myaddr));
+  ret = connect(sockfd, (struct sockaddr *)&myaddr, sizeof(myaddr));
   if (ret < 0 && errno == EINPROGRESS)
     {
       struct pollfd pfd;
@@ -309,9 +307,9 @@ static int rpsock_stream_client(FAR char *argv[])
       size_t sendsize = BUFHEAD + cnt * (random() % 64);
       size_t recvsize = 0;
       ssize_t act;
-      FAR char *tmp;
-      FAR int *ptr;
+      char *tmp;
       int snd;
+      int *ptr;
       int i;
 
       if (sendsize > SYNCSIZE)
@@ -322,7 +320,7 @@ static int rpsock_stream_client(FAR char *argv[])
       snprintf(outbuf, BUFHEAD, "process%04d, msg%04d, name:%s",
                getpid(), cnt, argv[3]);
 
-      ptr = (FAR int *)(outbuf + BUFHEAD);
+      ptr = (int *)(outbuf + BUFHEAD);
       for (i = 0; i < (sendsize - BUFHEAD) / 4; i++)
         {
           ptr[i] = cnt * 100 + i;
@@ -391,7 +389,7 @@ static int rpsock_stream_client(FAR char *argv[])
             }
         }
 
-      ptr = (FAR int *)(inbuf + BUFHEAD);
+      ptr = (int *)(inbuf + BUFHEAD);
       for (i = 0; i < (recvsize - BUFHEAD) / 4; i++)
         {
           if (ptr[i] != cnt * 100 + i)
@@ -423,13 +421,13 @@ errout_with_buffers:
   return -errno;
 }
 
-static int rpsock_dgram_client(FAR char *argv[])
+static int rpsock_dgram_client(char *argv[])
 {
   struct sockaddr_rpmsg myaddr;
   struct rpsock_arg_s args;
   bool nonblock = false;
-  FAR char *outbuf;
-  FAR char *inbuf;
+  char *outbuf;
+  char *inbuf;
   int sockfd;
   int ret;
 
@@ -475,7 +473,7 @@ static int rpsock_dgram_client(FAR char *argv[])
   strlcpy(myaddr.rp_cpu, argv[4], RPMSG_SOCKET_CPU_SIZE);
 
   printf("client: Connecting to %s,%s...\n", myaddr.rp_cpu, myaddr.rp_name);
-  ret = connect(sockfd, (FAR struct sockaddr *)&myaddr, sizeof(myaddr));
+  ret = connect(sockfd, (struct sockaddr *)&myaddr, sizeof(myaddr));
   if (ret < 0 && errno == EINPROGRESS)
     {
       struct pollfd pfd;
@@ -530,7 +528,7 @@ errout_with_buffers:
  *
  ****************************************************************************/
 
-int main(int argc, FAR char *argv[])
+int main(int argc, char *argv[])
 {
   if (argc < 4)
     {
