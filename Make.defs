@@ -56,6 +56,11 @@ RUSTEXT ?= .rs
 ZIGEXT ?= .zig
 DEXT ?= .d
 SWIFTEXT ?= .swift
+AIDLEXT ?= .aidl
+
+# Tools
+
+AIDL ?= aidl
 
 # Library path
 
@@ -163,7 +168,7 @@ endef
 
 define AROBJSRULES
 $(1) : $(2)
-	cp $(2) $(1)
+	@ cp $(2) $(1)
 endef
 
 # CLEANAROBJS - del AR target files exclusively

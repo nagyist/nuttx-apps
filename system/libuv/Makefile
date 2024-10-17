@@ -19,6 +19,7 @@
 ############################################################################
 
 include $(APPDIR)/Make.defs
+-include ./ext/Makefile
 
 LIBUV_PATCHS ?= $(sort $(wildcard 000*.patch))
 
@@ -53,6 +54,7 @@ CFLAGS += -DDEF_THREADPOOL_STACKSIZE=CONFIG_LIBUV_THREAD_STACKSIZE
 CFLAGS += -DDEF_THREADPOOL_PRIORITY=CONFIG_LIBUV_THREADPOOL_PRIORITY
 CFLAGS += -DMAX_EPOLL_EVENTS=CONFIG_LIBUV_MAX_EPOLL_EVENTS
 CFLAGS += -DPREP_EVENT_SIZE=CONFIG_LIBUV_PREP_EVENT_SIZE
+CFLAGS += -DDEF_STREAM_READ_BUF_SIZE=CONFIG_LIBUV_STREAM_READ_BUF_SIZE
 
 ifeq ($(GCCVER),)
   export GCCVER = $(shell $(CC) --version | grep gcc | sed -r 's/.* ([0-9]+\.[0-9]+).*/\1/' | cut -d'.' -f1)

@@ -26,4 +26,5 @@ CONFIGURED_APPS += $(APPDIR)/graphics/lvgl
 CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/graphics/lvgl
 CXXFLAGS += ${INCDIR_PREFIX}$(APPDIR)/graphics/lvgl
 
+-include $(APPDIR)/graphics/lvgl/ext/Make.defs
 endif

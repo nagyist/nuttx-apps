@@ -47,7 +47,7 @@ MAINSRC  += drivertest_timer.c
 PROGNAME += cmocka_driver_timer
 endif
 
-ifneq ($(CONFIG_ONESHOT),)
+ifneq ($(CONFIG_TESTING_ONESHOT_TEST),)
 MAINSRC  += drivertest_oneshot.c
 PROGNAME += cmocka_driver_oneshot
 endif
@@ -111,6 +111,11 @@ MAINSRC  += drivertest_audio.c
 PROGNAME += cmocka_driver_audio
 endif
 
+ifneq ($(CONFIG_CPUFREQ),)
+MAINSRC  += drivertest_cpufreq.c
+PROGNAME += cmocka_driver_cpufreq
+endif
+
 ifneq ($(CONFIG_VIDEO_FB),)
 MAINSRC  += drivertest_framebuffer.c
 PROGNAME += cmocka_driver_framebuffer
@@ -140,9 +145,13 @@ PROGNAME += cmocka_driver_mps2_zerointerrupt
 endif
 endif
 
-ifneq ($(CONFIG_PM),)
+ifeq ($(CONFIG_PM),y)
 MAINSRC  += drivertest_pm.c
 PROGNAME += cmocka_driver_pm
+ifeq ($(CONFIG_SMP),y)
+MAINSRC  += drivertest_pm_smp.c
+PROGNAME += cmocka_driver_pm_smp
+endif
 endif
 
 ifneq ($(CONFIG_PM_RUNTIME),)

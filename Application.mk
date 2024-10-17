@@ -91,6 +91,7 @@ RUSTOBJS = $(RUSTSRCS:%=$(PREFIX)%$(SUFFIX)$(OBJEXT))
 ZIGOBJS = $(ZIGSRCS:%=$(PREFIX)%$(SUFFIX)$(OBJEXT))
 DOBJS = $(DSRCS:%=$(PREFIX)%$(SUFFIX)$(OBJEXT))
 SWIFTOBJS = $(SWIFTSRCS:%=$(PREFIX)%$(SUFFIX)$(OBJEXT))
+AIDLOBJS = $(patsubst %$(AIDLEXT),%$(CXXEXT),$(AIDLSRCS))
 
 MAINCXXSRCS = $(filter %$(CXXEXT),$(MAINSRC))
 MAINCSRCS = $(filter %.c,$(MAINSRC))
@@ -225,6 +226,18 @@ define RENAMEMAIN
 	$(ECHO_END)
 endef
 
+define COMPILEAIDL
+	$(ECHO_BEGIN)"AIDL: $1 "
+	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1
+	$(ECHO_END)
+endef
+
+define DELAIDLOUT
+	$(ECHO_BEGIN)"DELAIDLOUT: $1 "
+	$(Q) $(AIDL) $(AIDLFLAGS) $($(strip $1)_AIDLFLAGS) $1 --delete
+	$(ECHO_END)
+endef
+
 $(RAOBJS): $(PREFIX)%.s$(SUFFIX)$(OBJEXT): %.s
 	$(if $(and $(CONFIG_MODULES),$(MODAELFFLAGS)), \
 		$(call ELFASSEMBLE, $<, $@), $(call ASSEMBLE, $<, $@))
@@ -256,6 +269,9 @@ $(DOBJS): $(PREFIX)%$(DEXT)$(SUFFIX)$(OBJEXT): %$(DEXT)
 $(SWIFTOBJS): $(PREFIX)%$(SWIFTEXT)$(SUFFIX)$(OBJEXT): %$(SWIFTEXT)
 	$(if $(and $(CONFIG_MODULES), $(CELFFLAGS)), \
 		$(call ELFCOMPILESWIFT, $<, $@), $(call COMPILESWIFT, $<, $@))
+
+$(AIDLOBJS): %$(CXXEXT): %$(AIDLEXT)
+	$(call COMPILEAIDL, $<)
 
 AROBJS :=
 ifneq ($(OBJS),)
@@ -350,7 +366,8 @@ endif # BUILD_MODULE
 postinstall::
 	@:
 
-context::
+context:: $(AIDLOBJS)
+	@:
 
 ifeq ($(DO_REGISTRATION),y)
 
@@ -370,7 +387,7 @@ register::
 endif
 
 $(PREFIX).depend: Makefile $(wildcard $(foreach SRC, $(SRCS), $(addsuffix /$(SRC), $(subst :, ,$(VPATH))))) $(DEPCONFIG)
-	$(shell echo "# Gen Make.dep automatically" >Make.dep)
+	$(shell echo "# Gen Make.dep automatically" >$(PREFIX)Make.dep)
 	$(call SPLITVARIABLE,ALL_DEP_OBJS,$^,100)
 	$(foreach BATCH, $(ALL_DEP_OBJS_TOTAL), \
 	  $(shell $(MKDEP) $(DEPPATH) --obj-suffix .c$(SUFFIX)$(OBJEXT) "$(CC)" -- $(CFLAGS) -- $(filter %.c,$(ALL_DEP_OBJS_$(BATCH))) >>$(PREFIX)Make.dep) \
@@ -389,6 +406,7 @@ clean::
 distclean:: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
+	$(foreach AIDLSRC,$(AIDLSRCS),$(call DELAIDLOUT,$(AIDLSRC)))
 
 -include $(PREFIX)Make.dep
 

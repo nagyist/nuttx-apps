@@ -56,13 +56,14 @@ if(CONFIG_LIBUV)
   # ############################################################################
 
   set(CFLAGS
-      -Wno-shadow -DDEF_THREADPOOL_SIZE=CONFIG_LIBUV_THREADPOOL_SIZE
+      -Wno-shadow
+      -DDEF_THREADPOOL_SIZE=CONFIG_LIBUV_THREADPOOL_SIZE
       -DDEF_THREADPOOL_STACKSIZE=CONFIG_LIBUV_THREAD_STACKSIZE
-      -DDEF_THREADPOOL_PRIORITY=CONFIG_LIBUV_THREADPOOL_PRIORITY)
+      -DDEF_THREADPOOL_PRIORITY=CONFIG_LIBUV_THREADPOOL_PRIORITY
+      -DMAX_EPOLL_EVENTS=CONFIG_LIBUV_MAX_EPOLL_EVENTS
+      -DPREP_EVENT_SIZE=CONFIG_LIBUV_PREP_EVENT_SIZE
+      -DDEF_STREAM_READ_BUF_SIZE=CONFIG_LIBUV_STREAM_READ_BUF_SIZE)
 
-  if(GCCVER EQUAL 12)
-    list(APPEND CFLAGS -Wno-dangling-pointer)
-  endif()
   # ############################################################################
   # Sources
   # ############################################################################
@@ -142,6 +143,17 @@ if(CONFIG_LIBUV)
   # Library Configuration
   # ############################################################################
 
+  # import libuv ext
+  if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/ext/CMakeLists.txt)
+    set(EXT_SRCS)
+    set(EXT_INCDIR)
+    set(EXT_EXPORT_INCDIR)
+    include(${CMAKE_CURRENT_LIST_DIR}/ext/CMakeLists.txt)
+    list(APPEND EXPORT_INCDIR ${EXT_EXPORT_INCDIR})
+    list(APPEND INTER_INCDIR ${EXT_INCDIR})
+    list(APPEND SRCS ${EXT_SRCS})
+  endif()
+
   set(INCDIR ${EXPORT_INCDIR} ${INTER_INCDIR})
 
   nuttx_add_library(libuv STATIC)
@@ -163,6 +175,10 @@ if(CONFIG_LIBUV)
   # ############################################################################
   # Applications Configuration
   # ############################################################################
+
+  if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/ext/tests/CMakeLists.txt)
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ext/tests)
+  endif()
 
   if(CONFIG_LIBUV_UTILS_TEST)
     set(LIBUV_UTILS_TEST_SRCS

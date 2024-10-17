@@ -26,6 +26,44 @@ LVGL_DIR = .
 LVGL_DIR_NAME = lvgl
 
 -include ./lvgl/lvgl.mk
+-include ./ext/Makefile
+
+ifneq ($(CONFIG_LV_USE_LIBPNG),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libpng
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libpng/libpng
+endif
+
+ifneq ($(CONFIG_LV_USE_LIBWEBP),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libwebp/libwebp/src/
+endif
+
+ifneq ($(CONFIG_LV_USE_LIBJPEG_TURBO),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/libjpeg-turbo/libjpeg-turbo
+endif
+
+ifneq ($(CONFIG_LV_USE_FFMPEG),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/ffmpeg/ffmpeg
+endif
+
+ifneq ($(CONFIG_LV_USE_RLOTTIE),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/rlottie/rlottie/inc
+endif
+
+ifneq ($(CONFIG_LVX_USE_QRSCAN),)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/external/quirc/quirc/lib
+endif
+
+ifneq ($(CONFIG_LV_GPU_G2D_INCLUDE_PATH),)
+CFLAGS += "-I$(addprefix $(strip $(INCDIR_PREFIX))$(APPDIR)/../,$(CONFIG_LV_GPU_G2D_INCLUDE_PATH))"
+endif
+
+ifeq ($(CONFIG_LV_USE_DRAW_VG_LITE),y)
+CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/../$(CONFIG_LV_DRAW_VG_LITE_INCLUDE)
+
+# Disable optimization for vg_lite_path.c to avoid a compiler bug.
+# See: https://bugs.launchpad.net/gcc-arm-embedded/+bug/1982289
+$(CURDIR)/lvgl/src/draw/vg_lite/lv_vg_lite_path.c_CFLAGS += -O0
+endif
 
 ifneq ($(CONFIG_LV_ASSERT_HANDLER_INCLUDE), "")
 CFLAGS += "-DLV_ASSERT_HANDLER=ASSERT(0);"
