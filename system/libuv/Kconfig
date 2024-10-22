@@ -81,4 +81,3 @@ endif
 
 endif
 
-osource "$APPSDIR/system/libuv/ext/Kconfig"

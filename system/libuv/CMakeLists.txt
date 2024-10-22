@@ -140,11 +140,11 @@ if(CONFIG_LIBUV)
   # ############################################################################
 
   # import libuv ext
-  if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/ext/CMakeLists.txt)
+  if(EXISTS ${NUTTX_APPS_DIR}/frameworks/system/utils/uv/CMakeLists.txt)
     set(EXT_SRCS)
     set(EXT_INCDIR)
     set(EXT_EXPORT_INCDIR)
-    include(${CMAKE_CURRENT_LIST_DIR}/ext/CMakeLists.txt)
+    include(${NUTTX_APPS_DIR}/frameworks/system/utils/uv/CMakeLists.txt)
     list(APPEND EXPORT_INCDIR ${EXT_EXPORT_INCDIR})
     list(APPEND INTER_INCDIR ${EXT_INCDIR})
     list(APPEND SRCS ${EXT_SRCS})
@@ -172,8 +172,9 @@ if(CONFIG_LIBUV)
   # Applications Configuration
   # ############################################################################
 
-  if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/ext/tests/CMakeLists.txt)
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/ext/tests)
+  if(EXISTS ${NUTTX_APPS_DIR}/frameworks/system/utils/uv/tests/CMakeLists.txt)
+    add_subdirectory(${NUTTX_APPS_DIR}/frameworks/system/utils/uv/tests
+                     ${CMAKE_CURRENT_BINARY_DIR}/ext)
   endif()
 
   if(CONFIG_LIBUV_UTILS_TEST)
