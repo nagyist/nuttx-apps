@@ -96,6 +96,7 @@ struct cmd_record_s
   uint32_t nr_fds;
   struct pollfd fds[PERF_EVENT_MAX];
   uint32_t buffer_size;
+  bool call_chain;
 };
 
 /****************************************************************************
@@ -123,6 +124,7 @@ static const struct option_s record_options[] =
              "event selector. use 'perf list' to list available events"),
   OPT_STRING('p', "pid <pid>", "stat events on existing process id"),
   OPT_STRING('m', "--mmap-size <size>", "size of mmap buffer"),
+  OPT_STRING('g', " ", "enables call-graph recording"),
 };
 
 /****************************************************************************
@@ -345,6 +347,12 @@ static int evsel_record_start(FAR struct perf_evsel_s *evsel,
           PERF_FORMAT_ID;
   attr->sample_type = PERF_SAMPLE_ID;
   attr->sample_type  |= PERF_SAMPLE_IP | PERF_SAMPLE_TID;
+
+  if (rec->call_chain)
+    {
+      attr->sample_type |= PERF_SAMPLE_CALLCHAIN;
+    }
+
   attr->sample_period = evlist->sample_period;
   attr->disabled = 1;
   attr->inherit = 1;
@@ -395,6 +403,8 @@ int perf_record_handle(FAR struct evlist_s *evlist,
     {
       record.buffer_size = PERF_MMAP_SZIE;
     }
+
+  record.call_chain = stat_args->call_chain;
 
   list_for_every_entry(&evlist->core.entries, evsel,
                        struct perf_evsel_s, node)

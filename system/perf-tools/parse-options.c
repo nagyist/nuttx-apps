@@ -60,7 +60,7 @@ int parse_stat_options(int argc, FAR char **argv,
   stat_args->cpu = -1;
   stat_args->cmd_nr = argc - 1;
 
-  while ((opt = getopt(argc, argv, ":aC:p:e:c:m:")) != -1)
+  while ((opt = getopt(argc, argv, ":aC:p:e:c:m:g")) != -1)
     {
       switch (opt)
         {
@@ -145,6 +145,10 @@ int parse_stat_options(int argc, FAR char **argv,
           case 'm':
             stat_args->buffer_size = check_and_atoi(optarg);
             stat_args->cmd_nr -= 2;
+            break;
+          case 'g':
+            stat_args->call_chain = true;
+            stat_args->cmd_nr -= 1;
             break;
           default:
             return -EINVAL;
