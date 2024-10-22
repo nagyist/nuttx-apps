@@ -58,7 +58,7 @@ int parse_stat_options(int argc, FAR char **argv,
 
   stat_args->cmd_nr = argc;
 
-  while ((opt = getopt(argc, argv, ":aC:p:e:c:")) != -1)
+  while ((opt = getopt(argc, argv, ":aC:p:e:c:m:")) != -1)
     {
       switch (opt)
         {
@@ -148,6 +148,9 @@ int parse_stat_options(int argc, FAR char **argv,
           case 'c':
             stat_args->sample_period = check_and_atoi(optarg);
             break;
+          case 'm':
+            stat_args->buffer_size = check_and_atoi(optarg);
+            break;
           default:
             return -EINVAL;
         }
@@ -167,7 +170,7 @@ int parse_stat_options(int argc, FAR char **argv,
     }
   else if (stat_args->cmd_nr > 0)
     {
-      if (!strcmp(stat_args->cmd, "sleep"))
+      if (stat_args->cmd && !strcmp(stat_args->cmd, "sleep"))
         {
           stat_args->sec = PERF_DEFAULT_RUN_TIME;
           if (stat_args->type == STAT_ARGS_NONE)

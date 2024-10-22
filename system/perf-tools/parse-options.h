@@ -61,6 +61,7 @@ struct stat_args_s
   FAR char **cmd_args;
   int cmd_nr;
   int sec;
+  uint32_t buffer_size;
   uint64_t sample_period;
 };
 

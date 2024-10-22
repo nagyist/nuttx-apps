@@ -47,7 +47,7 @@
  ****************************************************************************/
 
 #define PERF_MAGIC 0x32454c4946524550ULL
-#define PERF_MMAP_SZIE 10240
+#define PERF_MMAP_SZIE 4096
 #define PERF_EVENT_MAX 10
 
 /****************************************************************************
@@ -95,6 +95,7 @@ struct cmd_record_s
   FAR void *mmap_base[CONFIG_SMP_NCPUS];
   uint32_t nr_fds;
   struct pollfd fds[PERF_EVENT_MAX];
+  uint32_t buffer_size;
 };
 
 /****************************************************************************
@@ -121,6 +122,7 @@ static const struct option_s record_options[] =
   OPT_STRING('e', "event <event>",
              "event selector. use 'perf list' to list available events"),
   OPT_STRING('p', "pid <pid>", "stat events on existing process id"),
+  OPT_STRING('m', "--mmap-size <size>", "size of mmap buffer"),
 };
 
 /****************************************************************************
@@ -268,7 +270,7 @@ static void record_evsel_mmap(int cpu, int fd,
 
   if (!rec->mmap_base[cpu])
     {
-      rec->mmap_base[cpu] = mmap(NULL, PERF_MMAP_SZIE, PROT_READ,
+      rec->mmap_base[cpu] = mmap(NULL, rec->buffer_size, PROT_READ,
                                 MAP_SHARED, fd, 0);
       ASSERT(rec->mmap_base);
       rec->mmap_fd[cpu] = fd;
@@ -381,6 +383,15 @@ int perf_record_handle(FAR struct evlist_s *evlist,
     {
       fprintf(stderr, "cannot open %s\n", PERF_SAVE_FILE_NAME);
       goto err;
+    }
+
+  if (stat_args->buffer_size > PERF_MMAP_SZIE)
+    {
+      record.buffer_size = ALIGN_UP(stat_args->buffer_size, 0x0f);
+    }
+  else
+    {
+      record.buffer_size = PERF_MMAP_SZIE;
     }
 
   list_for_every_entry(&evlist->core.entries, evsel,
