@@ -1,0 +1,962 @@
+/****************************************************************************
+ * apps/audioutils/alsa-lib/pcm_hw.c
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.  The
+ * ASF licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the
+ * License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ *
+ ****************************************************************************/
+
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
+
+#include <fcntl.h>
+#include <string.h>
+#include <sys/param.h>
+
+#include "pcm_local.h"
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+typedef struct
+{
+  int fd;
+  mqd_t mq;
+  bool setup;
+  bool xrun;
+  dq_queue_t bufferq;
+} snd_pcm_hw_t;
+
+/****************************************************************************
+ * Private Functions
+ ****************************************************************************/
+
+static int snd_pcm_hw_poll_available(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  bool nonblocking = pcm->mode & SND_PCM_NONBLOCK;
+  FAR struct ap_buffer_s *buffer;
+  struct audio_msg_s msg;
+  bool received = false;
+  struct timespec ts0 =
+    {
+      0,
+      0
+    };
+
+  for (; ; )
+    {
+      if (mq_timedreceive(hw->mq, (FAR char *)&msg, sizeof(msg), NULL,
+                          nonblocking ? &ts0 : NULL) < 0)
+        {
+          if (errno != ETIMEDOUT)
+            {
+              return -errno;
+            }
+
+          return received ? 0 : -EAGAIN;
+        }
+
+      if (msg.msg_id == AUDIO_MSG_DEQUEUE)
+        {
+          buffer = msg.u.ptr;
+          buffer->curbyte = 0;
+          dq_addlast(&buffer->dq_entry, &hw->bufferq);
+        }
+      else if (msg.msg_id == AUDIO_MSG_UNDERRUN)
+        {
+          hw->xrun = true;
+          return -EPIPE;
+        }
+      else
+        {
+          SNDINFO("Unhandled msg %d!\n", msg.msg_id);
+        }
+
+      received = true;
+      nonblocking = true;
+    }
+}
+
+static int snd_pcm_hw_peek_buffer(FAR snd_pcm_t *pcm,
+                                  FAR struct ap_buffer_s **buffer)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  int ret;
+
+  *buffer = (FAR struct ap_buffer_s *)dq_peek(&hw->bufferq);
+  if (*buffer)
+    {
+      return 0;
+    }
+
+  ret = snd_pcm_hw_poll_available(pcm);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
+  *buffer = (FAR struct ap_buffer_s *)dq_peek(&hw->bufferq);
+  if (!*buffer)
+    {
+      return -EAGAIN;
+    }
+
+  return 0;
+}
+
+static int snd_pcm_hw_enqueue_buffer(FAR snd_pcm_t *pcm,
+                                     FAR struct ap_buffer_s *buffer,
+                                     bool final)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  struct audio_buf_desc_s desc;
+  int ret;
+
+  if (final)
+    {
+      buffer->flags |= AUDIO_APB_FINAL;
+      SNDINFO("pcm_hw device %s enqueue apb final.\n", pcm->name);
+    }
+  else
+    {
+      buffer->flags &= ~AUDIO_APB_FINAL;
+    }
+
+  buffer->nbytes = buffer->curbyte;
+  buffer->curbyte = 0;
+  desc.u.buffer = buffer;
+
+  ret = ioctl(hw->fd, AUDIOIOC_ENQUEUEBUFFER, &desc);
+  if (ret < 0)
+    {
+      return -errno;
+    }
+
+  return 0;
+}
+
+static void snd_pcm_hw_deinit(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  char path[64];
+
+  if (hw->mq >= 0)
+    {
+      ioctl(hw->fd, AUDIOIOC_UNREGISTERMQ, 0);
+
+      mq_close(hw->mq);
+      hw->mq = -1;
+
+      snprintf(path, sizeof(path), "/tmp/%p", pcm->name);
+      mq_unlink(path);
+    }
+
+  ioctl(hw->fd, AUDIOIOC_RELEASE, 0);
+  close(hw->fd);
+  hw->fd = -1;
+}
+
+static int snd_pcm_hw_init(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  char path[64];
+  int ret;
+
+  struct mq_attr attr =
+    {
+      .mq_maxmsg = 16,
+      .mq_msgsize = sizeof(struct audio_msg_s),
+    };
+
+  /* Open device */
+
+  snprintf(path, sizeof(path), CONFIG_AUDIOUTILS_ALSA_LIB_DEV_PATH "/%s",
+           pcm->name);
+  hw->fd = open(path, O_RDWR | O_CLOEXEC);
+  if (hw->fd < 0)
+    {
+      return -errno;
+    }
+
+  /* Reserve */
+
+  ret = ioctl(hw->fd, AUDIOIOC_RESERVE, 0);
+  if (ret < 0)
+    {
+      ret = -errno;
+      goto out;
+    }
+
+  /* Create message queue */
+
+  snprintf(path, sizeof(path), "/tmp/%p", pcm->name);
+  hw->mq = mq_open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644, &attr);
+  if (hw->mq < 0)
+    {
+      ret = -errno;
+      goto out;
+    }
+
+  ret = ioctl(hw->fd, AUDIOIOC_REGISTERMQ, hw->mq);
+  if (ret < 0)
+    {
+      ret = -errno;
+    }
+
+  return 0;
+
+out:
+  snd_pcm_hw_deinit(pcm);
+  return ret;
+}
+
+static snd_pcm_state_t snd_pcm_hw_state(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  struct audio_status_s status;
+  int ret;
+
+  ret = ioctl(hw->fd, AUDIOIOC_GETSTATUS, &status);
+  if (ret < 0)
+    {
+      return -errno;
+    }
+
+  if (hw->setup && status.state == AUDIO_STATE_OPEN)
+    {
+      return SND_PCM_STATE_SETUP;
+    }
+  else if (hw->xrun)
+    {
+      return SND_PCM_STATE_XRUN;
+    }
+
+  return status.state;
+}
+
+static int snd_pcm_hw_close(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  struct audio_buf_desc_s buf_desc;
+
+  switch (snd_pcm_hw_state(pcm))
+    {
+    case SND_PCM_STATE_RUNNING:
+      ioctl(hw->fd, AUDIOIOC_STOP, 0);
+    default:
+      break;
+    }
+
+  pcm->mode &= ~SND_PCM_NONBLOCK;
+  while (dq_count(&hw->bufferq) < pcm->periods)
+    {
+      snd_pcm_hw_poll_available(pcm);
+    }
+
+  while (!dq_empty(&hw->bufferq))
+    {
+      buf_desc.u.buffer =
+          (FAR struct ap_buffer_s *)dq_remfirst(&hw->bufferq);
+      ioctl(hw->fd, AUDIOIOC_FREEBUFFER, &buf_desc);
+    }
+
+  snd_pcm_hw_deinit(pcm);
+  free(hw);
+  return 0;
+}
+
+static int snd_pcm_hw_query_format(int fd, FAR unsigned int *values,
+                                   size_t num)
+{
+  struct audio_caps_s caps;
+  size_t i;
+
+  caps.ac_len = sizeof(struct audio_caps_s);
+  caps.ac_type = AUDIO_TYPE_QUERY;
+  caps.ac_subtype = AUDIO_TYPE_QUERY;
+  if (ioctl(fd, AUDIOIOC_GETCAPS, (unsigned long)&caps) < 0)
+    {
+      return -errno;
+    }
+
+  if ((caps.ac_format.hw & (1 << (AUDIO_FMT_PCM - 1))) == 0)
+    {
+      return -EPERM;
+    }
+
+  caps.ac_subtype = AUDIO_FMT_PCM;
+  if (ioctl(fd, AUDIOIOC_GETCAPS, (unsigned long)&caps) < 0)
+    {
+      return -errno;
+    }
+
+  for (i = 0; i < sizeof(caps.ac_controls.b); i++)
+    {
+      if (caps.ac_controls.b[i] == AUDIO_SUBFMT_END)
+        {
+          break;
+        }
+
+      values[i] = caps.ac_controls.b[i];
+    }
+
+  return i == 0 ? -EPERM : i;
+}
+
+static int snd_pcm_hw_query_channel(int fd, snd_pcm_stream_t stream,
+                                    FAR unsigned int *values, size_t num)
+{
+  struct audio_caps_s caps;
+
+  caps.ac_len = sizeof(struct audio_caps_s);
+  caps.ac_type = stream == SND_PCM_STREAM_PLAYBACK ? AUDIO_TYPE_OUTPUT
+                                                   : AUDIO_TYPE_INPUT;
+  caps.ac_subtype = AUDIO_TYPE_QUERY;
+  if (ioctl(fd, AUDIOIOC_GETCAPS, (unsigned long)&caps) < 0)
+    {
+      return -errno;
+    }
+
+  if ((caps.ac_channels & 0xf0) == 0)
+    {
+      values[0] = caps.ac_channels;
+      values[1] = caps.ac_channels;
+    }
+  else
+    {
+      values[0] = caps.ac_channels >> 4;
+      values[1] = caps.ac_channels & 0x0f;
+    }
+
+  return 2;
+}
+
+static int snd_pcm_hw_query_rete(int fd, snd_pcm_stream_t stream,
+                                 FAR unsigned int *values, size_t num)
+{
+  struct audio_caps_s caps;
+  size_t i;
+
+  caps.ac_len = sizeof(struct audio_caps_s);
+  caps.ac_type = stream == SND_PCM_STREAM_PLAYBACK ? AUDIO_TYPE_OUTPUT
+                                                   : AUDIO_TYPE_INPUT;
+  caps.ac_subtype = AUDIO_TYPE_QUERY;
+  if (ioctl(fd, AUDIOIOC_GETCAPS, (unsigned long)&caps) < 0)
+    {
+      return -errno;
+    }
+
+  for (i = 0; i < num && caps.ac_controls.hw[0]; i++)
+    {
+      if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_8K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_8K;
+          values[i] = 8000;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_11K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_11K;
+          values[i] = 11025;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_12K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_12K;
+          values[i] = 12000;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_16K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_16K;
+          values[i] = 16000;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_22K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_22K;
+          values[i] = 22050;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_24K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_24K;
+          values[i] = 24000;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_32K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_32K;
+          values[i] = 32000;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_44K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_44K;
+          values[i] = 44100;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_48K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_48K;
+          values[i] = 48000;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_96K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_96K;
+          values[i] = 96000;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_128K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_128K;
+          values[i] = 128000;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_160K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_160K;
+          values[i] = 160000;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_172K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_172K;
+          values[i] = 172000;
+        }
+      else if (caps.ac_controls.hw[0] & AUDIO_SAMP_RATE_192K)
+        {
+          caps.ac_controls.hw[0] &= ~AUDIO_SAMP_RATE_192K;
+          values[i] = 192000;
+        }
+      else
+        {
+          break;
+        }
+    }
+
+  return i;
+}
+
+static int snd_pcm_hw_hw_refine(FAR snd_pcm_t *pcm,
+                                FAR snd_pcm_hw_params_t *params)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  FAR snd_pcm_format_mask_t *format_mask;
+  unsigned int value[32];
+  int ret;
+  int i;
+
+  ret = snd_pcm_hw_query_format(hw->fd, value, 32);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
+  snd_pcm_format_mask_alloca(&format_mask);
+  for (i = 0; i < ret; i++)
+    {
+      snd_pcm_format_mask_set(format_mask, value[i]);
+    }
+
+  snd_pcm_hw_params_set_format_mask(pcm, params, format_mask);
+
+  ret = snd_pcm_hw_query_channel(hw->fd, pcm->stream, value, 32);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
+  snd_pcm_hw_params_set_channels_min(pcm, params, &value[0]);
+  snd_pcm_hw_params_set_channels_max(pcm, params, &value[1]);
+
+  ret = snd_pcm_hw_query_rete(hw->fd, pcm->stream, value, 32);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
+  snd_pcm_hw_params_set_rate_min(pcm, params, &value[0], NULL);
+  snd_pcm_hw_params_set_rate_max(pcm, params, &value[MAX(ret - 1, 0)], NULL);
+
+  return 0;
+}
+
+static int snd_pcm_hw_hw_params(FAR snd_pcm_t *pcm,
+                                FAR snd_pcm_hw_params_t *params)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  struct audio_caps_desc_s caps_desc;
+  struct audio_buf_desc_s buf_desc;
+  struct ap_buffer_info_s buf_info;
+  FAR struct ap_buffer_s *buffer;
+  snd_pcm_uframes_t period_size;
+  unsigned int period_bytes;
+  unsigned int period_time;
+  snd_pcm_format_t format;
+  unsigned int channels;
+  unsigned int periods;
+  unsigned int rate;
+  unsigned int i;
+  int ret;
+
+  snd_pcm_hw_params_get_format(params, &format);
+  snd_pcm_hw_params_get_channels(params, &channels);
+  snd_pcm_hw_params_get_rate(params, &rate, NULL);
+  snd_pcm_hw_params_get_periods(params, &periods, NULL);
+  snd_pcm_hw_params_get_period_size(params, &period_size, NULL);
+
+  memset(&caps_desc, 0, sizeof(caps_desc));
+  caps_desc.caps.ac_len = sizeof(struct audio_caps_s);
+  caps_desc.caps.ac_type = pcm->stream == SND_PCM_STREAM_PLAYBACK ?
+                           AUDIO_TYPE_OUTPUT : AUDIO_TYPE_INPUT;
+  caps_desc.caps.ac_channels = channels;
+  caps_desc.caps.ac_controls.hw[0] = rate;
+  caps_desc.caps.ac_controls.b[3] = rate >> 16;
+  caps_desc.caps.ac_controls.b[2] = snd_pcm_format_physical_width(format);
+  caps_desc.caps.ac_subtype = AUDIO_FMT_PCM;
+
+  ret = ioctl(hw->fd, AUDIOIOC_CONFIGURE, &caps_desc);
+  if (ret < 0)
+    {
+      return -errno;
+    }
+
+  SNDINFO("configure. f:%u, ch:%u, rate:%u", format, channels, rate);
+
+  period_bytes = snd_pcm_format_size(format, period_size * channels);
+  buf_info.nbuffers = periods;
+  buf_info.buffer_size = period_bytes;
+  ioctl(hw->fd, AUDIOIOC_SETBUFFERINFO, &buf_info);
+  ioctl(hw->fd, AUDIOIOC_GETBUFFERINFO, &buf_info);
+  if (buf_info.nbuffers != periods || buf_info.buffer_size != period_bytes)
+    {
+      periods = buf_info.nbuffers;
+      period_size = 8 * buf_info.buffer_size /
+                    (snd_pcm_format_physical_width(format) * channels);
+      period_time = period_size * 1000000 / rate;
+      snd_pcm_hw_params_set_periods(pcm, params, periods, 0);
+      snd_pcm_hw_params_set_period_size(pcm, params, period_size, 0);
+      snd_pcm_hw_params_set_period_time(pcm, params, period_time, 0);
+      snd_pcm_hw_params_set_buffer_size(pcm, params, period_size * periods);
+      snd_pcm_hw_params_set_buffer_time(pcm, params, period_time * periods,
+                                        0);
+    }
+
+  pcm->start_threshold = period_size * periods;
+  SNDINFO("config buffer info. n:%u, size:%u", buf_info.nbuffers,
+          buf_info.buffer_size);
+
+  dq_init(&hw->bufferq);
+  for (i = 0; i < buf_info.nbuffers; i++)
+    {
+      buf_desc.numbytes = buf_info.buffer_size;
+      buf_desc.u.pbuffer = &buffer;
+      ret = ioctl(hw->fd, AUDIOIOC_ALLOCBUFFER, &buf_desc);
+      if (ret < 0)
+        {
+          return -errno;
+        }
+
+      if (pcm->stream == SND_PCM_STREAM_CAPTURE)
+        {
+          ret = snd_pcm_hw_enqueue_buffer(pcm, buffer, false);
+          if (ret < 0)
+            {
+              return ret;
+            }
+        }
+      else
+        {
+          dq_addlast(&buffer->dq_entry, &hw->bufferq);
+        }
+    }
+
+  hw->setup = true;
+
+  return 0;
+}
+
+static int snd_pcm_hw_prepare(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+
+  hw->xrun = false;
+  hw->setup = false;
+
+  return 0;
+}
+
+static int snd_pcm_hw_reset(FAR snd_pcm_t *pcm)
+{
+  return -ENOTSUP;
+}
+
+static int snd_pcm_hw_start(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  int ret;
+
+  ret = ioctl(hw->fd, AUDIOIOC_START, 0);
+  if (ret < 0)
+    {
+      SNDERR("start error:%d\n", ret);
+      return -errno;
+    }
+
+  return ret;
+}
+
+static int snd_pcm_hw_drop(FAR snd_pcm_t *pcm)
+{
+  return -ENOTSUP;
+}
+
+static int snd_pcm_hw_drain(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  FAR struct ap_buffer_s *buffer;
+  int ret;
+
+  hw->setup = true;
+  if (pcm->stream == SND_PCM_STREAM_PLAYBACK)
+    {
+      buffer = (FAR struct ap_buffer_s *)dq_peek(&hw->bufferq);
+      if (buffer && buffer->curbyte)
+        {
+          dq_remfirst(&hw->bufferq);
+          snd_pcm_hw_enqueue_buffer(pcm, buffer, true);
+        }
+    }
+
+  switch (snd_pcm_hw_state(pcm))
+    {
+    case SND_PCM_STATE_PREPARED:
+      snd_pcm_hw_start(pcm);
+      break;
+    case SND_PCM_STATE_SETUP:
+      return 0;
+    default:
+      break;
+    }
+
+  ioctl(hw->fd, AUDIOIOC_STOP, 0);
+  while (snd_pcm_hw_state(pcm) != SND_PCM_STATE_SETUP)
+    {
+      ret = snd_pcm_hw_poll_available(pcm);
+      if (ret < 0)
+        {
+          return ret;
+        }
+    }
+
+  return 0;
+}
+
+static int snd_pcm_hw_pause(FAR snd_pcm_t *pcm, int enable)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  int ret;
+
+  ret = ioctl(hw->fd, enable ? AUDIOIOC_PAUSE : AUDIOIOC_RESUME, 0);
+  if (ret < 0)
+    {
+      SNDERR("pause:%d, ret:%d", enable, ret);
+      return -errno;
+    }
+
+  return ret;
+}
+
+static int snd_pcm_hw_delay(FAR snd_pcm_t *pcm,
+                            FAR snd_pcm_sframes_t *delayp)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  FAR struct ap_buffer_s *buffer;
+  FAR struct dq_entry_s *cur;
+  ssize_t avail = 0;
+  int ret;
+
+  *delayp = 0;
+  ret = ioctl(hw->fd, AUDIOIOC_GETLATENCY, delayp);
+  if (ret < 0)
+    {
+      return -errno;
+    }
+
+  for (cur = dq_peek(&hw->bufferq); cur; cur = dq_next(cur))
+    {
+      buffer = (FAR struct ap_buffer_s *)cur;
+      avail += buffer->curbyte;
+    }
+
+  *delayp += snd_pcm_bytes_to_frames(pcm, avail);
+  return 0;
+}
+
+static int snd_pcm_hw_resume(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+
+  hw->xrun = false;
+  return 0;
+}
+
+static snd_pcm_sframes_t snd_pcm_hw_writei(FAR snd_pcm_t *pcm,
+                                           FAR const void *buffer,
+                                           snd_pcm_uframes_t size)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  size_t left = snd_pcm_frames_to_bytes(pcm, size);
+  FAR const uint8_t *data = buffer;
+  FAR struct ap_buffer_s *apb;
+  snd_pcm_uframes_t xfer;
+  int ret = 0;
+
+  if (hw->xrun)
+    {
+      return -EPIPE;
+    }
+
+  while (left > 0)
+    {
+      size_t len;
+
+      ret = snd_pcm_hw_peek_buffer(pcm, &apb);
+      if (ret < 0)
+        {
+          break;
+        }
+
+      len = MIN(apb->nmaxbytes - apb->curbyte, left);
+      memcpy(apb->samp + apb->curbyte, data, len);
+
+      data += len;
+      left -= len;
+      apb->curbyte += len;
+      if (apb->curbyte >= apb->nmaxbytes)
+        {
+          if (pcm->volume != 1.0)
+            {
+              snd_pcm_softvol_scale(
+                  pcm->format, pcm->volume, apb->samp,
+                  snd_pcm_bytes_to_samples(pcm, apb->curbyte));
+            }
+
+          dq_remfirst(&hw->bufferq);
+          ret = snd_pcm_hw_enqueue_buffer(pcm, apb, false);
+          if (ret < 0)
+            {
+              break;
+            }
+
+          if (snd_pcm_hw_state(pcm) == SND_PCM_STATE_PREPARED)
+            {
+              xfer = pcm->period_size *
+                     (pcm->periods - dq_count(&hw->bufferq));
+              if (xfer >= pcm->start_threshold)
+                {
+                  ret = snd_pcm_hw_start(pcm);
+                  if (ret < 0)
+                    {
+                      break;
+                    }
+                }
+            }
+        }
+    }
+
+  xfer = size - snd_pcm_bytes_to_frames(pcm, left);
+  return xfer > 0 ? xfer : ret;
+}
+
+static snd_pcm_sframes_t snd_pcm_hw_writen(FAR snd_pcm_t *pcm,
+                                           FAR void **bufs,
+                                           snd_pcm_uframes_t size)
+{
+  return -ENOTSUP;
+}
+
+static snd_pcm_sframes_t snd_pcm_hw_readi(FAR snd_pcm_t *pcm,
+                                          FAR void *buffer,
+                                          snd_pcm_uframes_t size)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  size_t left = snd_pcm_frames_to_bytes(pcm, size);
+  FAR struct ap_buffer_s *apb;
+  FAR uint8_t *data = buffer;
+  snd_pcm_uframes_t xfer;
+  int ret = 0;
+
+  if (hw->xrun)
+    {
+      return -EPIPE;
+    }
+
+  if (snd_pcm_hw_state(pcm) == SND_PCM_STATE_PREPARED)
+    {
+      ret = snd_pcm_hw_start(pcm);
+      if (ret < 0)
+        {
+          return ret;
+        }
+    }
+
+  while (left > 0)
+    {
+      size_t len;
+
+      ret = snd_pcm_hw_peek_buffer(pcm, &apb);
+      if (ret < 0)
+        {
+          break;
+        }
+
+      len = MIN(apb->nbytes - apb->curbyte, left);
+      memcpy(data, apb->samp + apb->curbyte, len);
+
+      if (pcm->volume != 1.0)
+        {
+          snd_pcm_softvol_scale(pcm->format, pcm->volume, data,
+                                snd_pcm_bytes_to_samples(pcm, len));
+        }
+
+      data += len;
+      left -= len;
+      apb->curbyte += len;
+      if (apb->curbyte >= apb->nbytes)
+        {
+          dq_remfirst(&hw->bufferq);
+          ret = snd_pcm_hw_enqueue_buffer(pcm, apb, false);
+          if (ret < 0)
+            {
+              break;
+            }
+        }
+    }
+
+  xfer = size - snd_pcm_bytes_to_frames(pcm, left);
+  return xfer > 0 ? xfer : ret;
+}
+
+static snd_pcm_sframes_t snd_pcm_hw_avail_update(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  FAR struct ap_buffer_s *buffer;
+  FAR struct dq_entry_s *cur;
+  ssize_t avail = 0;
+  int ret;
+
+  if (hw->xrun)
+    {
+      return -EPIPE;
+    }
+
+  ret = snd_pcm_hw_poll_available(pcm);
+  if (ret < 0 && ret != -EAGAIN)
+    {
+      return ret;
+    }
+
+  for (cur = dq_peek(&hw->bufferq); cur; cur = dq_next(cur))
+    {
+      buffer = (FAR struct ap_buffer_s *)cur;
+      avail += buffer->nbytes - buffer->curbyte;
+    }
+
+  return snd_pcm_bytes_to_frames(pcm, avail);
+}
+
+static int snd_pcm_hw_poll_descriptors_count(FAR snd_pcm_t *pcm)
+{
+  return 1;
+}
+
+static int snd_pcm_hw_poll_descriptors(FAR snd_pcm_t *pcm,
+                                       FAR struct pollfd *pfds,
+                                       unsigned int space)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+
+  pfds->fd = hw->mq;
+  pfds->events = POLLIN;
+
+  return 1;
+}
+
+static const snd_pcm_ops_t g_snd_pcm_hw_ops =
+{
+    .close = snd_pcm_hw_close,
+    .hw_refine = snd_pcm_hw_hw_refine,
+    .hw_params = snd_pcm_hw_hw_params,
+    .dump = NULL,
+    .prepare = snd_pcm_hw_prepare,
+    .reset = snd_pcm_hw_reset,
+    .start = snd_pcm_hw_start,
+    .drop = snd_pcm_hw_drop,
+    .drain = snd_pcm_hw_drain,
+    .pause = snd_pcm_hw_pause,
+    .state = snd_pcm_hw_state,
+    .delay = snd_pcm_hw_delay,
+    .resume = snd_pcm_hw_resume,
+    .writei = snd_pcm_hw_writei,
+    .writen = snd_pcm_hw_writen,
+    .readi = snd_pcm_hw_readi,
+    .avail_update = snd_pcm_hw_avail_update,
+    .poll_descriptors_count = snd_pcm_hw_poll_descriptors_count,
+    .poll_descriptors = snd_pcm_hw_poll_descriptors,
+    .poll_revents = NULL,
+};
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+int snd_pcm_hw_open(FAR snd_pcm_t **pcmp, FAR const char *name,
+                    snd_pcm_stream_t stream, int mode)
+{
+  FAR snd_pcm_hw_t *hw;
+  FAR snd_pcm_t *pcm;
+  int ret;
+
+  if (!pcmp || !name)
+    {
+      return -EINVAL;
+    }
+
+  if (stream != SND_PCM_STREAM_PLAYBACK && stream != SND_PCM_STREAM_CAPTURE)
+    {
+      return -EINVAL;
+    }
+
+  hw = calloc(1, sizeof(snd_pcm_hw_t));
+  if (!hw)
+    {
+      return -ENOMEM;
+    }
+
+  ret = snd_pcm_new(&pcm, SND_PCM_TYPE_HW, name, stream, mode);
+  if (ret < 0)
+    {
+      free(hw);
+      return ret;
+    }
+
+  pcm->ops = &g_snd_pcm_hw_ops;
+  pcm->private_data = hw;
+
+  ret = snd_pcm_hw_init(pcm);
+  if (ret < 0)
+    {
+      free(hw);
+      snd_pcm_free(pcm);
+      return ret;
+    }
+
+  *pcmp = pcm;
+  return ret;
+}
