@@ -38,7 +38,7 @@
 #endif
 
 #include <nuttx/version.h>
-#include <nuttx/sched_note.h>
+#include <nuttx/trace.h>
 
 #include "nsh.h"
 #include "nsh_console.h"
@@ -2466,7 +2466,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
   char      tracebuf[CONFIG_NSH_LINELEN + 1];
 
   strlcpy(tracebuf, cmdline, sizeof(tracebuf));
-  sched_note_beginex(NOTE_TAG_APP, tracebuf);
+  app_trace_beginex(tracebuf);
 #endif
 
   /* Initialize parser state */
@@ -2844,8 +2844,8 @@ dynlist_free:
 
   NSH_ALIASLIST_FREE(vtbl, &alist);
   NSH_MEMLIST_FREE(&memlist);
-#ifdef CONFIG_SCHED_INSTRUMENTATION_DUMP
-  sched_note_endex(NOTE_TAG_APP, tracebuf);
+#ifdef CONFIG_TRACE_APP
+  app_trace_endex(tracebuf);
 #endif
   return ret;
 }
