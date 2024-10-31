@@ -98,6 +98,11 @@ function(generate_common_defs)
       include $(TOPDIR)/arch/x86_64/src/intel64/Toolchain.defs
       endif
 
+      # xtensa specific
+      ifeq ($(CONFIG_ARCH_XTENSA),y)
+      include $(TOPDIR)/arch/xtensa/src/lx7/Toolchain.defs
+      endif
+
       CFLAGS := $(ARCHCFLAGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS) -pipe
       CXXFLAGS := $(ARCHCXXFLAGS) $(ARCHOPTIMIZATION) $(ARCHCPUFLAGS) $(ARCHXXINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS) -pipe
       CPPFLAGS := $(ARCHINCLUDES) $(ARCHDEFINES) $(EXTRAFLAGS)
