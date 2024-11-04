@@ -56,7 +56,9 @@ int parse_stat_options(int argc, FAR char **argv,
   int opt;
   int ret;
 
-  stat_args->cmd_nr = argc;
+  stat_args->pid = -1;
+  stat_args->cpu = -1;
+  stat_args->cmd_nr = argc - 1;
 
   while ((opt = getopt(argc, argv, ":aC:p:e:c:m:")) != -1)
     {
@@ -72,7 +74,7 @@ int parse_stat_options(int argc, FAR char **argv,
                 stat_args->events = NULL;
               }
 
-            stat_args->cmd_nr -= 2;
+            stat_args->cmd_nr -= 1;
             break;
           case 'C':
             if (stat_args->type == STAT_ARGS_NONE)
@@ -86,16 +88,14 @@ int parse_stat_options(int argc, FAR char **argv,
               {
                 stat_args->cpu = check_and_atoi(optarg);
                 stat_args->pid = -1;
-                stat_args->cmd_nr += 1;
               }
             else if (stat_args->type == STAT_ARGS_TASK)
               {
                 printf("PID/TID switch overriding CPU\n");
                 stat_args->cpu = check_and_atoi(optarg);
-                stat_args->cmd_nr += 1;
               }
 
-            stat_args->cmd_nr -= 3;
+            stat_args->cmd_nr -= 2;
             break;
           case 'p':
             if (stat_args->type == STAT_ARGS_NONE)
@@ -109,17 +109,15 @@ int parse_stat_options(int argc, FAR char **argv,
               {
                 stat_args->pid = check_and_atoi(optarg);
                 stat_args->cpu = -1;
-                stat_args->cmd_nr += 1;
               }
             else if (stat_args->type == STAT_ARGS_CPU)
               {
                 printf("PID/TID switch overriding CPU\n");
                 stat_args->type = STAT_ARGS_TASK;
                 stat_args->pid = check_and_atoi(optarg);
-                stat_args->cmd_nr += 1;
               }
 
-            stat_args->cmd_nr -= 3;
+            stat_args->cmd_nr -= 2;
             break;
           case 'e':
             if (stat_args->type == STAT_ARGS_NONE ||
@@ -131,25 +129,22 @@ int parse_stat_options(int argc, FAR char **argv,
             else if (stat_args->type == STAT_ARGS_CPU)
               {
                 stat_args->pid = -1;
-                stat_args->cmd_nr += 1;
-              }
-            else if (stat_args->type == STAT_ARGS_TASK)
-              {
-                stat_args->cmd_nr += 1;
               }
 
             stat_args->type = STAT_ARGS_EVENT;
             stat_args->events = optarg;
-            stat_args->cmd_nr -= 3;
+            stat_args->cmd_nr -= 2;
             break;
           case 'h':
             stat_args->type = STAT_ARGS_HELP;
             break;
           case 'c':
             stat_args->sample_period = check_and_atoi(optarg);
+            stat_args->cmd_nr -= 2;
             break;
           case 'm':
             stat_args->buffer_size = check_and_atoi(optarg);
+            stat_args->cmd_nr -= 2;
             break;
           default:
             return -EINVAL;
