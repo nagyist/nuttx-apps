@@ -191,5 +191,7 @@ function(nuttx_call_apps_makefile)
     ${TARGET} PROPERTIES IMPORTED_LOCATION
                          ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_BIN})
   set_property(GLOBAL APPEND PROPERTY NUTTX_SYSTEM_LIBRARIES ${TARGET})
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_BIN}
+          DESTINATION ${CMAKE_BINARY_DIR}/staging/lib)
 
 endfunction()
