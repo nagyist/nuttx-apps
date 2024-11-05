@@ -25,6 +25,12 @@ PRIORITY  = $(CONFIG_TESTING_SCHEDTEST_PRIORITY)
 STACKSIZE = $(CONFIG_TESTING_SCHEDTEST_STACKSIZE)
 MODULE    = $(CONFIG_TESTING_SCHEDTEST)
 
-MAINSRC = test_sched_wqueue.c
+MAINSRC += wqueue.c rwsem.c
+
+ifeq ($(CONFIG_BUILD_FLAT)$(CONFIG_SCHED_EVENTS),yy)
+MAINSRC += eventtest.c
+endif
+
+PROGNAME := $(notdir $(patsubst %.c,%, $(MAINSRC)))
 
 include $(APPDIR)/Application.mk

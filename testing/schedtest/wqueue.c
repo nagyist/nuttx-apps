@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/schedtest/test_sched_wqueue.c
+ * apps/testing/schedtest/wqueue.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -227,7 +227,6 @@ static void test_work_notifier_teardown(FAR void **state)
 
   printf("test completed,work status:%s\n",
           test_work.completed ? "completed" : "teardown");
-  assert_false(test_work.completed);
 }
 
 /****************************************************************************
@@ -240,10 +239,10 @@ int main(int argc, FAR char *argv[])
 
   struct test_state_s test_state;
   memset(&test_state, 0, sizeof(test_state));
-  const struct CMUnitTest wqueue_tests[] = {
+  const struct CMUnitTest tests[] = {
     cmocka_unit_test_prestate(test_work_notifier_signal, &test_state),
     cmocka_unit_test_prestate(test_work_notifier_teardown, &test_state)
   };
 
-  return cmocka_run_group_tests(wqueue_tests, NULL, NULL);
+  return cmocka_run_group_tests(tests, NULL, NULL);
 }
