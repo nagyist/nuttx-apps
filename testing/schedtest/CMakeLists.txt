@@ -108,4 +108,18 @@ if(CONFIG_TESTING_SCHEDTEST)
       SRCS
       busywait_test.c)
   endif()
+
+  if(CONFIG_SCHED_BACKTRACE)
+    nuttx_add_application(
+      NAME
+      sched_backtrace_test
+      PRIORITY
+      ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_SCHEDTEST}
+      SRCS
+      sched_backtrace_test.c)
+  endif()
 endif()

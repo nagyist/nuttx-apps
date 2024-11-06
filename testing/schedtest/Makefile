@@ -40,6 +40,10 @@ CFLAGS += -I$(TOPDIR)/sched
 endif
 endif
 
+ifeq ($(CONFIG_SCHED_BACKTRACE),y)
+MAINSRC += sched_backtrace_test.c
+endif
+
 PROGNAME := $(notdir $(patsubst %.c,%, $(MAINSRC)))
 
 include $(APPDIR)/Application.mk
