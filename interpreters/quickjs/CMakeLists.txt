@@ -1,4 +1,27 @@
 if(CONFIG_INTERPRETERS_QUICKJS)
+  set(QUICKJS_DIR ${CMAKE_CURRENT_LIST_DIR}/quickjs)
+
+  if(NOT EXISTS ${QUICKJS_DIR})
+    set(QUICKJS_URL_BASE https://github.com/bellard/quickjs/archive/)
+
+    FetchContent_Declare(
+      quickjs_fetch
+      URL ${QUICKJS_URL_BASE}/refs/heads/master.zip SOURCE_DIR
+          ${CMAKE_CURRENT_LIST_DIR}/quickjs BINARY_DIR
+          ${CMAKE_BINARY_DIR}/apps/interpreters/quickjs/quickjs
+      PATCH_COMMAND
+        patch -p1 -d ${CMAKE_CURRENT_LIST_DIR}/quickjs <
+        ${CMAKE_CURRENT_LIST_DIR}/0001-Disabled-unsupported-feature-on-NuttX.patch
+      DOWNLOAD_NO_PROGRESS true
+      TIMEOUT 30)
+
+    FetchContent_GetProperties(quickjs)
+
+    if(NOT quickjs_fetch_POPULATED)
+      FetchContent_Populate(quickjs_fetch)
+    endif()
+  endif()
+
   set(CMAKE_C_STANDARD 11)
   set(CMAKE_CXX_STANDARD 17)
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,7 +34,6 @@ if(CONFIG_INTERPRETERS_QUICKJS)
     TARGET nuttx
     APPEND
     PROPERTY NUTTX_INCLUDE_DIRECTORIES ${NUTTX_APPS_DIR}/interpreters/quickjs)
-  set(QUICKJS_DIR ${CMAKE_CURRENT_LIST_DIR}/quickjs)
   set(QUICKJS_VERSION "\"2020-11-08\"")
   set(QUICKJS_FLAGS)
   set(QUICKJS_INCDIR)
