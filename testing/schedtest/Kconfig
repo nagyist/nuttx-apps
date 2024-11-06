@@ -9,7 +9,6 @@ config TESTING_SCHEDTEST
 	depends on WQUEUE_NOTIFIER
 	---help---
 		Enable the Sched test
-
 		For all tests to be successful, you need to enable
 		CONFIG_SCHEDTEST in addition.
 

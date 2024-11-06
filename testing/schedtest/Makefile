@@ -31,6 +31,12 @@ ifeq ($(CONFIG_BUILD_FLAT)$(CONFIG_SCHED_EVENTS),yy)
 MAINSRC += eventtest.c
 endif
 
+ifeq ($(CONFIG_SMP),y)
+MAINSRC += setaffinity_test.c
+MAINSRC += getaffinity_test.c
+MAINSRC += cpucount_test.c
+endif
+
 PROGNAME := $(notdir $(patsubst %.c,%, $(MAINSRC)))
 
 include $(APPDIR)/Application.mk
