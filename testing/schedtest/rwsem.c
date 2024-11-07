@@ -25,6 +25,7 @@
 #include <nuttx/config.h>
 #include <nuttx/rwsem.h>
 #include <pthread.h>
+#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

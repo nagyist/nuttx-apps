@@ -31,7 +31,7 @@ if(CONFIG_TESTING_SCHEDTEST)
     SRCS
     wqueue.c)
 
-  if(CONFIG_BUILD_FLAT AND CONFIG_SCHED_EVENTS)
+  if(CONFIG_SCHED_EVENTS)
     nuttx_add_application(
       NAME
       eventtest
