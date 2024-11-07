@@ -42,6 +42,7 @@ endif
 
 ifeq ($(CONFIG_SCHED_BACKTRACE),y)
 MAINSRC += sched_backtrace_test.c
+MAINSRC += sched_dumpstack_test.c
 endif
 
 PROGNAME := $(notdir $(patsubst %.c,%, $(MAINSRC)))

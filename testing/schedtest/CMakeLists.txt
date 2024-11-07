@@ -121,5 +121,16 @@ if(CONFIG_TESTING_SCHEDTEST)
       ${CONFIG_TESTING_SCHEDTEST}
       SRCS
       sched_backtrace_test.c)
+    nuttx_add_application(
+      NAME
+      sched_dumpstack_test
+      PRIORITY
+      ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_SCHEDTEST}
+      SRCS
+      sched_dumpstack_test.c)
   endif()
 endif()
