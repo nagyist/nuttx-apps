@@ -143,10 +143,10 @@ if(CONFIG_CRYPTO_MBEDTLS)
     APPEND
     PROPERTY NUTTX_CXX_INCLUDE_DIRECTORIES ${INCDIR})
 
-  nuttx_add_library(mbedtls STATIC)
+  nuttx_add_kernel_library(mbedtls SPLIT)
   target_sources(mbedtls PRIVATE ${CSRCS})
-  target_include_directories(mbedtls PRIVATE ${INCDIR})
-  target_compile_definitions(mbedtls PRIVATE unix)
+  include_directories(${INCDIR})
+  add_compile_definitions(unix)
 
   if(CONFIG_ARCH_SIM)
     target_compile_options(mbedtls PRIVATE -O0)
