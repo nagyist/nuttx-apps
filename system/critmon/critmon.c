@@ -59,6 +59,8 @@
 #  define CONFIG_SYSTEM_CRITMONITOR_MOUNTPOINT "/proc"
 #endif
 
+#define STATE_LINELEN 128
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -68,7 +70,7 @@ struct critmon_state_s
   volatile bool started;
   volatile bool stop;
   pid_t pid;
-  char line[80];
+  char line[STATE_LINELEN];
 };
 
 /****************************************************************************
@@ -118,6 +120,8 @@ static int critmon_process_directory(FAR struct dirent *entryp)
   FAR char *filepath;
   FAR char *maxpreemp;
   FAR char *maxcrit;
+  FAR char *maxbusywait;
+  FAR char *allbusywait;
   FAR char *maxrun;
   FAR char *runtime;
   FAR char *pos;
@@ -152,9 +156,9 @@ static int critmon_process_directory(FAR struct dirent *entryp)
       goto errout_with_filepath;
     }
 
-  while (fgets(g_critmon.line, 80, stream) != NULL)
+  while (fgets(g_critmon.line, STATE_LINELEN, stream) != NULL)
     {
-      g_critmon.line[79] = '\n';
+      g_critmon.line[STATE_LINELEN - 1] = '\n';
       len = strlen(g_name);
       if (strncmp(g_critmon.line, g_name, len) == 0)
         {
@@ -206,7 +210,7 @@ static int critmon_process_directory(FAR struct dirent *entryp)
 
   /* Read the line containing the Csection max durations */
 
-  if (fgets(g_critmon.line, 80, stream) == NULL)
+  if (fgets(g_critmon.line, STATE_LINELEN, stream) == NULL)
     {
       ret = -errno;
       fprintf(stderr, "Csection Monitor: Failed to read from %s: %d\n",
@@ -242,6 +246,25 @@ static int critmon_process_directory(FAR struct dirent *entryp)
   maxcrit = "None";
 #endif
 
+#if CONFIG_SCHED_CRITMONITOR_MAXTIME_BUSYWAIT >= 0
+  maxbusywait = pos;
+  pos = strchr(pos, ',');
+  if (pos != NULL)
+    {
+      *pos++  = '\0';
+    }
+
+  allbusywait = pos;
+  pos = strchr(pos, ',');
+  if (pos != NULL)
+    {
+      *pos++  = '\0';
+    }
+#else
+  maxbusywait = "None";
+  allbusywait = "None";
+#endif
+
 #if CONFIG_SCHED_CRITMONITOR_MAXTIME_THREAD >= 0
   maxrun = pos;
   pos = strchrnul(pos, ',');
@@ -264,11 +287,11 @@ static int critmon_process_directory(FAR struct dirent *entryp)
   /* Finally, output the stack info that we gleaned from the procfs */
 
 #if CONFIG_TASK_NAME_SIZE > 0
-  printf("%-29s %-29s %-16s %-16s %-5s %s\n",
-         maxpreemp, maxcrit, maxrun, runtime, entryp->d_name, name);
+  printf("%-29s %-29s %-29s %-29s %-16s %-16s %-5s %s\n", maxpreemp, maxcrit,
+         maxbusywait, allbusywait, maxrun, runtime, entryp->d_name, name);
 #else
-  printf("%-29s %-29s %16s %16s %5s\n",
-         maxpreemp, maxcrit, maxrun, runtime, entryp->d_name);
+  printf("%-29s %-29s %-29s %-29s %16s %16s %5s\n", maxpreemp, maxcrit,
+         maxbusywait, allbusywait, maxrun, runtime, entryp->d_name);
 #endif
 
   ret = OK;
@@ -323,6 +346,8 @@ static void critmon_global_crit(void)
   FAR char *cpu;
   FAR char *maxpreemp;
   FAR char *maxcrit;
+  FAR char *maxbusywait;
+  FAR char *allbusywait;
   FAR char *pos;
   FILE *stream;
   int errcode;
@@ -354,7 +379,7 @@ static void critmon_global_crit(void)
 
   /* Read the line containing the Csection max durations for each CPU */
 
-  while (fgets(g_critmon.line, 80, stream) != NULL)
+  while (fgets(g_critmon.line, STATE_LINELEN, stream) != NULL)
     {
       /* Input Format:  X,X.XXXXXXXXX,X.XXXXXXXXX
        * Output Format: X.XXXXXXXXX X.XXXXXXXXX       CPU X
@@ -390,11 +415,30 @@ static void critmon_global_crit(void)
       maxcrit = "None";
 #endif
 
+#if CONFIG_SCHED_CRITMONITOR_MAXTIME_BUSYWAIT >= 0
+      maxbusywait = pos;
+      pos = strchr(pos, ',');
+      if (pos != NULL)
+        {
+          *pos++ = '\0';
+        }
+
+      allbusywait = pos;
+      pos = strchr(pos, ',');
+      if (pos != NULL)
+        {
+          *pos++ = '\0';
+        }
+#else
+      maxbusywait = "None";
+      allbusywait = "None";
+#endif
+
       /* Finally, output the stack info that we gleaned from the procfs */
 
-      printf("%-29s %-29s ---------------- ---------------- ----  "
-             "CPU %s\n",
-              maxpreemp, maxcrit, cpu);
+      printf("%-29s %-29s %-29s %-29s ---------------- ---------------- ----"
+             "  CPU %s\n",
+              maxpreemp, maxcrit, maxbusywait, allbusywait, cpu);
     }
 
   fclose(stream);
@@ -417,10 +461,12 @@ static int critmon_list_once(void)
   /* Output a Header */
 
 #if CONFIG_TASK_NAME_SIZE > 0
-  printf("PRE-EMPTION CALLER            CSECTION CALLER               "
+  printf("PRE-EMPTION CALLER            CSECTION    CALLER            "
+         "BUSYWAIT-MAX CALLER           BUSYWAIT-ALL RATE (%%)         "
          "RUN              TIME             PID   DESCRIPTION\n");
 #else
-  printf("PRE-EMPTION CALLER            CSECTION CALLER               "
+  printf("PRE-EMPTION CALLER            CSECTION    CALLER            "
+         "BUSYWAIT-MAX CALLER           BUSYWAIT-ALL RATE (%%)         "
          "RUN              TIME             PID\n");
 #endif
 
