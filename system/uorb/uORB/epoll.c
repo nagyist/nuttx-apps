@@ -106,7 +106,8 @@ static int orb_loop_epoll_run(FAR struct orb_loop_s *loop)
                   uorberr("epoll wait data in error! fd:%d", handle->fd);
                 }
             }
-          else if (et[i].events & EPOLLOUT)
+
+          if (et[i].events & EPOLLOUT)
             {
               if (handle->dataout_cb != NULL)
                 {
@@ -117,7 +118,8 @@ static int orb_loop_epoll_run(FAR struct orb_loop_s *loop)
                   uorberr("epoll wait data out error! fd:%d", handle->fd);
                 }
             }
-          else if (et[i].events & EPOLLPRI)
+
+          if (et[i].events & EPOLLPRI)
             {
               if (handle->eventpri_cb != NULL)
                 {
@@ -128,7 +130,8 @@ static int orb_loop_epoll_run(FAR struct orb_loop_s *loop)
                   uorberr("epoll wait events pri error! fd:%d", handle->fd);
                 }
             }
-          else if (et[i].events & EPOLLERR)
+
+          if (et[i].events & EPOLLERR)
             {
               if (handle->eventerr_cb != NULL)
                 {
