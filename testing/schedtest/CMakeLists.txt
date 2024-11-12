@@ -57,39 +57,55 @@ if(CONFIG_TESTING_SCHEDTEST)
     SRCS
     rwsem.c)
 
-if(CONFIG_SMP)
-  nuttx_add_application(
-    NAME
-    setaffinity_test
-    PRIORITY
-    ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
-    STACKSIZE
-    ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
-    MODULE
-    ${CONFIG_TESTING_SCHEDTEST}
-    SRCS
-    setaffinity_test.c)
-  nuttx_add_application(
-    NAME
-    getaffinity_test
-    PRIORITY
-    ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
-    STACKSIZE
-    ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
-    MODULE
-    ${CONFIG_TESTING_SCHEDTEST}
-    SRCS
-    getaffinity_test.c)
-  nuttx_add_application(
-    NAME
-    cpucount_test
-    PRIORITY
-    ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
-    STACKSIZE
-    ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
-    MODULE
-    ${CONFIG_TESTING_SCHEDTEST}
-    SRCS
-    cpucount_test.c)
+  if(CONFIG_SMP)
+    nuttx_add_application(
+      NAME
+      setaffinity_test
+      PRIORITY
+      ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_SCHEDTEST}
+      SRCS
+      setaffinity_test.c)
+    nuttx_add_application(
+      NAME
+      getaffinity_test
+      PRIORITY
+      ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_SCHEDTEST}
+      SRCS
+      getaffinity_test.c)
+    nuttx_add_application(
+      NAME
+      cpucount_test
+      PRIORITY
+      ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_SCHEDTEST}
+      SRCS
+      cpucount_test.c)
+  endif()
+
+  if(NOT CONFIG_SCHED_CRITMONITOR_MAXTIME_BUSYWAIT -1)
+    nuttx_add_application(
+      NAME
+      busywait_test
+      PRIORITY
+      ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_SCHEDTEST}
+      INCLUDE_DIRECTORIES
+      ${NUTTX_DIR}/sched
+      SRCS
+      busywait_test.c)
   endif()
 endif()

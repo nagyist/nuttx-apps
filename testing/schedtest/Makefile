@@ -34,6 +34,10 @@ ifeq ($(CONFIG_SMP),y)
 MAINSRC += setaffinity_test.c
 MAINSRC += getaffinity_test.c
 MAINSRC += cpucount_test.c
+ifneq ($(CONFIG_SCHED_CRITMONITOR_MAXTIME_BUSYWAIT),-1)
+MAINSRC += busywait_test.c
+CFLAGS += -I$(TOPDIR)/sched
+endif
 endif
 
 PROGNAME := $(notdir $(patsubst %.c,%, $(MAINSRC)))
