@@ -69,8 +69,8 @@ struct evlist_count_s
     FAR struct list_node *list = &(evlist->core.entries); \
     for(node = (list)->next; node != (list); node = node->next) \
       { \
-        psel = container_of(node, struct perf_evsel_s, node), \
-        evsel = container_of(psel, struct evsel_s, core); \
+        psel = list_container_of(node, struct perf_evsel_s, node), \
+        evsel = list_container_of(psel, struct evsel_s, core); \
         status = func(evsel, evlist); \
       } \
     } while(0)

@@ -126,8 +126,8 @@ out_delete:
   list_for_every(&(evlist->core.entries), node)
     {
       FAR struct perf_evsel_s *psel;
-      psel = container_of(node, struct perf_evsel_s, node);
-      evsel = container_of(psel, struct evsel_s, core);
+      psel = list_container_of(node, struct perf_evsel_s, node);
+      evsel = list_container_of(psel, struct evsel_s, core);
       evsel_delete(evsel);
     }
 
@@ -154,8 +154,8 @@ int evlist_print_counters(FAR struct evlist_s *evlist)
 
       list_for_every(&(evlist->core.entries), node)
         {
-          psel = container_of(node, struct perf_evsel_s, node);
-          evsel = container_of(psel, struct evsel_s, core);
+          psel = list_container_of(node, struct perf_evsel_s, node);
+          evsel = list_container_of(psel, struct evsel_s, core);
           evcnt[i % num].count += evsel->core.count;
           if (i < num)
             {
@@ -177,8 +177,8 @@ int evlist_print_counters(FAR struct evlist_s *evlist)
     {
       list_for_every(&(evlist->core.entries), node)
         {
-          psel = container_of(node, struct perf_evsel_s, node);
-          evsel = container_of(psel, struct evsel_s, core);
+          psel = list_container_of(node, struct perf_evsel_s, node);
+          evsel = list_container_of(psel, struct evsel_s, core);
           printf("%10ld\t %s\n", evsel->core.count, evsel_name(evsel));
         }
     }

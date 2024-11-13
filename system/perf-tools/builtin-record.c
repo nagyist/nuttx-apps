@@ -35,6 +35,7 @@
 
 #include <nuttx/perf.h>
 #include <nuttx/list.h>
+#include <nuttx/nuttx.h>
 
 #include "builtin.h"
 #include "evlist.h"
