@@ -183,6 +183,24 @@ int rpmsg_tun_process_netlink(int fd, const char *name);
 
 int rpmsg_tun_wait_running(int fd, const char *name);
 
+/****************************************************************************
+ * Name: rpmsg_tun_loop
+ *
+ * Description:
+ *   Poll tunfd and rpmsgfd and when fds return POLLIN
+ *   then read buffer from tunfd and send to rpmsgfd
+ *   or read buffer from rpmsgfd and send to tunfd
+ *
+ * Parameters:
+ *   tunfd   - tun device fd
+ *   rpmsgfd - rpmsg socket fd
+ *
+ * Returned Value:
+ *   None
+ ****************************************************************************/
+
+void rpmsg_tun_loop(int tunfd, int rpmsgfd);
+
 #ifdef __cplusplus
 }
 #endif

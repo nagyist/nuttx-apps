@@ -35,10 +35,10 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: rpmsg_tun_loop
+ * Name: rpmsg_tun_netlink_loop
  *
  * Description:
- *   Poll tunfd and rpmsgfd and when fds return POLLIN
+ *   Poll tunfd and rpmsgfd and nlfd when fds return POLLIN
  *   then read buffer from tunfd and send to rpmsgfd
  *   or read buffer from rpmsgfd and send to tunfd
  *
@@ -53,7 +53,7 @@
  ****************************************************************************/
 
 static void
-rpmsg_tun_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
+rpmsg_tun_netlink_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
 {
   struct pollfd fds[3];
 
@@ -116,14 +116,15 @@ rpmsg_tun_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
 
 int main(int argc, char *argv[])
 {
+  int nlfd = -1;
   int rpmsgfd;
   int tunfd;
-  int nlfd;
   int ret;
 
-  if (argc != 5)
+  if (argc != 4 && argc != 5)
     {
-      fprintf(stderr, "Usage: %s <tunname> <ip> <mask> <ifname>\n", argv[0]);
+      fprintf(stderr, "Usage: %s <tunname> <ip> <mask> <ifname> or\n"
+                      "Usage: %s <tunname> <ip> <mask>\n", argv[0], argv[0]);
       return -EINVAL;
     }
 
@@ -133,19 +134,25 @@ int main(int argc, char *argv[])
       return tunfd;
     }
 
-  nlfd = rpmsg_tun_connect_netlink();
-  if (nlfd < 0)
+  if (argc == 5)
     {
-      close(tunfd);
-      return nlfd;
+      nlfd = rpmsg_tun_connect_netlink();
+      if (nlfd < 0)
+        {
+          close(tunfd);
+          return nlfd;
+        }
     }
 
   for (; ; )
     {
-      ret = rpmsg_tun_wait_running(nlfd, argv[4]);
-      if (ret < 0)
+      if (nlfd >= 0)
         {
-          goto out;
+          ret = rpmsg_tun_wait_running(nlfd, argv[4]);
+          if (ret < 0)
+            {
+              goto out;
+            }
         }
 
       rpmsgfd = rpmsg_tun_accept(argv[1]);
@@ -160,7 +167,14 @@ int main(int argc, char *argv[])
           break;
         }
 
-      rpmsg_tun_loop(tunfd, rpmsgfd, nlfd, argv[4]);
+      if (nlfd >= 0)
+        {
+          rpmsg_tun_netlink_loop(tunfd, rpmsgfd, nlfd, argv[4]);
+        }
+      else
+        {
+          rpmsg_tun_loop(tunfd, rpmsgfd);
+        }
 
       ret = rpmsg_tun_set_running(tunfd, false);
       if (ret < 0)
@@ -172,9 +186,13 @@ int main(int argc, char *argv[])
     }
 
   close(rpmsgfd);
-out:
-  close(nlfd);
-  close(tunfd);
 
+out:
+  if (nlfd >= 0)
+    {
+      close(nlfd);
+    }
+
+  close(tunfd);
   return ret;
 }

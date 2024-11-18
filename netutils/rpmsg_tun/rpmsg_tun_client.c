@@ -23,74 +23,11 @@
  ****************************************************************************/
 
 #include <errno.h>
-#include <poll.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
 #include "rpmsg_tun_util.h"
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Name: rpmsg_tun_loop
- *
- * Description:
- *   Poll tunfd and rpmsgfd and when fds return POLLIN
- *   then read buffer from tunfd and send to rpmsgfd
- *   or read buffer from rpmsgfd and send to tunfd
- *
- * Parameters:
- *   tunfd   - tun device fd
- *   rpmsgfd - rpmsg socket fd
- *
- * Returned Value:
- *   None
- ****************************************************************************/
-
-static void rpmsg_tun_loop(int tunfd, int rpmsgfd)
-{
-  struct pollfd fds[2];
-
-  memset(fds, 0, sizeof(fds));
-  fds[0].fd = tunfd;
-  fds[0].events = POLLIN;
-  fds[1].fd = rpmsgfd;
-  fds[1].events = POLLIN;
-
-  for (; ; )
-    {
-      if (poll(fds, 2, -1) < 0)
-        {
-          break;
-        }
-
-      if ((fds[0].revents | fds[1].revents) & POLLIN)
-        {
-          if (fds[0].revents & POLLIN)
-            {
-              if (rpmsg_tun_to_socket(tunfd, rpmsgfd) < 0)
-                {
-                  break;
-                }
-            }
-
-          if (fds[1].revents & POLLIN)
-            {
-              if (rpmsg_tun_from_socket(tunfd, rpmsgfd) < 0)
-                {
-                  break;
-                }
-            }
-        }
-      else if ((fds[0].revents | fds[1].revents) & (POLLHUP | POLLERR))
-        {
-          break;
-        }
-    }
-}
 
 /****************************************************************************
  * Public Functions
