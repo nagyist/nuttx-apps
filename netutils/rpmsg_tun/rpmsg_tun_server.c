@@ -92,7 +92,7 @@ rpmsg_tun_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
 
           if (fds[2].revents & POLLIN)
             {
-              if (rpmsg_tun_process_netlink(nlfd, name) < 0)
+              if (rpmsg_tun_process_netlink(nlfd, name) <= 0)
                 {
                   break;
                 }

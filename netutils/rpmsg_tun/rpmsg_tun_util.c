@@ -582,7 +582,7 @@ int rpmsg_tun_connect_netlink(void)
  *   name - netdev to monitor
  *
  * Returned Value:
- *   1 is running, 0 is down/unknown and -errno on failure.
+ *   1 is running/unknown, 0 is down and -errno on failure.
  ****************************************************************************/
 
 int rpmsg_tun_process_netlink(int fd, const char *name)
@@ -603,8 +603,8 @@ int rpmsg_tun_process_netlink(int fd, const char *name)
       struct rtattr *attr;
       size_t attrlen;
 
-      if (hdr->nlmsg_type != RTM_NEWLINK ||
-          hdr->nlmsg_type != RTM_DELLINK ||
+      if (hdr->nlmsg_type != RTM_NEWLINK &&
+          hdr->nlmsg_type != RTM_DELLINK &&
           hdr->nlmsg_type != RTM_SETLINK)
         {
           continue;
@@ -630,7 +630,7 @@ int rpmsg_tun_process_netlink(int fd, const char *name)
         }
     }
 
-  return 0;
+  return 1;
 }
 
 /****************************************************************************
