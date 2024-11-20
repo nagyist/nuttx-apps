@@ -69,17 +69,6 @@ config CM_MUTEX_TEST
 	default n
 	depends on TESTS_TESTSUITES
 
-config TEST_TELEPHONY
-	bool "enbale telephony test"
-	default n
-	depends on TESTS_TESTSUITES
-
-if TEST_TELEPHONY
-	config TEST_PHONE_NUMBER
-		string "test phone number"
-		default "10086"
-endif
-
 config CM_DFX_TEST
 	bool "enbale dfx test"
 	default n

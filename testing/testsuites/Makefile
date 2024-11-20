@@ -99,28 +99,6 @@ PROGNAME += cmocka_mutex_test
 MAINSRC += $(CURDIR)/kernel/mutex/cmocka_mutex_test.c
 endif
 
-ifneq ($(CONFIG_TEST_TELEPHONY),)
-	CFLAGS += -I$(APPDIR)/frameworks/telephony/include
-	CFLAGS += -I$(APPDIR)/testing/cmocka/cmocka/include
-	CSRCS += $(CURDIR)/kernel/telephony/telephony_sim_test.c \
-		 $(CURDIR)/kernel/telephony/telephony_call_test.c \
-		 $(CURDIR)/kernel/telephony/telephony_data_test.c \
-		 $(CURDIR)/kernel/telephony/telephony_sms_test.c \
-		 $(CURDIR)/kernel/telephony/telephony_network_test.c \
-		 $(CURDIR)/kernel/telephony/telephony_common_test.c \
-		 $(CURDIR)/kernel/telephony/telephony_ims_test.c \
-		 $(CURDIR)/kernel/telephony/telephony_ss_test.c
-	PROGNAME += cmocka_telephony_test
-	ifneq ($(CONFIG_GOLDFISH_RIL),)
-	MAINSRC += $(CURDIR)/kernel/telephony/cmocka_telephony_test.c
-	else
-	MAINSRC += $(CURDIR)/kernel/telephony/product_telephony_test.c
-	endif
-
-depend::
-	$(Q) touch $(MAINSRC)
-endif
-
 ifneq ($(CONFIG_CM_DFX_TEST),)
 CFLAGS += -I$(CURDIR)/kernel/dfx/include
 CFLAGS += -I$(APPDIR)/frameworks/dfx/include
