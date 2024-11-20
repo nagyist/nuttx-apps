@@ -147,4 +147,18 @@ if(CONFIG_TESTING_SCHEDTEST)
     ${CONFIG_TESTING_SCHEDTEST}
     SRCS
     signaltest.c)
+
+  if(NOT CONFIG_TLS_TASK_NELEM EQUAL 0 AND NOT CONFIG_TLS_NCLEANUP EQUAL 0)
+    nuttx_add_application(
+      NAME
+      tls_test
+      PRIORITY
+      ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_SCHEDTEST}
+      SRCS
+      tls_test.c)
+  endif()
 endif()

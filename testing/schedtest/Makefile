@@ -47,6 +47,12 @@ MAINSRC += sched_backtrace_test.c
 MAINSRC += sched_dumpstack_test.c
 endif
 
+ifneq ($(CONFIG_TLS_TASK_NELEM),0)
+ifneq ($(CONFIG_TLS_NCLEANUP),0)
+MAINSRC += tls_test.c
+endif
+endif
+
 PROGNAME := $(notdir $(patsubst %.c,%, $(MAINSRC)))
 
 include $(APPDIR)/Application.mk
