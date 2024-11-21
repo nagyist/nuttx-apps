@@ -24,23 +24,38 @@ include(nuttx_parse_function_args)
 # nuttx_add_jidl
 #
 # Description:
-#   Generate source code files using JIDL and add them to the given target
+#   Generate source code files for JIDL, adding them to the given target and generate feature registry info
 #
 # Example:
 #  nuttx_add_jidl(
 #    TARGET
 #    libfeature
-#    JIDL_SCRIPT
-#    ${FEATURE_TOP}/tools/jidl/jsongensource.py
+#    FEATURE_SRCS
+#    error_impl.cpp
 #    JIDL_OUT_DIR
 #    ${CMAKE_CURRENT_BINARY_DIR}
 #    JIDLS
 #    test.jidl
-#    JIDL_FLAGS
-#    --lang=cpp
+#    FEATURE_NAMES
+#    Error
 #    OUT_SRC_EXT
 #    cpp)
 # ~~~
+
+set(QUICKAPP_FEATURES_OUT_DIR ${CMAKE_BINARY_DIR}/jidl_generated)
+set(JIDL_TOOL ${NUTTX_APPS_DIR}/../prebuilts/tools/rust/bin/jidl/jidl_gen_cpp)
+
+if(NOT EXISTS {QUICKAPP_FEATURES_OUT_DIR})
+  file(MAKE_DIRECTORY ${QUICKAPP_FEATURES_OUT_DIR})
+endif()
+
+if(NOT EXISTS ${QUICKAPP_FEATURES_OUT_DIR}/features_registry_list.h)
+  file(WRITE ${QUICKAPP_FEATURES_OUT_DIR}/features_registry_list.h "")
+endif()
+
+if(NOT EXISTS ${QUICKAPP_FEATURES_OUT_DIR}/cfeatures_registry_list.h)
+  file(WRITE ${QUICKAPP_FEATURES_OUT_DIR}/cfeatures_registry_list.h "")
+endif()
 
 function(nuttx_add_jidl)
 
@@ -51,16 +66,17 @@ function(nuttx_add_jidl)
     nuttx_add_jidl
     ONE_VALUE
     TARGET
-    JIDL_SCRIPT
     JIDL_OUT_DIR
-    MULTI_VALUE
-    JIDLS
-    JIDL_FLAGS
     OUT_SRC_EXT
+    JIDL_FLAGS
+    MULTI_VALUE
+    FEATURE_SRCS
+    JIDLS
+    FEATURE_NAMES
     REQUIRED
     TARGET
-    JIDL_SCRIPT
-    JIDL_OUT_DIR
+    FEATURE_SRCS
+    FEATURE_NAMES
     JIDLS
     ARGN
     ${ARGN})
@@ -68,6 +84,13 @@ function(nuttx_add_jidl)
   if(NOT OUT_SRC_EXT)
     set(OUT_SRC_EXT "cpp")
   endif()
+
+  if(NOT JIDL_OUT_DIR)
+    set(JIDL_OUT_DIR ${QUICKAPP_FEATURES_OUT_DIR}/jidl)
+  endif()
+
+  target_include_directories(
+    ${TARGET} PRIVATE ${NUTTX_APPS_DIR}/frameworks/runtimes/feature/include)
 
   foreach(JIDL_PATH ${JIDLS})
     get_filename_component(JIDL_NAME ${JIDL_PATH} NAME_WE)
@@ -79,23 +102,47 @@ function(nuttx_add_jidl)
     set(JIDL_TARGET jidl_${JIDL_NAME}_target)
     add_custom_target(
       ${JIDL_TARGET}
-      COMMAND
-        python3 ${JIDL_SCRIPT} ${JIDL_PATH} ${JIDL_FLAGS} -out-dir
-        ${JIDL_OUT_DIR} -header ${JIDL_NAME}.h -source
-        ${JIDL_NAME}.${OUT_SRC_EXT}
+      COMMAND ${JIDL_TOOL} ${JIDL_PATH} ${JIDL_FLAGS} --out-dir ${JIDL_OUT_DIR}
+              --header ${JIDL_NAME}.h --source ${JIDL_NAME}.${OUT_SRC_EXT}
       WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
       COMMENT "JIDL: generating glue files for ${JIDL_NAME}.jidl")
 
     add_dependencies(${TARGET} ${JIDL_TARGET})
-    # make a link list dep of jidl targets
-    get_property(DEP_JIDL_TARGET GLOBAL PROPERTY GLOBAL_JIDL_TARGET)
-    if(DEP_JIDL_TARGET)
-      add_dependencies(${JIDL_TARGET} ${DEP_JIDL_TARGET})
-    endif()
-    set_property(GLOBAL PROPERTY GLOBAL_JIDL_TARGET ${JIDL_TARGET})
     target_sources(${TARGET} PRIVATE ${JIDL_SRC})
   endforeach()
 
   target_include_directories(${TARGET} PRIVATE ${JIDL_OUT_DIR})
+  target_include_directories(${TARGET} PRIVATE ${QUICKAPP_FEATURES_OUT_DIR})
+
+  set(FEATURE_REGISTRY_TABLE
+      ${QUICKAPP_FEATURES_OUT_DIR}/features_registry_table.h)
+  foreach(feature_name ${FEATURE_NAMES})
+    set(FEATURE_PDAT ${QUICKAPP_FEATURES_OUT_DIR}/feature_${feature_name}.pdat)
+    if(OUT_SRC_EXT STREQUAL "cpp")
+      set(QUICKAPP_FEATURE_LIST
+          ${QUICKAPP_FEATURES_OUT_DIR}/features_registry_list.h)
+    else()
+      set(QUICKAPP_FEATURE_LIST
+          ${QUICKAPP_FEATURES_OUT_DIR}/cfeatures_registry_list.h)
+    endif()
+    add_custom_command(
+      OUTPUT ${FEATURE_PDAT}
+      COMMAND
+        echo
+        "bool jse_${feature_name}_initFeature(FeatureRegistryHandle handle); "
+        >> ${QUICKAPP_FEATURE_LIST}
+      COMMAND echo "jse_${feature_name}_initFeature," >>
+              ${FEATURE_REGISTRY_TABLE}
+      COMMAND touch ${FEATURE_PDAT}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+      VERBATIM
+      COMMENT "generate quickapp feature registry info: ${feature_name}")
+    add_custom_target(quickapp_feature_${feature_name} DEPENDS ${FEATURE_PDAT})
+    add_dependencies(apps_context quickapp_feature_${feature_name})
+  endforeach()
+
+  foreach(feature_src ${FEATURE_SRCS})
+    target_sources(${TARGET} PRIVATE ${feature_src})
+  endforeach()
 
 endfunction()
