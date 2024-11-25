@@ -195,7 +195,7 @@ int main(int argc, FAR char *argv[])
       else
         {
           printf("Sample     :\n");
-          printf("   npoints : %d\n",   sample.npoints);
+          printf("   npoints : %"PRId32"\n",   sample.npoints);
           printf("Point 1    :\n");
           printf("        id : %d\n",   sample.point[0].id);
           printf("     flags : %02x\n", sample.point[0].flags);
