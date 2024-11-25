@@ -39,6 +39,15 @@ config INTERPRETERS_QUICKJS_STACKSIZE
 	int "QuickJS interpreter stack size"
 	default 8192
 
+config INTERPRETERS_QUICKJS_MEMORY_LEAK_TRACE_SIZE
+	int "QuickJS Memory trace stack buffer size"
+	default 0
+
+config INTERPRETERS_QUICKJS_MEMORY_LEAK_TRACE_DUP_SIZE
+	int "QuickJS Memory trace stack dup buffer size"
+	default 0
+	depends on QUICKJS_MEMORY_LEAK_TRACE_SIZE > 0
+
 config INTERPRETERS_QUICKJS_EXT_HOOK
 	bool "External init/destory hook"
 	default n
