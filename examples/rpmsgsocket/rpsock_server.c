@@ -151,6 +151,7 @@ static FAR void *rpsock_thread(FAR void *pvarg)
     }
 
   printf("server Complete ret %zd, errno %d\n", ret, errno);
+  close(args->fd);
   free(args);
   return NULL;
 }
@@ -343,6 +344,7 @@ static int rpsock_recv_send_single(FAR struct rpsock_arg_s *args)
 
 end:
   printf("server Complete ret %zd, errno %d\n", ret, errno);
+  close(args->fd);
   free(args);
   return -errno;
 }
@@ -533,7 +535,6 @@ static int rpsock_dgram_server(int argc, FAR char *argv[])
 
   rpsock_thread(args);
 
-  close(fd);
   return 0;
 }
 
