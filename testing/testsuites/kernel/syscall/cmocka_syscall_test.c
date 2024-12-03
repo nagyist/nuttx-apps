@@ -439,7 +439,7 @@ int main(int argc, char *argv[])
    * test_nuttx_syscall_test_group_teardown),
    */
 
-#if !defined(CONFIG_ARCH_SIM) && defined(CONFIG_NET)
+#if !defined(CONFIG_ARCH_SIM) && defined(CONFIG_NET_IPv4)
       cmocka_unit_test_setup_teardown(
           test_nuttx_syscall_sockettest01,
           test_nuttx_syscall_test_group_setup,
