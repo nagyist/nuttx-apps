@@ -47,14 +47,14 @@ DECLARE_TEST(timespec_get)
   struct timespec ts;
 
   ret = timespec_get(&ts, TIME_UTC);
-  assert_int_equal(ret, 0);
+  assert_int_equal(ret, TIME_UTC);
 
   ret = timespec_get(NULL, TIME_UTC);
-  assert_int_not_equal(ret, 0);
+  assert_int_not_equal(ret, TIME_UTC);
 
   ret = timespec_get(&ts, -1);
-  assert_int_not_equal(ret, 0);
+  assert_int_not_equal(ret, TIME_UTC);
 
   ret = timespec_get(&ts, TIME_UTC + 1);
-  assert_int_not_equal(ret, 0);
+  assert_int_not_equal(ret, TIME_UTC + 1);
 }

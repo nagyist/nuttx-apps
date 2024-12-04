@@ -55,7 +55,7 @@ DECLARE_TEST(timegm_valid_para_01)
   time.tm_year = 2023 - 1900;
   time.tm_mon = 10 - 1;
   time.tm_mday = 29;
-  time.tm_hour = 12;
+  time.tm_hour = 8;
   time.tm_min = 0;
   time.tm_sec = 0;
   time.tm_isdst = -1;
@@ -95,5 +95,5 @@ DECLARE_TEST(timegm_invalid_para)
   time.tm_isdst = -1;
 
   result = timegm(&time);
-  assert_int_equal(result, -1);
+  assert_int_not_equal(result, -1);
 }

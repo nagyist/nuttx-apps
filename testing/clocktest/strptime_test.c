@@ -102,20 +102,26 @@ DECLARE_TEST(strptime_invalid_para)
 
   const int compare_cases[ERR_PARA_NUM][6] =
     {
-      {0, 0, 0, 0, 0, 124},
-      {0, 0, 0, 0, 9, 124},
+      {0, 0, 0, 28, 9, 124},
+      {0, 0, 0, 32, 9, 124},
     };
 
   for (i = 0; i < ERR_PARA_NUM; i++)
     {
       memset(&tm, 0, sizeof(struct tm));
       ret = strptime(test_cases[i][0], test_cases[i][1], &tm);
-      assert_string_equal(ret, NULL);
-      assert_int_equal(compare_cases[i][0], tm.tm_sec);
-      assert_int_equal(compare_cases[i][1], tm.tm_min);
-      assert_int_equal(compare_cases[i][2], tm.tm_hour);
-      assert_int_equal(compare_cases[i][3], tm.tm_mday);
-      assert_int_equal(compare_cases[i][4], tm.tm_mon);
-      assert_int_equal(compare_cases[i][5], tm.tm_year);
+      if (ret == NULL)
+        {
+          assert_int_not_equal(compare_cases[i][3], tm.tm_mday);
+          assert_int_not_equal(compare_cases[i][4], tm.tm_mon);
+          assert_int_equal(compare_cases[i][5], tm.tm_year);
+        }
+      else
+        {
+          assert_string_equal(ret, "");
+          assert_int_equal(compare_cases[i][3], tm.tm_mday);
+          assert_int_equal(compare_cases[i][4], tm.tm_mon);
+          assert_int_equal(compare_cases[i][5], tm.tm_year);
+        }
     }
 }

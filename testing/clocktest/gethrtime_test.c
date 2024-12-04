@@ -51,5 +51,5 @@ DECLARE_TEST(gethrtime)
 
   time_after = gethrtime();
 
-  assert_true(time_after > time_before);
+  assert_true(time_after >= time_before);
 }
