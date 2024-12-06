@@ -175,7 +175,8 @@ static int rpmsg_tun_recv_all(int fd, void *buf_, size_t len)
  *   name - network device name
  *
  * Returned Value:
- *   1 is running, 0 is down and -errno on failure.
+ *   1 is running and get ip address, 0 is down or not set ip addr,
+ *   -errno on failure.
  ****************************************************************************/
 
 static int rpmsg_tun_is_running(const char *name)
@@ -198,8 +199,24 @@ static int rpmsg_tun_is_running(const char *name)
       return -errno;
     }
 
+  if ((ifr.ifr_flags & IFF_RUNNING) != 0)
+    {
+      if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
+        {
+          close(fd);
+          return -errno;
+        }
+
+      struct sockaddr_in *addr = (struct sockaddr_in *)&ifr.ifr_addr;
+      if (addr->sin_addr.s_addr != INADDR_ANY)
+        {
+          close(fd);
+          return 1;
+        }
+    }
+
   close(fd);
-  return (ifr.ifr_flags & IFF_RUNNING) != 0;
+  return 0;
 }
 
 /****************************************************************************
@@ -559,7 +576,7 @@ int rpmsg_tun_connect_netlink(void)
 
   memset(&addr, 0, sizeof(addr));
   addr.nl_family = AF_NETLINK;
-  addr.nl_groups = RTNLGRP_LINK;
+  addr.nl_groups = RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
 
   /* Bind to local address */
 
@@ -583,7 +600,7 @@ int rpmsg_tun_connect_netlink(void)
  *   name - netdev to monitor
  *
  * Returned Value:
- *   1 is running/unknown, 0 is down and -errno on failure.
+ *   1 is running/unknown or have ip addr, 0 is down and -errno on failure.
  ****************************************************************************/
 
 int rpmsg_tun_process_netlink(int fd, const char *name)
@@ -601,33 +618,76 @@ int rpmsg_tun_process_netlink(int fd, const char *name)
   for (; NLMSG_OK(hdr, len); hdr = NLMSG_NEXT(hdr, len))
     {
       struct ifinfomsg *info;
+      struct ifaddrmsg *ifaddr;
       struct rtattr *attr;
       size_t attrlen;
+      char devname[IFNAMSIZ];
 
       if (hdr->nlmsg_type != RTM_NEWLINK &&
           hdr->nlmsg_type != RTM_DELLINK &&
-          hdr->nlmsg_type != RTM_SETLINK)
+          hdr->nlmsg_type != RTM_SETLINK &&
+          hdr->nlmsg_type != RTM_NEWADDR &&
+          hdr->nlmsg_type != RTM_DELADDR)
         {
           continue;
         }
 
-      info = NLMSG_DATA(hdr);
-      attr = IFLA_RTA(info);
-      attrlen = IFLA_PAYLOAD(hdr);
-
-      for (; RTA_OK(attr, attrlen); attr = RTA_NEXT(attr, attrlen))
+      switch (hdr->nlmsg_type)
         {
-          if (attr->rta_type != IFLA_IFNAME)
-            {
-              continue;
-            }
+          case RTM_NEWLINK:
+          case RTM_DELLINK:
+          case RTM_SETLINK:
+            info = (struct ifinfomsg *)NLMSG_DATA(hdr);
+            attr = IFLA_RTA(info);
+            attrlen = IFLA_PAYLOAD(hdr);
 
-          if (strcmp(name, RTA_DATA(attr)))
-            {
-              break;
-            }
+            for (; RTA_OK(attr, attrlen); attr = RTA_NEXT(attr, attrlen))
+              {
+                if (attr->rta_type != IFLA_IFNAME)
+                  {
+                    continue;
+                  }
 
-          return (info->ifi_flags & IFF_RUNNING) != 0;
+                if (strcmp(name, RTA_DATA(attr)))
+                  {
+                    break;
+                  }
+
+                return (info->ifi_flags & IFF_RUNNING) != 0;
+              }
+
+            break;
+
+          case RTM_NEWADDR:
+          case RTM_DELADDR:
+            ifaddr = (struct ifaddrmsg *)NLMSG_DATA(hdr);
+            attr = IFA_RTA(ifaddr);
+            attrlen = IFA_PAYLOAD(hdr);
+
+            for (; RTA_OK(attr, attrlen); attr = RTA_NEXT(attr, attrlen))
+              {
+                if (attr->rta_type != IFA_LOCAL)
+                  {
+                    continue;
+                  }
+
+                if (if_indextoname(ifaddr->ifa_index, devname) == NULL)
+                  {
+                    continue;
+                  }
+
+                if (strcmp(name, devname))
+                  {
+                    break;
+                  }
+
+                return hdr->nlmsg_type == RTM_NEWADDR;
+              }
+
+            break;
+
+          default:
+            break;
         }
     }
 
