@@ -22,6 +22,7 @@
  * Included Files
  ****************************************************************************/
 
+#include <stdlib.h>
 #include <pthread.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -114,6 +115,8 @@ static void test_trywait(FAR void **state)
 
   assert_int_equal(pthread_create(&tid, NULL, thread_nxevent_trywait,
                    event), 0);
+
+  assert_int_equal(pthread_join(tid, NULL), 0);
 }
 
 static void test_reset_and_wait(FAR void **state)
@@ -126,6 +129,9 @@ static void test_reset_and_wait(FAR void **state)
                    event), 0);
   assert_int_equal(pthread_create(&w_tid, NULL, thread_nxevent_wait,
                    event), 0);
+
+  assert_int_equal(pthread_join(r_tid, NULL), 0);
+  assert_int_equal(pthread_join(w_tid, NULL), 0);
 }
 
 static void test_post_and_tickwait(FAR void **state)
@@ -138,6 +144,9 @@ static void test_post_and_tickwait(FAR void **state)
                    event), 0);
   assert_int_equal(pthread_create(&t_tid, NULL, thread_nxevent_tickwait,
                    event), 0);
+
+  assert_int_equal(pthread_join(p_tid, NULL), 0);
+  assert_int_equal(pthread_join(t_tid, NULL), 0);
 }
 
 /****************************************************************************
@@ -146,7 +155,9 @@ static void test_post_and_tickwait(FAR void **state)
 
 static int setup_nxevent_init(FAR void **state)
 {
-  FAR nxevent_t *event = *state;
+  FAR nxevent_t *event = (nxevent_t *)malloc(sizeof(nxevent_t));
+  assert_non_null(event);
+  *state = event;
 
   /* Initialize the event1 object */
 
@@ -166,6 +177,8 @@ static int teardown_nxevent_destroy(FAR void **state)
   ret = nxevent_destroy(event);
   assert_int_equal(ret, 0);
 
+  assert_non_null(event);
+  free(event);
   return 0;
 }
 
