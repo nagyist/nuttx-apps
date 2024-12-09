@@ -67,6 +67,10 @@
 #  define CONFIG_EXAMPLES_WATCHDOG_TIMEOUT 2000
 #endif
 
+#ifndef CONFIG_EXAMPLES_WATCHDOG_SOFT
+#  define CONFIG_EXAMPLES_WATCHDOG_SOFT 0
+#endif
+
 /****************************************************************************
  * Public Types
  ****************************************************************************/

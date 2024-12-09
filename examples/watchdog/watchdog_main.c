@@ -55,6 +55,7 @@ struct wdog_example_s
   uint32_t pingtime;
   uint32_t pingdelay;
   uint32_t timeout;
+  bool     soft;
   char devname[DEVNAME_SIZE];
 };
 
@@ -83,6 +84,8 @@ static void wdog_help(void)
   printf("  [-t timeout] = Time in milliseconds that the example will\n");
   printf("ping the watchdog before letting the watchdog expire.\n");
   printf("Default: %d\n", CONFIG_EXAMPLES_WATCHDOG_TIMEOUT);
+  printf("  [-s] = Choose the hardware watchdog or the software watchdog\n");
+  printf("Default software watchdog: %d\n", CONFIG_EXAMPLES_WATCHDOG_SOFT);
   printf("  [-h] = Shows this message and exits\n");
 }
 
@@ -136,6 +139,7 @@ static void parse_args(FAR struct wdog_example_s *wdog, int argc,
   wdog->pingtime  = CONFIG_EXAMPLES_WATCHDOG_PINGTIME;
   wdog->pingdelay = CONFIG_EXAMPLES_WATCHDOG_PINGDELAY;
   wdog->timeout   = CONFIG_EXAMPLES_WATCHDOG_TIMEOUT;
+  wdog->soft      = CONFIG_EXAMPLES_WATCHDOG_SOFT;
   strlcpy(wdog->devname, CONFIG_EXAMPLES_WATCHDOG_DEVPATH,
           sizeof(wdog->devname));
 
@@ -192,6 +196,25 @@ static void parse_args(FAR struct wdog_example_s *wdog, int argc,
             index += nargs;
             break;
 
+          case 's':
+            nargs = arg_string(&argv[index], &string);
+            if (strcmp(string, "soft") == 0)
+              {
+                wdog->soft = true;
+              }
+            else if (strcmp(string, "hard") == 0)
+              {
+                wdog->soft = false;
+              }
+            else
+              {
+                printf("Invalid argument for -s: %s, default soft\n",
+                       string);
+              }
+
+            index += nargs;
+            break;
+
           case 'h':
             wdog_help();
             exit(EXIT_SUCCESS);
@@ -238,6 +261,12 @@ int main(int argc, FAR char *argv[])
       printf("wdog_main: open %s failed: %d\n",
              wdog.devname, errno);
       goto errout;
+    }
+
+  ret = ioctl(fd, WDIOC_SETSOFT, wdog.soft);
+  if (ret < 0)
+    {
+      printf("wdog_main: ioctl(WDIOC_SETSOFT) failed: %d\n", ret);
     }
 
   /* Set the watchdog timeout */

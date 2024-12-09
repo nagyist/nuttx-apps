@@ -60,4 +60,10 @@ config EXAMPLES_WATCHDOG_TIMEOUT
 		The watchdog timeout value in milliseconds before the watchdog timer
 		expires.  Default:  2000 milliseconds.
 
+config EXAMPLES_WATCHDOG_SOFT
+	bool "Watchdog ping delay"
+	default n
+	---help---
+		The default is Soft Watchdog.
+
 endif
