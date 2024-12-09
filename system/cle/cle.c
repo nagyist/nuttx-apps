@@ -314,7 +314,7 @@ static int cle_getch(FAR struct cle_s *priv)
           if (nread == 0 || errcode != EINTR)
             {
               cledbg("ERROR: read from stdin failed: %d\n", errcode);
-              return -EIO;
+              return EOF;
             }
         }
     }
@@ -701,9 +701,9 @@ static int cle_editloop(FAR struct cle_s *priv)
       for (; ; )
         {
           ch = cle_getch(priv);
-          if (ch < 0)
+          if (ch == EOF)
             {
-              return -EIO;
+              return EOF;
             }
           else if (state != 0)
             {
