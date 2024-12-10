@@ -52,9 +52,9 @@ FAR static void *busy_loop(FAR void *arg)
   irqstate_t flags;
 
   clock_t current = perf_gettime();
-  printf("Thread: %d; CPU: %d; current_time = %ld\n",
+  printf("Thread: %d; CPU: %d; current_time = %"PRIu64"\n",
          tcb->pid, cpu, current);
-  printf("tcb->busywait_max = %ld; tcb->busywait_total = %ld\n",
+  printf("tcb->busywait_max = %"PRIu64"; tcb->busywait_total = %"PRIu64"\n",
          tcb->busywait_max, tcb->busywait_total);
 
   /* Accessing g_sum in a critical section */
@@ -65,9 +65,9 @@ FAR static void *busy_loop(FAR void *arg)
 
   /* record the max busywait time */
 
-  printf("Thread: %d; CPU: %d; tcb->busywait_start =%ld; "
-         "tcb->busywait_max = %ld; tcb->busywait_total = %ld; "
-         "g_busywait_total[%d] = %ld\n",
+  printf("Thread: %d; CPU: %d; tcb->busywait_start =%"PRIu64"; "
+         "tcb->busywait_max = %"PRIu64"; tcb->busywait_total = %"PRIu64"; "
+         "g_busywait_total[%d] = %"PRIu64"\n",
          tcb->pid, cpu, tcb->busywait_start, tcb->busywait_max,
          tcb->busywait_total, cpu, g_busywait_total[cpu]);
 
