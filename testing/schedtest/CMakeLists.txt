@@ -135,4 +135,16 @@ if(CONFIG_TESTING_SCHEDTEST)
       SRCS
       sched_dumpstack_test.c)
   endif()
+
+  nuttx_add_application(
+    NAME
+    signaltest
+    PRIORITY
+    ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
+    STACKSIZE
+    ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
+    MODULE
+    ${CONFIG_TESTING_SCHEDTEST}
+    SRCS
+    signaltest.c)
 endif()

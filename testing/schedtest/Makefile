@@ -24,7 +24,8 @@ PRIORITY  = $(CONFIG_TESTING_SCHEDTEST_PRIORITY)
 STACKSIZE = $(CONFIG_TESTING_SCHEDTEST_STACKSIZE)
 MODULE    = $(CONFIG_TESTING_SCHEDTEST)
 
-MAINSRC += wqueue.c rwsem.c
+CFLAGS  += -I$(TOPDIR)/sched
+MAINSRC += wqueue.c rwsem.c signaltest.c
 
 ifneq ($(CONFIG_SCHED_EVENTS),)
 MAINSRC += eventtest.c
@@ -37,7 +38,6 @@ MAINSRC += cpucount_test.c
 ifeq ($(CONFIG_SCHED_CRITMONITOR),y)
 ifneq ($(CONFIG_SCHED_CRITMONITOR_MAXTIME_BUSYWAIT),-1)
 MAINSRC += busywait_test.c
-CFLAGS += -I$(TOPDIR)/sched
 endif
 endif
 endif

@@ -20,6 +20,6 @@ config TESTING_SCHEDTEST_PRIORITY
 
 config TESTING_SCHEDTEST_STACKSIZE
 	int "Schedtest stack size"
-	default DEFAULT_TASK_STACKSIZE
+	default 4096
 
 endif
