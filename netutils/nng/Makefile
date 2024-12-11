@@ -73,6 +73,7 @@ CSRCS += $(NNG_SRCDIR)/core/listener.c
 CSRCS += $(NNG_SRCDIR)/core/lmq.c
 CSRCS += $(NNG_SRCDIR)/core/message.c
 CSRCS += $(NNG_SRCDIR)/core/msgqueue.c
+CSRCS += $(NNG_SRCDIR)/core/nng_global.c
 CSRCS += $(NNG_SRCDIR)/core/options.c
 CSRCS += $(NNG_SRCDIR)/core/pollable.c
 CSRCS += $(NNG_SRCDIR)/core/panic.c
