@@ -82,7 +82,7 @@ static void *other_run(void *arg)
 
 static void *other_ready(void *arg)
 {
-  sleep(1000 * 10);
+  sleep(10);
 
   return NULL;
 }
@@ -91,13 +91,13 @@ static void test_other_cpu_run(void **state)
 {
   pthread_t thread;
   pthread_attr_t tattr;
-  pthread_attr_init(&tattr);
   cpu_set_t cpuset;
   int current_cpu = sched_getcpu();
   int other_cpu = (current_cpu == 0) ? 1 : 0;
 
   /* Set the cpu affinity of the new thread */
 
+  pthread_attr_init(&tattr);
   CPU_ZERO(&cpuset);
   CPU_SET(other_cpu, &cpuset);
   pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);
@@ -113,13 +113,13 @@ static void test_other_cpu_ready(void **state)
 {
   pthread_t thread;
   pthread_attr_t tattr;
-  pthread_attr_init(&tattr);
   cpu_set_t cpuset;
   int current_cpu = sched_getcpu();
   int other_cpu = (current_cpu == 0) ? 1 : 0;
 
   /* Set the cpu affinity of the new thread */
 
+  pthread_attr_init(&tattr);
   CPU_ZERO(&cpuset);
   CPU_SET(other_cpu, &cpuset);
   pthread_attr_setaffinity_np(&tattr, sizeof(cpu_set_t), &cpuset);

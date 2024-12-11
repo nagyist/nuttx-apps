@@ -68,7 +68,26 @@ static void test_current_cpu_ready(void **state)
   int num_frames;
   int i;
 
+  /**
+   * If in SMP, newly created threads will be put on other idle CPUs,
+   * so need to set CPU affinity.
+   */
+
+#ifdef CONFIG_SMP
+  pthread_attr_t attr;
+  cpu_set_t cpuset;
+  int current_cpu = sched_getcpu();
+
+  pthread_attr_init(&attr);
+  CPU_ZERO(&cpuset);
+  CPU_SET(current_cpu, &cpuset);
+  pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+  pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpuset);
+  pthread_create(&thread, &attr, current_ready, NULL);
+#else
   pthread_create(&thread, NULL, current_ready, NULL);
+#endif
+
   sched_yield();
 
   num_frames = sched_backtrace(thread, buffer, 10, 0);

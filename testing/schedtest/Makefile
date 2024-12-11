@@ -34,9 +34,11 @@ ifeq ($(CONFIG_SMP),y)
 MAINSRC += setaffinity_test.c
 MAINSRC += getaffinity_test.c
 MAINSRC += cpucount_test.c
+ifeq ($(CONFIG_SCHED_CRITMONITOR),y)
 ifneq ($(CONFIG_SCHED_CRITMONITOR_MAXTIME_BUSYWAIT),-1)
 MAINSRC += busywait_test.c
 CFLAGS += -I$(TOPDIR)/sched
+endif
 endif
 endif
 
