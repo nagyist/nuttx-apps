@@ -603,7 +603,14 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
     {
       FAR char *sh_argv[4];
       FAR char *sh_cmd = "sh";
-      char sh_arg2[CONFIG_NSH_LINELEN];
+      FAR char *sh_arg2;
+
+      sh_arg2 = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+      if (sh_arg2 == NULL)
+        {
+          nsh_error(vtbl, g_fmtcmdoutofmemory, sh_cmd);
+          return nsh_saveresult(vtbl, false);
+        }
 
       DEBUGASSERT(strncmp(argv[0], sh_cmd, 3) != 0);
 
@@ -611,7 +618,7 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
 
       for (ret = 0; ret < argc; ret++)
         {
-          strlcat(sh_arg2, argv[ret], sizeof(sh_arg2));
+          strlcat(sh_arg2, argv[ret], CONFIG_NSH_LINELEN);
 
           if (ret < argc - 1)
             {
@@ -628,7 +635,9 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
        * dispatch the backgroud by sh -c ""
        */
 
-      return nsh_execute(vtbl, 4, sh_argv, param);
+      ret = nsh_execute(vtbl, 4, sh_argv, param);
+      lib_put_tempbuffer(sh_arg2);
+      return ret;
     }
   else
 #endif
@@ -2677,7 +2686,15 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
         {
           FAR char *arg;
           FAR char *sh_argv[4];
-          char sh_arg2[CONFIG_NSH_LINELEN];
+          FAR char *sh_arg2;
+
+          sh_arg2 = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+          if (sh_arg2 == NULL)
+            {
+              nsh_error(vtbl, g_fmtcmdoutofmemory, cmd);
+              ret = -ENOMEM;
+              goto dynlist_free;
+            }
 
           if (argv[argc][g_pipeline1_len])
             {
@@ -2691,6 +2708,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
           if (!arg)
             {
               nsh_error(vtbl, g_fmtarginvalid, cmd);
+              lib_put_tempbuffer(sh_arg2);
               ret = ERROR;
               goto dynlist_free;
             }
@@ -2699,7 +2717,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
 
           for (ret = 0; ret < argc; ret++)
             {
-              strlcat(sh_arg2, argv[ret], sizeof(sh_arg2));
+              strlcat(sh_arg2, argv[ret], CONFIG_NSH_LINELEN);
 
               if (ret < argc - 1)
                 {
@@ -2715,6 +2733,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
           ret = pipe2(pipefd, 0);
           if (ret < 0)
             {
+              lib_put_tempbuffer(sh_arg2);
               ret = -errno;
               goto dynlist_free;
             }
@@ -2727,6 +2746,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
           vtbl->np.np_bg = true;
 
           ret = nsh_execute(vtbl, 4, sh_argv, &param);
+          lib_put_tempbuffer(sh_arg2);
 
           vtbl->np.np_bg = bg_save;
 

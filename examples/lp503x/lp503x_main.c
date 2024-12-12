@@ -623,20 +623,26 @@ static int lp503x_cmd_help(FAR char *parg)
 
 int main(int argc, FAR char *argv[])
 {
+  FAR char *buffer;
+  FAR char *cmd;
+  FAR char *arg;
   bool running;
-  char buffer[CONFIG_NSH_LINELEN];
   int len;
   int x;
-  char *cmd;
-  char *arg;
 
   fd = open(CONFIG_EXAMPLES_LP503X_DEVPATH, O_CREAT);
   if (fd < 0)
     {
       fprintf(stderr, "ERROR: Failed to open %s: %d\n",
               CONFIG_EXAMPLES_LP503X_DEVPATH, errno);
-              close(fd);
-      return ENODEV;
+      return -ENODEV;
+    }
+
+  buffer = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+  if (buffer == NULL)
+    {
+      close(fd);
+      return -ENOMEM;
     }
 
   running = true;
@@ -713,6 +719,7 @@ int main(int argc, FAR char *argv[])
         }
     }
 
+  lib_put_tempbuffer(buffer);
   close(fd);
 
   return 0;

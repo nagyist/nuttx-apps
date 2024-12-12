@@ -500,7 +500,7 @@ static int nxlooper_cmd_help(FAR struct nxlooper_s *plooper, char *parg)
 
 int main(int argc, FAR char *argv[])
 {
-  char                  buffer[CONFIG_NSH_LINELEN];
+  FAR char             *buffer;
   int                   len;
   int                   x;
   int                   running;
@@ -518,6 +518,14 @@ int main(int argc, FAR char *argv[])
   if (plooper == NULL)
     {
       printf("Error: Out of RAM\n");
+      return -ENOMEM;
+    }
+
+  buffer = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+  if (buffer == NULL)
+    {
+      nxlooper_release(plooper);
+      printf("Error: lib_get_tempbuffer failed\n");
       return -ENOMEM;
     }
 
@@ -595,6 +603,7 @@ int main(int argc, FAR char *argv[])
   /* Release the NxLooper context */
 
   nxlooper_release(plooper);
+  lib_put_tempbuffer(buffer);
 
   return OK;
 }

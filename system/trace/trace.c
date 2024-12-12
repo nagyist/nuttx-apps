@@ -227,7 +227,7 @@ static int trace_cmd_dump(FAR const char *name, int index, int argc,
 static int trace_cmd_cmd(FAR const char *name, int index, int argc,
                          FAR char **argv, int notectlfd)
 {
-  char command[CONFIG_NSH_LINELEN];
+  FAR char *command;
   bool changed;
   bool cont = false;
 
@@ -251,6 +251,12 @@ static int trace_cmd_cmd(FAR const char *name, int index, int argc,
       return ERROR;
     }
 
+  command = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+  if (command == NULL)
+    {
+      return -ENOMEM;
+    }
+
   command[0] = '\0';
   while (index < argc)
     {
@@ -271,6 +277,7 @@ static int trace_cmd_cmd(FAR const char *name, int index, int argc,
   changed = notectl_enable(name, true, notectlfd);
 
   system(command);
+  lib_put_tempbuffer(command);
 
   if (changed)
     {

@@ -80,13 +80,19 @@ static bool get_cpuset(const char *arg, cpu_set_t *cpu_set)
 
 int main(int argc, FAR char *argv[])
 {
-  char command[CONFIG_NSH_LINELEN];
+  FAR char *command;
   int exitcode;
   int option;
   int pid = -1;
   cpu_set_t cpuset;
   int rc;
   int i;
+
+  command = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+  if (command == NULL)
+    {
+      return -ENOMEM;
+    }
 
   command[0] = '\0';
   CPU_ZERO(&cpuset);
@@ -166,8 +172,10 @@ int main(int argc, FAR char *argv[])
     }
 
 errout:
+  lib_put_tempbuffer(command);
   return EXIT_SUCCESS;
 errout_with_usage:
+  lib_put_tempbuffer(command);
   show_usage(argv[0], exitcode);
   return exitcode;  /* Not reachable */
 }

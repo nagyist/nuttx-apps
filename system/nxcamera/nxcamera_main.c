@@ -396,7 +396,7 @@ static int nxcamera_cmd_help(FAR struct nxcamera_s *pcam, FAR char *parg)
 
 int main(int argc, FAR char *argv[])
 {
-  char                  buffer[CONFIG_NSH_LINELEN];
+  FAR char             *buffer;
   int                   len;
   int                   x;
   bool                  running = true;
@@ -417,6 +417,14 @@ int main(int argc, FAR char *argv[])
   if (pcam == NULL)
     {
       printf("Error: Out of RAM\n");
+      return -ENOMEM;
+    }
+
+  buffer = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+  if (buffer == NULL)
+    {
+      nxcamera_release(pcam);
+      printf("Error: lib_get_tempbuffer failed\n");
       return -ENOMEM;
     }
 
@@ -493,6 +501,7 @@ int main(int argc, FAR char *argv[])
   /* Release the NxCamera context */
 
   nxcamera_release(pcam);
+  lib_put_tempbuffer(buffer);
 
   return OK;
 }

@@ -737,7 +737,7 @@ static int nxplayer_cmd_help(FAR struct nxplayer_s *pplayer, char *parg)
 
 int main(int argc, FAR char *argv[])
 {
-  char                    buffer[CONFIG_NSH_LINELEN];
+  FAR char               *buffer;
   int                     len;
   int                     x;
   int                     running;
@@ -755,6 +755,14 @@ int main(int argc, FAR char *argv[])
   if (pplayer == NULL)
     {
       printf("Error:  Out of RAM\n");
+      return -ENOMEM;
+    }
+
+  buffer = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+  if (buffer == NULL)
+    {
+      nxplayer_release(pplayer);
+      printf("Error: lib_get_tempbuffer failed\n");
       return -ENOMEM;
     }
 
@@ -839,6 +847,7 @@ int main(int argc, FAR char *argv[])
   /* Release the NxPlayer context */
 
   nxplayer_release(pplayer);
+  lib_put_tempbuffer(buffer);
 
   return OK;
 }

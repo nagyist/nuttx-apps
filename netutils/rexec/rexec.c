@@ -153,9 +153,10 @@ static int do_rexec(FAR struct rexec_arg_s *arg)
 
 int main(int argc, FAR char **argv)
 {
-  char cmd[CONFIG_NSH_LINELEN];
   struct rexec_arg_s arg;
+  FAR char *cmd;
   int option;
+  int ret;
   int i;
 
   memset(&arg, 0, sizeof(arg));
@@ -200,6 +201,12 @@ int main(int argc, FAR char **argv)
       usage(argv[0]);
     }
 
+  cmd = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+  if (cmd == NULL)
+    {
+      return -ENOMEM;
+    }
+
   cmd[0] = '\0';
   for (i = optind; i < argc; i++)
     {
@@ -208,5 +215,7 @@ int main(int argc, FAR char **argv)
     }
 
   arg.command = cmd;
-  return do_rexec(&arg);
+  ret = do_rexec(&arg);
+  lib_put_tempbuffer(cmd);
+  return ret;
 }

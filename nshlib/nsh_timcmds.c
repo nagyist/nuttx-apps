@@ -24,6 +24,7 @@
 
 #include <nuttx/config.h>
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -550,7 +551,7 @@ int cmd_timedatectl(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 #ifndef CONFIG_NSH_DISABLE_WATCH
 int cmd_watch(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
-  char buffer[CONFIG_NSH_LINELEN];
+  FAR char *buffer;
   int interval = 2;
   int count = -1;
   FAR char *cmd;
@@ -591,6 +592,13 @@ int cmd_watch(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       count = INT_MAX;
     }
 
+  buffer = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+  if (buffer == NULL)
+    {
+      nsh_error(vtbl, g_fmtcmdfailed, argv[0], cmd, ENOMEM);
+      return -ENOMEM;
+    }
+
   for (i = 0; i < count; i++)
     {
       strlcpy(buffer, cmd, CONFIG_NSH_LINELEN);
@@ -598,12 +606,14 @@ int cmd_watch(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       if (ret < 0)
         {
           nsh_error(vtbl, g_fmtcmdfailed, argv[0], cmd, NSH_ERRNO);
+          lib_put_tempbuffer(buffer);
           return ERROR;
         }
 
       sleep(interval);
     }
 
+  lib_put_tempbuffer(buffer);
   return OK;
 }
 #endif
