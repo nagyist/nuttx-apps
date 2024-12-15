@@ -705,11 +705,6 @@ static int cmd_rptun_cb(FAR int *cmd, FAR unsigned long *val,
     {
       *cmd = RPTUNIOC_STOP;
     }
-  else if (strcmp(argv[1], "reset") == 0)
-    {
-      *val = atoi(argv[3]);
-      *cmd = RPTUNIOC_RESET;
-    }
   else
     {
       return ERROR;
@@ -747,7 +742,6 @@ int cmd_rptun(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
     {
       nsh_output(vtbl, "usage:\n\n");
       nsh_output(vtbl, "rptun <start|stop> <path>\n");
-      nsh_output(vtbl, "rptun <reset> <path> <resetvalue>\n");
       return cmd_rpmsg_help(vtbl, argc, argv);
     }
 
