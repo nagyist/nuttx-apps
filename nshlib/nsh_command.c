@@ -536,13 +536,13 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #if defined(CONFIG_RPMSG) && !defined(CONFIG_NSH_DISABLE_RPMSG)
   CMD_MAP("rpmsg",    cmd_rpmsg,    2, 7,
-    "<panic|dump|ping> <path|all>"
+    "<dump|ping> <path|all>"
     " [value|times length ack sleep]"),
 #endif
 
 #if defined(CONFIG_RPTUN) && !defined(CONFIG_NSH_DISABLE_RPTUN)
   CMD_MAP("rptun",    cmd_rptun,    2, 7,
-    "<start|stop|panic|dump|ping> <path|all>"
+    "<start|stop|dump|ping> <path|all>"
     " [value|times length ack sleep]"),
 #endif
 

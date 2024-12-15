@@ -563,11 +563,7 @@ static int cmd_rpmsg_once(FAR struct nsh_vtbl_s *vtbl,
   int cmd;
   int fd;
 
-  if (strcmp(argv[1], "panic") == 0)
-    {
-      cmd = RPMSGIOC_PANIC;
-    }
-  else if (strcmp(argv[1], "dump") == 0)
+  if (strcmp(argv[1], "dump") == 0)
     {
       cmd = RPMSGIOC_DUMP;
     }
