@@ -30,6 +30,18 @@ config UORB_TESTS
 	bool "uorb unit tests"
 	default n
 
+config UORB_ADVERTISE_DEMO
+	bool "enable uorb advertise demo"
+	default n
+
+config UORB_RPMSG_TEST
+	bool "enable uorb rpmsg test"
+	default n
+
+config UORB_DOWNSAMPLING_TEST
+	bool "enable uorb downsampling test"
+	default n
+
 config UORB_LOOP_MAX_EVENTS
 	int "uorb loop max events"
 	default 16

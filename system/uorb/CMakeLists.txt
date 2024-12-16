@@ -78,6 +78,54 @@ if(CONFIG_UORB)
       uorb)
   endif()
 
+  if(CONFIG_UORB_ADVERTISE_DEMO)
+    nuttx_add_application(
+      NAME
+      uorb_advertise_demo
+      PRIORITY
+      ${CONFIG_UORB_PRIORITY}
+      STACKSIZE
+      ${CONFIG_UORB_STACKSIZE}
+      MODULE
+      ${CONFIG_UORB}
+      SRCS
+      test/orb_advertise_main.c
+      DEPENDS
+      uorb)
+  endif()
+
+  if(CONFIG_UORB_RPMSG_TEST)
+    nuttx_add_application(
+      NAME
+      uorb_rpmsg_test
+      PRIORITY
+      ${CONFIG_UORB_PRIORITY}
+      STACKSIZE
+      ${CONFIG_UORB_STACKSIZE}
+      MODULE
+      ${CONFIG_UORB}
+      SRCS
+      test/rpmsg_test.c
+      DEPENDS
+      uorb)
+  endif()
+
+  if(CONFIG_UORB_DOWNSAMPLING_TEST)
+    nuttx_add_application(
+      NAME
+      uorb_downsample
+      PRIORITY
+      ${CONFIG_UORB_PRIORITY}
+      STACKSIZE
+      ${CONFIG_UORB_STACKSIZE}
+      MODULE
+      ${CONFIG_UORB}
+      SRCS
+      test/downsampling_test.c
+      DEPENDS
+      uorb)
+  endif()
+
   target_include_directories(uorb PUBLIC .)
   target_sources(uorb PRIVATE ${CSRCS})
 

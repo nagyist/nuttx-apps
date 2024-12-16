@@ -63,3 +63,37 @@ cc_binary {
     ],
     defaults: ["uorb_defaults"]
 }
+
+cc_binary {
+    name: "uorb_advertise_demo",
+    srcs: [
+        "test/orb_advertise_main.c",
+        "test/utility.c"
+    ],
+    defaults: ["uorb_defaults"]
+}
+
+cc_binary {
+    name: "uorb_rpmsg_test",
+    srcs: [
+        "test/rpmsg_test.c",
+        "test/utility.c"
+    ],
+    defaults: ["uorb_defaults"],
+    cflags: [
+        "-DCONFIG_LIBC_HOSTNAME=\"Xiaomi Watch O61\""
+    ]
+}
+
+cc_binary {
+    name: "uorb_downsample",
+    srcs: [
+        "test/downsampling_test.c",
+        "test/utility.c"
+    ],
+    defaults: ["uorb_defaults"],
+    cflags: [
+        "-DSCHED_PRIORITY_MAX=255",
+        "-DCONFIG_UORB_STACKSIZE=2048"
+    ]
+}

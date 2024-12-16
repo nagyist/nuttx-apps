@@ -39,6 +39,21 @@ MAINSRC  += test/unit_test.c
 PROGNAME += uorb_unit_test
 endif
 
+ifneq ($(CONFIG_UORB_ADVERTISE_DEMO),)
+PROGNAME += uorb_advertise_demo
+MAINSRC  += test/orb_advertise_main.c
+endif
+
+ifneq ($(CONFIG_UORB_RPMSG_TEST),)
+PROGNAME += uorb_rpmsg_test
+MAINSRC  += test/rpmsg_test.c
+endif
+
+ifneq ($(CONFIG_UORB_DOWNSAMPLING_TEST),)
+PROGNAME += uorb_downsample
+MAINSRC  += test/downsampling_test.c
+endif
+
 PRIORITY  = $(CONFIG_UORB_PRIORITY)
 STACKSIZE = $(CONFIG_UORB_STACKSIZE)
 MODULE    = $(CONFIG_UORB)
