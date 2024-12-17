@@ -948,8 +948,8 @@ errout:
  * Name: cmd_losetup
  ****************************************************************************/
 
-#ifndef CONFIG_DISABLE_MOUNTPOINT
-#   if defined(CONFIG_DEV_LOOP) && !defined(CONFIG_NSH_DISABLE_LOSETUP)
+#if !defined(CONFIG_DISABLE_MOUNTPOINT) && defined(CONFIG_DEV_LOOP) && \
+    !defined(CONFIG_NSH_DISABLE_LOSETUP)
 int cmd_losetup(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   FAR char *loopdev = NULL;
@@ -1103,14 +1103,13 @@ errout_with_paths:
   return ret;
 }
 #endif
-#endif
 
 /****************************************************************************
  * Name: cmd_losmart
  ****************************************************************************/
 
-#ifndef CONFIG_DISABLE_MOUNTPOINT
-#   if defined(CONFIG_SMART_DEV_LOOP) && !defined(CONFIG_NSH_DISABLE_LOSMART)
+#if !defined(CONFIG_DISABLE_MOUNTPOINT) && defined(CONFIG_SMART_DEV_LOOP) && \
+    !defined(CONFIG_NSH_DISABLE_LOSMART)
 int cmd_losmart(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   FAR char *loopdev = NULL;
@@ -1275,14 +1274,13 @@ errout_with_paths:
   return ret;
 }
 #endif
-#endif
 
 /****************************************************************************
  * Name: cmd_lomtd
  ****************************************************************************/
 
-#ifndef CONFIG_DISABLE_MOUNTPOINT
-#  if defined(CONFIG_MTD_LOOP) && !defined(CONFIG_NSH_DISABLE_LOMTD)
+#if !defined(CONFIG_DISABLE_MOUNTPOINT) && defined(CONFIG_MTD_LOOP) && \
+    !defined(CONFIG_NSH_DISABLE_LOMTD)
 int cmd_lomtd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   FAR char *loopdev = NULL;
@@ -1293,6 +1291,9 @@ int cmd_lomtd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   int sectsize = -1;
   off_t offset = 0;
   bool badarg = false;
+#  ifdef CONFIG_MTD_CONFIG
+  int configdata = 0;
+#  endif
   int ret = ERROR;
   int option;
   int fd;
@@ -1300,14 +1301,17 @@ int cmd_lomtd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   /* Get the lomtd options:  Two forms are supported:
    *
    *   lomtd -d <loop-device>
-   *   lomtd [-o <offset>] [-e erasesize] [-b sectsize]
+   *   lomtd [-o <offset>] [-e erasesize] [-b sectsize] [-c configdata]
    *         <loop-device> <filename>
    *
    * NOTE that the -o and -r options are accepted with the -d option, but
    * will be ignored.
    */
-
+#  ifdef CONFIG_MTD_CONFIG
+  while ((option = getopt(argc, argv, "d:o:e:b:c:")) != ERROR)
+#  else
   while ((option = getopt(argc, argv, "d:o:e:b:")) != ERROR)
+#  endif
     {
       switch (option)
         {
@@ -1327,6 +1331,12 @@ int cmd_lomtd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
         case 'b':
           sectsize = atoi(optarg);
           break;
+
+#  ifdef CONFIG_MTD_CONFIG
+        case 'c':
+          configdata = atoi(optarg);
+          break;
+#  endif
 
         case '?':
         default:
@@ -1403,11 +1413,14 @@ int cmd_lomtd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
     {
       /* Set up the loop device */
 
-      setup.devname   = loopdev;    /* The loop block device to be created */
-      setup.filename  = filepath;   /* The file or character device to use */
-      setup.sectsize  = sectsize;   /* The sector size to use with the block device */
-      setup.erasesize = erasesize;  /* The sector size to use with the block device */
-      setup.offset    = offset;     /* An offset that may be applied to the device */
+      setup.devname    = loopdev;    /* The loop block device to be created */
+      setup.filename   = filepath;   /* The file or character device to use */
+      setup.sectsize   = sectsize;   /* The sector size to use with the block device */
+      setup.erasesize  = erasesize;  /* The sector size to use with the block device */
+      setup.offset     = offset;     /* An offset that may be applied to the device */
+#  ifdef CONFIG_MTD_CONFIG
+      setup.configdata = configdata; /* Is a loop mtdconfig device */
+#  endif
 
       ret = ioctl(fd, MTD_LOOPIOC_SETUP,
                   (unsigned long)((uintptr_t)&setup));
@@ -1438,7 +1451,6 @@ errout_with_paths:
 
   return ret;
 }
-#  endif
 #endif
 
 /****************************************************************************
@@ -1650,8 +1662,7 @@ int cmd_ls(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  * Name: cmd_mkdir
  ****************************************************************************/
 
-#ifdef NSH_HAVE_DIROPTS
-#ifndef CONFIG_NSH_DISABLE_MKDIR
+#if defined(NSH_HAVE_DIROPTS) && !defined(CONFIG_NSH_DISABLE_MKDIR)
 int cmd_mkdir(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   FAR char *fullpath = NULL;
@@ -1711,14 +1722,13 @@ int cmd_mkdir(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   return ret;
 }
 #endif
-#endif
 
 /****************************************************************************
  * Name: cmd_mkfatfs
  ****************************************************************************/
 
-#if !defined(CONFIG_DISABLE_MOUNTPOINT) && defined(CONFIG_FSUTILS_MKFATFS)
-#ifndef CONFIG_NSH_DISABLE_MKFATFS
+#if !defined(CONFIG_DISABLE_MOUNTPOINT) && defined(CONFIG_FSUTILS_MKFATFS) && \
+    !defined(CONFIG_NSH_DISABLE_MKFATFS)
 int cmd_mkfatfs(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   struct fat_format_s fmt = FAT_FORMAT_INITIALIZER;
@@ -1813,7 +1823,6 @@ int cmd_mkfatfs(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   nsh_freefullpath(fullpath);
   return ret;
 }
-#endif
 #endif
 
 /****************************************************************************
@@ -1951,8 +1960,7 @@ errout_with_fmt:
  ****************************************************************************/
 
 #if !defined(CONFIG_DISABLE_MOUNTPOINT) && defined(CONFIG_FS_SMARTFS) && \
-    defined(CONFIG_FSUTILS_MKSMARTFS)
-#ifndef CONFIG_NSH_DISABLE_MKSMARTFS
+    defined(CONFIG_FSUTILS_MKSMARTFS) && !defined(CONFIG_NSH_DISABLE_MKSMARTFS)
 int cmd_mksmartfs(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   FAR char *fullpath = NULL;
@@ -2037,14 +2045,12 @@ int cmd_mksmartfs(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   return ret;
 }
 #endif
-#endif
 
 /****************************************************************************
  * Name: cmd_mv
  ****************************************************************************/
 
-#ifdef NSH_HAVE_DIROPTS
-#ifndef CONFIG_NSH_DISABLE_MV
+#if defined(NSH_HAVE_DIROPTS) && !defined(CONFIG_NSH_DISABLE_MV)
 int cmd_mv(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   UNUSED(argc);
@@ -2086,7 +2092,6 @@ errout_with_oldpath:
   nsh_freefullpath(oldpath);
   return ret;
 }
-#endif
 #endif
 
 /****************************************************************************
@@ -2130,9 +2135,7 @@ int cmd_readlink(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
  * Name: cmd_rm
  ****************************************************************************/
 
-#ifdef NSH_HAVE_DIROPTS
-#ifndef CONFIG_NSH_DISABLE_RM
-
+#if defined(NSH_HAVE_DIROPTS) && !defined(CONFIG_NSH_DISABLE_RM)
 static int unlink_recursive(FAR char *path, FAR struct stat *stat)
 {
   struct dirent *d;
@@ -2261,14 +2264,12 @@ int cmd_rm(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   return ret;
 }
 #endif
-#endif
 
 /****************************************************************************
  * Name: cmd_rmdir
  ****************************************************************************/
 
-#ifdef NSH_HAVE_DIROPTS
-#ifndef CONFIG_NSH_DISABLE_RMDIR
+#if defined(NSH_HAVE_DIROPTS) && !defined(CONFIG_NSH_DISABLE_RMDIR)
 int cmd_rmdir(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   UNUSED(argc);
@@ -2289,7 +2290,6 @@ int cmd_rmdir(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 
   return ret;
 }
-#endif
 #endif
 
 /****************************************************************************
@@ -2419,8 +2419,7 @@ errout:
  * Name: cmd_truncate
  ****************************************************************************/
 
-#ifndef CONFIG_DISABLE_MOUNTPOINT
-#ifndef CONFIG_NSH_DISABLE_TRUNCATE
+#if !defined(CONFIG_DISABLE_MOUNTPOINT) && !defined(CONFIG_NSH_DISABLE_TRUNCATE)
 int cmd_truncate(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   UNUSED(argc);
@@ -2523,7 +2522,6 @@ int cmd_truncate(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   nsh_freefullpath(fullpath);
   return ret;
 }
-#endif
 #endif
 
 /****************************************************************************
