@@ -132,7 +132,7 @@ static int dd_read(FAR struct dd_s *dd)
             }
 
           FAR struct nsh_vtbl_s *vtbl = dd->vtbl;
-          nsh_error(vtbl, g_fmtcmdfailed, g_dd, "read", NSH_ERRNO);
+          nsh_error(vtbl, g_fmtcmdfailed, g_dd, "infd read", NSH_ERRNO);
           return ERROR;
         }
 
@@ -155,7 +155,7 @@ static inline int dd_infopen(FAR const char *name, FAR struct dd_s *dd)
   if (dd->infd < 0)
     {
       FAR struct nsh_vtbl_s *vtbl = dd->vtbl;
-      nsh_error(vtbl, g_fmtcmdfailed, g_dd, "open", NSH_ERRNO);
+      nsh_error(vtbl, g_fmtcmdfailed, g_dd, "infd open", NSH_ERRNO);
       return ERROR;
     }
 
@@ -172,7 +172,7 @@ static inline int dd_outfopen(FAR const char *name, FAR struct dd_s *dd)
   if (dd->outfd < 0)
     {
       FAR struct nsh_vtbl_s *vtbl = dd->vtbl;
-      nsh_error(vtbl, g_fmtcmdfailed, g_dd, "open", NSH_ERRNO);
+      nsh_error(vtbl, g_fmtcmdfailed, g_dd, "outfd open", NSH_ERRNO);
       return ERROR;
     }
 
@@ -193,7 +193,7 @@ static int dd_verify(FAR const char *infile, FAR const char *outfile,
   ret = lseek(dd->infd, dd->skip ? dd->skip * dd->sectsize : 0, SEEK_SET);
   if (ret < 0)
     {
-      nsh_error(vtbl, g_fmtcmdfailed, g_dd, "lseek", NSH_ERRNO);
+      nsh_error(vtbl, g_fmtcmdfailed, g_dd, "infd lseek", NSH_ERRNO);
       return ret;
     }
 
@@ -201,7 +201,7 @@ static int dd_verify(FAR const char *infile, FAR const char *outfile,
   ret = lseek(dd->outfd, 0, SEEK_SET);
   if (ret < 0)
     {
-      nsh_error(vtbl, g_fmtcmdfailed, g_dd, "lseek", NSH_ERRNO);
+      nsh_error(vtbl, g_fmtcmdfailed, g_dd, "outfd lseek", NSH_ERRNO);
       return ret;
     }
 
@@ -222,7 +222,8 @@ static int dd_verify(FAR const char *infile, FAR const char *outfile,
       ret = read(dd->outfd, buffer, dd->nbytes);
       if (ret != dd->nbytes)
         {
-          nsh_error(vtbl, g_fmtcmdfailed, g_dd, "read", NSH_ERRNO);
+          nsh_error(vtbl, g_fmtcmdfailed, g_dd, "outfd read",
+                    ret < 0 ? NSH_ERRNO : ret);
           break;
         }
 
@@ -474,13 +475,21 @@ int cmd_dd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 errout_with_outf:
   if (outfile)
     {
-      close(dd.outfd);
+      dd.outfd = close(dd.outfd);
+      if (dd.outfd < 0)
+        {
+          nsh_error(vtbl, g_fmtcmdfailed, g_dd, "outfd close", NSH_ERRNO);
+        }
     }
 
 errout_with_inf:
   if (infile)
     {
-      close(dd.infd);
+      dd.infd = close(dd.infd);
+      if (dd.infd < 0)
+        {
+          nsh_error(vtbl, g_fmtcmdfailed, g_dd, "infd close", NSH_ERRNO);
+        }
     }
 
 errout_with_alloc:
@@ -497,7 +506,7 @@ errout_with_paths:
       nsh_freefullpath(outfile);
     }
 
-  return ret;
+  return ret < 0 ? ret : (dd.outfd < 0 ? dd.outfd : dd.infd);
 }
 
 #endif /* !CONFIG_NSH_DISABLE_DD */
