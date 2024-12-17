@@ -639,11 +639,13 @@ void touchpad_deinit(touchpad_s *touchpad)
   if (touchpad->indev)
     {
       lv_indev_delete(touchpad->indev);
+      touchpad->indev = NULL;
     }
 
-  if (touchpad->fd > 0)
+  if (touchpad->fd >= 0)
     {
       close(touchpad->fd);
+      touchpad->fd = -1;
     }
 
   free(touchpad);
@@ -754,14 +756,19 @@ static void test_case_touchpanel(FAR void **state)
 #else
   while (1)
     {
-      lv_timer_handler();
-      usleep(10 * 1000);
+      uint32_t idle;
+      idle = lv_timer_handler();
+
+      /* Minimum sleep of 1ms */
+
+      idle = idle ? idle : 1;
+      usleep(idle * 1000);
     }
 #endif
 
 errout:
   touchpad_deinit(touchpad);
-  lv_disp_remove(result.disp);
+  lv_nuttx_deinit(&result);
   lv_deinit();
 
   LV_LOG_USER("Terminating!\n");
