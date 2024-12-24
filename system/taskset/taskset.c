@@ -162,8 +162,8 @@ int main(int argc, FAR char *argv[])
 
           for (i = 0; i < argc - 2; i++)
             {
-              strlcat(command, argv[i + 2], sizeof(command));
-              strlcat(command, " ", sizeof(command));
+              strlcat(command, argv[i + 2], CONFIG_NSH_LINELEN);
+              strlcat(command, " ", CONFIG_NSH_LINELEN);
             }
 
           sched_setaffinity(gettid(), sizeof(cpu_set_t), &cpuset);

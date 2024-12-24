@@ -210,8 +210,8 @@ int main(int argc, FAR char **argv)
   cmd[0] = '\0';
   for (i = optind; i < argc; i++)
     {
-      strlcat(cmd, argv[i], sizeof(cmd));
-      strlcat(cmd, " ", sizeof(cmd));
+      strlcat(cmd, argv[i], CONFIG_NSH_LINELEN);
+      strlcat(cmd, " ", CONFIG_NSH_LINELEN);
     }
 
   arg.command = cmd;

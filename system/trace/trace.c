@@ -260,8 +260,8 @@ static int trace_cmd_cmd(FAR const char *name, int index, int argc,
   command[0] = '\0';
   while (index < argc)
     {
-      strlcat(command, argv[index], sizeof(command));
-      strlcat(command, " ", sizeof(command));
+      strlcat(command, argv[index], CONFIG_NSH_LINELEN);
+      strlcat(command, " ", CONFIG_NSH_LINELEN);
       index++;
     }
 
