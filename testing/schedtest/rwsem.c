@@ -81,7 +81,7 @@ static void *reader_thread(void *arg)
   switch (id)
     {
       case 1:
-        printf("Reader %d acquired read lock (blocking).\n", id);
+        printf("Reader %d attempt to acquire read lock (blocking).\n", id);
         down_read(&data->rwsem);
         printf("Reader %d acquired read lock.\n", id);
         assert_int_equal(data->shared_resource, 10);
@@ -90,7 +90,7 @@ static void *reader_thread(void *arg)
         break;
 
       case 2:
-        printf("Reader %d acquired read lock (blocking).\n", id);
+        printf("Reader %d attempt to acquire read lock (blocking).\n", id);
         int acquired = down_read_trylock(&data->rwsem);
         assert_int_equal(acquired, 0);
         printf("Reader %d failed to acquire read lock as expected.\n", id);
@@ -155,13 +155,91 @@ static void test_rwsem(void **state)
   printf("rwsem tests completed.\n");
 }
 
+static void *downgrade_thread(void *arg)
+{
+  reader_arg_t *args = (reader_arg_t *)arg;
+  shared_data_t *data = args->data;
+  int id = args->id;
+
+  printf("Downgrade thread [%d] attempt to acquire write lock.\n", id);
+  down_write(&data->rwsem);
+  printf("Downgrade thread [%d] acquired write lock.\n", id);
+  data->shared_resource = id;
+  sleep(1);
+
+  printf("Downgrade thread [%d] attempt to downgrade to read lock.\n", id);
+  downgrade_write(&data->rwsem);
+  printf("Downgrade thread [%d] acquired read lock.\n", id);
+  assert_true(data->shared_resource == id);
+  sleep(1);
+
+  up_read(&data->rwsem);
+  printf("Downgrade thread [%d] released read lock.\n", id);
+
+  return NULL;
+}
+
+static void *reader_thread2(void *arg)
+{
+  reader_arg_t *args = (reader_arg_t *)arg;
+  shared_data_t *data = args->data;
+  int id = args->id;
+
+  printf("Reader [%d] attempt to acquire read lock.\n", id);
+  down_read(&data->rwsem);
+  printf("Reader [%d] acquired read lock.\n", id);
+
+  sleep(2);
+
+  up_read(&data->rwsem);
+  printf("Reader [%d] released read lock.\n", id);
+
+  return NULL;
+}
+
+static void test_downgrade_write(void **state)
+{
+  shared_data_t *data = (shared_data_t *)*state;
+  reader_arg_t args[3];
+  pthread_t grader[3];
+  pthread_t reader;
+  int i;
+
+  init_rwsem(&data->rwsem);
+  data->shared_resource = 0;
+
+  for (i = 0; i < 3; i++)
+    {
+      args[i].data = data;
+      args[i].id = i + 1;
+      pthread_create(&grader[i],  NULL, downgrade_thread, &args[i]);
+    }
+
+  pthread_create(&reader, NULL, reader_thread2, &args[0]);
+
+  for (i = 0; i < 3; i++)
+    {
+      pthread_join(grader[i], NULL);
+    }
+
+  pthread_join(reader, NULL);
+  assert_true(data->rwsem.writer == 0);
+  assert_true(data->rwsem.reader == 0);
+  assert_true(data->rwsem.holder == RWSEM_NO_HOLDER);
+
+  printf("Test downgrade_write completed successfully !\n");
+}
+
 int main(int argc, FAR char *argv[])
 {
+  shared_data_t data;
+
   cmocka_set_message_output(CM_OUTPUT_STDOUT);
 
-  shared_data_t data;
-  const struct CMUnitTest tests[] = {
+  const struct CMUnitTest tests[] =
+  {
     cmocka_unit_test_prestate(test_rwsem, &data),
+    cmocka_unit_test_prestate(test_downgrade_write, &data),
   };
 
   return cmocka_run_group_tests(tests, NULL, NULL);
