@@ -122,8 +122,11 @@ void test_nuttx_clock_test_timer03(FAR void **state)
 
       failed += (escaped < expected ||
                  (escaped - expected) >= 20000000); /* 20000000, 2 ticks. */
-      syslog(LOG_INFO, "expected = %lld escaped = %lld failed = %d",
-             expected, escaped, failed);
+      syslog(LOG_INFO,
+            "expected = %" PRIi64
+            " escaped = %" PRIi64
+            " failed = %d",
+            expected, escaped, failed);
     }
 
   ret = timer_delete(timerid);
