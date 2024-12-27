@@ -39,6 +39,7 @@
 
 void mbedtls_aes_init(FAR mbedtls_aes_context *ctx)
 {
+  memset(ctx, 0, sizeof(mbedtls_aes_context));
   cryptodev_init(&ctx->dev);
 }
 
