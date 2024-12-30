@@ -68,7 +68,7 @@ static int gdb_monitor(FAR struct gdb_state_s *state, FAR const char *cmd)
 #endif
 }
 
-static ssize_t gdb_send(FAR void *priv, FAR void *buf,
+static ssize_t gdb_send(FAR void *priv, FAR const void *buf,
                         size_t len)
 {
   int fd = *(FAR int *)priv;
@@ -76,7 +76,7 @@ static ssize_t gdb_send(FAR void *priv, FAR void *buf,
 
   while (i < len)
     {
-      ssize_t ret = write(fd, (FAR char *)buf + i, len - i);
+      ssize_t ret = write(fd, (FAR const char *)buf + i, len - i);
       if (ret < 0)
         {
           return -errno;
