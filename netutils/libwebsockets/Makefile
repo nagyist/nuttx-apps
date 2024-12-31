@@ -33,7 +33,8 @@ CFLAGS += \
 	-DLWS_LIBRARY_VERSION_MINOR=$(call word-dot,$(LIBWEBSOCKETS_VERSION),2) \
 	-DLWS_LIBRARY_VERSION_PATCH=$(call word-dot,$(LIBWEBSOCKETS_VERSION),3) \
 	-DLWS_LIBRARY_VERSION_PATCH_ELABORATED=$(call word-dot,$(LIBWEBSOCKETS_VERSION),3)-unknown \
-	-DLWS_LIBRARY_VERSION=\"$(LIBWEBSOCKETS_VERSION)-unknown\"
+	-DLWS_LIBRARY_VERSION=\"$(LIBWEBSOCKETS_VERSION)-unknown\" \
+	-Wno-shadow \
 
 CFLAGS += \
 	-I. \
@@ -48,7 +49,11 @@ CFLAGS += \
 	-I$(LIBWEBSOCKETS_UNPACK)/lib/roles/h1 \
 	-I$(LIBWEBSOCKETS_UNPACK)/lib/roles/h2 \
 	-I$(LIBWEBSOCKETS_UNPACK)/lib/roles/ws \
-	-I$(LIBWEBSOCKETS_UNPACK)/lib/tls
+	-I$(LIBWEBSOCKETS_UNPACK)/lib/tls \
+	-I${LIBWEBSOCKETS_UNPACK}/lib/tls/mbedtls/wrapper/include \
+	-I${LIBWEBSOCKETS_UNPACK}/lib/tls/mbedtls/wrapper/include/internal \
+	-I${LIBWEBSOCKETS_UNPACK}/lib/tls/mbedtls/wrapper/include/openssl \
+	-I${LIBWEBSOCKETS_UNPACK}/lib/tls/mbedtls/wrapper/include/platform
 
 CSRCS += \
 	$(LIBWEBSOCKETS_UNPACK)/lib/plat/unix/unix-caps.c \
@@ -126,7 +131,7 @@ CSRCS += \
 	$(LIBWEBSOCKETS_UNPACK)/lib/tls/mbedtls/mbedtls-x509.c \
 	$(LIBWEBSOCKETS_UNPACK)/lib/tls/mbedtls/mbedtls-ssl.c \
 	$(LIBWEBSOCKETS_UNPACK)/lib/tls/mbedtls/mbedtls-session.c \
-	$(LIBWEBSOCKETS_UNPACK)/lib/tls/mbedtls/mbedtls-client.c \
+	$(LIBWEBSOCKETS_UNPACK)/lib/tls/mbedtls/mbedtls-client.c
 
 ifneq ($(CONFIG_NETUTILS_MQTTC),)
 	CFLAGS += -I$(LIBWEBSOCKETS_UNPACK)/lib/roles/mqtt

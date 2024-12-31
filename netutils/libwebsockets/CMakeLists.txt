@@ -80,7 +80,9 @@ if(CONFIG_NETUTILS_LIBWEBSOCKETS)
       ${LIBWEBSOCKETS_DIR}/lib/roles/ws
       ${LIBWEBSOCKETS_DIR}/lib/tls
       ${LIBWEBSOCKETS_DIR}/lib/tls/mbedtls/wrapper/include
-      ${LIBWEBSOCKETS_DIR}/lib/tls/mbedtls/wrapper/include/internal)
+      ${LIBWEBSOCKETS_DIR}/lib/tls/mbedtls/wrapper/include/internal
+      ${LIBWEBSOCKETS_DIR}/lib/tls/mbedtls/wrapper/include/openssl
+      ${LIBWEBSOCKETS_DIR}/lib/tls/mbedtls/wrapper/include/platform)
 
   set(CSRCS
       ${LIBWEBSOCKETS_DIR}/lib/plat/unix/unix-caps.c
