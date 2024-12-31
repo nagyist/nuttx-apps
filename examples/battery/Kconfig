@@ -6,6 +6,7 @@
 config EXAMPLES_BATTERY
 	tristate "Battery monitor example"
 	default n
+	depends on BATTERY_CHARGER
 	---help---
 		Enable the battery monitor example
 
