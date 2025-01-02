@@ -92,6 +92,7 @@ static void test_nxsig_action(FAR void **state)
   nxsig_release(&data->group);
 }
 
+#ifdef CONFIG_SIG_DEFAULT
 static void test_nxsig_default_initialize(FAR void **state)
 {
   FAR struct test_data_t *data;
@@ -102,6 +103,7 @@ static void test_nxsig_default_initialize(FAR void **state)
   int result = nxsig_default_initialize(&data->tcb);
   assert_int_equal(result, OK);
 }
+#endif
 
 static void test_nxsig_find_action(FAR void **state)
 {
@@ -476,10 +478,12 @@ int main(int argc, FAR char *argv[])
       cmocka_unit_test(test_nxsig_tgkill),
       cmocka_unit_test(test_nxsig_usleep),
       cmocka_unit_test(test_nxsig_notification),
+#ifdef CONFIG_SIG_DEFAULT
       cmocka_unit_test_prestate_setup_teardown(test_nxsig_default_initialize,
                                                test_setup,
                                                test_teardown,
                                                data),
+#endif
       cmocka_unit_test_prestate_setup_teardown(test_nxsig_find_action,
                                                test_setup,
                                                test_teardown,
