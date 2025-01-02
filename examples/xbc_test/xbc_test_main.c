@@ -78,7 +78,7 @@ int main(int argc, FAR char *argv[])
    * controller test.
    */
 
-  while (1)
+  for (; ; )
     {
       /* Open the controller device.  Loop until the device is successfully
        * opened.
@@ -111,7 +111,7 @@ int main(int argc, FAR char *argv[])
             {
               /* On success, echo the buffer to stdout */
 
-              printf("%d bytes read\n", nbytes);
+              printf("%zd bytes read\n", nbytes);
               if (nbytes == sizeof(struct xbox_controller_buttonstate_s))
                 {
                   struct xbox_controller_buttonstate_s *rpt =

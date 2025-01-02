@@ -53,6 +53,7 @@ config CM_TIME_TEST
 	bool "enbale time test"
 	default n
 	depends on SIG_EVTHREAD
+	depends on !DISABLE_POSIX_TIMERS
 
 config CM_SOCKET_TEST
 	bool "enbale socket test"
