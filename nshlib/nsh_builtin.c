@@ -87,7 +87,7 @@ int nsh_builtin(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
 #if !defined(CONFIG_NSH_DISABLEBG) && defined(CONFIG_SCHED_CHILD_STATUS)
   /* Ignore the child status if run the application on background. */
 
-  if (vtbl->np.np_bg == true)
+  if (vtbl->np.np_bg)
     {
       act.sa_handler = SIG_DFL;
       act.sa_flags = SA_NOCLDWAIT;
@@ -232,7 +232,11 @@ int nsh_builtin(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
 
           /* Restore the old actions */
 
-          sigaction(SIGCHLD, &old, NULL);
+          if (vtbl->np.np_bg)
+            {
+              sigaction(SIGCHLD, &old, NULL);
+            }
+
 #  endif
           struct sched_param sched;
           sched_getparam(ret, &sched);
