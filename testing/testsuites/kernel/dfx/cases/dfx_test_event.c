@@ -31,6 +31,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 
+#define sendeventmisight(eventId, eventStr) sendEventMisight(eventId, eventStr)
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
