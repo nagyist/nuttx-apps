@@ -78,7 +78,8 @@ if(CONFIG_BENCHMARK_COREMARK)
   endif()
 
   get_target_property(FLAGS_STR_LIST nuttx COMPILE_OPTIONS)
-  list(JOIN FLAGS_STR_LIST " " FLAGS_STR)
+  list(REMOVE_ITEM FLAGS_STR_LIST "")
+  list(JOIN FLAGS_STR_LIST "," FLAGS_STR)
 
   set(CFLAGS -Dcrc16=coremark_crc16 -Wno-strict-prototypes -Wno-undef)
 
