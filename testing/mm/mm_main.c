@@ -212,8 +212,12 @@ static void do_reallocs(FAR void **mem, FAR const int *oldsize,
   for (i = 0; i < n; i++)
     {
       j = seq[i];
-      int allocsize = MM_ALIGN_UP(newsize[j] + MM_SIZEOF_ALLOCNODE) -
-                      MM_ALIGN_UP(oldsize[j] + MM_SIZEOF_ALLOCNODE);
+      int allocsize = MM_ALIGN_UP(newsize[j] + MM_SIZEOF_ALLOCNODE);
+      if (mem[j])
+        {
+           allocsize -= MM_ALIGN_UP(oldsize[j] + MM_SIZEOF_ALLOCNODE);
+        }
+
       if (is_oversize(allocsize))
         {
           printf("(%d)The reallocs memory exceeds the threshold, "
