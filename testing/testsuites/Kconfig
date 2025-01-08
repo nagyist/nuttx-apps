@@ -38,7 +38,7 @@ config CM_SCHED_TEST
 config CM_SYSCALL_TEST
 	bool "enbale syscall test"
 	default n
-	depends on PIPES && SCHED_HAVE_PARENT
+	depends on PIPES && SCHED_HAVE_PARENT && FS_TMPFS && ARCH_SETJMP_H && PSEUDOFS_SOFTLINKS
 
 config CM_MM_TEST
 	bool "enbale MM test"
