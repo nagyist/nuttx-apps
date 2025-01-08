@@ -172,7 +172,7 @@ static FAR void *test_cpufreq_thread(void *arg)
   return NULL;
 }
 
-static void test_cpufreq(FAR void **state)
+static void drivertest_cpufreq(FAR void **state)
 {
   FAR struct cpufreq_policy *policy = cpufreq_policy_get();
   pthread_t thread0, thread1, thread2;
@@ -214,7 +214,7 @@ int main(int argc, FAR char *argv[])
 {
   const struct CMUnitTest tests[] =
     {
-      cmocka_unit_test_prestate_setup_teardown(test_cpufreq, setup,
+      cmocka_unit_test_prestate_setup_teardown(drivertest_cpufreq, setup,
                                                teardown, NULL),
     };
 
