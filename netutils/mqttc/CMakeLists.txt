@@ -118,4 +118,24 @@ if(CONFIG_NETUTILS_MQTTC)
         mqttc)
     endif()
   endif()
+
+  if(CONFIG_NETUTILS_MQTTC_TEST)
+    set(MQTT_TEST_CFLAGS ${CFLAGS} -Dopen_nb_socket=test_open_nb_socket
+                         -Dpublish_callback=test_publish_callback)
+
+    nuttx_add_application(
+      NAME
+      cmocka_mqttc_test
+      STACKSIZE
+      ${CONFIG_NETUTILS_MQTTC_TEST_STACKSIZE}
+      PRIORITY
+      ${SCHED_PRIORITY_DEFAULT}
+      SRCS
+      ${MQTTC_DIR}/tests.c
+      COMPILE_FLAGS
+      ${MQTT_TEST_CFLAGS}
+      DEPENDS
+      cmocka
+      mqttc)
+  endif()
 endif()
