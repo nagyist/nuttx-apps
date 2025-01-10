@@ -81,6 +81,10 @@ if(CONFIG_NETUTILS_NETLIB)
     endif()
   endif()
 
+  if(CONFIG_NETDB_DNSCLIENT)
+    list(APPEND SRCS netlib_cleardnsaddr.c)
+  endif()
+
   # Device support
 
   if(CONFIG_NETLINK_ROUTE)
@@ -88,6 +92,10 @@ if(CONFIG_NETUTILS_NETLIB)
     if(CONFIG_NET_ROUTE)
       list(APPEND SRCS netlib_getroute.c)
     endif()
+  endif()
+
+  if(CONFIG_NETDEV_STATISTICS)
+    list(APPEND SRCS netlib_getifstatistics.c)
   endif()
 
   # Netfilter connection support
