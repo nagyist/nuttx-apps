@@ -41,7 +41,7 @@
 
 static void nxevent_yield(void)
 {
-  usleep(1);
+  usleep(1000);
 }
 
 static void nxevent_test_rule1(nxevent_t *event)
