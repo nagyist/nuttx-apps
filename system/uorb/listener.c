@@ -423,7 +423,7 @@ static int listener_generate_object_list(FAR struct listen_list_s *objlist,
                         }
                     }
 
-                  if (orb_exists(object.meta, object.instance++) < 0)
+                  if (orb_exists(object.meta, ++object.instance) < 0)
                     {
                       break;
                     }
