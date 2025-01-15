@@ -152,4 +152,5 @@ if(CONFIG_GRAPHICS_LVGL)
     PROPERTY NUTTX_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}
              ${CMAKE_CURRENT_LIST_DIR}/lvgl)
 
+  add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/lvgl/tests/cmake_nuttx)
 endif()
