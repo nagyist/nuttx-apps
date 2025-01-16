@@ -40,7 +40,7 @@
 #define CACHESPEED_PREFIX "CACHE Speed: "
 #define REPEAT_NUM 1000
 
-#ifdef CACHESPEED_PERFTIME
+#ifndef CONFIG_CACHESPEED_MONOTONIC_TIME
   #define TIME uint64_t
 
   #define CONVERT(cost) \
