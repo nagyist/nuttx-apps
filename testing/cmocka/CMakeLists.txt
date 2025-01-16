@@ -65,12 +65,14 @@ if(CONFIG_TESTING_CMOCKA)
   set(CFLAGS -Dprint_error=nx_print_error -DCMOCKA_PLATFORM_INCLUDE
              -DHAVE_CLOCK_REALTIME=1 -DHAVE_STRUCT_TIMESPEC=1)
   if(CONFIG_TESTING_CMOCKA_LEAKDETECT)
-    list(APPEND CFLAGS -DUNIT_TESTING=ON)
+    nuttx_compile_options_for_all_apps(-DUNIT_TESTING=ON)
   endif()
 
   target_sources(cmocka PRIVATE ${SRCS})
   target_include_directories(cmocka PRIVATE ${INCDIR})
   target_compile_options(cmocka PRIVATE ${CFLAGS})
+
+  nuttx_include_directories_for_all_apps(${CMOCKA_DIR}/include)
 
   nuttx_add_application(
     NAME
