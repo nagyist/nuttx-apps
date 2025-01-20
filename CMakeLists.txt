@@ -90,6 +90,10 @@ if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/vendor/CMakeLists.txt)
   add_subdirectory(vendor)
 endif()
 
+if(EXISTS ${CMAKE_CURRENT_LIST_DIR}/applications/CMakeLists.txt)
+  add_subdirectory(applications)
+endif()
+
 add_subdirectory(tools) # after traversing all subdirectories
 add_subdirectory(builtin) # must be last
 
