@@ -262,7 +262,12 @@ static uint32_t get_timestamp(void)
 {
   struct timespec ts;
   uint32_t us;
+#ifdef CONFIG_RAMSPEED_MONOTONIC_TIME
   clock_gettime(CLOCK_MONOTONIC, &ts);
+#else
+  clock_t clock = perf_gettime();
+  perf_convert(clock, &ts);
+#endif
   us = ts.tv_sec * 1000000 + ts.tv_nsec / 1000;
   return us;
 }
