@@ -417,25 +417,34 @@ int main(int argc, FAR char *argv[])
   /* Initialize the state data */
 
   struct lcd_state_s lcd_state;
-
+  void (*drivertest_lcd_cb)(FAR void **state) = NULL;
   memset(&lcd_state, 0, sizeof(struct lcd_state_s));
   snprintf(lcd_state.devpath, sizeof(lcd_state.devpath), "%s",
                                        LCD_DEFAULT_DEVPATH);
 
   parse_commandline(&lcd_state, argc, argv);
 
+  switch (lcd_state.test_case_id)
+  {
+    case 0:
+      drivertest_lcd_cb = drivertest_lcd_black;
+      break;
+    case 1:
+      drivertest_lcd_cb = drivertest_lcd_white;
+      break;
+    case 2:
+      drivertest_lcd_cb = drivertest_lcd_cross;
+      break;
+    case 3:
+      drivertest_lcd_cb = drivertest_lcd_vertical;
+      break;
+    default:
+      break;
+  }
+
   const struct CMUnitTest tests[] =
   {
-    cmocka_unit_test_prestate_setup_teardown(drivertest_lcd_black,
-                                             lcd_setup, lcd_teardown,
-                                             &lcd_state),
-    cmocka_unit_test_prestate_setup_teardown(drivertest_lcd_white,
-                                             lcd_setup, lcd_teardown,
-                                             &lcd_state),
-    cmocka_unit_test_prestate_setup_teardown(drivertest_lcd_cross,
-                                             lcd_setup, lcd_teardown,
-                                             &lcd_state),
-    cmocka_unit_test_prestate_setup_teardown(drivertest_lcd_vertical,
+    cmocka_unit_test_prestate_setup_teardown(drivertest_lcd_cb,
                                              lcd_setup, lcd_teardown,
                                              &lcd_state),
   };

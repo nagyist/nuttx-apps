@@ -531,6 +531,7 @@ int main(int argc, FAR char *argv[])
   /* Initialize the state data */
 
   struct fb_state_s fb_state;
+  void (*drivertest_fb_cb)(FAR void **state) = NULL;
 
   memset(&fb_state, 0, sizeof(struct fb_state_s));
   snprintf(fb_state.devpath, sizeof(fb_state.devpath), "%s",
@@ -538,18 +539,27 @@ int main(int argc, FAR char *argv[])
 
   parse_commandline(&fb_state, argc, argv);
 
+  switch (fb_state.test_case_id)
+  {
+    case 0:
+      drivertest_fb_cb = drivertest_framebuffer_black;
+      break;
+    case 1:
+      drivertest_fb_cb = drivertest_framebuffer_white;
+      break;
+    case 2:
+      drivertest_fb_cb = drivertest_framebuffer_cross;
+      break;
+    case 3:
+      drivertest_fb_cb = drivertest_framebuffer_vertical;
+      break;
+    default:
+      break;
+  }
+
   const struct CMUnitTest tests[] =
   {
-    cmocka_unit_test_prestate_setup_teardown(drivertest_framebuffer_black,
-                                             fb_setup, fb_teardown,
-                                             &fb_state),
-    cmocka_unit_test_prestate_setup_teardown(drivertest_framebuffer_white,
-                                             fb_setup, fb_teardown,
-                                             &fb_state),
-    cmocka_unit_test_prestate_setup_teardown(drivertest_framebuffer_cross,
-                                             fb_setup, fb_teardown,
-                                             &fb_state),
-    cmocka_unit_test_prestate_setup_teardown(drivertest_framebuffer_vertical,
+    cmocka_unit_test_prestate_setup_teardown(drivertest_fb_cb,
                                              fb_setup, fb_teardown,
                                              &fb_state),
   };
