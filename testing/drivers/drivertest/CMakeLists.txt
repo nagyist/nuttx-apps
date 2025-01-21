@@ -357,40 +357,10 @@ if(CONFIG_TESTING_DRIVER_TEST)
       drivertest_touchpanel.c)
   endif()
 
-  if(CONFIG_ARCH_CHIP_MPS2_AN500)
-    if(CONFIG_ARCH_IRQPRIO)
-      nuttx_add_application(
-        NAME
-        cmocka_driver_mps2
-        PRIORITY
-        ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
-        STACKSIZE
-        ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
-        MODULE
-        ${CONFIG_TESTING_DRIVER_TEST}
-        DEPENDS
-        cmocka
-        SRCS
-        drivertest_mps2.c)
-
-      nuttx_add_application(
-        NAME
-        cmocka_driver_mps2_zerointerrupt
-        PRIORITY
-        ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
-        STACKSIZE
-        ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
-        MODULE
-        ${CONFIG_TESTING_DRIVER_TEST}
-        DEPENDS
-        cmocka
-        SRCS
-        drivertest_mps2_zerointerrupt.c)
-    endif()
-
+  if(CONFIG_ARCH_CHIP_MPS2_AN500 AND CONFIG_ARCH_IRQPRIO)
     nuttx_add_application(
       NAME
-      cmocka_driver_mps2_isr_signal
+      cmocka_driver_mps2
       PRIORITY
       ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
       STACKSIZE
@@ -400,7 +370,7 @@ if(CONFIG_TESTING_DRIVER_TEST)
       DEPENDS
       cmocka
       SRCS
-      drivertest_mps2_isr_signal.c)
+      drivertest_mps2.c)
   endif()
 
   if(CONFIG_PM)
@@ -417,22 +387,6 @@ if(CONFIG_TESTING_DRIVER_TEST)
       cmocka
       SRCS
       drivertest_pm.c)
-  endif()
-
-  if(CONFIG_PM AND CONFIG_PM_GOVERNOR_STABILITY)
-    nuttx_add_application(
-      NAME
-      cmocka_driver_pm_gov_stability
-      PRIORITY
-      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
-      STACKSIZE
-      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
-      MODULE
-      ${CONFIG_TESTING_DRIVER_TEST}
-      DEPENDS
-      cmocka
-      SRCS
-      drivertest_pm_gov_stability.c)
   endif()
 
   if(CONFIG_PM AND CONFIG_SMP)
