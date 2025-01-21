@@ -62,6 +62,7 @@ if(CONFIG_TINYCRYPT)
   # Sources
   # ############################################################################
 
+  list(APPEND CFLAGS -Dunix)
   set(CSRCS
       ${TINYCRYPT_DIR}/lib/source/utils.c ${TINYCRYPT_DIR}/lib/source/ecc.c
       ${TINYCRYPT_DIR}/lib/source/ecc_platform_specific.c)
@@ -118,7 +119,7 @@ if(CONFIG_TINYCRYPT)
   if(CONFIG_TINYCRYPT_TEST)
     list(APPEND CSRCS ${TINYCRYPT_DIR}/tests/test_ecc_utils.c)
     list(APPEND INCDIR ${TINYCRYPT_DIR}/tests/include)
-    set(CFLAGS -Dhex2bin=ltp_hex2bin -DENABLE_TESTS)
+    list(APPEND CFLAGS -DENABLE_TESTS)
 
     nuttx_add_application(
       NAME
