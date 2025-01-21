@@ -60,6 +60,7 @@ int main(int argc, char *argv[])
       rpmsgfd = rpmsg_tun_connect(argv[4], argv[1]);
       if (rpmsgfd < 0)
         {
+          usleep(50000);
           continue;
         }
 
