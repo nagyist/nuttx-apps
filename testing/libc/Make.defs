@@ -1,5 +1,7 @@
 ############################################################################
-# apps/testing/fmemopen/Makefile
+# apps/testing/libc/Make.defs
+#
+# SPDX-License-Identifier: Apache-2.0
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,15 +20,4 @@
 #
 ############################################################################
 
-include $(APPDIR)/Make.defs
-
-# SMART filesystem test tool
-
-PROGNAME = fmemopen_test
-PRIORITY = SCHED_PRIORITY_DEFAULT
-STACKSIZE = 4096
-MODULE = $(CONFIG_TESTING_FMEMOPEN_TEST)
-
-MAINSRC = fmemopen.c
-
-include $(APPDIR)/Application.mk
+include $(wildcard $(APPDIR)/testing/libc/*/Make.defs)

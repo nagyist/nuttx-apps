@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/scanftest/Make.defs
+# apps/testing/libc/scanftest/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,17 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_SCANFTEST),)
-CONFIGURED_APPS += $(APPDIR)/testing/scanftest
-endif
+include $(APPDIR)/Make.defs
+
+# scanf() test built-in application info
+
+PROGNAME  = $(CONFIG_TESTING_SCANFTEST_PROGNAME)
+PRIORITY  = $(CONFIG_TESTING_SCANFTEST_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_SCANFTEST_STACKSIZE)
+MODULE    = $(CONFIG_TESTING_SCANFTEST)
+
+# scanf test files
+
+MAINSRC = scanftest_main.c
+
+include $(APPDIR)/Application.mk

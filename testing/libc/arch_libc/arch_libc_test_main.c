@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/arch_libc/arch_libc_test_main.c
+ * apps/testing/libc/arch_libc/arch_libc_test_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

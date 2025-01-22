@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/arch_libc/CMakeLists.txt
+# apps/testing/libc/fmemopen/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,16 +18,14 @@
 #
 # ##############################################################################
 
-if(CONFIG_TESTING_ARCH_LIBC)
+if(CONFIG_TESTING_FMEMOPEN_TEST)
   nuttx_add_application(
     NAME
-    ${CONFIG_TESTING_ARCH_LIBC_PROGNAME}
-    PRIORITY
-    ${CONFIG_TESTING_ARCH_LIBC_PRIORITY}
+    fmemopen_test
     STACKSIZE
-    ${CONFIG_TESTING_ARCH_LIBC_STACKSIZE}
+    4096
     MODULE
-    ${CONFIG_TESTING_ARCH_LIBC}
+    ${CONFIG_TESTING_FMEMOPEN_TEST}
     SRCS
-    arch_libc_test_main.c)
+    fmemopen.c)
 endif()

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/scanftest/scanftest_main.c
+ * apps/testing/libc/scanftest/scanftest_main.c
  *
  *   Copyright (C) 2005-01-26, Greg King (https://github.com/cc65)
  *
