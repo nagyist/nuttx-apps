@@ -1,5 +1,7 @@
 ############################################################################
-# apps/system/uorb/Make.defs
+# apps/testing/arch/himem_test/LibIncludes.mk
+#
+# SPDX-License-Identifier: Apache-2.0
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +20,7 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_X86_64_ABI),)
-CONFIGURED_APPS += $(APPDIR)/testing/x86-64-ABI
+
+ifneq ($(CONFIG_TESTING_HIMEM_TEST),)
+CFLAGS   += ${shell $(INCDIR) $(INCDIROPT) "$(CC)" "$(TOPDIR)/arch/xtensa/src/esp32"}
 endif

@@ -1,5 +1,7 @@
 ############################################################################
-# apps/testing/gpu/Make.defs
+# apps/testing/arch/himem_test/Makefile
+#
+# SPDX-License-Identifier: Apache-2.0
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +20,19 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_GPU),)
-CONFIGURED_APPS += $(APPDIR)/testing/gpu
-endif
+
+include $(APPDIR)/Make.defs
+include $(APPDIR)/testing/arch/himem_test/LibIncludes.mk
+
+
+#  built-in application info
+PROGNAME  = $(CONFIG_TESTING_HIMEM_TEST_PROGNAME)
+PRIORITY  = $(CONFIG_TESTING_HIMEM_TEST_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_HIMEM_TEST_STACKSIZE)
+MODULE    = $(CONFIG_TESTING_HIMEM_TEST)
+
+
+MAINSRC = himem_chardev_test.c
+
+
+include $(APPDIR)/Application.mk
