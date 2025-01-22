@@ -1,5 +1,11 @@
 # ##############################################################################
+<<<<<<<< HEAD:testing/libc/fmemopen/CMakeLists.txt
 # apps/testing/libc/fmemopen/CMakeLists.txt
+========
+# apps/testing/arch/mtetest/CMakeLists.txt
+#
+# SPDX-License-Identifier: Apache-2.0
+>>>>>>>> 481530e02 (apps/testing: move himem_test,mtetest,x86-64-ABI folders to the new arhc folder):testing/arch/mtetest/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,6 +24,7 @@
 #
 # ##############################################################################
 
+<<<<<<<< HEAD:testing/libc/fmemopen/CMakeLists.txt
 if(CONFIG_TESTING_FMEMOPEN_TEST)
   nuttx_add_application(
     NAME
@@ -28,4 +35,8 @@ if(CONFIG_TESTING_FMEMOPEN_TEST)
     ${CONFIG_TESTING_FMEMOPEN_TEST}
     SRCS
     fmemopen.c)
+========
+if(CONFIG_TESTING_MTE)
+  nuttx_add_application(NAME mtetest COMPILE_FLAGS ${CFLAGS} SRCS mtetest.c)
+>>>>>>>> 481530e02 (apps/testing: move himem_test,mtetest,x86-64-ABI folders to the new arhc folder):testing/arch/mtetest/CMakeLists.txt
 endif()
