@@ -419,6 +419,22 @@ if(CONFIG_TESTING_DRIVER_TEST)
       drivertest_pm.c)
   endif()
 
+  if(CONFIG_PM AND CONFIG_PM_GOVERNOR_STABILITY)
+    nuttx_add_application(
+      NAME
+      cmocka_driver_pm_gov_stability
+      PRIORITY
+      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_DRIVER_TEST}
+      DEPENDS
+      cmocka
+      SRCS
+      drivertest_pm_gov_stability.c)
+  endif()
+
   if(CONFIG_PM AND CONFIG_SMP)
     nuttx_add_application(
       NAME

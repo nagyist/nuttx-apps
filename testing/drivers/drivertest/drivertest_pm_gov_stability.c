@@ -243,6 +243,7 @@ static void drivertest_pm_gov_stability(FAR void **argv)
 
           usleep(g_stability_governor_thresh[PM_SLEEP] * USEC_PER_TICK * 2);
           assert_int_equal(g_test_pm_dev.state, PM_SLEEP);
+          ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
         }
 
       /* test state with thresh */
@@ -259,6 +260,8 @@ static void drivertest_pm_gov_stability(FAR void **argv)
 
           assert_int_equal(g_test_pm_dev.state, last);
           ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), last, check);
+          target = persist_stay_cnt[state] + 1;
+          ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
 
           /* wait for stability thresh */
 
@@ -276,6 +279,8 @@ static void drivertest_pm_gov_stability(FAR void **argv)
 
           assert_int_equal(g_test_pm_dev.state, last);
           ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), last, check);
+          target = persist_stay_cnt[state] + 0;
+          ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
 
           /* wait for stability thresh */
 
