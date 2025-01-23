@@ -256,8 +256,22 @@ static const struct cmdmap_s g_cmdmap[] =
 
 #ifdef CONFIG_DEBUG_MM
 #  ifndef CONFIG_NSH_DISABLE_MEMDUMP
-  CMD_MAP("memdump",  cmd_memdump,
-          1, 4, "[pid/used/free/on/off]" " <minseq> <maxseq>"),
+  CMD_MAP("memdump",  cmd_memdump, 1, 4, "["
+#    ifdef CONFIG_MM_RECORD_PID
+           "pid/"
+#    endif
+#    ifdef CONFIG_MM_RECORD_SEQNO
+           "seqno/"
+#    endif
+           "used/free"
+#    ifdef CONFIG_MM_RECORD_STACK
+           "/on/off"
+#    endif
+           "]"
+#    ifdef CONFIG_MM_RECORD_SEQNO
+           " <minseq> <maxseq>"
+#    endif
+         ),
 #  endif
 #endif
 

@@ -58,7 +58,7 @@
 #  define LOAD_FRAC(x) (LOAD_INT(((x) & (FIXED_1 - 1)) * 100))
 #endif
 
-#if CONFIG_MM_BACKTRACE >= 0 && !defined(CONFIG_NSH_DISABLE_PSHEAPUSAGE)
+#if defined(CONFIG_MM_RECORD_PID) && !defined(CONFIG_NSH_DISABLE_PSHEAPUSAGE)
 #  define PS_SHOW_HEAPSIZE
 #endif
 
