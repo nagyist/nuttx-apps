@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/atomic/CMakeLists.txt
+# apps/testing/sched/getprime/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,16 +18,14 @@
 #
 # ##############################################################################
 
-if(CONFIG_TESTING_ATOMIC)
+if(CONFIG_TESTING_GETPRIME)
   nuttx_add_application(
     NAME
-    ${CONFIG_TESTING_ATOMIC_PROGNAME}
-    PRIORITY
-    ${CONFIG_TESTING_ATOMIC_PRIORITY}
-    STACKSIZE
-    ${CONFIG_TESTING_ATOMIC_STACKSIZE}
-    MODULE
-    ${CONFIG_TESTING_ATOMIC}
+    ${CONFIG_TESTING_GETPRIME_PROGNAME}
     SRCS
-    atomic_main.c)
+    getprime_main.c
+    STACKSIZE
+    ${CONFIG_TESTING_GETPRIME_STACKSIZE}
+    PRIORITY
+    ${CONFIG_TESTING_GETPRIME_PRIORITY})
 endif()

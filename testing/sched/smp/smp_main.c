@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/smp/smp_main.c
+ * apps/testing/sched/smp/smp_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/atomic/Makefile
+# apps/testing/sched/smp/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -20,15 +20,15 @@
 
 include $(APPDIR)/Make.defs
 
-# Atomic ! built-in application info
+# SMP built-in application info
 
-PROGNAME  = $(CONFIG_TESTING_ATOMIC_PROGNAME)
-PRIORITY  = $(CONFIG_TESTING_ATOMIC_PRIORITY)
-STACKSIZE = $(CONFIG_TESTING_ATOMIC_STACKSIZE)
-MODULE    = $(CONFIG_TESTING_ATOMIC)
+PROGNAME = $(CONFIG_TESTING_SMP_PROGNAME)
+PRIORITY = $(CONFIG_TESTING_SMP_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_SMP_STACKSIZE)
+MODULE = $(CONFIG_TESTING_SMP)
 
-# Atomic! Example
+# SMP Example
 
-MAINSRC = atomic_main.c
+MAINSRC = smp_main.c
 
 include $(APPDIR)/Application.mk

@@ -1,5 +1,7 @@
 ############################################################################
-# apps/testing/cxx/uclibcxx_test/Make.defs
+# apps/testing/sched/Make.defs
+#
+# SPDX-License-Identifier: Apache-2.0
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +20,4 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_UCLIBCXXTEST),)
-CONFIGURED_APPS += $(APPDIR)/testing/cxx/uclibcxx_test
-endif
+include $(wildcard $(APPDIR)/testing/sched/*/Make.defs)

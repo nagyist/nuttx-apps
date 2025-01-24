@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/timerjitter/CMakeLists.txt
+# apps/testing/sched/timerjitter/CMakeLists.txt
 #
 # Copyright (C) 2024 Xiaomi Corporation
 #

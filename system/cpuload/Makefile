@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/getprime/Make.defs
+# apps/system/cpuload/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,13 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_GETPRIME),)
-CONFIGURED_APPS += $(APPDIR)/testing/getprime
-endif
+include $(APPDIR)/Make.defs
+
+PROGNAME  = cpuload
+PRIORITY  = 253
+STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
+MODULE    = $(CONFIG_SYSTEM_CPULOAD)
+
+MAINSRC = cpuload_main.c
+
+include $(APPDIR)/Application.mk

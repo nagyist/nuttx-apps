@@ -1,5 +1,7 @@
 # ##############################################################################
-# apps/testing/cpuload/CMakeLists.txt
+# apps/testing/sched/CMakeLists.txt
+#
+# SPDX-License-Identifier: Apache-2.0
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,16 +20,5 @@
 #
 # ##############################################################################
 
-if(CONFIG_TESTING_CPULOAD)
-  nuttx_add_application(
-    NAME
-    cpuload
-    PRIORITY
-    253
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE}
-    MODULE
-    ${CONFIG_TESTING_CPULOAD}
-    SRCS
-    cpuload_main.c)
-endif()
+nuttx_add_subdirectory()
+nuttx_generate_kconfig(MENUDESC "sched")

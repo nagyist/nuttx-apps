@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/cpuload/Make.defs
+# apps/testing/libc/atomic/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,17 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_CPULOAD),)
-CONFIGURED_APPS += $(APPDIR)/testing/cpuload
-endif
+include $(APPDIR)/Make.defs
+
+# Atomic ! built-in application info
+
+PROGNAME  = $(CONFIG_TESTING_ATOMIC_PROGNAME)
+PRIORITY  = $(CONFIG_TESTING_ATOMIC_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_ATOMIC_STACKSIZE)
+MODULE    = $(CONFIG_TESTING_ATOMIC)
+
+# Atomic! Example
+
+MAINSRC = atomic_main.c
+
+include $(APPDIR)/Application.mk

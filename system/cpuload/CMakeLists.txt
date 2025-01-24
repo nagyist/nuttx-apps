@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/smp/CMakeLists.txt
+# apps/system/cpuload/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,14 +18,16 @@
 #
 # ##############################################################################
 
-if(CONFIG_TESTING_SMP)
+if(CONFIG_SYSTEM_CPULOAD)
   nuttx_add_application(
     NAME
-    ${CONFIG_TESTING_SMP_PROGNAME}
-    SRCS
-    smp_main.c
-    STACKSIZE
-    ${CONFIG_TESTING_SMP_STACKSIZE}
+    cpuload
     PRIORITY
-    ${CONFIG_TESTING_SMP_PRIORITY})
+    253
+    STACKSIZE
+    ${CONFIG_DEFAULT_TASK_STACKSIZE}
+    MODULE
+    ${CONFIG_SYSTEM_CPULOAD}
+    SRCS
+    cpuload_main.c)
 endif()

@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/cxx/uclibcxx_test/Make.defs
+# apps/testing/sched/getprime/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,17 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_UCLIBCXXTEST),)
-CONFIGURED_APPS += $(APPDIR)/testing/cxx/uclibcxx_test
-endif
+include $(APPDIR)/Make.defs
+
+# getprime built-in application info
+
+PROGNAME = $(CONFIG_TESTING_GETPRIME_PROGNAME)
+PRIORITY = $(CONFIG_TESTING_GETPRIME_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_GETPRIME_STACKSIZE)
+MODULE = $(CONFIG_TESTING_GETPRIME)
+
+# getprime main source
+
+MAINSRC = getprime_main.c
+
+include $(APPDIR)/Application.mk
