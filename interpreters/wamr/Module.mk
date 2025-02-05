@@ -28,10 +28,21 @@ define WAMR_MODULE_REGISTER
 endef
 
 ifneq ($(WAMR_MODULE_NAME),)
-WAMR_MODULE_LIST := $(addprefix $(WAMR_MODULE_REGISTRY)$(DELIM),$(addsuffix .bdat,$(WAMR_MODULE_NAME)))
-$(WAMR_MODULE_LIST): $(DEPCONFIG) Makefile
-	$(call WAMR_MODULE_REGISTER,$(firstword $(WAMR_MODULE_NAME)),$(firstword wamr_module_$(WAMR_MODULE_NAME)_register))
-	$(eval WAMR_MODULE_NAME=$(filter-out $(firstword $(WAMR_MODULE_NAME)),$(WAMR_MODULE_NAME)))
+# Create individual targets for each module
+# This macro generates a build target for each WAMR module
+# $(1) - Module name that will be used to generate:
+#   - A .bdat file containing the module registration function name
+#   - A .pdat file containing the function prototype
+# The target depends on configuration and Makefile changes
+define WAMR_MODULE_TARGET
+$(WAMR_MODULE_REGISTRY)$(DELIM)$(1).bdat: $(DEPCONFIG) Makefile
+	$$(call WAMR_MODULE_REGISTER,$(1),wamr_module_$(1)_register)
+endef
 
-register:: $(WAMR_MODULE_LIST)
+# Evaluate the WAMR_MODULE_TARGET macro for each module name
+# This creates individual build targets for all modules listed in WAMR_MODULE_NAME
+$(foreach mod,$(WAMR_MODULE_NAME),$(eval $(call WAMR_MODULE_TARGET,$(mod))))
+
+# Add all module .bdat files as dependencies of the 'register' target
+register:: $(foreach mod,$(WAMR_MODULE_NAME),$(WAMR_MODULE_REGISTRY)$(DELIM)$(mod).bdat)
 endif
