@@ -30,7 +30,7 @@
 #include <syslog.h>
 
 #include <nuttx/symtab.h>
-#include <nuttx/lib/modlib.h>
+#include <nuttx/lib/elf.h>
 
 /****************************************************************************
  * Private Functions

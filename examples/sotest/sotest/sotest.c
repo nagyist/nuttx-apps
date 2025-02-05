@@ -30,13 +30,13 @@
 #include <syslog.h>
 
 #include <nuttx/symtab.h>
-#include <nuttx/lib/modlib.h>
+#include <nuttx/lib/elf.h>
 
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
 
-#if CONFIG_MODLIB_MAXDEPEND > 0
+#if CONFIG_LIBC_ELF_MAXDEPEND > 0
 void modprint(FAR const char *fmt, ...) printf_like(1, 2);
 #endif
 
@@ -60,7 +60,7 @@ visibility_default const char g_msg3[] = "Yes, don't be a stranger!";
  * Name: modprint
  ****************************************************************************/
 
-#if CONFIG_MODLIB_MAXDEPEND < 1
+#if CONFIG_LIBC_ELF_MAXDEPEND < 1
 static void modprint(FAR const char *fmt, ...)
 {
   va_list ap;
