@@ -52,23 +52,24 @@ SUFFIX ?= $(subst $(DELIM),.,$(CWD))
 
 PROGNAME := $(subst ",,$(PROGNAME))
 
-# Add the static application library to the linked libraries.
-
-LDLIBS += $(call CONVERT_PATH,$(BIN))
-
-# When building a module, link with the compiler runtime.
-# This should be linked after libapps. Consider that mbedtls in libapps
-# uses __udivdi3.
+# When building a module, link with the necessary libraries
+# 1. system libraries such as proxies,c,mm
+# 2. application libraries such as libapps, custom BIN in apps/staging
+# 3. extra libraries such as compiler-rt lib, extra external libs
 ifeq ($(BUILD_MODULE),y)
-  # Revisit: This only works for gcc and clang.
-  # Do other compilers have similar?
-  COMPILER_RT_LIB = $(shell $(CC) $(ARCHCPUFLAGS) --print-libgcc-file-name)
-  ifeq ($(wildcard $(COMPILER_RT_LIB)),)
-    # if "--print-libgcc-file-name" unable to find the correct libgcc PATH
-    # then go ahead and try "--print-file-name"
-    COMPILER_RT_LIB := $(wildcard $(shell $(CC) $(ARCHCPUFLAGS) --print-file-name $(notdir $(COMPILER_RT_LIB))))
-  endif
-  LDLIBS += $(COMPILER_RT_LIB)
+  LDLIBS += $(call CONVERT_PATH,$(APPDIR)$(DELIM)libapps$(LIBEXT))
+  $(foreach lib,$(notdir $(wildcard $(APPDIR)$(DELIM)staging$(DELIM)*$(LIBEXT))), \
+  $(foreach elib,$(EXTRA_LIBS), \
+    $(if $(filter $(notdir $(elib)),$(lib)), \
+      $(eval NAMEFULL_LIBS+=$(elib)), \
+      $(if $(filter $(notdir $(elib)),$(patsubst lib%$(LIBEXT),-l%,$(lib))), \
+        $(eval NAMESPEC_LIBS+=$(elib)) \
+       ) \
+     ) \
+   ) \
+ )
+  LDLIBS += $(filter-out $(NAMEFULL_LIBS) $(NAMESPEC_LIBS),$(EXTRA_LIBS))
+  LDLIBS += $(wildcard $(APPDIR)$(DELIM)staging$(DELIM)*$(LIBEXT))
 endif
 
 # Apps compilation can achieve out-of-tree intermediate products
