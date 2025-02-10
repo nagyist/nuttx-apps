@@ -90,4 +90,8 @@ config INTERPRETERS_QUICKJS_DUMP_LEAKS
 		by default, quickjs will only dump object leaks when closing, without string and atoms
 		open this option will dump all leaks when closing, contains object, string and atoms.
 
+config INTERPRETERS_QUICKJS_TEST
+	bool "Enable QuickJS test"
+	default n
+
 endif # INTERPRETERS_QUICKJS
