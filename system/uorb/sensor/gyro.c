@@ -31,6 +31,9 @@
 #ifdef CONFIG_DEBUG_UORB
 static const char sensor_gyro_format[] =
   "timestamp:%" PRIu64 ",x:%hf,y:%hf,z:%hf,temperature:%hf";
+static const char sensor_gyro_uncal_format[] =
+  "timestamp:%" PRIu64 ",x:%hf,y:%hf,z:%hf,x_bias:%hf,y_bias:%hf,"
+  "z_bias:%hf,temperature:%hf";
 #endif
 
 /****************************************************************************
@@ -38,4 +41,5 @@ static const char sensor_gyro_format[] =
  ****************************************************************************/
 
 ORB_DEFINE(sensor_gyro, struct sensor_gyro, sensor_gyro_format);
-ORB_DEFINE(sensor_gyro_uncal, struct sensor_gyro, sensor_gyro_format);
+ORB_DEFINE(sensor_gyro_uncal, struct sensor_gyro_uncal,
+           sensor_gyro_uncal_format);

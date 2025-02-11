@@ -31,7 +31,9 @@
 #ifdef CONFIG_DEBUG_UORB
 static const char sensor_accel_format[] =
   "timestamp:%" PRIu64 ",x:%hf,y:%hf,z:%hf,temperature:%hf";
-
+static const char sensor_accel_uncal_format[] =
+  "timestamp:%" PRIu64 ",x:%hf,y:%hf,z:%hf,x_bias:%hf,y_bias:%hf,"
+  "z_bias:%hf,temperature:%hf";
 #endif
 
 /****************************************************************************
@@ -39,7 +41,8 @@ static const char sensor_accel_format[] =
  ****************************************************************************/
 
 ORB_DEFINE(sensor_accel, struct sensor_accel, sensor_accel_format);
-ORB_DEFINE(sensor_accel_uncal, struct sensor_accel, sensor_accel_format);
+ORB_DEFINE(sensor_accel_uncal, struct sensor_accel_uncal,
+           sensor_accel_uncal_format);
 ORB_DEFINE(sensor_linear_accel, struct sensor_accel, sensor_accel_format);
-ORB_DEFINE(sensor_linear_accel_uncal, struct sensor_accel,
-           sensor_accel_format);
+ORB_DEFINE(sensor_linear_accel_uncal, struct sensor_accel_uncal,
+           sensor_accel_uncal_format);
