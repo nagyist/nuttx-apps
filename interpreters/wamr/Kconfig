@@ -248,4 +248,21 @@ config INTERPRETERS_WAMR_CONFIGUABLE_BOUNDS_CHECKS
 		disable bounds checks passing --disable-bounds-checks to
 		iwasm.
 
+config INTERPRETERS_WAMR_UNIT_TEST
+	bool "Enable WAMR unit test"
+	default n
+	depends on INTERPRETERS_WAMR && LIB_GOOGLETEST
+
+if INTERPRETERS_WAMR_UNIT_TEST
+
+config INTERPRETERS_WAMR_UNIT_TEST_PRIORITY
+	int "WAMR unit test task priority"
+	default 100
+
+config INTERPRETERS_WAMR_UNIT_TEST_STACKSIZE
+	int "WAMR unit test stack size"
+	default 8192
+
+endif
+
 endif

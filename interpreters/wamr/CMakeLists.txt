@@ -77,6 +77,27 @@ if(CONFIG_INTERPRETERS_WAMR)
     DEPENDS
     wamr)
 
+  if(CONFIG_INTERPRETERS_WAMR_UNIT_TEST)
+    set(CXXEXT .cc)
+    list(APPEND WAMR_UNIT_TEST_SRCS ${CMAKE_CURRENT_LIST_DIR}/wamr_unit_test.cc)
+    # the WAMR_UNIT_TEST_FLAGS is defined in platforms/nuttx/CMakeLists.txt
+    nuttx_add_application(
+      NAME
+      wamr_unit_test
+      PRIORITY
+      ${CONFIG_INTERPRETERS_WAMR_UNIT_TEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_INTERPRETERS_WAMR_UNIT_TEST_STACKSIZE}
+      SRCS
+      ${WAMR_UNIT_TEST_SRCS}
+      INCLUDE_DIRECTORIES
+      ${WAMR_INCDIRS}
+      COMPILE_FLAGS
+      ${WAMR_UNIT_TEST_FLAGS}
+      DEPENDS
+      wamr)
+  endif()
+
   nuttx_append_source_file_properties(
     ${WAMR_DIR}/product-mini/platforms/nuttx/main.c COMPILE_FLAGS
     -Dwasm_runtime_full_init=wamr_custom_init)
