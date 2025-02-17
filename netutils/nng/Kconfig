@@ -38,4 +38,22 @@ config NETUTILS_NNG_USE_MBEDTLS
 
 endchoice # TLS engine
 
+config NETUTILS_NNG_TEST
+	tristate "Enable NNG test"
+	default n
+	help
+		Enable the NNG test.
+
+if NETUTILS_NNG_TEST
+
+config NETUTILS_NNG_TEST_PRIORITY
+	int "NNG test priority"
+	default 100
+
+config NETUTILS_NNG_TEST_STACKSIZE
+	int "NNG test stack size"
+	default DEFAULT_TASK_STACKSIZE
+
+endif # NETUTILS_NNG_TEST
+
 endif

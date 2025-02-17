@@ -170,4 +170,176 @@ if(CONFIG_NETUTILS_NNG)
   target_sources(nng PRIVATE ${CSRCS})
   target_compile_options(nng PRIVATE ${CFLAGS})
   target_include_directories(nng PRIVATE ${INCDIR})
+
+  if(CONFIG_NETUTILS_NNG_TEST)
+    # Set compile definitions for test files
+    set(TESTDIR ${NNG_DIR}/tests)
+
+    list(
+      APPEND
+      CFLAGS
+      -DNNG_HAVE_PAIR0
+      -DNNG_HAVE_BUS0
+      -DNNG_HAVE_PULL0
+      -DNNG_HAVE_PUSH0
+      -DNNG_HAVE_PUB0
+      -DNNG_HAVE_SUB0
+      -DNNG_HAVE_REQ0
+      -DNNG_HAVE_REP0
+      -DNNG_HAVE_SURVEYOR0
+      -DNNG_HAVE_RESPONDENT0
+      -DNNG_HAVE_LANGINFO=1)
+    list(APPEND CSRCS ${NNG_DIR}/src/compat/nanomsg/nn.c
+         ${TESTDIR}/compat_testutil.c ${TESTDIR}/convey.c ${TESTDIR}/trantest.c)
+
+    set_source_files_properties(
+      ${TESTDIR}/bus.c
+      PROPERTIES COMPILE_DEFINITIONS bus=test_bus
+                 bus1=test_bus1 bus2=test_bus2
+                 bus3=test_bus3 rtimeo=test_bus_rtimeo)
+
+    set_source_files_properties(
+      ${TESTDIR}/compat_block.c PROPERTIES COMPILE_DEFINITIONS sc=cp_block_sc
+                                           sb=cp_block_sb)
+
+    set_source_files_properties(
+      ${TESTDIR}/compat_device.c
+      PROPERTIES COMPILE_DEFINITIONS deva=cp_device_deva
+                 devb=cp_device_devb devc=cp_device_devc
+                 devd=cp_device_devd)
+
+    set_source_files_properties(${TESTDIR}/compat_poll.c
+                                PROPERTIES COMPILE_DEFINITIONS sc=cp_poll_sc)
+
+    set_source_files_properties(
+      ${TESTDIR}/compat_reqttl.c
+      PROPERTIES COMPILE_DEFINITIONS dev0=cp_reqttl_dev0 dev1=cp_reqttl_dev1)
+
+    set_source_files_properties(
+      ${TESTDIR}/compat_surveyttl.c
+      PROPERTIES COMPILE_DEFINITIONS dev0=cp_surveyttl_dev0
+                 dev1=cp_surveyttl_dev1)
+
+    set_source_files_properties(
+      ${TESTDIR}/ipcsupp.c
+      PROPERTIES COMPILE_DEFINITIONS d=ipcsupp_dialer
+                 l=ipcsupp_listener daio=ipcsupp_aio
+                 laio=ipcsupp_laio maio=ipcsupp_maio
+                 c1=ipcsupp_c1 c2=ipcsupp_c2
+                 aio1=ipcsupp_aio1 aio2=ipcsupp_aio2
+                 sa2=ipcsupp_sa2)
+
+    set_source_files_properties(
+      ${TESTDIR}/ipcwinsec.c PROPERTIES COMPILE_DEFINITIONS s=ipcwinsec_s
+                                        l=ipcwinsec_l x=ipcwinsec_x)
+
+    set_source_files_properties(
+      ${TESTDIR}/nonblock.c PROPERTIES COMPILE_DEFINITIONS addr=nonblock_addr
+                                       reqs=nonblock_reqs rep=nonblock_rep)
+
+    set_source_files_properties(
+      ${TESTDIR}/pipe.c
+      PROPERTIES COMPILE_DEFINITIONS addr=pipe_addr
+                 cnt=pipe_cnt push=pipe_push
+                 pull=pipe_pull)
+
+    set_source_files_properties(
+      ${TESTDIR}/pollfd.c PROPERTIES COMPILE_DEFINITIONS s1=pollfd_s1
+                                     s2=pollfd_s2 s3=pollfd_s3)
+
+    set_source_files_properties(
+      ${TESTDIR}/reqctx.c
+      PROPERTIES COMPILE_DEFINITIONS ctxs=reqctx_ctxs
+                 saios=reqctx_saios raios=reqctx_raios
+                 recd=reqctx_recd sent=reqctx_sent
+                 req=reqctx_req ctx=reqctx_ctx
+                 aio=reqctx_aio)
+
+    set_source_files_properties(
+      ${TESTDIR}/reqstress.c
+      PROPERTIES COMPILE_DEFINITIONS tcp4_template=reqstress_tcp4tmp
+                 tcp6_template=reqstress_tcp6tmp
+                 inproc_template=reqstress_inproctmp
+                 ipc_template=reqstress_ipctemp ws_template=reqstress_wstmp
+                 templates=reqstress_templates cases=reqstress_cases
+                 ncases=reqstress_ncases curcase=reqstress_curcase)
+
+    set_source_files_properties(
+      ${TESTDIR}/stats.c PROPERTIES COMPILE_DEFINITIONS s1=stats_s1 s2=stats_s2)
+
+    set_source_files_properties(
+      ${TESTDIR}/sync.c PROPERTIES COMPILE_DEFINITIONS thr=sync_thr mx=sync_mx)
+
+    set_source_files_properties(${TESTDIR}/tcp6.c PROPERTIES COMPILE_DEFINITIONS
+                                                             s1=tcp6_s1)
+
+    set_source_files_properties(
+      ${TESTDIR}/tcpsupp.c
+      PROPERTIES COMPILE_DEFINITIONS d=tcpsupp_dialer
+                 l=tcpsupp_listener daio=tcpsupp_daio
+                 laio=tcpsupp_laio maio=tcpsupp_maio
+                 c1=tcpsupp_c1 c2=tcpsupp_c2
+                 aio1=tcpsupp_aio1 aio2=tcpsupp_aio2)
+
+    set_source_files_properties(${TESTDIR}/udp.c PROPERTIES COMPILE_DEFINITIONS
+                                                            u1=udp_u1 u2=udp_u2)
+
+    set_source_files_properties(
+      ${TESTDIR}/zt.c PROPERTIES COMPILE_DEFINITIONS s=zt_s s1=zt_s1 s2=zt_s2)
+
+    macro(add_nng_test_app NNG_NAME NNG_MAIN)
+      nuttx_add_application(
+        NAME
+        ${NNG_NAME}
+        SRCS
+        ${TESTDIR}/${NNG_MAIN}
+        STACKSIZE
+        ${CONFIG_NETUTILS_NNG_TEST_STACKSIZE}
+        PRIORITY
+        ${CONFIG_NETUTILS_NNG_TEST_PRIORITY})
+    endmacro()
+
+    add_nng_test_app(nng_test_bus bus.c)
+    add_nng_test_app(nng_test_compat_block compat_block.c)
+    add_nng_test_app(nng_test_compat_bug777 compat_bug777.c)
+    add_nng_test_app(nng_test_compat_bus compat_bus.c)
+    add_nng_test_app(nng_test_compat_cmsg compat_cmsg.c)
+    add_nng_test_app(nng_test_compat_device compat_device.c)
+    add_nng_test_app(nng_test_compat_iovec compat_iovec.c)
+    add_nng_test_app(nng_test_compat_msg compat_msg.c)
+    add_nng_test_app(nng_test_compat_options compat_options.c)
+    add_nng_test_app(nng_test_compat_pair compat_pair.c)
+    add_nng_test_app(nng_test_compat_pipeline compat_pipeline.c)
+    add_nng_test_app(nng_test_compat_poll compat_poll.c)
+    add_nng_test_app(nng_test_compat_reqrep compat_reqrep.c)
+    add_nng_test_app(nng_test_compat_reqttl compat_reqttl.c)
+    add_nng_test_app(nng_test_compat_shutdown compat_shutdown.c)
+    add_nng_test_app(nng_test_compat_survey compat_survey.c)
+    add_nng_test_app(nng_test_compat_surveyttl compat_surveyttl.c)
+    add_nng_test_app(nng_test_device device.c)
+    add_nng_test_app(nng_test_files files.c)
+    add_nng_test_app(nng_test_httpclient httpclient.c)
+    add_nng_test_app(nng_test_httpserver httpserver.c)
+    add_nng_test_app(nng_test_inproc inproc.c)
+    add_nng_test_app(nng_test_ipc ipc.c)
+    add_nng_test_app(nng_test_ipcsupp ipcsupp.c)
+    add_nng_test_app(nng_test_ipcwinsec ipcwinsec.c)
+    add_nng_test_app(nng_test_multistress multistress.c)
+    add_nng_test_app(nng_test_nonblock nonblock.c)
+    add_nng_test_app(nng_test_pipe pipe.c)
+    add_nng_test_app(nng_test_pollfd pollfd.c)
+    add_nng_test_app(nng_test_reqctx reqctx.c)
+    add_nng_test_app(nng_test_reqstress reqstress.c)
+    add_nng_test_app(nng_test_scalability scalability.c)
+    add_nng_test_app(nng_test_synch synch.c)
+    add_nng_test_app(nng_test_tcp tcp.c)
+    add_nng_test_app(nng_test_tcp6 tcp6.c)
+    add_nng_test_app(nng_test_tcpsupp tcpsupp.c)
+    add_nng_test_app(nng_test_tls tls.c)
+    add_nng_test_app(nng_test_udp udp.c)
+    add_nng_test_app(nng_test_ws ws.c)
+    add_nng_test_app(nng_test_wss wss.c)
+    add_nng_test_app(nng_test_zt zt.c)
+
+  endif()
 endif()
