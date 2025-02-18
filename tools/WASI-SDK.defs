@@ -67,8 +67,10 @@ endif
 # -fno-sanitize%: -fno-sanitize=address, -fno-sanitize=thread etc.
 # -W%: Warning flags, clang is more strict than gcc
 # --param%: Warning flags, wasm-clang does not support
+# -fprofile-arcs -ftest-coverage -fprofile-instr-generate -fcoverage-mapping etc
 
 CFLAGS_STRIP = -m% -Wl,% -fsanitize% -fno-sanitize% -W% --param%
+CFLAGS_STRIP += -fprofile% -f%coverage%
 
 WCFLAGS += $(filter-out $(CFLAGS_STRIP),$(CFLAGS))
 WCFLAGS += --sysroot=$(WSYSROOT) -nostdlib -D__NuttX__
