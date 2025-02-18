@@ -47,7 +47,7 @@ MAINSRC  += drivertest_timer.c
 PROGNAME += cmocka_driver_timer
 endif
 
-ifneq ($(CONFIG_TESTING_ONESHOT_TEST),)
+ifneq ($(CONFIG_ONESHOT),)
 MAINSRC  += drivertest_oneshot.c
 PROGNAME += cmocka_driver_oneshot
 endif
