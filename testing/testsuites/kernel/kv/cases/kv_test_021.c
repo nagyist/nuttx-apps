@@ -48,7 +48,10 @@
 
 void test_nuttx_kv21(FAR void **state)
 {
-  int ret = 0;
+  char *str = "persist.test.kv.reload=test";
+  FILE *file;
+  int ret;
+
   char key[TEST_KEY_LENGTH] =
   {
     0
@@ -64,25 +67,32 @@ void test_nuttx_kv21(FAR void **state)
     0
   };
 
+  if (strlen(CONFIG_KVDB_LOAD_TEST_SOURCE_PATH) == 0)
+    return;
+
   strcpy(key, "persist.test.kv.reload");
   strcpy(value, "test");
 
+  /* open test path */
+
+  file = fopen(CONFIG_KVDB_LOAD_TEST_SOURCE_PATH, "w");
+  assert_non_null(file);
+
+  fputs(str, file);
+  fclose(file);
+
+  /* load */
+
+  property_load(CONFIG_KVDB_LOAD_TEST_SOURCE_PATH);
+
   /* get key */
 
   ret = property_get(key, data, "");
   assert_int_equal(ret, strlen(value));
   assert_int_equal(strcmp(value, data), 0);
 
-  /* delete persist key */
+  /* del key */
 
   ret = property_delete(key);
   assert_int_equal(ret, 0);
-
-  property_reload();
-
-  /* get key */
-
-  ret = property_get(key, data, "");
-  assert_int_equal(ret, strlen(value));
-  assert_int_equal(strcmp(value, data), 0);
 }

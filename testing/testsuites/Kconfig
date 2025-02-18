@@ -49,6 +49,15 @@ config CM_KVDB_TEST
 	default n
 	depends on KVDB
 
+if CM_KVDB_TEST
+
+config KVDB_LOAD_TEST_SOURCE_PATH
+	string "database default value test source path"
+	default "/data/test.prop"
+	depends on KVDB_SERVER
+
+endif # CM_KVDB_TEST
+
 config CM_TIME_TEST
 	bool "enbale time test"
 	default n
