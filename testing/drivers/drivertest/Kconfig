@@ -22,6 +22,6 @@ config TESTING_DRIVER_TEST_STACKSIZE
 
 config TESTING_DRIVER_TEST_SIMPLE
 	bool "Enable cmocka driver simple test"
-	default n
+	default y
 
 endif
