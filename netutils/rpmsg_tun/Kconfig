@@ -30,6 +30,10 @@ config NETUTILS_RPMSG_TUN_PRIORITY
 
 config NETUTILS_RPMSG_TUN_STACKSIZE
 	int "Remote tun device with rpmsg socket task stack size"
-	default 4096
+	default 6144
+
+config NETUTILS_RPMSG_TUN_BUFSIZE
+	int "Remote tun buffer size"
+	default 2048
 
 endif

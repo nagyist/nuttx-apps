@@ -32,8 +32,6 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define RPMSG_TUN_BUFFER_SIZE     2048
-
 #undef EXTERN
 #if defined(__cplusplus)
 #define EXTERN extern "C"
@@ -49,7 +47,7 @@ extern "C"
 
 struct rpmsg_tun_buf_s
 {
-  char data[RPMSG_TUN_BUFFER_SIZE];
+  char data[CONFIG_NETUTILS_RPMSG_TUN_BUFSIZE];
   uint32_t len;
   uint32_t off;
 };

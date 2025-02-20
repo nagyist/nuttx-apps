@@ -4,6 +4,9 @@ cc_binary {
         "rpmsg_tun_client.c",
         "rpmsg_tun_util.c",
         ],
+    cflags: [
+        "-DCONFIG_NETUTILS_RPMSG_TUN_BUFSIZE=2048",
+    ],
     init_rc: [
         "init.rpmsg_tun_client.rc",
     ],

@@ -595,7 +595,7 @@ int rpmsg_tun_connect_netlink(void)
 
 int rpmsg_tun_process_netlink(int fd, const char *name)
 {
-  char buf[RPMSG_TUN_BUFFER_SIZE];
+  char buf[256];
   struct nlmsghdr *hdr = (struct nlmsghdr *)buf;
   ssize_t len;
 
