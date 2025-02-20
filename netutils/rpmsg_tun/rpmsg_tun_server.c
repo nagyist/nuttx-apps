@@ -55,8 +55,10 @@
 static void
 rpmsg_tun_netlink_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
 {
+  struct rpmsg_tun_buf_s buf;
   struct pollfd fds[3];
 
+  memset(&buf, 0, sizeof(buf));
   memset(fds, 0, sizeof(fds));
   fds[0].fd = tunfd;
   fds[0].events = POLLIN;
@@ -84,7 +86,7 @@ rpmsg_tun_netlink_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
 
           if (fds[1].revents & POLLIN)
             {
-              if (rpmsg_tun_from_socket(tunfd, rpmsgfd) < 0)
+              if (rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf) < 0)
                 {
                   break;
                 }

@@ -26,6 +26,13 @@
  ****************************************************************************/
 
 #include <stdbool.h>
+#include <stdint.h>
+
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#define RPMSG_TUN_BUFFER_SIZE     2048
 
 #undef EXTERN
 #if defined(__cplusplus)
@@ -35,6 +42,17 @@ extern "C"
 #else
 #define EXTERN extern
 #endif
+
+/****************************************************************************
+ * Public Type Definitions
+ ****************************************************************************/
+
+struct rpmsg_tun_buf_s
+{
+  char data[RPMSG_TUN_BUFFER_SIZE];
+  uint32_t len;
+  uint32_t off;
+};
 
 /****************************************************************************
  * Public Function Prototypes
@@ -134,7 +152,8 @@ int rpmsg_tun_to_socket(int tunfd, int rpmsgfd);
  *   int - 0 on success, -errno on failure.
  ****************************************************************************/
 
-int rpmsg_tun_from_socket(int tunfd, int rpmsgfd);
+int rpmsg_tun_from_socket(int tunfd, int rpmsgfd,
+                          struct rpmsg_tun_buf_s *buf);
 
 /****************************************************************************
  * Name: rpmsg_tun_connect_netlink

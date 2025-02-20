@@ -44,12 +44,6 @@
 #include "rpmsg_tun_util.h"
 
 /****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#define RPMSG_TUN_BUFFER_SIZE     2048
-
-/****************************************************************************
  * Private Functions
  ****************************************************************************/
 
@@ -509,38 +503,48 @@ int rpmsg_tun_to_socket(int tunfd, int rpmsgfd)
  * Parameters:
  *   tunfd   - tun device fd
  *   rpmsgfd - rpmsg socket fd
+ *   buf     - buffer to store the data
  *
  * Returned Value:
  *   int - 0 on success, -errno on failure.
  ****************************************************************************/
 
-int rpmsg_tun_from_socket(int tunfd, int rpmsgfd)
+int rpmsg_tun_from_socket(int tunfd, int rpmsgfd,
+                          struct rpmsg_tun_buf_s *buf)
 {
-  char buf[RPMSG_TUN_BUFFER_SIZE];
-  int32_t len;
   int ret;
 
-  ret = rpmsg_tun_recv_all(rpmsgfd, &len, sizeof(len));
+  if (buf->len == 0)
+    {
+      ret = rpmsg_tun_recv_all(rpmsgfd, &buf->len, sizeof(buf->len));
+      if (ret < 0)
+        {
+          return ret;
+        }
+
+      if (buf->len > sizeof(buf->data))
+        {
+          return -EINVAL;
+        }
+    }
+
+  ret = recv(rpmsgfd, buf->data + buf->off, buf->len - buf->off, 0);
   if (ret < 0)
     {
-      return ret;
+      return -errno;
     }
 
-  if (len < 0 || len > sizeof(buf))
+  buf->off += ret;
+  if (buf->off >= buf->len)
     {
-      return -EINVAL;
-    }
+      ret = write(tunfd, buf->data, buf->len);
+      if (ret != buf->len)
+        {
+          return ret < 0 ? -errno : -EPIPE;
+        }
 
-  ret = rpmsg_tun_recv_all(rpmsgfd, buf, len);
-  if (ret < 0)
-    {
-      return ret;
-    }
-
-  ret = write(tunfd, buf, len);
-  if (ret != len)
-    {
-      return ret < 0 ? -errno : -EPIPE;
+      buf->off = 0;
+      buf->len = 0;
     }
 
   return 0;
@@ -748,8 +752,10 @@ int rpmsg_tun_wait_running(int fd, const char *name)
 
 void rpmsg_tun_loop(int tunfd, int rpmsgfd)
 {
+  struct rpmsg_tun_buf_s buf;
   struct pollfd fds[2];
 
+  memset(&buf, 0, sizeof(buf));
   memset(fds, 0, sizeof(fds));
   fds[0].fd = tunfd;
   fds[0].events = POLLIN;
@@ -775,7 +781,7 @@ void rpmsg_tun_loop(int tunfd, int rpmsgfd)
 
           if (fds[1].revents & POLLIN)
             {
-              if (rpmsg_tun_from_socket(tunfd, rpmsgfd) < 0)
+              if (rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf) < 0)
                 {
                   break;
                 }
