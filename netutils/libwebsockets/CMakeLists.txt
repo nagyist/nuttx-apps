@@ -190,4 +190,58 @@ if(CONFIG_NETUTILS_LIBWEBSOCKETS)
   target_compile_options(libwebsockets PRIVATE ${FLAGS})
   target_include_directories(libwebsockets PRIVATE ${INCDIR})
 
+  if(CONFIG_NETUTILS_LIBWEBSOCKETS_TEST)
+    set(LIBWEBSOCKETS_API_TEST_DIR
+        ${LIBWEBSOCKETS_DIR}/minimal-examples/api-tests)
+
+    macro(add_lws_test_app PROG)
+      nuttx_add_application(
+        NAME
+        ${PROG}
+        STACKSIZE
+        ${CONFIG_NETUTILS_LIBWEBSOCKETS_TEST_STACKSIZE}
+        PRIORITY
+        ${SCHED_PRIORITY_DEFAULT}
+        SRCS
+        ${ARGN}
+        INCLUDE_DIRECTORIES
+        ${INCDIR}
+        COMPILE_FLAGS
+        ${FLAGS}
+        DEPENDS
+        libwebsockets)
+    endmacro()
+
+    add_lws_test_app(libwebsockets_test_lejp
+                     ${LIBWEBSOCKETS_API_TEST_DIR}/api-test-lejp/main.c)
+
+    add_lws_test_app(libwebsockets_test_lws_tokenize
+                     ${LIBWEBSOCKETS_API_TEST_DIR}/api-test-lws_tokenize/main.c)
+
+    add_lws_test_app(libwebsockets_test_lws_map
+                     ${LIBWEBSOCKETS_API_TEST_DIR}/api-test-lws_map/main.c)
+
+    add_lws_test_app(libwebsockets_test_lws_lwsac
+                     ${LIBWEBSOCKETS_API_TEST_DIR}/api-test-lwsac/main.c)
+
+    add_lws_test_app(libwebsockets_test_lws_cache
+                     ${LIBWEBSOCKETS_API_TEST_DIR}/api-test-lws_cache/main.c)
+
+    set(LECP_TEST_SRCS
+        ${LIBWEBSOCKETS_API_TEST_DIR}/api-test-lecp/main.c
+        ${LIBWEBSOCKETS_DIR}/lib/misc/lecp.c
+        ${LIBWEBSOCKETS_DIR}/lib/misc/ieeehalfprecision.c)
+    add_lws_test_app(libwebsockets_test_lws_lecp ${LECP_TEST_SRCS})
+
+    set(DSH_TEST_SRCS ${LIBWEBSOCKETS_API_TEST_DIR}/api-test-lws_dsh/main.c
+                      ${LIBWEBSOCKETS_DIR}/lib/core-net/lws-dsh.c)
+    add_lws_test_app(libwebsockets_test_lws_dsh ${DSH_TEST_SRCS})
+
+    set(JSON_TEST_SRCS
+        ${LIBWEBSOCKETS_API_TEST_DIR}/api-test-lws_struct-json/main.c
+        ${LIBWEBSOCKETS_DIR}/minimal-examples/api-tests/api-test-lws_struct-json/test2.c
+        ${LIBWEBSOCKETS_DIR}/lib/misc/lws-struct-lejp.c)
+    add_lws_test_app(libwebsockets_test_lws_struct_json ${JSON_TEST_SRCS})
+  endif()
+
 endif()

@@ -10,6 +10,10 @@ config NETUTILS_LIBWEBSOCKETS
 	---help---
 		Enables the libwebsockets library.
 
+config NETUTILS_LIBWEBSOCKETS_TEST
+	tristate "Enable libwebsockets test"
+	default n
+
 if NETUTILS_LIBWEBSOCKETS
 
 config NETUTILS_LIBWEBSOCKETS_VERSION
@@ -20,5 +24,13 @@ config NETUTILS_LIBWEBSOCKETS_CERTS
 	string "Libwebsocket Certificate Authorize Path"
 	default "/etc/ssl/curl"
 	depends on CRYPTO_MBEDTLS
+
+endif
+
+if NETUTILS_LIBWEBSOCKETS_TEST
+
+config NETUTILS_LIBWEBSOCKETS_TEST_STACKSIZE
+	int "Task's stack size"
+	default 8192
 
 endif

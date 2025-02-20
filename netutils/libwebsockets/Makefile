@@ -146,6 +146,44 @@ ifneq ($(CONFIG_NETUTILS_MQTTC),)
 	$(LIBWEBSOCKETS_UNPACK)/lib/roles/mqtt/client/client-mqtt-handshake.c
 endif
 
+ifneq ($(CONFIG_NETUTILS_LIBWEBSOCKETS_TEST),)
+	LIBWEBSOCKETS_API_TEST_DIR   = $(LIBWEBSOCKETS_UNPACK)/minimal-examples/api-tests
+
+	PRIORITY  = SCHED_PRIORITY_DEFAULT
+	STACKSIZE = $(CONFIG_NETUTILS_LIBWEBSOCKETS_TEST_STACKSIZE)
+	MODULE    = $(CONFIG_NETUTILS_LIBWEBSOCKETS_TEST)
+	MAINSRC  += $(LIBWEBSOCKETS_API_TEST_DIR)/api-test-lejp/main.c
+	PROGNAME += libwebsockets_test_lejp
+
+	MAINSRC  += $(LIBWEBSOCKETS_API_TEST_DIR)/api-test-lws_tokenize/main.c
+	PROGNAME += libwebsockets_test_lws_tokenize
+
+	MAINSRC  += $(LIBWEBSOCKETS_API_TEST_DIR)/api-test-lws_map/main.c
+	PROGNAME += libwebsockets_test_lws_map
+
+	MAINSRC  += $(LIBWEBSOCKETS_API_TEST_DIR)/api-test-lwsac/main.c
+	PROGNAME += libwebsockets_test_lwsac
+
+	MAINSRC  += $(LIBWEBSOCKETS_API_TEST_DIR)/api-test-lws_cache/main.c
+	PROGNAME += libwebsockets_test_lws_cache
+
+	CSRCS    += \
+		$(LIBWEBSOCKETS_UNPACK)/lib/misc/lecp.c \
+		$(LIBWEBSOCKETS_UNPACK)/lib/misc/ieeehalfprecision.c
+	MAINSRC  += $(LIBWEBSOCKETS_API_TEST_DIR)/api-test-lecp/main.c
+	PROGNAME += libwebsockets_test_lws_lecp
+
+	CSRCS    += $(LIBWEBSOCKETS_UNPACK)/lib/core-net/lws-dsh.c
+	MAINSRC  += $(LIBWEBSOCKETS_API_TEST_DIR)/api-test-lws_dsh/main.c
+	PROGNAME += libwebsockets_test_lws_dsh
+
+	CSRCS    += \
+		$(LIBWEBSOCKETS_API_TEST_DIR)/api-test-lws_struct-json/test2.c \
+		$(LIBWEBSOCKETS_UNPACK)/lib/misc/lws-struct-lejp.c
+	MAINSRC  += $(LIBWEBSOCKETS_API_TEST_DIR)/api-test-lws_struct-json/main.c
+	PROGNAME += libwebsockets_test_lws_struct_json
+endif
+
 ifeq ($(wildcard $(LIBWEBSOCKETS_UNPACK)/.git),)
 $(LIBWEBSOCKETS_TARBALL):
 	$(Q) echo "Downloading libwebsockets-$(LIBWEBSOCKETS_VERSION)"
