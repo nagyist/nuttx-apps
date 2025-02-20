@@ -136,7 +136,8 @@ int rpmsg_tun_accept(const char *name);
  *   int - 0 on success, -errno on failure.
  ****************************************************************************/
 
-int rpmsg_tun_to_socket(int tunfd, int rpmsgfd);
+int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
+                        struct rpmsg_tun_buf_s *buf);
 
 /****************************************************************************
  * Name: rpmsg_tun_from_socket

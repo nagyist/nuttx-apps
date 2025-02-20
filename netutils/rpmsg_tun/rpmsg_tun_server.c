@@ -55,30 +55,40 @@
 static void
 rpmsg_tun_netlink_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
 {
-  struct rpmsg_tun_buf_s buf;
+  struct rpmsg_tun_buf_s buf[2];
   struct pollfd fds[3];
 
-  memset(&buf, 0, sizeof(buf));
+  memset(buf, 0, sizeof(buf));
   memset(fds, 0, sizeof(fds));
   fds[0].fd = tunfd;
-  fds[0].events = POLLIN;
   fds[1].fd = rpmsgfd;
-  fds[1].events = POLLIN;
   fds[2].fd = nlfd;
   fds[2].events = POLLIN;
 
   for (; ; )
     {
+      if (buf[0].off)
+        {
+          fds[0].events = 0;
+          fds[1].events = POLLIN | POLLOUT;
+        }
+      else
+        {
+          fds[0].events = POLLIN;
+          fds[1].events = POLLIN;
+        }
+
       if (poll(fds, 3, -1) < 0)
         {
           break;
         }
 
-      if ((fds[0].revents | fds[1].revents | fds[2].revents) & POLLIN)
+      if ((fds[0].revents | fds[1].revents | fds[2].revents) &
+          (POLLIN | POLLOUT))
         {
-          if (fds[0].revents & POLLIN)
+          if ((fds[0].revents & POLLIN) || (fds[1].revents & POLLOUT))
             {
-              if (rpmsg_tun_to_socket(tunfd, rpmsgfd) < 0)
+              if (rpmsg_tun_to_socket(tunfd, rpmsgfd, &buf[0]) < 0)
                 {
                   break;
                 }
@@ -86,7 +96,7 @@ rpmsg_tun_netlink_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
 
           if (fds[1].revents & POLLIN)
             {
-              if (rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf) < 0)
+              if (rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf[1]) < 0)
                 {
                   break;
                 }

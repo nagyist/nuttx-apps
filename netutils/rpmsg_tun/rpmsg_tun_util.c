@@ -92,40 +92,6 @@ static int rpmsg_tun_set_addr(const char *name, int cmd, const char *addr)
 }
 
 /****************************************************************************
- * Name: rpmsg_tun_send_all
- *
- * Description:
- *   Send all data buffer to file handle
- *
- * Parameters:
- *   fd  - file handle
- *   buf - data buffer
- *   len - data length
- *
- * Returned Value:
- *   int - 0 on success, -errno on failure.
- ****************************************************************************/
-
-static int rpmsg_tun_send_all(int fd, const void *buf_, size_t len)
-{
-  const char *buf = buf_;
-
-  while (len > 0)
-    {
-      ssize_t ret = send(fd, buf, len, 0);
-      if (ret < 0)
-        {
-          return -errno;
-        }
-
-      len -= ret;
-      buf += ret;
-    }
-
-  return 0;
-}
-
-/****************************************************************************
  * Name: rpmsg_tun_recv_all
  *
  * Description:
@@ -467,31 +433,51 @@ out:
  * Parameters:
  *   tunfd   - tun device fd
  *   rpmsgfd - rpmsg socket fd
+ *   buf     - buffer to store the data
  *
  * Returned Value:
  *   int - 0 on success, -errno on failure.
  ****************************************************************************/
 
-int rpmsg_tun_to_socket(int tunfd, int rpmsgfd)
+int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
+                        struct rpmsg_tun_buf_s *buf)
 {
-  char buf[RPMSG_TUN_BUFFER_SIZE];
-  int32_t ret;
+  int ret;
 
-  /* Read from tun device */
-
-  ret = read(tunfd, buf + sizeof(ret), sizeof(buf) - sizeof(ret));
-  if (ret <= 0)
+  if (buf->len == 0)
     {
-      return ret < 0 ? -errno : -EPIPE;
+      /* Read from tun device */
+
+      ret = read(tunfd, buf->data + sizeof(buf->len),
+                 sizeof(buf->data) - sizeof(buf->len));
+      if (ret <= 0)
+        {
+          return ret < 0 ? -errno : -EPIPE;
+        }
+
+      /* Pretend the buffer length */
+
+      buf->len = ret;
+      memcpy(buf, &buf->len, sizeof(buf->len));
+      buf->len += sizeof(buf->len);
     }
-
-  /* Pretend the buffer length */
-
-  memcpy(buf, &ret, sizeof(ret));
 
   /* Send to the remote side */
 
-  return rpmsg_tun_send_all(rpmsgfd, buf, ret + sizeof(ret));
+  ret = send(rpmsgfd, buf->data + buf->off, buf->len - buf->off, 0);
+  if (ret < 0)
+    {
+      return -errno;
+    }
+
+  buf->off += ret;
+  if (buf->off >= buf->len)
+    {
+      buf->off = 0;
+      buf->len = 0;
+    }
+
+  return 0;
 }
 
 /****************************************************************************
@@ -752,28 +738,37 @@ int rpmsg_tun_wait_running(int fd, const char *name)
 
 void rpmsg_tun_loop(int tunfd, int rpmsgfd)
 {
-  struct rpmsg_tun_buf_s buf;
+  struct rpmsg_tun_buf_s buf[2];
   struct pollfd fds[2];
 
-  memset(&buf, 0, sizeof(buf));
+  memset(buf, 0, sizeof(buf));
   memset(fds, 0, sizeof(fds));
   fds[0].fd = tunfd;
-  fds[0].events = POLLIN;
   fds[1].fd = rpmsgfd;
-  fds[1].events = POLLIN;
 
   for (; ; )
     {
+      if (buf[0].off)
+        {
+          fds[0].events = 0;
+          fds[1].events = POLLIN | POLLOUT;
+        }
+      else
+        {
+          fds[0].events = POLLIN;
+          fds[1].events = POLLIN;
+        }
+
       if (poll(fds, 2, -1) < 0)
         {
           break;
         }
 
-      if ((fds[0].revents | fds[1].revents) & POLLIN)
+      if ((fds[0].revents | fds[1].revents) & (POLLIN | POLLOUT))
         {
-          if (fds[0].revents & POLLIN)
+          if ((fds[0].revents & POLLIN) | (fds[1].revents & POLLOUT))
             {
-              if (rpmsg_tun_to_socket(tunfd, rpmsgfd) < 0)
+              if (rpmsg_tun_to_socket(tunfd, rpmsgfd, &buf[0]) < 0)
                 {
                   break;
                 }
@@ -781,7 +776,7 @@ void rpmsg_tun_loop(int tunfd, int rpmsgfd)
 
           if (fds[1].revents & POLLIN)
             {
-              if (rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf) < 0)
+              if (rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf[1]) < 0)
                 {
                   break;
                 }
