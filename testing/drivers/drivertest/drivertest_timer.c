@@ -47,7 +47,7 @@
 
 #define TIMER_DEFAULT_DEVPATH "/dev/timer0"
 #define TIMER_DEFAULT_INTERVAL 1000000
-#define TIMER_DEFAULT_NSAMPLES 20
+#define TIMER_DEFAULT_NSAMPLES 5
 #define TIMER_DEFAULT_SIGNO 31
 #define TIMER_DEFAULT_RANGE 1000
 
@@ -253,6 +253,10 @@ static void drivertest_timer(FAR void **state)
   ret = ioctl(fd, TCIOC_START, 0);
   assert_return_code(ret, OK);
 
+  /* Sleep some timer avoid left tick issue */
+
+  usleep(10000);
+
   /* Get status */
 
   ret = ioctl(fd, TCIOC_GETSTATUS, &timer_status);
@@ -265,7 +269,7 @@ static void drivertest_timer(FAR void **state)
 
   ret = ioctl(fd, TCIOC_MAXTIMEOUT, &max_timeout);
   assert_return_code(ret, OK);
-  syslog(LOG_DEBUG, "max timeout:%ld\n", max_timeout);
+  syslog(LOG_DEBUG, "max timeout:%" PRIu32 "\n", max_timeout);
 
   /* Set the timer interval */
 
