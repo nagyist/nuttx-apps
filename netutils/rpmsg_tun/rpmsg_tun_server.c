@@ -67,7 +67,7 @@ rpmsg_tun_netlink_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
 
   for (; ; )
     {
-      if (buf[0].off)
+      if (buf[0].len)
         {
           fds[0].events = 0;
           fds[1].events = POLLIN | POLLOUT;
@@ -83,8 +83,8 @@ rpmsg_tun_netlink_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
           break;
         }
 
-      if ((fds[0].revents | fds[1].revents | fds[2].revents) &
-          (POLLIN | POLLOUT))
+      if ((fds[0].revents | fds[1].revents |
+           fds[2].revents) & (POLLIN | POLLOUT))
         {
           if ((fds[0].revents & POLLIN) || (fds[1].revents & POLLOUT))
             {
