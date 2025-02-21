@@ -159,4 +159,9 @@ MAINSRC  += drivertest_pm_runtime.c
 PROGNAME += cmocka_driver_pm_runtime
 endif
 
+ifneq ($(CONFIG_BATTERY_GAUGE),)
+MAINSRC  += drivertest_battery_gauge.c
+PROGNAME += cmocka_driver_battery_gauge
+endif
+
 include $(APPDIR)/Application.mk

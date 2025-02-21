@@ -421,4 +421,20 @@ if(CONFIG_TESTING_DRIVER_TEST)
       drivertest_pm_runtime.c)
   endif()
 
+  if(CONFIG_BATTERY_GAUGE)
+    nuttx_add_application(
+      NAME
+      cmocka_driver_battery_gauge
+      PRIORITY
+      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_DRIVER_TEST}
+      DEPENDS
+      cmocka
+      SRCS
+      drivertest_battery_gauge.c)
+  endif()
+
 endif()
