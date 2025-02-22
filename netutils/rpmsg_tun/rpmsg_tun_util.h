@@ -129,6 +129,7 @@ int rpmsg_tun_accept(const char *name);
  * Parameters:
  *   tunfd   - tun device fd
  *   rpmsgfd - rpmsg socket fd
+ *   buf     - buffer to store the data
  *
  * Returned Value:
  *   int - 0 on success, -errno on failure.
@@ -146,6 +147,7 @@ int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
  * Parameters:
  *   tunfd   - tun device fd
  *   rpmsgfd - rpmsg socket fd
+ *   buf     - buffer to store the data
  *
  * Returned Value:
  *   int - 0 on success, -errno on failure.

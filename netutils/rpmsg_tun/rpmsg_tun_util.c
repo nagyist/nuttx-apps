@@ -75,7 +75,7 @@ static int rpmsg_tun_set_addr(const char *name, int cmd, const char *addr)
     }
 
   memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name) - 1);
+  strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
 
   sin = (struct sockaddr_in *)&ifr.ifr_addr;
   sin->sin_family = AF_INET;
@@ -151,7 +151,7 @@ static int rpmsg_tun_is_running(const char *name)
     }
 
   memset(&ifr, 0, sizeof(ifr));
-  strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name) - 1);
+  strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
 
   if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0)
     {
@@ -215,7 +215,7 @@ int rpmsg_tun_setup(const char *name, const char *ip, const char *mask)
 
   memset(&ifr, 0, sizeof(ifr));
   ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
-  strncpy(ifr.ifr_name, name, sizeof(ifr.ifr_name) - 1);
+  strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
 
   if (ioctl(fd, TUNSETIFF, &ifr) < 0)
     {
@@ -347,8 +347,8 @@ int rpmsg_tun_connect(const char *cpu, const char *name)
 
   memset(&addr, 0, sizeof(addr));
   addr.rp_family = AF_RPMSG;
-  strncpy(addr.rp_cpu, cpu, sizeof(addr.rp_cpu) - 1);
-  strncpy(addr.rp_name, name, sizeof(addr.rp_name) - 1);
+  strlcpy(addr.rp_cpu, cpu, sizeof(addr.rp_cpu));
+  strlcpy(addr.rp_name, name, sizeof(addr.rp_name));
 
   /* Connect to remote server */
 
@@ -392,7 +392,7 @@ int rpmsg_tun_accept(const char *name)
 
   memset(&addr, 0, sizeof(addr));
   addr.rp_family = AF_RPMSG;
-  strncpy(addr.rp_name, name, sizeof(addr.rp_name) - 1);
+  strlcpy(addr.rp_name, name, sizeof(addr.rp_name));
 
   /* Bind to local address */
 
