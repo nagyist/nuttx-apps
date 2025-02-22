@@ -306,7 +306,9 @@ out:
  *   buf     - buffer to store the data
  *
  * Returned Value:
- *   int - 0 on success, -errno on failure.
+ *   int - 1 continue loop
+ *         0 exit loop with rpmsg failure
+ *    -errno exit loop with other failure
  ****************************************************************************/
 
 static int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
@@ -326,7 +328,7 @@ static int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
         }
       else if (ret < 0)
         {
-          return errno == EAGAIN ? 0 : -errno;
+          return errno == EAGAIN ? 1 : -errno;
         }
 
       /* Pretend the buffer length */
@@ -341,7 +343,7 @@ static int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
   ret = send(rpmsgfd, buf->data + buf->off, buf->len - buf->off, 0);
   if (ret < 0)
     {
-      return errno == EAGAIN ? 0 : -errno;
+      return errno == EAGAIN;
     }
 
   buf->off += ret;
@@ -351,7 +353,7 @@ static int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
       buf->len = 0;
     }
 
-  return 0;
+  return 1;
 }
 
 /****************************************************************************
@@ -366,7 +368,9 @@ static int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
  *   buf     - buffer to store the data
  *
  * Returned Value:
- *   int - 0 on success, -errno on failure.
+ *   int - 1 continue loop
+ *         0 exit loop with rpmsg failure
+ *    -errno exit loop with other failure
  ****************************************************************************/
 
 static int rpmsg_tun_from_socket(int tunfd, int rpmsgfd,
@@ -379,25 +383,21 @@ static int rpmsg_tun_from_socket(int tunfd, int rpmsgfd,
       ret = rpmsg_tun_recv_all(rpmsgfd, &buf->len, sizeof(buf->len));
       if (ret < 0)
         {
-          return ret;
+          return 0;
         }
 
       if (buf->len > sizeof(buf->data))
         {
-          return -EINVAL;
+          return 0;
         }
     }
 
   if (buf->off < buf->len)
     {
       ret = recv(rpmsgfd, buf->data + buf->off, buf->len - buf->off, 0);
-      if (ret == 0)
+      if (ret <= 0)
         {
-          return -EPIPE;
-        }
-      else if (ret < 0)
-        {
-          return errno == EAGAIN ? 0 : -errno;
+          return ret < 0 && errno == EAGAIN;
         }
 
       buf->off += ret;
@@ -408,7 +408,7 @@ static int rpmsg_tun_from_socket(int tunfd, int rpmsgfd,
       ret = write(tunfd, buf->data, buf->len);
       if (ret < 0)
         {
-          return errno == EAGAIN ? 0 : -errno;
+          return errno == EAGAIN ? 1 : -errno;
         }
       else if (ret != buf->len)
         {
@@ -419,7 +419,7 @@ static int rpmsg_tun_from_socket(int tunfd, int rpmsgfd,
       buf->len = 0;
     }
 
-  return 0;
+  return 1;
 }
 
 /****************************************************************************
@@ -795,7 +795,7 @@ int rpmsg_tun_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
           if ((fds[0].revents & POLLIN) || (fds[1].revents & POLLOUT))
             {
               ret = rpmsg_tun_to_socket(tunfd, rpmsgfd, &buf[0]);
-              if (ret < 0)
+              if (ret != 1)
                 {
                   break;
                 }
@@ -804,7 +804,7 @@ int rpmsg_tun_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
           if ((fds[0].revents & POLLOUT) || (fds[1].revents & POLLIN))
             {
               ret = rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf[1]);
-              if (ret < 0)
+              if (ret != 1)
                 {
                   break;
                 }
@@ -819,11 +819,14 @@ int rpmsg_tun_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
                 }
             }
         }
-      else if ((fds[0].revents | fds[1].revents |
-                fds[2].revents) & (POLLHUP | POLLERR))
+      else if ((fds[0].revents | fds[2].revents) & (POLLHUP | POLLERR))
         {
           ret = -EPIPE;
           break;
+        }
+      else if (fds[1].revents & (POLLHUP | POLLERR))
+        {
+          break; /* Exit loop but ignore rpmsg socket error */
         }
     }
 
