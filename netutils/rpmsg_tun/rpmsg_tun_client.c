@@ -24,7 +24,6 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "rpmsg_tun_util.h"
@@ -64,25 +63,14 @@ int main(int argc, char *argv[])
           continue;
         }
 
-      ret = rpmsg_tun_set_running(tunfd, true);
-      if (ret < 0)
-        {
-          break;
-        }
-
-      rpmsg_tun_loop(tunfd, rpmsgfd);
-
-      ret = rpmsg_tun_set_running(tunfd, false);
-      if (ret < 0)
-        {
-          break;
-        }
-
+      ret = rpmsg_tun_loop(tunfd, rpmsgfd, -1, NULL);
       close(rpmsgfd);
+      if (ret < 0)
+        {
+          break;
+        }
     }
 
-  close(rpmsgfd);
   close(tunfd);
-
   return ret;
 }

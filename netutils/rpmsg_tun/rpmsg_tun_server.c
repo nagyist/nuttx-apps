@@ -23,111 +23,10 @@
  ****************************************************************************/
 
 #include <errno.h>
-#include <poll.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 #include "rpmsg_tun_util.h"
-
-/****************************************************************************
- * Private Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Name: rpmsg_tun_netlink_loop
- *
- * Description:
- *   Poll tunfd and rpmsgfd and nlfd when fds return POLLIN
- *   then read buffer from tunfd and send to rpmsgfd
- *   or read buffer from rpmsgfd and send to tunfd
- *
- * Parameters:
- *   tunfd   - tun device fd
- *   rpmsgfd - rpmsg socket fd
- *   nlfd    - netlink socket fd
- *   name    - network device name
- *
- * Returned Value:
- *   None
- ****************************************************************************/
-
-static void
-rpmsg_tun_netlink_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
-{
-  struct rpmsg_tun_buf_s buf[2];
-  struct pollfd fds[3];
-
-  memset(buf, 0, sizeof(buf));
-  memset(fds, 0, sizeof(fds));
-  fds[0].fd = tunfd;
-  fds[1].fd = rpmsgfd;
-  fds[2].fd = nlfd;
-  fds[2].events = POLLIN;
-
-  for (; ; )
-    {
-      if (buf[0].len)
-        {
-          fds[0].events &= ~POLLIN;
-          fds[1].events |= POLLOUT;
-        }
-      else
-        {
-          fds[0].events |= POLLIN;
-          fds[1].events &= ~POLLOUT;
-        }
-
-      if (buf[1].len && buf[1].off >= buf[1].len)
-        {
-          fds[0].events |= POLLOUT;
-          fds[1].events &= ~POLLIN;
-        }
-      else
-        {
-          fds[0].events &= ~POLLOUT;
-          fds[1].events |= POLLIN;
-        }
-
-      if (poll(fds, 3, -1) < 0)
-        {
-          break;
-        }
-
-      if ((fds[0].revents | fds[1].revents |
-           fds[2].revents) & (POLLIN | POLLOUT))
-        {
-          if ((fds[0].revents & POLLIN) || (fds[1].revents & POLLOUT))
-            {
-              if (rpmsg_tun_to_socket(tunfd, rpmsgfd, &buf[0]) < 0)
-                {
-                  break;
-                }
-            }
-
-          if ((fds[0].revents & POLLOUT) || (fds[1].revents & POLLIN))
-            {
-              if (rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf[1]) < 0)
-                {
-                  break;
-                }
-            }
-
-          if (fds[2].revents & POLLIN)
-            {
-              if (rpmsg_tun_process_netlink(nlfd, name) != 1)
-                {
-                  break;
-                }
-            }
-        }
-      else if ((fds[0].revents | fds[1].revents |
-                fds[2].revents) & (POLLHUP | POLLERR))
-        {
-          break;
-        }
-    }
-}
 
 /****************************************************************************
  * Public Functions
@@ -174,7 +73,7 @@ int main(int argc, char *argv[])
           ret = rpmsg_tun_wait_running(nlfd, argv[4]);
           if (ret < 0)
             {
-              goto out;
+              break;
             }
         }
 
@@ -184,33 +83,14 @@ int main(int argc, char *argv[])
           continue;
         }
 
-      ret = rpmsg_tun_set_running(tunfd, true);
-      if (ret < 0)
-        {
-          break;
-        }
-
-      if (nlfd >= 0)
-        {
-          rpmsg_tun_netlink_loop(tunfd, rpmsgfd, nlfd, argv[4]);
-        }
-      else
-        {
-          rpmsg_tun_loop(tunfd, rpmsgfd);
-        }
-
-      ret = rpmsg_tun_set_running(tunfd, false);
-      if (ret < 0)
-        {
-          break;
-        }
-
+      ret = rpmsg_tun_loop(tunfd, rpmsgfd, nlfd, argv[4]);
       close(rpmsgfd);
+      if (ret < 0)
+        {
+          break;
+        }
     }
 
-  close(rpmsgfd);
-
-out:
   if (nlfd >= 0)
     {
       close(nlfd);

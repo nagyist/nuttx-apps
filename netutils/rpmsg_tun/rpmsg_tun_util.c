@@ -36,12 +36,25 @@
 #  include <linux/rtnetlink.h>
 #endif
 #include <poll.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 #include "rpmsg_tun_util.h"
+
+/****************************************************************************
+ * Private Type Definitions
+ ****************************************************************************/
+
+struct rpmsg_tun_buf_s
+{
+  char data[CONFIG_NETUTILS_RPMSG_TUN_BUFSIZE];
+  uint32_t len;
+  uint32_t off;
+};
 
 /****************************************************************************
  * Private Functions
@@ -205,6 +218,251 @@ out:
 }
 
 /****************************************************************************
+ * Name: rpmsg_tun_set_running
+ *
+ * Description:
+ *   Set tun device running status
+ *
+ * Parameters:
+ *   fd      - tun device fd
+ *   running - true is running and false is down
+ *
+ * Returned Value:
+ *   0 on success, -errno on failure.
+ ****************************************************************************/
+
+static int rpmsg_tun_set_running(int fd, bool running)
+{
+  struct ifreq ifr;
+  int carrier = running;
+  int sockfd;
+
+  memset(&ifr, 0, sizeof(ifr));
+
+  /* Get tun device name */
+
+  if (ioctl(fd, TUNGETIFF, &ifr) < 0)
+    {
+      return -errno;
+    }
+
+  sockfd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+  if (sockfd < 0)
+    {
+      return -errno;
+    }
+
+  if (ioctl(sockfd, SIOCGIFFLAGS, &ifr) < 0)
+    {
+      goto out;
+    }
+
+  if (running)
+    {
+      ifr.ifr_flags |= IFF_UP;
+
+      if (ioctl(sockfd, SIOCSIFFLAGS, &ifr) < 0)
+        {
+          goto out;
+        }
+
+      if (ioctl(fd, TUNSETCARRIER, &carrier) < 0)
+        {
+          goto out;
+        }
+    }
+  else
+    {
+      ifr.ifr_flags &= ~IFF_UP;
+
+      if (ioctl(fd, TUNSETCARRIER, &carrier) < 0)
+        {
+          goto out;
+        }
+
+      if (ioctl(sockfd, SIOCSIFFLAGS, &ifr) < 0)
+        {
+          goto out;
+        }
+    }
+
+  close(sockfd);
+  return 0;
+
+out:
+  close(sockfd);
+  return -errno;
+}
+
+/****************************************************************************
+ * Name: rpmsg_tun_to_socket
+ *
+ * Description:
+ *   Read buffer from tun device and send to rpmsg socket
+ *
+ * Parameters:
+ *   tunfd   - tun device fd
+ *   rpmsgfd - rpmsg socket fd
+ *   buf     - buffer to store the data
+ *
+ * Returned Value:
+ *   int - 0 on success, -errno on failure.
+ ****************************************************************************/
+
+static int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
+                               struct rpmsg_tun_buf_s *buf)
+{
+  int ret;
+
+  if (buf->len == 0)
+    {
+      /* Read from tun device */
+
+      ret = read(tunfd, buf->data + sizeof(buf->len),
+                 sizeof(buf->data) - sizeof(buf->len));
+      if (ret == 0)
+        {
+          return -EPIPE;
+        }
+      else if (ret < 0)
+        {
+          return errno == EAGAIN ? 0 : -errno;
+        }
+
+      /* Pretend the buffer length */
+
+      buf->len = ret;
+      memcpy(buf, &buf->len, sizeof(buf->len));
+      buf->len += sizeof(buf->len);
+    }
+
+  /* Send to the remote side */
+
+  ret = send(rpmsgfd, buf->data + buf->off, buf->len - buf->off, 0);
+  if (ret < 0)
+    {
+      return errno == EAGAIN ? 0 : -errno;
+    }
+
+  buf->off += ret;
+  if (buf->off >= buf->len)
+    {
+      buf->off = 0;
+      buf->len = 0;
+    }
+
+  return 0;
+}
+
+/****************************************************************************
+ * Name: rpmsg_tun_from_socket
+ *
+ * Description:
+ *   Read buffer from rpmsg socket and send to tun device
+ *
+ * Parameters:
+ *   tunfd   - tun device fd
+ *   rpmsgfd - rpmsg socket fd
+ *   buf     - buffer to store the data
+ *
+ * Returned Value:
+ *   int - 0 on success, -errno on failure.
+ ****************************************************************************/
+
+static int rpmsg_tun_from_socket(int tunfd, int rpmsgfd,
+                                 struct rpmsg_tun_buf_s *buf)
+{
+  int ret;
+
+  if (buf->len == 0)
+    {
+      ret = rpmsg_tun_recv_all(rpmsgfd, &buf->len, sizeof(buf->len));
+      if (ret < 0)
+        {
+          return ret;
+        }
+
+      if (buf->len > sizeof(buf->data))
+        {
+          return -EINVAL;
+        }
+    }
+
+  if (buf->off < buf->len)
+    {
+      ret = recv(rpmsgfd, buf->data + buf->off, buf->len - buf->off, 0);
+      if (ret == 0)
+        {
+          return -EPIPE;
+        }
+      else if (ret < 0)
+        {
+          return errno == EAGAIN ? 0 : -errno;
+        }
+
+      buf->off += ret;
+    }
+
+  if (buf->off >= buf->len)
+    {
+      ret = write(tunfd, buf->data, buf->len);
+      if (ret < 0)
+        {
+          return errno == EAGAIN ? 0 : -errno;
+        }
+      else if (ret != buf->len)
+        {
+          return -EPIPE;
+        }
+
+      buf->off = 0;
+      buf->len = 0;
+    }
+
+  return 0;
+}
+
+/****************************************************************************
+ * Name: rpmsg_tun_process_netlink
+ *
+ * Description:
+ *   Process netlink message
+ *
+ * Parameters:
+ *   fd   - netlink socket fd
+ *   name - netdev to monitor
+ *
+ * Returned Value:
+ *   1 is running and get ip address, 0 is down or not set ip addr,
+ *   -errno on failure.
+ ****************************************************************************/
+
+static int rpmsg_tun_process_netlink(int fd, const char *name)
+{
+  for (; ; )
+    {
+      char buf[256];
+      ssize_t len = read(fd, buf, sizeof(buf));
+      if (len > 0)
+        {
+          continue;
+        }
+      else if (len == 0)
+        {
+          return -EPIPE;
+        }
+      else if (errno == EAGAIN)
+        {
+          return rpmsg_tun_is_running(name);
+        }
+      else
+        {
+          return -errno;
+        }
+    }
+}
+
+/****************************************************************************
  * Public Functions
  ****************************************************************************/
 
@@ -266,83 +524,6 @@ int rpmsg_tun_setup(const char *name, const char *ip, const char *mask)
 out:
   close(fd);
   return ret;
-}
-
-/****************************************************************************
- * Name: rpmsg_tun_set_running
- *
- * Description:
- *   Set tun device running status
- *
- * Parameters:
- *   fd      - tun device fd
- *   running - true is running and false is down
- *
- * Returned Value:
- *   0 on success, -errno on failure.
- ****************************************************************************/
-
-int rpmsg_tun_set_running(int fd, bool running)
-{
-  struct ifreq ifr;
-  int carrier = running;
-  int sockfd;
-
-  memset(&ifr, 0, sizeof(ifr));
-
-  /* Get tun device name */
-
-  if (ioctl(fd, TUNGETIFF, &ifr) < 0)
-    {
-      return -errno;
-    }
-
-  sockfd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
-  if (sockfd < 0)
-    {
-      return -errno;
-    }
-
-  if (ioctl(sockfd, SIOCGIFFLAGS, &ifr) < 0)
-    {
-      goto out;
-    }
-
-  if (running)
-    {
-      ifr.ifr_flags |= IFF_UP;
-
-      if (ioctl(sockfd, SIOCSIFFLAGS, &ifr) < 0)
-        {
-          goto out;
-        }
-
-      if (ioctl(fd, TUNSETCARRIER, &carrier) < 0)
-        {
-          goto out;
-        }
-    }
-  else
-    {
-      ifr.ifr_flags &= ~IFF_UP;
-
-      if (ioctl(fd, TUNSETCARRIER, &carrier) < 0)
-        {
-          goto out;
-        }
-
-      if (ioctl(sockfd, SIOCSIFFLAGS, &ifr) < 0)
-        {
-          goto out;
-        }
-    }
-
-  close(sockfd);
-  return 0;
-
-out:
-  close(sockfd);
-  return -errno;
 }
 
 /****************************************************************************
@@ -456,134 +637,6 @@ out:
 }
 
 /****************************************************************************
- * Name: rpmsg_tun_to_socket
- *
- * Description:
- *   Read buffer from tun device and send to rpmsg socket
- *
- * Parameters:
- *   tunfd   - tun device fd
- *   rpmsgfd - rpmsg socket fd
- *   buf     - buffer to store the data
- *
- * Returned Value:
- *   int - 0 on success, -errno on failure.
- ****************************************************************************/
-
-int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
-                        struct rpmsg_tun_buf_s *buf)
-{
-  int ret;
-
-  if (buf->len == 0)
-    {
-      /* Read from tun device */
-
-      ret = read(tunfd, buf->data + sizeof(buf->len),
-                 sizeof(buf->data) - sizeof(buf->len));
-      if (ret == 0)
-        {
-          return -EPIPE;
-        }
-      else if (ret < 0)
-        {
-          return errno == EAGAIN ? 0 : -errno;
-        }
-
-      /* Pretend the buffer length */
-
-      buf->len = ret;
-      memcpy(buf, &buf->len, sizeof(buf->len));
-      buf->len += sizeof(buf->len);
-    }
-
-  /* Send to the remote side */
-
-  ret = send(rpmsgfd, buf->data + buf->off, buf->len - buf->off, 0);
-  if (ret < 0)
-    {
-      return errno == EAGAIN ? 0 : -errno;
-    }
-
-  buf->off += ret;
-  if (buf->off >= buf->len)
-    {
-      buf->off = 0;
-      buf->len = 0;
-    }
-
-  return 0;
-}
-
-/****************************************************************************
- * Name: rpmsg_tun_from_socket
- *
- * Description:
- *   Read buffer from rpmsg socket and send to tun device
- *
- * Parameters:
- *   tunfd   - tun device fd
- *   rpmsgfd - rpmsg socket fd
- *   buf     - buffer to store the data
- *
- * Returned Value:
- *   int - 0 on success, -errno on failure.
- ****************************************************************************/
-
-int rpmsg_tun_from_socket(int tunfd, int rpmsgfd,
-                          struct rpmsg_tun_buf_s *buf)
-{
-  int ret;
-
-  if (buf->len == 0)
-    {
-      ret = rpmsg_tun_recv_all(rpmsgfd, &buf->len, sizeof(buf->len));
-      if (ret < 0)
-        {
-          return ret;
-        }
-
-      if (buf->len > sizeof(buf->data))
-        {
-          return -EINVAL;
-        }
-    }
-
-  if (buf->off < buf->len)
-    {
-      ret = recv(rpmsgfd, buf->data + buf->off, buf->len - buf->off, 0);
-      if (ret == 0)
-        {
-          return -EPIPE;
-        }
-      else if (ret < 0)
-        {
-          return errno == EAGAIN ? 0 : -errno;
-        }
-
-      buf->off += ret;
-    }
-
-  if (buf->off >= buf->len)
-    {
-      ret = write(tunfd, buf->data, buf->len);
-      if (ret < 0)
-        {
-          return errno == EAGAIN ? 0 : -errno;
-        }
-      else if (ret != buf->len)
-        {
-          return -EPIPE;
-        }
-
-      buf->off = 0;
-      buf->len = 0;
-    }
-
-  return 0;
-}
-
-/****************************************************************************
  * Name: rpmsg_tun_connect_netlink
  *
  * Description:
@@ -625,46 +678,6 @@ int rpmsg_tun_connect_netlink(void)
     }
 
   return fd;
-}
-
-/****************************************************************************
- * Name: rpmsg_tun_process_netlink
- *
- * Description:
- *   Process netlink message
- *
- * Parameters:
- *   fd   - netlink socket fd
- *   name - netdev to monitor
- *
- * Returned Value:
- *   1 is running and get ip address, 0 is down or not set ip addr,
- *   -errno on failure.
- ****************************************************************************/
-
-int rpmsg_tun_process_netlink(int fd, const char *name)
-{
-  for (; ; )
-    {
-      char buf[256];
-      ssize_t len = read(fd, buf, sizeof(buf));
-      if (len > 0)
-        {
-          continue;
-        }
-      else if (len == 0)
-        {
-          return -EPIPE;
-        }
-      else if (errno == EAGAIN)
-        {
-          return rpmsg_tun_is_running(name);
-        }
-      else
-        {
-          return -errno;
-        }
-    }
 }
 
 /****************************************************************************
@@ -713,27 +726,38 @@ int rpmsg_tun_wait_running(int fd, const char *name)
  * Name: rpmsg_tun_loop
  *
  * Description:
- *   Poll tunfd and rpmsgfd when fds return POLLIN
+ *   Poll tunfd and rpmsgfd and nlfd when fds return POLLIN
  *   then read buffer from tunfd and send to rpmsgfd
  *   or read buffer from rpmsgfd and send to tunfd
  *
  * Parameters:
  *   tunfd   - tun device fd
  *   rpmsgfd - rpmsg socket fd
+ *   nlfd    - netlink socket fd
+ *   name    - network device name
  *
  * Returned Value:
- *   None
+ *   int - 0 on success, -errno on failure.
  ****************************************************************************/
 
-void rpmsg_tun_loop(int tunfd, int rpmsgfd)
+int rpmsg_tun_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
 {
   struct rpmsg_tun_buf_s buf[2];
-  struct pollfd fds[2];
+  struct pollfd fds[3];
+  int ret;
+
+  ret = rpmsg_tun_set_running(tunfd, true);
+  if (ret < 0)
+    {
+      return ret;
+    }
 
   memset(buf, 0, sizeof(buf));
   memset(fds, 0, sizeof(fds));
   fds[0].fd = tunfd;
   fds[1].fd = rpmsgfd;
+  fds[2].fd = nlfd;
+  fds[2].events = POLLIN;
 
   for (; ; )
     {
@@ -759,16 +783,19 @@ void rpmsg_tun_loop(int tunfd, int rpmsgfd)
           fds[1].events |= POLLIN;
         }
 
-      if (poll(fds, 2, -1) < 0)
+      if (poll(fds, nlfd >= 0 ? 3 : 2, -1) < 0)
         {
+          ret = -errno;
           break;
         }
 
-      if ((fds[0].revents | fds[1].revents) & (POLLIN | POLLOUT))
+      if ((fds[0].revents | fds[1].revents |
+           fds[2].revents) & (POLLIN | POLLOUT))
         {
           if ((fds[0].revents & POLLIN) || (fds[1].revents & POLLOUT))
             {
-              if (rpmsg_tun_to_socket(tunfd, rpmsgfd, &buf[0]) < 0)
+              ret = rpmsg_tun_to_socket(tunfd, rpmsgfd, &buf[0]);
+              if (ret < 0)
                 {
                   break;
                 }
@@ -776,15 +803,38 @@ void rpmsg_tun_loop(int tunfd, int rpmsgfd)
 
           if ((fds[0].revents & POLLOUT) || (fds[1].revents & POLLIN))
             {
-              if (rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf[1]) < 0)
+              ret = rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf[1]);
+              if (ret < 0)
+                {
+                  break;
+                }
+            }
+
+          if (fds[2].revents & POLLIN)
+            {
+              ret = rpmsg_tun_process_netlink(nlfd, name);
+              if (ret != 1)
                 {
                   break;
                 }
             }
         }
-      else if ((fds[0].revents | fds[1].revents) & (POLLHUP | POLLERR))
+      else if ((fds[0].revents | fds[1].revents |
+                fds[2].revents) & (POLLHUP | POLLERR))
         {
+          ret = -EPIPE;
           break;
         }
     }
+
+  if (ret < 0)
+    {
+      rpmsg_tun_set_running(tunfd, false);
+    }
+  else
+    {
+      ret = rpmsg_tun_set_running(tunfd, false);
+    }
+
+  return ret;
 }
