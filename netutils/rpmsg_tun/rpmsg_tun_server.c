@@ -69,13 +69,24 @@ rpmsg_tun_netlink_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
     {
       if (buf[0].len)
         {
-          fds[0].events = 0;
-          fds[1].events = POLLIN | POLLOUT;
+          fds[0].events &= ~POLLIN;
+          fds[1].events |= POLLOUT;
         }
       else
         {
-          fds[0].events = POLLIN;
-          fds[1].events = POLLIN;
+          fds[0].events |= POLLIN;
+          fds[1].events &= ~POLLOUT;
+        }
+
+      if (buf[1].len && buf[1].off >= buf[1].len)
+        {
+          fds[0].events |= POLLOUT;
+          fds[1].events &= ~POLLIN;
+        }
+      else
+        {
+          fds[0].events &= ~POLLOUT;
+          fds[1].events |= POLLIN;
         }
 
       if (poll(fds, 3, -1) < 0)
@@ -94,7 +105,7 @@ rpmsg_tun_netlink_loop(int tunfd, int rpmsgfd, int nlfd, const char *name)
                 }
             }
 
-          if (fds[1].revents & POLLIN)
+          if ((fds[0].revents & POLLOUT) || (fds[1].revents & POLLIN))
             {
               if (rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf[1]) < 0)
                 {

@@ -231,7 +231,7 @@ int rpmsg_tun_setup(const char *name, const char *ip, const char *mask)
 
   /* Open the tun device */
 
-  fd = open("/dev/net/tun", O_RDWR | O_CLOEXEC);
+  fd = open("/dev/net/tun", O_RDWR | O_CLOEXEC | O_NONBLOCK);
   if (fd < 0)
     {
       return -errno;
@@ -481,9 +481,13 @@ int rpmsg_tun_to_socket(int tunfd, int rpmsgfd,
 
       ret = read(tunfd, buf->data + sizeof(buf->len),
                  sizeof(buf->data) - sizeof(buf->len));
-      if (ret <= 0)
+      if (ret == 0)
         {
-          return ret < 0 ? -errno : -EPIPE;
+          return -EPIPE;
+        }
+      else if (ret < 0)
+        {
+          return errno == EAGAIN ? 0 : -errno;
         }
 
       /* Pretend the buffer length */
@@ -545,23 +549,31 @@ int rpmsg_tun_from_socket(int tunfd, int rpmsgfd,
         }
     }
 
-  ret = recv(rpmsgfd, buf->data + buf->off, buf->len - buf->off, 0);
-  if (ret == 0)
+  if (buf->off < buf->len)
     {
-      return -EPIPE;
-    }
-  else if (ret < 0)
-    {
-      return errno == EAGAIN ? 0 : -errno;
+      ret = recv(rpmsgfd, buf->data + buf->off, buf->len - buf->off, 0);
+      if (ret == 0)
+        {
+          return -EPIPE;
+        }
+      else if (ret < 0)
+        {
+          return errno == EAGAIN ? 0 : -errno;
+        }
+
+      buf->off += ret;
     }
 
-  buf->off += ret;
   if (buf->off >= buf->len)
     {
       ret = write(tunfd, buf->data, buf->len);
-      if (ret != buf->len)
+      if (ret < 0)
         {
-          return ret < 0 ? -errno : -EPIPE;
+          return errno == EAGAIN ? 0 : -errno;
+        }
+      else if (ret != buf->len)
+        {
+          return -EPIPE;
         }
 
       buf->off = 0;
@@ -727,13 +739,24 @@ void rpmsg_tun_loop(int tunfd, int rpmsgfd)
     {
       if (buf[0].len)
         {
-          fds[0].events = 0;
-          fds[1].events = POLLIN | POLLOUT;
+          fds[0].events &= ~POLLIN;
+          fds[1].events |= POLLOUT;
         }
       else
         {
-          fds[0].events = POLLIN;
-          fds[1].events = POLLIN;
+          fds[0].events |= POLLIN;
+          fds[1].events &= ~POLLOUT;
+        }
+
+      if (buf[1].len && buf[1].off >= buf[1].len)
+        {
+          fds[0].events |= POLLOUT;
+          fds[1].events &= ~POLLIN;
+        }
+      else
+        {
+          fds[0].events &= ~POLLOUT;
+          fds[1].events |= POLLIN;
         }
 
       if (poll(fds, 2, -1) < 0)
@@ -751,7 +774,7 @@ void rpmsg_tun_loop(int tunfd, int rpmsgfd)
                 }
             }
 
-          if (fds[1].revents & POLLIN)
+          if ((fds[0].revents & POLLOUT) || (fds[1].revents & POLLIN))
             {
               if (rpmsg_tun_from_socket(tunfd, rpmsgfd, &buf[1]) < 0)
                 {
