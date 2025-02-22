@@ -68,18 +68,22 @@ static int rpmsg_tun_set_addr(const char *name, int cmd, const char *addr)
   struct ifreq ifr;
   int fd;
 
-  fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
-  if (fd < 0)
-    {
-      return -errno;
-    }
-
   memset(&ifr, 0, sizeof(ifr));
   strlcpy(ifr.ifr_name, name, sizeof(ifr.ifr_name));
 
   sin = (struct sockaddr_in *)&ifr.ifr_addr;
   sin->sin_family = AF_INET;
-  inet_aton(addr, &sin->sin_addr);
+
+  if (inet_aton(addr, &sin->sin_addr) == 0)
+    {
+      return -EINVAL;
+    }
+
+  fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
+  if (fd < 0)
+    {
+      return -errno;
+    }
 
   if (ioctl(fd, cmd, &ifr) < 0)
     {
@@ -201,6 +205,7 @@ static int rpmsg_tun_is_running(const char *name)
 int rpmsg_tun_setup(const char *name, const char *ip, const char *mask)
 {
   struct ifreq ifr;
+  int ret;
   int fd;
 
   /* Open the tun device */
@@ -219,15 +224,18 @@ int rpmsg_tun_setup(const char *name, const char *ip, const char *mask)
 
   if (ioctl(fd, TUNSETIFF, &ifr) < 0)
     {
+      ret = -errno;
       goto out;
     }
 
-  if (rpmsg_tun_set_addr(name, SIOCSIFADDR, ip) < 0)
+  ret = rpmsg_tun_set_addr(name, SIOCSIFADDR, ip);
+  if (ret < 0)
     {
       goto out;
     }
 
-  if (rpmsg_tun_set_addr(name, SIOCSIFNETMASK, mask) < 0)
+  ret = rpmsg_tun_set_addr(name, SIOCSIFNETMASK, mask);
+  if (ret < 0)
     {
       goto out;
     }
@@ -236,7 +244,7 @@ int rpmsg_tun_setup(const char *name, const char *ip, const char *mask)
 
 out:
   close(fd);
-  return -errno;
+  return ret;
 }
 
 /****************************************************************************
