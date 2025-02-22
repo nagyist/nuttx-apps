@@ -182,7 +182,8 @@ int rpmsg_tun_connect_netlink(void);
  *   name - netdev to monitor
  *
  * Returned Value:
- *   1 is running, 0 is down/unknown and -errno on failure.
+ *   1 is running and get ip address, 0 is down or not set ip addr,
+ *   -errno on failure.
  ****************************************************************************/
 
 int rpmsg_tun_process_netlink(int fd, const char *name);

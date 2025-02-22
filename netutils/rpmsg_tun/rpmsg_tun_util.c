@@ -139,19 +139,20 @@ static int rpmsg_tun_recv_all(int fd, void *buf_, size_t len)
  *   name - network device name
  *
  * Returned Value:
- *   1 is running and get ip address, 0 is down or not set ip addr,
- *   -errno on failure.
+ *   true is running and get ip address, false is down or not set ip addr
  ****************************************************************************/
 
-static int rpmsg_tun_is_running(const char *name)
+static bool rpmsg_tun_is_running(const char *name)
 {
+  struct sockaddr_in *addr;
   struct ifreq ifr;
+  bool running = false;
   int fd;
 
   fd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
   if (fd < 0)
     {
-      return -errno;
+      return false;
     }
 
   memset(&ifr, 0, sizeof(ifr));
@@ -159,28 +160,30 @@ static int rpmsg_tun_is_running(const char *name)
 
   if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0)
     {
-      close(fd);
-      return -errno;
+      goto out;
     }
 
-  if ((ifr.ifr_flags & IFF_RUNNING) != 0)
+  if ((ifr.ifr_flags & IFF_RUNNING) == 0)
     {
-      if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
-        {
-          close(fd);
-          return -errno;
-        }
-
-      struct sockaddr_in *addr = (struct sockaddr_in *)&ifr.ifr_addr;
-      if (addr->sin_addr.s_addr != INADDR_ANY)
-        {
-          close(fd);
-          return 1;
-        }
+      goto out;
     }
 
+  if (ioctl(fd, SIOCGIFADDR, &ifr) < 0)
+    {
+      goto out;
+    }
+
+  addr = (struct sockaddr_in *)&ifr.ifr_addr;
+  if (addr->sin_addr.s_addr == INADDR_ANY)
+    {
+      goto out;
+    }
+
+  running = true;
+
+out:
   close(fd);
-  return 0;
+  return running;
 }
 
 /****************************************************************************
@@ -564,7 +567,8 @@ int rpmsg_tun_connect_netlink(void)
 
   /* Create netlink socket */
 
-  fd = socket(AF_NETLINK, SOCK_DGRAM | SOCK_CLOEXEC, NETLINK_ROUTE);
+  fd = socket(AF_NETLINK, SOCK_DGRAM |
+              SOCK_CLOEXEC | SOCK_NONBLOCK, NETLINK_ROUTE);
   if (fd < 0)
     {
       return -errno;
@@ -598,98 +602,33 @@ int rpmsg_tun_connect_netlink(void)
  *   name - netdev to monitor
  *
  * Returned Value:
- *   1 is running/unknown or have ip addr, 0 is down and -errno on failure.
+ *   1 is running and get ip address, 0 is down or not set ip addr,
+ *   -errno on failure.
  ****************************************************************************/
 
 int rpmsg_tun_process_netlink(int fd, const char *name)
 {
-  char buf[256];
-  struct nlmsghdr *hdr = (struct nlmsghdr *)buf;
-  ssize_t len;
-
-  len = read(fd, buf, sizeof(buf));
-  if (len <= 0)
+  for (; ; )
     {
-      return len < 0 ? -errno : -EPIPE;
-    }
-
-  for (; NLMSG_OK(hdr, len); hdr = NLMSG_NEXT(hdr, len))
-    {
-      struct ifinfomsg *info;
-      struct ifaddrmsg *ifaddr;
-      struct rtattr *attr;
-      size_t attrlen;
-      char devname[IFNAMSIZ];
-
-      if (hdr->nlmsg_type != RTM_NEWLINK &&
-          hdr->nlmsg_type != RTM_DELLINK &&
-          hdr->nlmsg_type != RTM_SETLINK &&
-          hdr->nlmsg_type != RTM_NEWADDR &&
-          hdr->nlmsg_type != RTM_DELADDR)
+      char buf[256];
+      ssize_t len = read(fd, buf, sizeof(buf));
+      if (len > 0)
         {
           continue;
         }
-
-      switch (hdr->nlmsg_type)
+      else if (len == 0)
         {
-          case RTM_NEWLINK:
-          case RTM_DELLINK:
-          case RTM_SETLINK:
-            info = (struct ifinfomsg *)NLMSG_DATA(hdr);
-            attr = IFLA_RTA(info);
-            attrlen = IFLA_PAYLOAD(hdr);
-
-            for (; RTA_OK(attr, attrlen); attr = RTA_NEXT(attr, attrlen))
-              {
-                if (attr->rta_type != IFLA_IFNAME)
-                  {
-                    continue;
-                  }
-
-                if (strcmp(name, RTA_DATA(attr)))
-                  {
-                    break;
-                  }
-
-                return (info->ifi_flags & IFF_RUNNING) != 0;
-              }
-
-            break;
-
-          case RTM_NEWADDR:
-          case RTM_DELADDR:
-            ifaddr = (struct ifaddrmsg *)NLMSG_DATA(hdr);
-            attr = IFA_RTA(ifaddr);
-            attrlen = IFA_PAYLOAD(hdr);
-
-            for (; RTA_OK(attr, attrlen); attr = RTA_NEXT(attr, attrlen))
-              {
-                if (attr->rta_type != IFA_LOCAL)
-                  {
-                    continue;
-                  }
-
-                if (if_indextoname(ifaddr->ifa_index, devname) == NULL)
-                  {
-                    continue;
-                  }
-
-                if (strcmp(name, devname))
-                  {
-                    break;
-                  }
-
-                return hdr->nlmsg_type == RTM_NEWADDR;
-              }
-
-            break;
-
-          default:
-            break;
+          return -EPIPE;
+        }
+      else if (errno == EAGAIN)
+        {
+          return rpmsg_tun_is_running(name);
+        }
+      else
+        {
+          return -errno;
         }
     }
-
-  return 1;
 }
 
 /****************************************************************************
@@ -712,14 +651,20 @@ int rpmsg_tun_wait_running(int fd, const char *name)
 
   for (; ; )
     {
-      ret = rpmsg_tun_is_running(name);
-      if (ret == 1)
+      struct pollfd pfd;
+
+      memset(&pfd, 0, sizeof(pfd));
+      pfd.fd = fd;
+      pfd.events = POLLIN;
+
+      if (poll(&pfd, 1, -1) < 0)
         {
+          ret = -errno;
           break;
         }
 
       ret = rpmsg_tun_process_netlink(fd, name);
-      if (ret < 0)
+      if (ret != 0)
         {
           break;
         }
