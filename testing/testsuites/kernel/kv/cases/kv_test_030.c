@@ -131,17 +131,22 @@ static void *store_persist_data(void *arg)
 void test_nuttx_kv30(FAR void **state)
 {
   pthread_t nthread[3];
+  pthread_attr_t attr;
   int status;
   int num_thread = 3;
   int test_flag = 0;
 
   pthread_mutex_init(&mutex_kv, NULL);
+  status = pthread_attr_init(&attr);
+  assert_int_equal(status, 0);
+  status = pthread_attr_setstacksize(&attr, 8192);
+  assert_int_equal(status, 0);
 
   for (int i = 0; i < num_thread; i++)
     {
       /* creat test thread */
 
-      status = pthread_create(&nthread[i], NULL, store_persist_data,
+      status = pthread_create(&nthread[i], &attr, store_persist_data,
                               &test_flag);
       assert_int_equal(status, 0);
     }
