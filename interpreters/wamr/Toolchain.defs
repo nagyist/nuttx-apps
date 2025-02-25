@@ -78,8 +78,8 @@ RCFLAGS += --target=$(WTARGET) --target-abi=$(WABITYPE) --cpu=$(WCPU)
 define WAMR_AOT_COMPILE
 	$(if $(wildcard $(APPDIR)$(DELIM)wasm$(DELIM)*.wo), \
 	  $(foreach bin,$(wildcard $(APPDIR)$(DELIM)wasm$(DELIM)*.wo), \
-	    $(eval PROGNAME=$(shell echo $(notdir $(bin)) | cut -d'#' -f1)) \
-	    $(eval WAMRMODE=$(shell echo $(notdir $(bin)) | cut -d'#' -f5)) \
+	    $(eval PROGNAME=$(shell echo $(notdir $(bin)) | cut -d'%' -f1)) \
+	    $(eval WAMRMODE=$(shell echo $(notdir $(bin)) | cut -d'%' -f5)) \
 	    $(if $(CONFIG_INTERPRETERS_WAMR_AOT), \
 	      $(if $(filter AOT,$(WAMRMODE)), \
 	        $(info Wamrc Generate AoT: $(BINDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).aot) \

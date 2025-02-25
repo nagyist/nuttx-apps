@@ -32,9 +32,9 @@ ifeq ($(CURDIR),$(APPDIR))
 define LINK_WASM
 	$(if $(wildcard $(APPDIR)$(DELIM)wasm$(DELIM)*), \
 	  $(foreach bin,$(wildcard $(APPDIR)$(DELIM)wasm$(DELIM)*.wo), \
-	    $(eval INITIAL_MEMORY=$(shell echo $(notdir $(bin)) | cut -d'#' -f2)) \
-	    $(eval STACKSIZE=$(shell echo $(notdir $(bin)) | cut -d'#' -f3)) \
-	    $(eval PROGNAME=$(shell echo $(notdir $(bin)) | cut -d'#' -f1)) \
+	    $(eval INITIAL_MEMORY=$(shell echo $(notdir $(bin)) | cut -d'%' -f2)) \
+	    $(eval STACKSIZE=$(shell echo $(notdir $(bin)) | cut -d'%' -f3)) \
+	    $(eval PROGNAME=$(shell echo $(notdir $(bin)) | cut -d'%' -f1)) \
 	    $(eval WLDFLAGS=$(shell cat $(APPDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).ldflags)) \
 	    $(eval RETVAL=$(shell $(WCC) $(bin) $(WBIN) $(WCFLAGS) $(WLDFLAGS) $(WCC_COMPILER_RT_LIB) \
 	        -Wl,--Map=$(APPDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).map \
@@ -98,7 +98,7 @@ $(WBIN): $(WOBJS)
 	  $(eval progname=$(strip $(PROGNAME_$(main:=$(SUFFIX)$(OBJEXT))))) \
 	  $(eval dstname=$(shell echo $(main:=$(SUFFIX).wo) | sed -e 's/\//_/g')) \
 	  $(shell cp -rf $(strip $(main:=$(SUFFIX).wo)) \
-	    $(strip $(APPDIR)/wasm/$(progname)#$(WASM_INITIAL_MEMORY)#$(STACKSIZE)#$(PRIORITY)#$(WAMR_MODE)#$(dstname)) \
+	    $(strip $(APPDIR)/wasm/$(progname)%$(WASM_INITIAL_MEMORY)%$(STACKSIZE)%$(PRIORITY)%$(WAMR_MODE)%$(dstname)) \
 	   ) \
 	  $(shell echo $(WLDFLAGS) > $(APPDIR)/wasm/$(progname).ldflags) \
 	 )
