@@ -54,13 +54,26 @@ if(CONFIG_AUDIOUTILS_SPEEXDSP)
   endif()
 
   set(CSRCS speexdsp/libspeexdsp/resample.c)
-  add_definitions(-DOUTSIDE_SPEEX)
-  add_definitions(-DRANDOM_PREFIX=nuttx)
+
+  nuttx_add_library(libspeex STATIC)
+  target_sources(
+    libspeex
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/speexdsp/libspeexdsp/resample.c)
+  target_include_directories(
+    libspeex PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/speexdsp/include/speex)
+
+  target_compile_definitions(libspeex PRIVATE OUTSIDE_SPEEX RANDOM_PREFIX=nuttx)
 
   if(CONFIG_FIXED_POINT)
-    add_definitions(-DFIXED_POINT)
+    target_compile_definitions(libspeex PRIVATE FIXED_POINT)
   else()
-    add_definitions(-DFLOATING_POINT)
+    target_compile_definitions(libspeex PRIVATE FLOATING_POINT)
   endif()
+
+  set_property(
+    TARGET nuttx
+    APPEND
+    PROPERTY NUTTX_INCLUDE_DIRECTORIES
+             ${CMAKE_CURRENT_SOURCE_DIR}/speexdsp/include/speex)
 
 endif()
