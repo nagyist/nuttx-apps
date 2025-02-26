@@ -16,8 +16,8 @@ config TESTING_SCHEDTEST
 if TESTING_SCHEDTEST
 
 config TESTING_SCHEDTEST_PROGNAME
-	string "schedtest"
-	default "schedtest"
+	string "cmocka_sched_wqueue"
+	default "cmocka_sched_wqueue"
 	---help---
 		This is the name of the program that will be used when the NSH ELF
 		program is installed.

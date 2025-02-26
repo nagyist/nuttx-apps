@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/schedtest/schedtest.c
+ * apps/testing/schedtest/test_sched_wqueue.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -240,10 +240,10 @@ int main(int argc, FAR char *argv[])
 
   struct test_state_s test_state;
   memset(&test_state, 0, sizeof(test_state));
-  const struct CMUnitTest tests[] = {
+  const struct CMUnitTest wqueue_tests[] = {
     cmocka_unit_test_prestate(test_work_notifier_signal, &test_state),
     cmocka_unit_test_prestate(test_work_notifier_teardown, &test_state)
   };
 
-  return cmocka_run_group_tests(tests, NULL, NULL);
+  return cmocka_run_group_tests(wqueue_tests, NULL, NULL);
 }

@@ -29,5 +29,5 @@ if(CONFIG_TESTING_SCHEDTEST)
     MODULE
     ${CONFIG_TESTING_SCHEDTEST}
     SRCS
-    schedtest.c)
+    test_sched_wqueue.c)
 endif()
