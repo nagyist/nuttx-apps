@@ -1,4 +1,3 @@
-
 ############################################################################
 # apps/tools/Wasm.mk
 #
@@ -35,6 +34,7 @@ define LINK_WASM
 	    $(eval INITIAL_MEMORY=$(shell echo $(notdir $(bin)) | cut -d'%' -f2)) \
 	    $(eval STACKSIZE=$(shell echo $(notdir $(bin)) | cut -d'%' -f3)) \
 	    $(eval PROGNAME=$(shell echo $(notdir $(bin)) | cut -d'%' -f1)) \
+	    $(eval WAMRMODE=$(shell echo $(notdir $(bin)) | cut -d'%' -f5)) \
 	    $(eval WLDFLAGS=$(shell cat $(APPDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).ldflags)) \
 	    $(eval RETVAL=$(shell $(WCC) $(bin) $(WBIN) $(WCFLAGS) $(WLDFLAGS) $(WCC_COMPILER_RT_LIB) \
 	        -Wl,--Map=$(APPDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).map \
@@ -48,7 +48,7 @@ define LINK_WASM
 	        $(error wasm opt failed for $(PROGNAME).wasm) \
 	    ) \
 	    $(call STRIP_CONSTANT_SECTION,$(PROGNAME).wasm) \
-	    $(call WAMR_AOT_COMPILE) \
+	    $(call WAMR_AOT_COMPILE,$(PROGNAME),$(BINDIR)$(DELIM)wasm,$(WAMRMODE)) \
 	   ) \
 	 )
 endef
