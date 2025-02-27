@@ -29,10 +29,63 @@
  * Public Functions
  ****************************************************************************/
 
+/****************************************************************************
+ * Name: show_usage
+ ****************************************************************************/
+
+static void show_usage(void)
+{
+  fprintf(stderr, "Usage: lsan [-i interval] [-c count]\n");
+  fprintf(stderr, "  -i interval: Check for leaks every interval seconds\n");
+  fprintf(stderr, "  -c count:    Check for leaks count times\n");
+  exit(EXIT_FAILURE);
+}
+
+/****************************************************************************
+ * Name: lsan_main
+ *
+ * Description:
+ *   Main entry point for the lsan command.
+ *
+ * Input Parameters:
+ *   interval - The interval between leak checks. Default is 1 seconds.
+ *   count - The number of times to check for leaks. A value of -1 means
+ *           to run forever.
+ ****************************************************************************/
+
 extern void __lsan_do_recoverable_leak_check(void);
 
 int main(int argc, FAR char *argv[])
 {
-  __lsan_do_recoverable_leak_check();
+  int ch;
+  int interval = 5;
+  int count = -1;
+
+  if (argc == 1 || argv[1][0] != '-')
+    show_usage();
+
+  while ((ch = getopt(argc, argv, "i:c:h:")) != EOF)
+    {
+      switch (ch)
+        {
+          case 'i':
+            interval = atoi(optarg);
+            break;
+          case 'c':
+            count = atoi(optarg);
+            break;
+          case 'h':
+          default:
+            show_usage();
+        }
+    }
+
+  do
+    {
+      __lsan_do_recoverable_leak_check();
+      sleep(interval);
+    }
+  while (--count != 0);
+
   return 0;
 }
