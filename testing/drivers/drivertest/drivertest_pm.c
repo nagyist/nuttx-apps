@@ -186,8 +186,10 @@ static void drivertest_pm(FAR void **argv)
 
       /* test when pm prepare failed */
 
+      /* pm normal should never prepare fail */
+
       g_test_pm_dev.prepare_fail = true;
-      for (int state = 0; state < PM_COUNT; state++)
+      for (int state = PM_NORMAL + 1; state < PM_COUNT; state++)
         {
           target = persist_stay_cnt[state] + 0;
           ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
@@ -199,6 +201,7 @@ static void drivertest_pm(FAR void **argv)
           target = persist_stay_cnt[state] + 1;
           ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
 
+#ifndef CONFIG_PM_GOVERNOR_STABILITY
           pm_staytimeout(domain, state, TEST_STAYTIMEOUT);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, PM_SLEEP);
@@ -210,7 +213,7 @@ static void drivertest_pm(FAR void **argv)
           ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
           target = persist_stay_cnt[state] + 1;
           ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
-
+#endif
           pm_relax(domain, state);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, PM_SLEEP);
@@ -218,6 +221,7 @@ static void drivertest_pm(FAR void **argv)
           target = persist_stay_cnt[state] + 0;
           ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
 
+#ifndef CONFIG_PM_GOVERNOR_STABILITY
           pm_staytimeout(domain, state, TEST_STAYTIMEOUT);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, PM_SLEEP);
@@ -229,6 +233,7 @@ static void drivertest_pm(FAR void **argv)
           ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
           target = persist_stay_cnt[state] + 0;
           ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
+#endif
         }
 
       for (int state = 0; state < PM_COUNT; state++)
@@ -243,6 +248,7 @@ static void drivertest_pm(FAR void **argv)
           staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
           ASSERT_EQUAL_IF_CHECK(staycount, 1, check);
 
+#ifndef CONFIG_PM_GOVERNOR_STABILITY
           pm_wakelock_staytimeout(&g_test_wakelock[state], TEST_STAYTIMEOUT);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, PM_SLEEP);
@@ -254,7 +260,7 @@ static void drivertest_pm(FAR void **argv)
           ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
           staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
           ASSERT_EQUAL_IF_CHECK(staycount, 1, check);
-
+#endif
           pm_wakelock_relax(&g_test_wakelock[state]);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, PM_SLEEP);
@@ -262,6 +268,7 @@ static void drivertest_pm(FAR void **argv)
           staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
           ASSERT_EQUAL_IF_CHECK(staycount, 0, check);
 
+#ifndef CONFIG_PM_GOVERNOR_STABILITY
           pm_wakelock_staytimeout(&g_test_wakelock[state], TEST_STAYTIMEOUT);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, PM_SLEEP);
@@ -273,6 +280,7 @@ static void drivertest_pm(FAR void **argv)
           ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
           staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
           ASSERT_EQUAL_IF_CHECK(staycount, 0, check);
+#endif
         }
 
       /* test when pm prepare succeeded */
@@ -291,6 +299,7 @@ static void drivertest_pm(FAR void **argv)
           target = persist_stay_cnt[state] + 1;
           ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
 
+#ifndef CONFIG_PM_GOVERNOR_STABILITY
           pm_staytimeout(domain, state, TEST_STAYTIMEOUT);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, state);
@@ -302,7 +311,7 @@ static void drivertest_pm(FAR void **argv)
           ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), state, check);
           target = persist_stay_cnt[state] + 1;
           ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
-
+#endif
           pm_relax(domain, state);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, PM_SLEEP);
@@ -310,6 +319,7 @@ static void drivertest_pm(FAR void **argv)
           target = persist_stay_cnt[state] + 0;
           ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
 
+#ifndef CONFIG_PM_GOVERNOR_STABILITY
           pm_staytimeout(domain, state, TEST_STAYTIMEOUT);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, state);
@@ -321,6 +331,7 @@ static void drivertest_pm(FAR void **argv)
           ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
           target = persist_stay_cnt[state] + 0;
           ASSERT_EQUAL_IF_CHECK(pm_staycount(domain, state), target, check);
+#endif
         }
 
       for (int state = 0; state < PM_COUNT; state++)
@@ -335,6 +346,7 @@ static void drivertest_pm(FAR void **argv)
           staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
           ASSERT_EQUAL_IF_CHECK(staycount, 1, check);
 
+#ifndef CONFIG_PM_GOVERNOR_STABILITY
           pm_wakelock_staytimeout(&g_test_wakelock[state], TEST_STAYTIMEOUT);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, state);
@@ -346,7 +358,7 @@ static void drivertest_pm(FAR void **argv)
           ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), state, check);
           staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
           ASSERT_EQUAL_IF_CHECK(staycount, 1, check);
-
+#endif
           pm_wakelock_relax(&g_test_wakelock[state]);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, PM_SLEEP);
@@ -354,6 +366,7 @@ static void drivertest_pm(FAR void **argv)
           staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
           ASSERT_EQUAL_IF_CHECK(staycount, 0, check);
 
+#ifndef CONFIG_PM_GOVERNOR_STABILITY
           pm_wakelock_staytimeout(&g_test_wakelock[state], TEST_STAYTIMEOUT);
           usleep(TEST_WAITTIME);
           assert_int_equal(g_test_pm_dev.state, state);
@@ -365,6 +378,7 @@ static void drivertest_pm(FAR void **argv)
           ASSERT_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
           staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
           ASSERT_EQUAL_IF_CHECK(staycount, 0, check);
+#endif
         }
 
       ret = pm_domain_unregister(domain, &g_test_pm_callback);
