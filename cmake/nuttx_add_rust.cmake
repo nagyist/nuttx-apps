@@ -173,7 +173,10 @@ function(nuttx_add_rust)
   # Add a custom command to build the Rust crate
   add_custom_command(
     OUTPUT ${CARGO_LIB_PATH}
-    COMMAND cargo build ${CARGO_BUILD_FLAGS}
+    COMMAND
+      ${CMAKE_COMMAND} -E env
+      NUTTX_INCLUDE_DIR=${PROJECT_SOURCE_DIR}/include:${CMAKE_BINARY_DIR}/include:${CMAKE_BINARY_DIR}/include/arch
+      cargo build ${CARGO_BUILD_FLAGS}
     COMMENT "Building Rust crate ${CRATE_NAME}"
     VERBATIM)
 
