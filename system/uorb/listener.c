@@ -135,6 +135,7 @@ listener <command> [arguments...]\n\
 \t[-i       ]  Get sensor device information based on topic.\n\
 \t[-f       ]  Flush sensor drive data.\n\
 \t[-w       ]  Subscribe in wakeup mode.\n\
+\t[-k       ]  Unlink the nodes registered on the device.\n\
   ");
 }
 
@@ -551,6 +552,34 @@ static int listener_print(FAR const struct orb_metadata *meta, int fd)
 #endif
 
   return ret;
+}
+
+/****************************************************************************
+ * Name: listener_unlink_topic
+ *
+ * Description:
+ *   Flush sensor device.
+ *
+ * Input Parameters:
+ *   objlist      Topic object list.
+ *   nb_objects   Length of objects list.
+ *
+ * Returned Value:
+ *   void
+ ****************************************************************************/
+
+static void listener_unlink_topic(FAR const struct listen_list_s *objlist)
+{
+  FAR struct listen_object_s *tmp;
+
+  SLIST_FOREACH(tmp, objlist, node)
+    {
+      if (orb_unlink_multi(tmp->object.meta, tmp->object.instance) < 0)
+        {
+          uorbinfo_raw("uorb_ublink failed. errno:%d", errno);
+          return;
+        }
+    }
 }
 
 /****************************************************************************
@@ -1077,6 +1106,7 @@ int main(int argc, FAR char *argv[])
   bool record       = false;
   bool wakeup       = false;
   bool only_once    = false;
+  bool unlink       = false;
   FAR char *filter  = NULL;
   int ret;
   int ch;
@@ -1089,7 +1119,7 @@ int main(int argc, FAR char *argv[])
 
   /* Pasrse Argument */
 
-  while ((ch = getopt(argc, argv, "r:b:n:t:Tfslhiw")) != EOF)
+  while ((ch = getopt(argc, argv, "r:b:n:t:Tfslhiwk")) != EOF)
     {
       switch (ch)
       {
@@ -1151,6 +1181,10 @@ int main(int argc, FAR char *argv[])
           wakeup = true;
           break;
 
+        case 'k':
+          unlink = true;
+          break;
+
         case 'h':
         default:
           goto error;
@@ -1199,6 +1233,12 @@ int main(int argc, FAR char *argv[])
 
       listener_monitor(&objlist, ret, topic_rate, topic_latency,
                        nb_msgs, timeout, record, wakeup);
+    }
+
+  if (unlink)
+    {
+      listener_unlink_topic(&objlist);
+      goto exit;
     }
 
 exit:
