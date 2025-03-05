@@ -62,6 +62,7 @@
 struct test_confs_s
 {
   FAR const char *dev_path;
+  int test_case_id;
 };
 
 struct test_state_s
@@ -301,6 +302,12 @@ static void show_usage(FAR const char *progname, int exitcode)
   printf("Where:\n");
   printf("  -d <dev path> uart device path "
          "[default device: /dev/console].\n");
+  printf("  -n <test_case_id> selects the testcase to uart.\n"
+         "[default test: drivertest_uart_write].\n"
+         "  Case 0: drivertest_uart_write test\n"
+         "  Case 1: drivertest_uart_read test\n"
+         "  Case 2: drivertest_uart_burst test\n"
+        );
   exit(exitcode);
 }
 
@@ -313,12 +320,15 @@ static void parse_args(int argc, FAR char **argv,
 {
   int option;
 
-  while ((option = getopt(argc, argv, "d:")) != ERROR)
+  while ((option = getopt(argc, argv, "d:n:")) != ERROR)
     {
       switch (option)
         {
           case 'd':
             conf->dev_path = optarg;
+            break;
+          case 'n':
+            conf->test_case_id = atoi(optarg);
             break;
           case '?':
             printf("Unknown option: %c\n", optopt);
@@ -338,20 +348,30 @@ static void parse_args(int argc, FAR char **argv,
 
 int main(int argc, FAR char *argv[])
 {
+  void (*drivertest_uart)(FAR void **state) = NULL;
   struct test_confs_s confs =
   {
-    .dev_path = CONFIG_TESTING_DRIVER_TEST_UART_DEVICE
+    .dev_path = CONFIG_TESTING_DRIVER_TEST_UART_DEVICE,
+    .test_case_id = 0
   };
 
   parse_args(argc, argv, &confs);
+  switch (confs.test_case_id)
+  {
+    case 1:
+      drivertest_uart = drivertest_uart_read;
+      break;
+    case 2:
+      drivertest_uart = drivertest_uart_burst;
+      break;
+    default:
+      drivertest_uart = drivertest_uart_write;
+      break;
+  }
 
   const struct CMUnitTest tests[] =
     {
-      cmocka_unit_test_prestate_setup_teardown(drivertest_uart_write, setup,
-                                               teardown, &confs),
-      cmocka_unit_test_prestate_setup_teardown(drivertest_uart_read, setup,
-                                               teardown, &confs),
-      cmocka_unit_test_prestate_setup_teardown(drivertest_uart_burst, setup,
+      cmocka_unit_test_prestate_setup_teardown(drivertest_uart, setup,
                                                teardown, &confs),
     };
 
