@@ -264,6 +264,27 @@ int orb_open(FAR const char *name, int instance, int flags);
 int orb_close(int fd);
 
 /****************************************************************************
+ * Name: orb_unlink_multi
+ *
+ * Description:
+ *   Remove topic node.
+ *
+ * Input Parameters:
+ *   meta         The uORB metadata (usually from the ORB_ID() macro)
+ *   instance     Pointer to an integer which yield the instance ID,
+ *                (has default 0 if pointer is NULL).
+ * Returned Value:
+ *   0 on success.
+ ****************************************************************************/
+
+int orb_unlink_multi(FAR const struct orb_metadata *meta, int instance);
+
+static inline int orb_unlink(FAR const struct orb_metadata *meta)
+{
+  return orb_unlink_multi(meta, 0);
+}
+
+/****************************************************************************
  * Name: orb_advertise_multi_queue_info
  *
  * Description:

@@ -214,6 +214,32 @@ int orb_close(int fd)
   return ret;
 }
 
+int orb_unlink_multi(FAR const struct orb_metadata *meta, int instance)
+{
+  char path[ORB_PATH_MAX];
+  int ret;
+  int fd;
+
+  snprintf(path, ORB_PATH_MAX, ORB_SENSOR_PATH"%s%d", meta->o_name,
+           instance);
+  fd = open(ORB_USENSOR_PATH, O_WRONLY | O_CLOEXEC);
+  if (fd < 0)
+    {
+      return -errno;
+    }
+
+  ret = ioctl(fd, SNIOC_UNREGISTER, (unsigned long)(uintptr_t)path);
+  close(fd);
+  if (ret < 0)
+    {
+      uorberr("topic:%s%d unregister failed! return:%d",
+              meta->o_name, instance, ret);
+      return -errno;
+    }
+
+  return ret;
+}
+
 int orb_advertise_multi_queue_info(FAR const struct orb_metadata *meta,
                                    FAR const void *data, FAR int *instance,
                                    unsigned int queue_size,
