@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/nist-sts/CMakeLists.txt
+# apps/testing/drivers/nist-sts/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -30,7 +30,7 @@ if(CONFIG_TESTING_NIST_STS)
     FetchContent_Declare(
       nist-sts_fetch
       URL ${CONFIG_NIST_URL} SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/nist-sts
-          BINARY_DIR ${CMAKE_BINARY_DIR}/apps/testing/nist-sts/nist-sts
+          BINARY_DIR ${CMAKE_BINARY_DIR}/apps/testing/drivers/nist-sts/nist-sts
       PATCH_COMMAND
         patch -p0 -d ${CMAKE_CURRENT_LIST_DIR}/nist-sts <
         ${CMAKE_CURRENT_LIST_DIR}/0001-Solve-the-memory-out-of-bounds-problem-in-sts.patch
