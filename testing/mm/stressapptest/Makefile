@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/stressapptest/Makefile
+# apps/testing/mm/stressapptest/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with

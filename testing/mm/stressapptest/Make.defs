@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/memtester/Make.defs
+# apps/testing/mm/stressapptest/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,6 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_UTILS_MEMTESTER),)
-CONFIGURED_APPS += $(APPDIR)/testing/memtester
+ifneq ($(CONFIG_TESTING_STRESSAPPTEST),)
+CONFIGURED_APPS += $(APPDIR)/testing/mm/stressapptest
 endif
