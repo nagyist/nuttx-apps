@@ -198,11 +198,13 @@ static void test_nxsig_nanosleep(FAR void **state)
   assert_true(elapsed_time >= 0.5 && elapsed_time < 0.6);
 }
 
+#ifdef CONFIG_SIG_EVTHREAD
 static void nxsig_notification_work(union sigval sv)
 {
   int value = (int)(intptr_t)sv.sival_ptr;
   assert_int_equal(value, 42);
 }
+#endif
 
 static void *thread_nxsig_notification(FAR void *arg)
 {
@@ -218,7 +220,9 @@ static void test_nxsig_notification(FAR void **state)
 {
   UNUSED(state);
   struct sigevent event;
+#ifdef CONFIG_SIG_EVTHREAD
   struct sigwork_s work;
+#endif
   int notify_value = 42;
   pthread_t thread;
   int ret;
