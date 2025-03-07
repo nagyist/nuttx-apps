@@ -112,6 +112,12 @@ int exec_builtin(FAR const char *appname, FAR char * const *argv,
       goto errout_with_actions;
     }
 
+  ret = posix_spawnattr_setheapsize(&attr, builtin->heapsize);
+  if (ret != 0)
+    {
+      goto errout_with_actions;
+    }
+
   /* If robin robin scheduling is enabled, then set the scheduling policy
    * of the new task to SCHED_RR before it has a chance to run.
    */

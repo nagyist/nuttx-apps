@@ -26,4 +26,9 @@ config EXAMPLES_HELLO_STACKSIZE
 	int "Hello stack size"
 	default DEFAULT_TASK_STACKSIZE
 
+config EXAMPLES_HELLO_HEAPSIZE
+	int "Hello heap size"
+	depends on MM_TASK_HEAP
+	default MM_TASK_HEAP_DEFAULT_SIZE
+
 endif

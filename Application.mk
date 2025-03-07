@@ -133,6 +133,8 @@ ifneq ($(strip $(PROGNAME)),)
         $(if $(word $i,$(GID)),$(word $i,$(GID)),$(lastword $(GID)))) \
     $(eval MODE_$(word $i,$(REGLIST)) := \
         $(if $(word $i,$(MODE)),$(word $i,$(MODE)),$(lastword $(MODE)))) \
+    $(eval HEAPSIZE_$(word $i,$(REGLIST)) := \
+        $(if $(word $i,$(HEAPSIZE)),$(word $i,$(HEAPSIZE)),$(lastword $(HEAPSIZE)))) \
   )
 endif
 
@@ -376,13 +378,15 @@ context:: $(AIDLOBJS)
 
 ifeq ($(DO_REGISTRATION),y)
 
+comma := ,
 $(REGLIST): $(DEPCONFIG) Makefile
 	$(eval PROGNAME_$@ := $(basename $(notdir $@)))
-ifeq ($(CONFIG_SCHED_USER_IDENTITY),y)
-	$(call REGISTER,$(PROGNAME_$@),$(PRIORITY_$@),$(STACKSIZE_$@),$(if $(BUILD_MODULE),,$(PROGNAME_$@)_main),$(UID_$@),$(GID_$@),$(MODE_$@))
-else
-	$(call REGISTER,$(PROGNAME_$@),$(PRIORITY_$@),$(STACKSIZE_$@),$(if $(BUILD_MODULE),,$(PROGNAME_$@)_main))
-endif
+	$(call REGISTER,$(PROGNAME_$@),$(PRIORITY_$@),$(STACKSIZE_$@), \
+		$(if $(BUILD_MODULE),,$(PROGNAME_$@)_main), \
+		$(if $(CONFIG_SCHED_USER_IDENTITY),$(UID_$@)), \
+		$(if $(CONFIG_SCHED_USER_IDENTITY),$(GID_$@)), \
+		$(if $(CONFIG_SCHED_USER_IDENTITY),$(MODE_$@)), \
+		$(if $(CONFIG_MM_TASK_HEAP),$(if $(HEAPSIZE_$@),$(HEAPSIZE_$@),0)))
 
 register:: $(REGLIST)
 	@:
