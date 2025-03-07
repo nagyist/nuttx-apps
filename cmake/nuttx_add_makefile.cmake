@@ -200,6 +200,10 @@ function(nuttx_call_apps_makefile)
   set_target_properties(
     ${TARGET} PROPERTIES IMPORTED_LOCATION
                          ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_BIN})
+  set_property(
+    TARGET nuttx_global
+    APPEND
+    PROPERTY NUTTX_ELF_LINK_LIBRARIES $<TARGET_FILE:${TARGET}>)
   set_property(GLOBAL APPEND PROPERTY NUTTX_SYSTEM_LIBRARIES ${TARGET})
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_BIN}
           DESTINATION ${CMAKE_BINARY_DIR}/staging/lib)
