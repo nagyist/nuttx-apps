@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/memstress/Makefile
+# apps/testing/mm/ramtest/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -20,13 +20,13 @@
 
 include $(APPDIR)/Make.defs
 
-# RAM speed test
+# RAM test
 
-PROGNAME = $(CONFIG_TESTING_MEMORY_STRESS_PROGNAME)
-PRIORITY = $(CONFIG_TESTING_MEMORY_STRESS_PRIORITY)
-STACKSIZE = $(CONFIG_TESTING_MEMORY_STRESS_STACKSIZE)
-MODULE = $(CONFIG_TESTING_MEMORY_STRESS)
+PROGNAME = $(CONFIG_TESTING_RAMTEST_PROGNAME)
+PRIORITY = $(CONFIG_TESTING_RAMTEST_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_RAMTEST_STACKSIZE)
+MODULE = $(CONFIG_TESTING_RAMTEST)
 
-MAINSRC = memorystress_main.c
+MAINSRC = ramtest.c
 
 include $(APPDIR)/Application.mk

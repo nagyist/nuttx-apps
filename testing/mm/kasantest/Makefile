@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/cachetest/Make.defs
+# apps/testing/mm/kasantest/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,18 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_CACHETEST),)
-CONFIGURED_APPS += $(APPDIR)/testing/cachetest
-endif
+include $(APPDIR)/Make.defs
+
+# KASan validity test
+
+MAINSRC   = kasantest.c
+PROGNAME  = kasantest
+PRIORITY  = $(CONFIG_TESTING_KASAN_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_KASAN_STACKSIZE)
+
+CFLAGS += -Wno-error -Wno-use-after-free -Wno-stringop-overflow
+CFLAGS += -Wno-array-bounds -Wno-free-nonheap-object
+CFLAGS += -Wno-unused-value -Wno-unused-variable
+CFLAGS += "-O0"
+
+include $(APPDIR)/Application.mk

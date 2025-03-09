@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/kasantest/Makefile
+# apps/testing/mm//heaptest/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -20,16 +20,15 @@
 
 include $(APPDIR)/Make.defs
 
-# KASan validity test
+# Memory Management Test
 
-MAINSRC   = kasantest.c
-PROGNAME  = kasantest
-PRIORITY  = $(CONFIG_TESTING_KASAN_PRIORITY)
-STACKSIZE = $(CONFIG_TESTING_KASAN_STACKSIZE)
+PROGNAME  = $(CONFIG_TESTING_MM_PROGNAME)
+PRIORITY  = $(CONFIG_TESTING_MM_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_MM_STACKSIZE)
+MODULE    = $(CONFIG_TESTING_MM)
 
-CFLAGS += -Wno-error -Wno-use-after-free -Wno-stringop-overflow
-CFLAGS += -Wno-array-bounds -Wno-free-nonheap-object
-CFLAGS += -Wno-unused-value -Wno-unused-variable
-CFLAGS += "-O0"
+MAINSRC = mm_main.c
+
+CFLAGS += -I$(TOPDIR)/mm/mm_heap
 
 include $(APPDIR)/Application.mk

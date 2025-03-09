@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/kasantest/CMakeLists.txt
+# apps/testing/mm/cachetest/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,15 +18,16 @@
 #
 # ##############################################################################
 
-if(CONFIG_TESTING_KASAN)
-  set(CFLAGS
-      -Wno-error
-      -Wno-use-after-free
-      -Wno-array-bounds
-      -Wno-unused-value
-      -Wno-unused-variable
-      -Wno-free-nonheap-object
-      -Wno-stringop-overflow
-      "-O0")
-  nuttx_add_application(NAME kasantest COMPILE_FLAGS ${CFLAGS} SRCS kasantest.c)
+if(CONFIG_TESTING_CACHETEST)
+  nuttx_add_application(
+    NAME
+    ${CONFIG_TESTING_CACHETEST_PROGNAME}
+    PRIORITY
+    ${CONFIG_TESTING_CACHETEST_PRIORITY}
+    STACKSIZE
+    ${CONFIG_TESTING_CACHETEST_STACKSIZE}
+    MODULE
+    ${CONFIG_TESTING_CACHETEST}
+    SRCS
+    cachetest_main.c)
 endif()

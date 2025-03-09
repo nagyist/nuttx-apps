@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/kasantest/Make.defs
+# apps/testing/mm/memstress/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,15 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_KASAN),)
-CONFIGURED_APPS += $(APPDIR)/testing/kasantest
-endif
+include $(APPDIR)/Make.defs
+
+# RAM speed test
+
+PROGNAME = $(CONFIG_TESTING_MEMORY_STRESS_PROGNAME)
+PRIORITY = $(CONFIG_TESTING_MEMORY_STRESS_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_MEMORY_STRESS_STACKSIZE)
+MODULE = $(CONFIG_TESTING_MEMORY_STRESS)
+
+MAINSRC = memorystress_main.c
+
+include $(APPDIR)/Application.mk

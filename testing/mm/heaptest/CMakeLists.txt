@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/memstress/CMakeLists.txt
+# apps/testing/mm/heaptest/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,16 +18,18 @@
 #
 # ##############################################################################
 
-if(CONFIG_TESTING_MEMORY_STRESS)
+if(CONFIG_TESTING_MM)
   nuttx_add_application(
     NAME
-    ${CONFIG_TESTING_MEMORY_STRESS_PROGNAME}
+    ${CONFIG_TESTING_MM_PROGNAME}
     PRIORITY
-    ${CONFIG_TESTING_MEMORY_STRESS_PRIORITY}
+    ${CONFIG_TESTING_MM_PRIORITY}
     STACKSIZE
-    ${CONFIG_TESTING_MEMORY_STRESS_STACKSIZE}
+    ${CONFIG_TESTING_MM_STACKSIZE}
     MODULE
-    ${CONFIG_TESTING_MEMORY_STRESS}
+    ${CONFIG_TESTING_MM}
+    INCLUDE_DIRECTORIES
+    ${NUTTX_DIR}/mm/mm_heap
     SRCS
-    memorystress_main.c)
+    mm_main.c)
 endif()

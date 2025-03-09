@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/cachetest/cachetest_main.c
+ * apps/testing/mm/cachetest/cachetest_main.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
