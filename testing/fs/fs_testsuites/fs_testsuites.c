@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/fs_testsuites/mtd/util/testsuites_mtd_util.c
+ * apps/testing/fs/fs_testsuites/fs_testsuites.c
  *
  * Original Licence:
  *
@@ -38,68 +38,40 @@
  * Included Files
  ****************************************************************************/
 
-#include <stdio.h>
+#include <setjmp.h>
 #include <stdarg.h>
 #include <stddef.h>
-#include <setjmp.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <malloc.h>
-#include <string.h>
-#include <fcntl.h>
+#include <sys/mount.h>
 #include <cmocka.h>
 
-#include "testsuites_mtd_util.h"
-
-/****************************************************************************
- * Pre-processor Definitions
- ****************************************************************************/
-
-#define RAMMTD_DRIVER_NAME "/dev/test_rammtd"
+#ifdef CONFIG_TESTING_FS_TESTSUITES_MTD
+#  include "testsuites_mtd.h"
+#endif
 
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
 /****************************************************************************
- * testsuites_mtd_setup
+ * fstestsuites_main
  ****************************************************************************/
 
-int testsuites_mtd_setup(FAR void **state)
+int main(int argc, FAR char *argv[])
 {
-  FAR struct testsuites_mtd_driver *driver;
-  int ret;
+  /* Add Test Cases */
 
-  driver = zalloc(sizeof(struct testsuites_mtd_driver));
-  assert_false(driver == NULL);
+  const struct CMUnitTest fs_testsuites[] =
+  {
+      #ifdef CONFIG_TESTING_FS_TESTSUITES_MTD
+      TESTSUITES_MTD
+      #endif
+  };
 
-  driver->buffer = zalloc(MTD_BUFFERSIZE);
-  assert_false(driver->buffer == NULL);
+  /* Run Test cases */
 
-  snprintf(driver->pathname, PATH_MAX, RAMMTD_DRIVER_NAME);
-  driver->mtd = rammtd_initialize(driver->buffer, MTD_BUFFERSIZE);
-  assert_false(driver->mtd == NULL);
+  cmocka_run_group_tests(fs_testsuites, NULL, NULL);
 
-  ret = MTD_IOCTL(driver->mtd, MTDIOC_GEOMETRY,
-                  (unsigned long)((uintptr_t)&driver->geometry));
-  assert_false(ret < 0);
-
-  srand(time(NULL));
-  *state = driver;
-  return ret;
-}
-
-/****************************************************************************
- * testsuites_mtd_teardown
- ****************************************************************************/
-
-int testsuites_mtd_teardown(FAR void **state)
-{
-  FAR struct testsuites_mtd_driver *driver = *state;
-
-  rammtd_uninitialize(driver->mtd);
-  free(driver->buffer);
-  free(driver);
   return 0;
 }

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/fs_testsuites/mtd/util/testsuites_mtd_util.h
+ * apps/testing/fs/fs_testsuites/mtd/include/testsuites_mtd.h
  *
  * Original Licence:
  *
@@ -34,26 +34,14 @@
  *
  ****************************************************************************/
 
-#ifndef TESTSUITES_MTD_UTIL_H
-#define TESTSUITES_MTD_UTIL_H
+#ifndef TESTSUITES_MTD_H
+#define TESTSUITES_MTD_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/mtd/mtd.h>
-
-/****************************************************************************
- * Public Types
- ****************************************************************************/
-
-struct testsuites_mtd_driver
-{
-  FAR struct mtd_dev_s *mtd;
-  struct mtd_geometry_s geometry;
-  FAR uint8_t *buffer;
-  char pathname[PATH_MAX];
-};
+#include "testsuites_mtd_util.h"
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -67,9 +55,8 @@ struct testsuites_mtd_driver
  * Public Function Prototypes
  ****************************************************************************/
 
-/* TEST UTIL FUNCTIONS */
+/* TEST CASES FUNCTIONS */
 
-int testsuites_mtd_setup(FAR void **state);
-int testsuites_mtd_teardown(FAR void **state);
+void testsuites_mtd_ftl_01(FAR void **state);
 
-#endif /* TESTSUITES_MTD_UTIL_H */
+#endif /* TESTSUITES_MTD_H */

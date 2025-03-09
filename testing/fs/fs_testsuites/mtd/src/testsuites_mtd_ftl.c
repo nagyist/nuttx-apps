@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/fs_testsuites/mtd/src/testsuites_mtd_ftl.c
+ * apps/testing/fs/fs_testsuites/mtd/src/testsuites_mtd_ftl.c
  *
  * Original Licence:
  *

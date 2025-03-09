@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/fs_testsuites/Make.defs
+# apps/testing/fs/fs_testsuites/Make.defs
 
 # Adds selected services to apps/ build
 #
@@ -35,5 +35,5 @@
 ############################################################################
 
 ifneq ($(CONFIG_TESTING_FS_TESTSUITES),)
-CONFIGURED_APPS += $(APPDIR)/testing/fs_testsuites
+CONFIGURED_APPS += $(APPDIR)/testing/fs/fs_testsuites
 endif

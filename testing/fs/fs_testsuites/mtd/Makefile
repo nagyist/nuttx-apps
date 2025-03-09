@@ -1,4 +1,4 @@
-# apps/velatest/fs_testsuites/mtd/Makefile
+# apps/velatest/fs/fs_testsuites/mtd/Makefile
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-CFLAGS += -I$(APPDIR)/testing/fs_testsuites/mtd/include
-CFLAGS += -I$(APPDIR)/testing/fs_testsuites/mtd/util
-CSRCS += $(wildcard $(APPDIR)/testing/fs_testsuites/mtd/util/*.c)
-CSRCS += $(wildcard $(APPDIR)/testing/fs_testsuites/mtd/src/*.c)
+CFLAGS += -I$(APPDIR)/testing/fs/fs_testsuites/mtd/include
+CFLAGS += -I$(APPDIR)/testing/fs/fs_testsuites/mtd/util
+CSRCS += $(wildcard $(APPDIR)/testing/fs/fs_testsuites/mtd/util/*.c)
+CSRCS += $(wildcard $(APPDIR)/testing/fs/fs_testsuites/mtd/src/*.c)

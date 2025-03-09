@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/fs_testsuites/fs_testsuites.c
+ * apps/testing/fs/fs_testsuites/mtd/util/testsuites_mtd_util.h
  *
  * Original Licence:
  *
@@ -34,44 +34,42 @@
  *
  ****************************************************************************/
 
+#ifndef TESTSUITES_MTD_UTIL_H
+#define TESTSUITES_MTD_UTIL_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <setjmp.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <sys/mount.h>
-#include <cmocka.h>
-
-#ifdef CONFIG_TESTING_FS_TESTSUITES_MTD
-#  include "testsuites_mtd.h"
-#endif
+#include <nuttx/mtd/mtd.h>
 
 /****************************************************************************
- * Public Functions
+ * Public Types
  ****************************************************************************/
 
-/****************************************************************************
- * fstestsuites_main
- ****************************************************************************/
-
-int main(int argc, FAR char *argv[])
+struct testsuites_mtd_driver
 {
-  /* Add Test Cases */
+  FAR struct mtd_dev_s *mtd;
+  struct mtd_geometry_s geometry;
+  FAR uint8_t *buffer;
+  char pathname[PATH_MAX];
+};
 
-  const struct CMUnitTest fs_testsuites[] =
-  {
-      #ifdef CONFIG_TESTING_FS_TESTSUITES_MTD
-      TESTSUITES_MTD
-      #endif
-  };
+/****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
 
-  /* Run Test cases */
+#define TESTSUITES_MTD \
+  cmocka_unit_test_setup_teardown(testsuites_mtd_ftl_01, \
+          testsuites_mtd_setup, testsuites_mtd_teardown),
 
-  cmocka_run_group_tests(fs_testsuites, NULL, NULL);
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-  return 0;
-}
+/* TEST UTIL FUNCTIONS */
+
+int testsuites_mtd_setup(FAR void **state);
+int testsuites_mtd_teardown(FAR void **state);
+
+#endif /* TESTSUITES_MTD_UTIL_H */

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/fs_testsuites/mtd/include/testsuites_mtd.h
+ * apps/testing/fs/fs_testsuites/mtd/util/testsuites_mtd_util.c
  *
  * Original Licence:
  *
@@ -34,12 +34,21 @@
  *
  ****************************************************************************/
 
-#ifndef TESTSUITES_MTD_H
-#define TESTSUITES_MTD_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
+
+#include <stdio.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <setjmp.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <string.h>
+#include <fcntl.h>
+#include <cmocka.h>
 
 #include "testsuites_mtd_util.h"
 
@@ -47,16 +56,50 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define TESTSUITES_MTD \
-  cmocka_unit_test_setup_teardown(testsuites_mtd_ftl_01, \
-          testsuites_mtd_setup, testsuites_mtd_teardown),
+#define RAMMTD_DRIVER_NAME "/dev/test_rammtd"
 
 /****************************************************************************
- * Public Function Prototypes
+ * Public Functions
  ****************************************************************************/
 
-/* TEST CASES FUNCTIONS */
+/****************************************************************************
+ * testsuites_mtd_setup
+ ****************************************************************************/
 
-void testsuites_mtd_ftl_01(FAR void **state);
+int testsuites_mtd_setup(FAR void **state)
+{
+  FAR struct testsuites_mtd_driver *driver;
+  int ret;
 
-#endif /* TESTSUITES_MTD_H */
+  driver = zalloc(sizeof(struct testsuites_mtd_driver));
+  assert_false(driver == NULL);
+
+  driver->buffer = zalloc(MTD_BUFFERSIZE);
+  assert_false(driver->buffer == NULL);
+
+  snprintf(driver->pathname, PATH_MAX, RAMMTD_DRIVER_NAME);
+  driver->mtd = rammtd_initialize(driver->buffer, MTD_BUFFERSIZE);
+  assert_false(driver->mtd == NULL);
+
+  ret = MTD_IOCTL(driver->mtd, MTDIOC_GEOMETRY,
+                  (unsigned long)((uintptr_t)&driver->geometry));
+  assert_false(ret < 0);
+
+  srand(time(NULL));
+  *state = driver;
+  return ret;
+}
+
+/****************************************************************************
+ * testsuites_mtd_teardown
+ ****************************************************************************/
+
+int testsuites_mtd_teardown(FAR void **state)
+{
+  FAR struct testsuites_mtd_driver *driver = *state;
+
+  rammtd_uninitialize(driver->mtd);
+  free(driver->buffer);
+  free(driver);
+  return 0;
+}
