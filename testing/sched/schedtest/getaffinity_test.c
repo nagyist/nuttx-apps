@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/schedtest/cpucount_test.c
+ * apps/testing/sched/schedtest/getaffinity_test.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -23,6 +23,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <nuttx/arch.h>
 #include <pthread.h>
 #include <sched.h>
 
@@ -36,24 +37,54 @@
  * Private Functions
  ****************************************************************************/
 
-static void test_cpu_count(void **state)
+static void *task_run(void *arg)
 {
-  int i;
-  int j;
+  up_mdelay(1000);
+
+  return NULL;
+}
+
+/**
+ * Test getting the affinity of current thread.
+ */
+
+static void test_get_current(void **state)
+{
   int ret;
   cpu_set_t cpuset;
+  int cpu = sched_getcpu();
 
-  for (i = 0; i < CONFIG_SMP_NCPUS; i++)
-    {
-      CPU_ZERO(&cpuset);
-      for (j = 0; j < i; j++)
-        {
-          CPU_SET(j, &cpuset);
-        }
+  ret = sched_getaffinity(0, sizeof(cpu_set_t), &cpuset);
+  assert_int_equal(ret, 0);
+  assert_true(CPU_ISSET(cpu, &cpuset));
+}
 
-      ret = sched_cpucount(&cpuset);
-      assert_int_equal(ret, i);
-    }
+/**
+ * Test getting the affinity of other thread.
+ */
+
+static void test_get_others(void **state)
+{
+  int ret;
+  cpu_set_t cpuset;
+  pthread_attr_t attr;
+  pthread_t thread;
+  int old_cpu = sched_getcpu();
+  int new_cpu = (old_cpu != 1) ? 1 : 0;
+
+  pthread_attr_init(&attr);
+  CPU_ZERO(&cpuset);
+  CPU_SET(new_cpu, &cpuset);
+  pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpuset);
+
+  ret = pthread_create(&thread, &attr, task_run, NULL);
+  assert_int_equal(ret, 0);
+
+  ret = sched_getaffinity(thread, sizeof(cpu_set_t), &cpuset);
+  assert_int_equal(ret, 0);
+  assert_true(CPU_ISSET(new_cpu, &cpuset));
+
+  pthread_join(thread, NULL);
 }
 
 /****************************************************************************
@@ -63,7 +94,8 @@ static void test_cpu_count(void **state)
 int main(int argc, FAR char *argv[])
 {
   const struct CMUnitTest tests[] = {
-      cmocka_unit_test(test_cpu_count),
+      cmocka_unit_test(test_get_current),
+      cmocka_unit_test(test_get_others),
   };
 
   return cmocka_run_group_tests(tests, NULL, NULL);

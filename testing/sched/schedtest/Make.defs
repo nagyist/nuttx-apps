@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/schedtest/Makefile
+# apps/testing/sched/schedtest/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,41 +18,6 @@
 #
 ############################################################################
 
-include $(APPDIR)/Make.defs
-
-PRIORITY  = $(CONFIG_TESTING_SCHEDTEST_PRIORITY)
-STACKSIZE = $(CONFIG_TESTING_SCHEDTEST_STACKSIZE)
-MODULE    = $(CONFIG_TESTING_SCHEDTEST)
-
-CFLAGS  += -I$(TOPDIR)/sched
-MAINSRC += wqueue.c rwsem.c signaltest.c
-
-ifneq ($(CONFIG_SCHED_EVENTS),)
-MAINSRC += eventtest.c
+ifneq ($(CONFIG_TESTING_SCHEDTEST),)
+CONFIGURED_APPS += $(APPDIR)/testing/sched/schedtest
 endif
-
-ifeq ($(CONFIG_SMP),y)
-MAINSRC += setaffinity_test.c
-MAINSRC += getaffinity_test.c
-MAINSRC += cpucount_test.c
-ifeq ($(CONFIG_SCHED_CRITMONITOR),y)
-ifneq ($(CONFIG_SCHED_CRITMONITOR_MAXTIME_BUSYWAIT),-1)
-MAINSRC += busywait_test.c
-endif
-endif
-endif
-
-ifeq ($(CONFIG_SCHED_BACKTRACE),y)
-MAINSRC += sched_backtrace_test.c
-MAINSRC += sched_dumpstack_test.c
-endif
-
-ifneq ($(CONFIG_TLS_TASK_NELEM),0)
-ifneq ($(CONFIG_TLS_NCLEANUP),0)
-MAINSRC += tls_test.c
-endif
-endif
-
-PROGNAME := $(notdir $(patsubst %.c,%, $(MAINSRC)))
-
-include $(APPDIR)/Application.mk

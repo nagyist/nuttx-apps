@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/schedtest/CMakeLists.txt
+# apps/testing/sched/schedtest/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for

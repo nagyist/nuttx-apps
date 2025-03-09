@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/schedtest/getaffinity_test.c
+ * apps/testing/sched/schedtest/tls_test.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -23,10 +23,8 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/arch.h>
-#include <pthread.h>
-#include <sched.h>
-
+#include <nuttx/tls.h>
+#include <stdio.h>
 #include <setjmp.h>
 #include <stdarg.h>
 #include <stddef.h>
@@ -37,54 +35,89 @@
  * Private Functions
  ****************************************************************************/
 
-static void *task_run(void *arg)
+static void test_tls_task(FAR void **state)
 {
-  up_mdelay(1000);
+  int tlsindex;
+  uintptr_t test_value;
+  int ret;
 
-  return NULL;
+  /* Assign a TLS index */
+
+  tlsindex = task_tls_alloc(NULL);
+  assert_true(tlsindex >= 0);
+
+  /* Setting TLS Values */
+
+  test_value = 555;
+  ret = task_tls_set_value(tlsindex, test_value);
+  assert_int_equal(ret, 0);
+
+  /* Get and verify TLS values */
+
+  uintptr_t value = task_tls_get_value(tlsindex);
+  assert_int_equal(value, test_value);
+
+  /* Call task_tls_destruct to trigger the destructor */
+
+  task_tls_destruct();
 }
 
 /**
- * Test getting the affinity of current thread.
+ * Cleanup function for testing.
  */
 
-static void test_get_current(void **state)
+void mock_cleanup_function(void *arg)
 {
-  int ret;
-  cpu_set_t cpuset;
-  int cpu = sched_getcpu();
-
-  ret = sched_getaffinity(0, sizeof(cpu_set_t), &cpuset);
-  assert_int_equal(ret, 0);
-  assert_true(CPU_ISSET(cpu, &cpuset));
+  int *value = (int *)arg;
+  printf("Cleanup: %d\n", *value);
+  free(value);
 }
 
-/**
- * Test getting the affinity of other thread.
- */
-
-static void test_get_others(void **state)
+static void test_tls_cleanup(void **state)
 {
-  int ret;
-  cpu_set_t cpuset;
-  pthread_attr_t attr;
-  pthread_t thread;
-  int old_cpu = sched_getcpu();
-  int new_cpu = (old_cpu != 1) ? 1 : 0;
+  struct tls_info_s tls;
 
-  pthread_attr_init(&attr);
-  CPU_ZERO(&cpuset);
-  CPU_SET(new_cpu, &cpuset);
-  pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t), &cpuset);
+  /* Simulate the data to be cleaned. */
 
-  ret = pthread_create(&thread, &attr, task_run, NULL);
-  assert_int_equal(ret, 0);
+  int *data = malloc(sizeof(int));
+  *data = 666;
 
-  ret = sched_getaffinity(thread, sizeof(cpu_set_t), &cpuset);
-  assert_int_equal(ret, 0);
-  assert_true(CPU_ISSET(new_cpu, &cpuset));
+  tls_cleanup_push(&tls, mock_cleanup_function, data);
 
-  pthread_join(thread, NULL);
+  /* Check if the data has been added correctly to the stack. */
+
+  assert_int_equal(tls.tl_tos, 1);
+
+  /* Pop and perform cleanup. */
+
+  tls_cleanup_pop(&tls, 1);
+
+  /* Check if the stack is empty. */
+
+  assert_int_equal(tls.tl_tos, 0);
+}
+
+static void test_tls_cleanup_popall(void **state)
+{
+  struct tls_info_s tls;
+
+  int *data1 = malloc(sizeof(int));
+  *data1 = 777;
+  int *data2 = malloc(sizeof(int));
+  *data2 = 888;
+
+  tls_cleanup_push(&tls, mock_cleanup_function, data1);
+  tls_cleanup_push(&tls, mock_cleanup_function, data2);
+
+  assert_int_equal(tls.tl_tos, 2);
+
+  /* Pop and perform any cleanup. */
+
+  tls_cleanup_popall(&tls);
+
+  /* Check if the stack is empty. */
+
+  assert_int_equal(tls.tl_tos, 0);
 }
 
 /****************************************************************************
@@ -94,8 +127,9 @@ static void test_get_others(void **state)
 int main(int argc, FAR char *argv[])
 {
   const struct CMUnitTest tests[] = {
-      cmocka_unit_test(test_get_current),
-      cmocka_unit_test(test_get_others),
+      cmocka_unit_test(test_tls_task),
+      cmocka_unit_test(test_tls_cleanup),
+      cmocka_unit_test(test_tls_cleanup_popall),
   };
 
   return cmocka_run_group_tests(tests, NULL, NULL);
