@@ -55,7 +55,7 @@ struct orb_test_rpmsg_s
 ORB_DECLARE(orb_test_rpmsg);
 
 static const char test_rpmsg_format[] =
-  "timestamp:%" PRIu64 ",val:%" PRId32 ",str:[%128s]";
+  "timestamp:%" PRIu64 ",val:%" PRId32 ",str:[%s]";
 
 ORB_DEFINE(orb_test_rpmsg, struct orb_test_rpmsg_s, test_rpmsg_format);
 
@@ -83,8 +83,8 @@ static void test1(void)
       sleep(1);
       sample.timestamp = orb_absolute_time();
       sample.val++;
-      snprintf(sample.str, 128, "%s:%d hello %" PRId32, CONFIG_LIBC_HOSTNAME,
-              getpid(), sample.val);
+      snprintf(sample.str, 128, "%s:%d hello %" PRId32,
+               CONFIG_RPMSG_LOCAL_CPUNAME, getpid(), sample.val);
       orb_publish(ORB_ID(orb_test_rpmsg), afd, &sample);
     }
 
