@@ -18,7 +18,7 @@ config EXAMPLES_LVGLDEMO_PRIORITY
 
 config EXAMPLES_LVGLDEMO_STACKSIZE
 	int "lvgldemo stack size"
-	default 16384
+	default 32768
 
 config EXAMPLES_LVGLDEMO_INPUT_DEVPATH
 	string "Touchscreen device path"
