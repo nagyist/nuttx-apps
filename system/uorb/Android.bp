@@ -81,7 +81,7 @@ cc_binary {
     ],
     defaults: ["uorb_defaults"],
     cflags: [
-        "-DCONFIG_LIBC_HOSTNAME=\"Xiaomi Watch O61\""
+        "-DCONFIG_RPMSG_LOCAL_CPUNAME=\"droid\""
     ]
 }
 
