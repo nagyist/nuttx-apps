@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/mtetest/Makefile
+# apps/testing/mm/open_memstream/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,11 +18,6 @@
 #
 ############################################################################
 
-include $(APPDIR)/Make.defs
-
-MAINSRC   = mtetest.c
-PROGNAME  = mtetest
-PRIORITY  = $(CONFIG_TESTING_MTE_PRIORITY)
-STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
-
-include $(APPDIR)/Application.mk
+ifneq ($(CONFIG_TESTING_OPEN_MEMSTREAM),)
+CONFIGURED_APPS += $(APPDIR)/testing/mm/open_memstream
+endif

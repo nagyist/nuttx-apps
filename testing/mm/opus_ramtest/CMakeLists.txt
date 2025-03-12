@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/iob/CMakeLists.txt
+# apps/testing/mm/opus_ramtest/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,16 +18,16 @@
 #
 # ##############################################################################
 
-if(CONFIG_TESTING_IOB)
+if(CONFIG_TESTING_OPUS_RAMTEST)
   nuttx_add_application(
     NAME
-    ${CONFIG_TESTING_IOB_PROGNAME}
+    opus_ramtest
     PRIORITY
-    ${CONFIG_TESTING_IOB_PRIORITY}
+    ${CONFIG_TESTING_OPUS_RAMTEST_PRIORITY}
     STACKSIZE
-    ${CONFIG_TESTING_IOB_STACKSIZE}
+    ${CONFIG_TESTING_OPUS_RAMTEST_STACKSIZE}
     MODULE
-    ${CONFIG_TESTING_IOB}
+    ${CONFIG_TESTING_OPUS_RAMTEST}
     SRCS
-    iob_main.c)
+    opus_ramtest_main.c)
 endif()

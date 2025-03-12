@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/irtest/main.cxx
+ * apps/testing/drivers/irtest/main.cxx
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/opus_ramtest/CMakeLists.txt
+# apps/testing/mm/open_memstream/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,16 +18,14 @@
 #
 # ##############################################################################
 
-if(CONFIG_TESTING_OPUS_RAMTEST)
+if(CONFIG_TESTING_OPEN_MEMSTREAM)
   nuttx_add_application(
     NAME
-    opus_ramtest
-    PRIORITY
-    ${CONFIG_TESTING_OPUS_RAMTEST_PRIORITY}
+    open_memstream_test
     STACKSIZE
-    ${CONFIG_TESTING_OPUS_RAMTEST_STACKSIZE}
+    4096
     MODULE
-    ${CONFIG_TESTING_OPUS_RAMTEST}
+    ${CONFIG_TESTING_FMEMOPEN_TEST}
     SRCS
-    opus_ramtest_main.c)
+    open_memstream.c)
 endif()

@@ -1,5 +1,5 @@
 ############################################################################
-# apps/system/irtest/Makefile
+# apps/testing/iob/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,14 +18,6 @@
 #
 ############################################################################
 
-include $(APPDIR)/Make.defs
-
-PROGNAME  = $(CONFIG_SYSTEM_IRTEST_PROGNAME)
-PRIORITY  = $(CONFIG_SYSTEM_IRTEST_PRIORITY)
-STACKSIZE = $(CONFIG_SYSTEM_IRTEST_STACKSIZE)
-MODULE    = $(CONFIG_SYSTEM_IRTEST)
-
-MAINSRC   = main.cxx
-CXXSRCS   = $(filter-out $(MAINSRC), $(wildcard *.cxx))
-
-include $(APPDIR)/Application.mk
+ifneq ($(CONFIG_TESTING_IOB),)
+CONFIGURED_APPS += $(APPDIR)/testing/mm/iob
+endif

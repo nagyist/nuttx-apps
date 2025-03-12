@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/open_memstream/Make.defs
+# apps/testing/mm/opus_ramtest/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,6 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_OPEN_MEMSTREAM),)
-CONFIGURED_APPS += $(APPDIR)/testing/open_memstream
+ifneq ($(CONFIG_TESTING_OPUS_RAMTEST),)
+CONFIGURED_APPS += $(APPDIR)/testing/mm/opus_ramtest
 endif

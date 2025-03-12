@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/sd_bench/Make.defs
+# apps/testing/drivers/irtest/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,14 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_SD_BENCH),)
-CONFIGURED_APPS += $(APPDIR)/testing/sd_bench
-endif
+include $(APPDIR)/Make.defs
+
+PROGNAME  = $(CONFIG_SYSTEM_IRTEST_PROGNAME)
+PRIORITY  = $(CONFIG_SYSTEM_IRTEST_PRIORITY)
+STACKSIZE = $(CONFIG_SYSTEM_IRTEST_STACKSIZE)
+MODULE    = $(CONFIG_SYSTEM_IRTEST)
+
+MAINSRC   = main.cxx
+CXXSRCS   = $(filter-out $(MAINSRC), $(wildcard *.cxx))
+
+include $(APPDIR)/Application.mk

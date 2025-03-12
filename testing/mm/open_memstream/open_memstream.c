@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/open_memstream/open_memstream.c
+ * apps/testing/mm/open_memstream/open_memstream.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

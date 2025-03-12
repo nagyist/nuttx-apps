@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/iob/Make.defs
+# apps/testing/mm/iob/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,19 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_IOB),)
-CONFIGURED_APPS += $(APPDIR)/testing/iob
-endif
+include $(APPDIR)/Make.defs
+
+# Iob ! built-in application info
+
+PROGNAME  = $(CONFIG_TESTING_IOB_PROGNAME)
+PRIORITY  = $(CONFIG_TESTING_IOB_PRIORITY)
+STACKSIZE = $(CONFIG_TESTING_IOB_STACKSIZE)
+MODULE    = $(CONFIG_TESTING_IOB)
+
+# Iob! Example
+
+MAINSRC = iob_main.c
+
+CFLAGS += -I$(TOPDIR)/mm/iob
+
+include $(APPDIR)/Application.mk

@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/iob/Makefile
+# apps/testing/mm/open_memstream/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -20,17 +20,13 @@
 
 include $(APPDIR)/Make.defs
 
-# Iob ! built-in application info
+# SMART filesystem test tool
 
-PROGNAME  = $(CONFIG_TESTING_IOB_PROGNAME)
-PRIORITY  = $(CONFIG_TESTING_IOB_PRIORITY)
-STACKSIZE = $(CONFIG_TESTING_IOB_STACKSIZE)
-MODULE    = $(CONFIG_TESTING_IOB)
+PROGNAME = open_memstream_test
+PRIORITY = SCHED_PRIORITY_DEFAULT
+STACKSIZE = 4096
+MODULE = $(CONFIG_TESTING_FMEMOPEN_TEST)
 
-# Iob! Example
-
-MAINSRC = iob_main.c
-
-CFLAGS += -I$(TOPDIR)/mm/iob
+MAINSRC = open_memstream.c
 
 include $(APPDIR)/Application.mk

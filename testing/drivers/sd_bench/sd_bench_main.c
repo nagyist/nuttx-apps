@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/sd_bench/sd_bench_main.c
+ * apps/testing/drivers/sd_bench/sd_bench_main.c
  *
  * Original Licence:
  *

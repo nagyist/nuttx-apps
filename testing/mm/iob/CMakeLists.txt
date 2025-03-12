@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/testing/mtetest/CMakeLists.txt
+# apps/testing/mm/iob/CMakeLists.txt
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,6 +18,16 @@
 #
 # ##############################################################################
 
-if(CONFIG_TESTING_MTE)
-  nuttx_add_application(NAME mtetest COMPILE_FLAGS ${CFLAGS} SRCS mtetest.c)
+if(CONFIG_TESTING_IOB)
+  nuttx_add_application(
+    NAME
+    ${CONFIG_TESTING_IOB_PROGNAME}
+    PRIORITY
+    ${CONFIG_TESTING_IOB_PRIORITY}
+    STACKSIZE
+    ${CONFIG_TESTING_IOB_STACKSIZE}
+    MODULE
+    ${CONFIG_TESTING_IOB}
+    SRCS
+    iob_main.c)
 endif()
