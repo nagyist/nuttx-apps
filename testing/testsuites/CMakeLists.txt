@@ -138,6 +138,11 @@ if(CONFIG_CM_KVDB_TEST)
       ${NUTTX_DIR}/../apps/testing/cmocka/include)
   file(GLOB KVDB_CSRCS ${CMAKE_CURRENT_SOURCE_DIR}/kernel/kv/cases/*.c
        ${CMAKE_CURRENT_SOURCE_DIR}/kernel/kv/common/*.c)
+  if(NOT CONFIG_KVDB_SERVER)
+    file(GLOB EXLUDE_FILES
+         ${CMAKE_CURRENT_SOURCE_DIR}/kernel/kv/cases/kv_test_021.c)
+    list(REMOVE_ITEM KVDB_CSRCS ${EXLUDE_FILES})
+  endif()
   nuttx_add_application(
     NAME
     cmocka_kv_test

@@ -65,6 +65,9 @@ CFLAGS += ${INCDIR_PREFIX}$(APPDIR)/frameworks/kvdb
 CFLAGS += -I$(CURDIR)/kernel/kv/include
 CSRCS += $(wildcard kernel/kv/cases/*.c)
 CSRCS += $(wildcard kernel/kv/common/*.c)
+ifeq ($(CONFIG_KVDB_SERVER),)
+CSRCS := $(filter-out $(wildcard kernel/kv/cases/kv_test_021.c),$(wildcard $(CSRCS)))
+endif
 PROGNAME += cmocka_kv_test
 MAINSRC += $(CURDIR)/kernel/kv/cmocka_kv_test.c
 endif
