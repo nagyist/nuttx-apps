@@ -68,7 +68,9 @@ function(nuttx_add_aidl)
     ${ARGN})
 
   # concat aidl tool command
-  set(AIDL_CMD_STR "aidl ${AIDL_FLAGS} -h${AIDL_HEADER_DIR} -o${AIDL_OUT_DIR}")
+  string(JOIN " " AIDL_FLAGS_STR ${AIDL_FLAGS})
+  set(AIDL_CMD_STR
+      "aidl ${AIDL_FLAGS_STR} -h${AIDL_HEADER_DIR} -o${AIDL_OUT_DIR}")
   if(AIDL_INCLUDE_DIR)
     string(APPEND AIDL_CMD_STR " -I${AIDL_INCLUDE_DIR}")
   endif()
