@@ -229,11 +229,11 @@ static void drivertest_mps2_zerointerrupt(void **argv)
 
   while (cnt++ < CONFIG_TEST_IRQPRIO_LOOP_CNT)
     {
-      flags = enter_critical_section();
+      flags = up_irq_save();
       g_tag++;
       up_udelay(100);
       g_tag--;
-      leave_critical_section(flags);
+      up_irq_restore(flags);
     }
 
   pthread_join(tid, NULL);
