@@ -190,7 +190,7 @@ static void test_skeleton(FAR struct cachespeed_s *cs,
 
       up_flush_dcache_all();
 
-      irq = enter_critical_section();
+      irq = up_irq_save();
       for (int i = 0; i < REPEAT_NUM; i++)
         {
           memset((void *)cs->addr, 1, cs->alloc);
@@ -200,7 +200,7 @@ static void test_skeleton(FAR struct cachespeed_s *cs,
           cost += end - start;
         }
 
-      leave_critical_section(irq);
+      up_irq_restore(irq);
       report_line(bytes, cost);
     }
 }
