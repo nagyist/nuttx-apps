@@ -370,7 +370,7 @@ static void drivertest_watchdog_interrupts(FAR void **state)
 
   wdg_init(wdg_state);
 
-  enter_critical_section();
+  up_irq_save();
 
   /* Busy loop when disable interrupts */
 
