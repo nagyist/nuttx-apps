@@ -108,6 +108,45 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
 
   if (param)
     {
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+      if (param->priority)
+        {
+          struct sched_param sched;
+
+          sched_getparam(0, &sched);
+          sched.sched_priority = param->priority;
+          ret = posix_spawnattr_setschedparam(&attr, &sched);
+          if (ret != 0)
+            {
+              nsh_error(vtbl, g_fmtcmdfailed, cmd,
+                        "posix_spawnattr_setschedparam", NSH_ERRNO);
+              goto errout_with_actions;
+            }
+        }
+
+      if (param->stacksize)
+        {
+          ret = posix_spawnattr_setstacksize(&attr, param->stacksize);
+          if (ret != 0)
+            {
+              nsh_error(vtbl, g_fmtcmdfailed, cmd,
+                        "posix_spawnattr_setstacksize", NSH_ERRNO);
+              goto errout_with_actions;
+            }
+        }
+
+      if (param->heapsize)
+        {
+          ret = posix_spawnattr_setheapsize(&attr, param->heapsize);
+          if (ret != 0)
+            {
+              nsh_error(vtbl, g_fmtcmdfailed, cmd,
+                        "posix_spawnattr_setheapsize", NSH_ERRNO);
+              goto errout_with_actions;
+            }
+        }
+#endif
+
       /* Handle redirection of input */
 
       if (param->file_in)

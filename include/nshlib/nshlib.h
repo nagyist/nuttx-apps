@@ -82,6 +82,12 @@ struct nsh_param_s
   int oflags_out;
   FAR const char *file_in;
   FAR const char *file_out;
+
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+  int priority;
+  size_t stacksize;
+  size_t heapsize;
+#endif
 };
 
 /****************************************************************************

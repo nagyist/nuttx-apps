@@ -99,20 +99,30 @@ int exec_builtin(FAR const char *appname, FAR char * const *argv,
 
   /* Set the correct task size and priority */
 
-  sched.sched_priority = builtin->priority;
+  sched.sched_priority =
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+    param && param->priority ? param->priority :
+#endif
+    builtin->priority;
   ret = posix_spawnattr_setschedparam(&attr, &sched);
   if (ret != 0)
     {
       goto errout_with_actions;
     }
 
-  ret = posix_spawnattr_setstacksize(&attr, builtin->stacksize);
+  ret = posix_spawnattr_setstacksize(&attr,
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+         param && param->stacksize ? param->stacksize :
+#endif
+         builtin->stacksize
+        );
   if (ret != 0)
     {
       goto errout_with_actions;
     }
 
-  ret = posix_spawnattr_setheapsize(&attr, builtin->heapsize);
+  ret = posix_spawnattr_setheapsize(&attr,
+         param && param->heapsize ? param->heapsize : builtin->heapsize);
   if (ret != 0)
     {
       goto errout_with_actions;

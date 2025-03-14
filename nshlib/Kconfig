@@ -721,6 +721,10 @@ config NSH_DISABLE_WAIT
 	depends on SCHED_WAITPID
 	depends on FS_PROCFS && !FS_PROCFS_EXCLUDE_PROCESS
 
+config NSH_DISABLE_PRLIMIT
+	bool "Disable prlimit"
+	default DEFAULT_SMALL
+
 config NSH_DISABLE_WATCH
 	bool "Disable watch"
 	default DEFAULT_SMALL

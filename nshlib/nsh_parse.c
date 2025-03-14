@@ -237,12 +237,20 @@ static int nsh_nice(FAR struct nsh_vtbl_s *vtbl, FAR char **ppcmd,
                FAR NSH_ALIASLIST_TYPE *alist);
 #endif
 
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+static int nsh_prlimit(FAR struct nsh_vtbl_s *vtbl, FAR char **ppcmd,
+                       FAR char **saveptr, FAR NSH_MEMLIST_TYPE *memlist,
+                       FAR NSH_ALIASLIST_TYPE *alist,
+                       FAR struct nsh_param_s *param);
+#endif
+
 #ifdef CONFIG_NSH_CMDPARMS
 static int nsh_parse_cmdparm(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline,
                FAR const struct nsh_param_s *param);
 #endif
 
-static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline);
+static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline,
+                             FAR struct nsh_param_s *param);
 
 /****************************************************************************
  * Private Data
@@ -2296,6 +2304,92 @@ static int nsh_nice(FAR struct nsh_vtbl_s *vtbl, FAR char **ppcmd,
 #endif
 
 /****************************************************************************
+ * Name: nsh_prlimit
+ *
+ * Returned Value:
+ *   Zero (OK) on success; a negated errno value on failure.
+ *
+ ****************************************************************************/
+
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+static int nsh_prlimit(FAR struct nsh_vtbl_s *vtbl, FAR char **ppcmd,
+                       FAR char **saveptr, FAR NSH_MEMLIST_TYPE *memlist,
+                       FAR NSH_ALIASLIST_TYPE *alist,
+                       FAR struct nsh_param_s *param)
+{
+  FAR char *cmd = *ppcmd;
+  FAR char *arg;
+  FAR char *endptr;
+
+  if (cmd && strcmp(cmd, "prlimit") == 0)
+    {
+      while ((arg = nsh_argument(vtbl, saveptr, memlist, alist, NULL))
+             != NULL)
+        {
+          if (strcmp(arg, "-p") == 0)
+            {
+              arg = nsh_argument(vtbl, saveptr, memlist, alist, NULL);
+              if (!arg)
+                {
+                  nsh_error(vtbl, g_fmtarginvalid, "prlimit");
+                  return ERROR;
+                }
+
+              param->priority = (int)strtol(arg, &endptr, 0);
+              if (endptr == arg || *endptr != '\0')
+                {
+                  nsh_error(vtbl, g_fmtarginvalid, "prlimit");
+                  return ERROR;
+                }
+            }
+          else if (strcmp(arg, "-s") == 0)
+            {
+              arg = nsh_argument(vtbl, saveptr, memlist, alist, NULL);
+              if (!arg)
+                {
+                  nsh_error(vtbl, g_fmtarginvalid, "prlimit");
+                  return ERROR;
+                }
+
+              param->stacksize = (size_t)strtoul(arg, &endptr, 0);
+              if (endptr == arg || *endptr != '\0')
+                {
+                  nsh_error(vtbl, g_fmtarginvalid, "prlimit");
+                  return ERROR;
+                }
+            }
+          else if (strcmp(arg, "-h") == 0)
+            {
+              arg = nsh_argument(vtbl, saveptr, memlist, alist, NULL);
+              if (!arg)
+                {
+                  nsh_error(vtbl, g_fmtarginvalid, "prlimit");
+                  return ERROR;
+                }
+
+              param->heapsize = (size_t)strtoul(arg, &endptr, 0);
+              if (endptr == arg || *endptr != '\0')
+                {
+                  nsh_error(vtbl, g_fmtarginvalid, "prlimit");
+                  return ERROR;
+                }
+            }
+          else
+            {
+              break;
+            }
+        }
+
+      /* Set the real command name */
+
+      *ppcmd = arg;
+    }
+
+  return OK;
+}
+#endif
+
+/****************************************************************************
  * Name: nsh_parse_cmdparm
  *
  * Description:
@@ -2430,9 +2524,10 @@ exit:
  *
  ****************************************************************************/
 
-static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
+static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline,
+                             FAR struct nsh_param_s *param)
 {
-  struct nsh_param_s param =
+  struct nsh_param_s tmp =
     {
       .fd_in      = -1,
       .fd_out     = -1,
@@ -2474,6 +2569,10 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
   memset(argv, 0, MAX_ARGV_ENTRIES*sizeof(FAR char *));
   NSH_MEMLIST_INIT(memlist);
   NSH_ALIASLIST_INIT(alist);
+  if (param == NULL)
+    {
+      param = &tmp;
+    }
 
 #ifndef CONFIG_NSH_DISABLEBG
   vtbl->np.np_bg       = false;
@@ -2514,6 +2613,16 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
 
 #ifndef CONFIG_NSH_DISABLEBG
   if (nsh_nice(vtbl, &cmd, &saveptr, &memlist, &alist) != 0)
+    {
+      ret = nsh_saveresult(vtbl, true);
+      goto dynlist_free;
+    }
+#endif
+
+  /* Handle prlimit */
+
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+  if (nsh_prlimit(vtbl, &cmd, &saveptr, &memlist, &alist, param) != 0)
     {
       ret = nsh_saveresult(vtbl, true);
       goto dynlist_free;
@@ -2630,8 +2739,8 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
 
           redirect_out_save     = vtbl->np.np_redir_out;
           vtbl->np.np_redir_out = true;
-          param.oflags_out      = O_WRONLY | O_CREAT | O_APPEND;
-          param.file_out        = nsh_getfullpath(vtbl, arg);
+          param->oflags_out     = O_WRONLY | O_CREAT | O_APPEND;
+          param->file_out       = nsh_getfullpath(vtbl, arg);
         }
       else if (!strncmp(argv[argc], g_redirect_out1, g_redirect_out1_len))
         {
@@ -2654,8 +2763,8 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
 
           redirect_out_save     = vtbl->np.np_redir_out;
           vtbl->np.np_redir_out = true;
-          param.oflags_out      = O_WRONLY | O_CREAT | O_TRUNC;
-          param.file_out        = nsh_getfullpath(vtbl, arg);
+          param->oflags_out     = O_WRONLY | O_CREAT | O_TRUNC;
+          param->file_out       = nsh_getfullpath(vtbl, arg);
         }
       else if (!strncmp(argv[argc], g_redirect_in1, g_redirect_in1_len))
         {
@@ -2678,8 +2787,8 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
 
           redirect_in_save      = vtbl->np.np_redir_in;
           vtbl->np.np_redir_in  = true;
-          param.oflags_in       = O_RDONLY;
-          param.file_in         = nsh_getfullpath(vtbl, arg);
+          param->oflags_in      = O_RDONLY;
+          param->file_in        = nsh_getfullpath(vtbl, arg);
         }
 #ifdef CONFIG_NSH_PIPELINE
       else if (!strncmp(argv[argc], g_pipeline1, g_pipeline1_len))
@@ -2740,33 +2849,33 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
 
           redirect_out_save = vtbl->np.np_redir_out;
           vtbl->np.np_redir_out = true;
-          param.fd_out = pipefd[1];
+          param->fd_out = pipefd[1];
 
           bg_save = vtbl->np.np_bg;
           vtbl->np.np_bg = true;
 
-          ret = nsh_execute(vtbl, 4, sh_argv, &param);
+          ret = nsh_execute(vtbl, 4, sh_argv, param);
           lib_put_tempbuffer(sh_arg2);
 
           vtbl->np.np_bg = bg_save;
 
-          if (param.fd_in != -1)
+          if (param->fd_in != -1)
             {
-              close(param.fd_in);
-              param.fd_in = -1;
+              close(param->fd_in);
+              param->fd_in = -1;
               vtbl->np.np_redir_in = redirect_in_save;
             }
 
-          if (param.fd_out != -1)
+          if (param->fd_out != -1)
             {
-              close(param.fd_out);
-              param.fd_out = -1;
+              close(param->fd_out);
+              param->fd_out = -1;
               vtbl->np.np_redir_out = redirect_out_save;
             }
 
           redirect_in_save = vtbl->np.np_redir_in;
           vtbl->np.np_redir_in = true;
-          param.fd_in = pipefd[0];
+          param->fd_in = pipefd[0];
 
           argv[0] = arg;
           argc = 1;
@@ -2806,7 +2915,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
 
   /* Then execute the command */
 
-  ret = nsh_execute(vtbl, argc, argv, &param);
+  ret = nsh_execute(vtbl, argc, argv, param);
 
 dynlist_free:
 
@@ -2814,30 +2923,30 @@ dynlist_free:
 
   /* Free the redirected output file path */
 
-  if (param.file_out)
+  if (param->file_out)
     {
-      nsh_freefullpath((char *)param.file_out);
+      nsh_freefullpath((char *)param->file_out);
       vtbl->np.np_redir_out = redirect_out_save;
     }
 #ifdef CONFIG_NSH_PIPELINE
-  else if (param.fd_out != -1)
+  else if (param->fd_out != -1)
     {
-      close(param.fd_out);
+      close(param->fd_out);
       vtbl->np.np_redir_out = redirect_out_save;
     }
 #endif
 
   /* Free the redirected input file path */
 
-  if (param.file_in)
+  if (param->file_in)
     {
-      nsh_freefullpath((char *)param.file_in);
+      nsh_freefullpath((char *)param->file_in);
       vtbl->np.np_redir_in = redirect_in_save;
     }
 #ifdef CONFIG_NSH_PIPELINE
-  else if (param.fd_in != -1)
+  else if (param->fd_in != -1)
     {
-      close(param.fd_in);
+      close(param->fd_in);
       vtbl->np.np_redir_in = redirect_in_save;
     }
 #endif
@@ -2867,7 +2976,7 @@ dynlist_free:
 int nsh_parse(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
 {
 #ifdef NSH_DISABLE_SEMICOLON
-  return nsh_parse_command(vtbl, cmdline);
+  return nsh_parse_command(vtbl, cmdline, NULL);
 
 #else
 #if !defined(CONFIG_NSH_DISABLESCRIPT) && !defined(CONFIG_NSH_DISABLE_LOOPS)
@@ -2916,7 +3025,7 @@ int nsh_parse(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
         {
           /* Parse the last command on the line */
 
-          return nsh_parse_command(vtbl, start);
+          return nsh_parse_command(vtbl, start, NULL);
         }
 
       /* Check for a command terminated with ';'.  There is probably another
@@ -2931,7 +3040,7 @@ int nsh_parse(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline)
 
           /* Parse this command */
 
-          ret = nsh_parse_command(vtbl, start);
+          ret = nsh_parse_command(vtbl, start, NULL);
           if (ret != OK)
             {
               /* nsh_parse_command may return (1) -1 (ERROR) meaning that the
