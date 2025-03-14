@@ -41,6 +41,12 @@
 #define MDELAY 1000
 
 /****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static spinlock_t g_test_lock = SP_UNLOCKED;
+
+/****************************************************************************
  * Private Functions
  ****************************************************************************/
 
@@ -57,11 +63,11 @@ FAR static void *busy_loop(FAR void *arg)
   printf("tcb->busywait_max = %"PRIu64"; tcb->busywait_total = %"PRIu64"\n",
          tcb->busywait_max, tcb->busywait_total);
 
-  /* Accessing g_sum in a critical section */
+  /* Use up_mdelay to simulate synchronous operation between multiple cores */
 
-  flags = enter_critical_section();
+  flags = spin_lock_irqsave(&g_test_lock);
   up_mdelay(wait_time);
-  leave_critical_section(flags);
+  spin_unlock_irqrestore(&g_test_lock, flags);
 
   /* record the max busywait time */
 
