@@ -71,11 +71,11 @@
 #endif
 
 #if HAS_IRQ_CONTROL
-#  define ENABLE_IRQ(flags) leave_critical_section(flags)
-#  define DISABLE_IRQ(flags) flags=enter_critical_section()
+#  define ENABLE_IRQ(flags) up_irq_restore(flags);
+#  define DISABLE_IRQ(flags) flags=up_irq_save();
 #else
-#  define ENABLE_IRQ(flags) (void)(flags)
-#  define DISABLE_IRQ(flags) (void)(flags)
+#  define ENABLE_IRQ(flags) (void)flags;
+#  define DISABLE_IRQ(flags) (void)flags;
 #endif
 
 /****************************************************************************
