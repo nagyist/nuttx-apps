@@ -72,7 +72,6 @@ static int nsh_script_redirect(FAR struct nsh_vtbl_s *vtbl,
       if (fd > 0)
         {
           nsh_undirect(vtbl, save);
-          close(fd);
         }
     }
 
