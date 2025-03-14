@@ -45,7 +45,7 @@ if(CONFIG_UORB)
       uorb)
   endif()
 
-  if(CONFIG_UORB_TEST)
+  if(CONFIG_UORB_TESTS)
     nuttx_add_application(
       NAME
       uorb_unit_test
