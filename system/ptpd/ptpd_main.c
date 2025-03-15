@@ -33,11 +33,11 @@
  * Private Functions
  ****************************************************************************/
 
-static int do_ptpd_start(FAR const char *interface)
+static int do_ptpd_start(FAR const struct ptpd_config_s *config)
 {
   int ret;
 
-  ret = ptpd_start(interface);
+  ret = ptpd_start(config);
 
   /* Should never happen */
 
@@ -138,6 +138,24 @@ int do_ptpd_stop(int pid)
     }
 }
 
+static void usage(FAR const char *progname)
+{
+  fprintf(stderr, "Usage: %s [options]\n\n"
+                  " Network Transport:\n\n"
+                  " -2       IEEE 802.3\n"
+                  " -4       UDP IPV4 (default)\n"
+                  " -6       UDP IPV6\n\n"
+                  " Time Stamping:\n\n"
+                  " -H       HARDWARE (default) depends on NET_TIMESTAMP\n"
+                  " -S       SOFTWARE\n"
+                  " -r       synchronize system (realtime) clock"
+                  " -i [dev] interface device to use, for example 'eth0'\n"
+                  " -p [dev] clock device to use\n"
+                  " -t [pid] look the status of ptp daemon\n"
+                  " -s [pid] stop ptp daemon\n",
+                  progname);
+}
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -148,24 +166,57 @@ int do_ptpd_stop(int pid)
 
 int main(int argc, FAR char *argv[])
 {
-  if (argc == 3 && strcmp(argv[1], "start") == 0)
+  struct ptpd_config_s config;
+
+  /* Default config for ptp daemon */
+
+  config.interface = "eth0";
+  config.clock = "realtime";
+#if CONFIG_NET_TIMESTAMP
+  config.hardware_ts = true;
+#else
+  config.hardware_ts = false;
+#endif
+  config.af = AF_INET;
+
+  while ((option = getopt(argc, argv, "p:i:t:s:r246HS")) != ERROR)
     {
-      return do_ptpd_start(argv[2]);
+      switch (option)
+        {
+          case 't':
+            return do_ptpd_status(atoi(optarg));
+          case 's':
+            return do_ptpd_stop(atoi(optarg));
+          case '2':
+            config.af = AF_PACKET;
+            break;
+          case '4':
+            config.af = AF_INET;
+            break;
+          case '6':
+            config.af = AF_INET6;
+            break;
+#if CONFIG_NET_TIMESTAMP
+          case 'H':
+            config.hardware_ts = true;
+            break;
+#endif
+          case 'S':
+            config.hardware_ts = false;
+            break;
+          case 'i':
+            config.interface = optarg;
+            break;
+          case 'p':
+            config.clock = optarg;
+            break;
+          case 'r':
+            config.clock = "realtime";
+            break;
+          default:
+            usage(argv[0]);
+        }
     }
-  else if (argc == 3 && strcmp(argv[1], "status") == 0)
-    {
-      return do_ptpd_status(atoi(argv[2]));
-    }
-  else if (argc == 3 && strcmp(argv[1], "stop") == 0)
-    {
-      return do_ptpd_stop(atoi(argv[2]));
-    }
-  else
-    {
-      fprintf(stderr, "Usage: \n"
-                      "ptpd start <interface>\n"
-                      "ptpd status <pid>\n"
-                      "ptpd stop <pid>\n");
-      return EXIT_FAILURE;
-    }
+
+  return do_ptpd_start(&config);
 }
