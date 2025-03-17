@@ -24,18 +24,8 @@ if(NOT N EQUAL 0)
   set(MAKE_PARALLELISM -j${N} GLOBAL)
 endif()
 
-add_custom_target(
-  mkdeps
-  COMMAND cmake -B ${CMAKE_BINARY_DIR}/bin -S ${NUTTX_DIR}/tools && cmake
-          --build ${CMAKE_BINARY_DIR}/bin --target mkdeps
-  SOURCES ${NUTTX_DIR}/tools/mkdeps.c)
-
-add_custom_target(
-  incdir
-  COMMAND cmake -B ${CMAKE_BINARY_DIR}/bin -S ${NUTTX_DIR}/tools && cmake
-          --build ${CMAKE_BINARY_DIR}/bin --target incdir
-  SOURCES ${NUTTX_DIR}/tools/incdir.c
-  DEPENDS mkdeps)
+nuttx_build_host_target(mkdeps ${NUTTX_DIR}/tools/mkdeps.c)
+nuttx_build_host_target(incdir ${NUTTX_DIR}/tools/incdir.c)
 
 function(generate_common_defs)
   get_property(
@@ -66,8 +56,8 @@ function(generate_common_defs)
 
       TOPDIR := @NUTTX_DIR@
       APPDIR := @NUTTX_APPS_DIR@
-      INCDIR := @CMAKE_BINARY_DIR@/bin/incdir
-      MKDEP  := @CMAKE_BINARY_DIR@/bin/mkdeps
+      INCDIR := @CMAKE_BINARY_DIR@/bin_host/incdir
+      MKDEP  := @CMAKE_BINARY_DIR@/bin_host/mkdeps
       EXTRAFLAGS := -I @CMAKE_BINARY_DIR@/include
       EXTRAFLAGS += @EXTRA_INCLUDE_FLAG@
       EXTRAFLAGS += @EXTRA_FLAGS@
