@@ -91,6 +91,16 @@ MAINSRC  += drivertest_i2c_read.c
 PROGNAME += cmocka_driver_i2c_read
 endif
 
+ifneq ($(CONFIG_I2C_DRIVER),)
+MAINSRC  += drivertest_i2cdev_master.c
+PROGNAME += cmocka_driver_i2cdev_master
+endif
+
+ifneq ($(CONFIG_I2C_SLAVE_DRIVER),)
+MAINSRC  += drivertest_i2cdev_slave.c
+PROGNAME += cmocka_driver_i2cdev_slave
+endif
+
 ifneq ($(CONFIG_DEV_GPIO),)
 PROGNAME += cmocka_driver_gpio
 MAINSRC  += drivertest_gpio.c
