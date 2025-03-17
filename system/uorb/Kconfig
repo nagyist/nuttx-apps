@@ -35,6 +35,7 @@ config UORB_ADVERTISE_DEMO
 	default n
 
 config UORB_RPMSG_TEST
+	depends on RPMSG
 	bool "enable uorb rpmsg test"
 	default n
 
