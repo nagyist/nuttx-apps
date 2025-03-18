@@ -128,55 +128,68 @@ function(nuttx_add_rust)
     ARGN
     ${ARGN})
 
+  set(CARGO_BUILD_FLAGS "-Zbuild-std=std,panic_abort")
+
   # Determine build profile based on CONFIG_DEBUG_FULLOPT
   if(CONFIG_DEBUG_FULLOPT)
-    set(RUST_PROFILE "release")
-    set(RUST_DEBUG_FLAGS "-Zbuild-std-features=panic_immediate_abort")
+    set(CARGO_PROFILE "release")
+    # Append --release flag to cargo build flags
+    list(APPEND CARGO_BUILD_FLAGS "--release")
+    list(APPEND CARGO_BUILD_FLAGS "-Zbuild-std-features=panic_immediate_abort")
   else()
-    set(RUST_PROFILE "debug")
-    set(RUST_DEBUG_FLAGS "")
+    set(CARGO_PROFILE "debug")
   endif()
 
   # Get the Rust target triple
   nuttx_rust_target_triple(${LLVM_ARCHTYPE} ${LLVM_ABITYPE} ${LLVM_CPUTYPE}
-                           RUST_TARGET)
+                           CARGO_TARGET)
 
   # Get binary directory path using target triple base name if it's a JSON file
-  if(RUST_TARGET MATCHES ".json$")
-    get_filename_component(TARGET_BASE ${RUST_TARGET} NAME_WE)
+  if(CARGO_TARGET MATCHES ".json$")
+    get_filename_component(TARGET_BASE ${CARGO_TARGET} NAME_WE)
   else()
-    set(TARGET_BASE ${RUST_TARGET})
+    set(TARGET_BASE ${CARGO_TARGET})
   endif()
 
-  set(RUST_BUILD_DIR
-      ${CMAKE_CURRENT_BINARY_DIR}/${CRATE_NAME}/target/${TARGET_BASE})
-  set(RUST_LIB_PATH ${RUST_BUILD_DIR}/${RUST_PROFILE}/lib${CRATE_NAME}.a)
+  # Append target triple to cargo build flags
+  list(APPEND CARGO_BUILD_FLAGS "--target=${CARGO_TARGET}")
+
+  # Append --manifest-path flag to cargo build flags
+  list(APPEND CARGO_BUILD_FLAGS "--manifest-path=${CRATE_PATH}/Cargo.toml")
+
+  # Set the cargo target directory
+  set(CARGO_TARGET_DIR "${CMAKE_CURRENT_BINARY_DIR}/${CRATE_NAME}")
+
+  # Append target directory to cargo build flags
+  list(APPEND CARGO_BUILD_FLAGS "--target-dir=${CARGO_TARGET_DIR}")
+
+  # Set paths for build artifacts
+  set(CARGO_BUILD_DIR "${CARGO_TARGET_DIR}/${TARGET_BASE}")
+  set(CARGO_LIB_PATH "${CARGO_BUILD_DIR}/${CARGO_PROFILE}/lib${CRATE_NAME}.a")
 
   # Create build directory
-  file(MAKE_DIRECTORY ${RUST_BUILD_DIR})
+  file(MAKE_DIRECTORY ${CARGO_BUILD_DIR})
 
   # Add a custom command to build the Rust crate
   add_custom_command(
-    OUTPUT ${RUST_LIB_PATH}
-    COMMAND
-      cargo build --${RUST_PROFILE} ${RUST_BUILD_FLAGS} --manifest-path
-      ${CRATE_PATH}/Cargo.toml --target ${RUST_TARGET} --target-dir
-      ${CMAKE_CURRENT_BINARY_DIR}/${CRATE_NAME}
+    OUTPUT ${CARGO_LIB_PATH}
+    COMMAND cargo build ${CARGO_BUILD_FLAGS}
     COMMENT "Building Rust crate ${CRATE_NAME}"
     VERBATIM)
 
   # Add a custom target that depends on the built library
-  add_custom_target(${CRATE_NAME}_build ALL DEPENDS ${RUST_LIB_PATH})
+  add_custom_target(${CRATE_NAME}_build ALL DEPENDS ${CARGO_LIB_PATH})
 
   # Add imported library target
   add_library(${CRATE_NAME} STATIC IMPORTED GLOBAL)
   set_target_properties(${CRATE_NAME} PROPERTIES IMPORTED_LOCATION
-                                                 ${RUST_LIB_PATH})
+                                                 ${CARGO_LIB_PATH})
 
   # Add the Rust library to NuttX build
-  nuttx_add_extra_library(${RUST_LIB_PATH})
+  nuttx_add_extra_library(${CARGO_LIB_PATH})
 
   # Ensure the Rust library is built before linking
   add_dependencies(${CRATE_NAME} ${CRATE_NAME}_build)
+  add_dependencies(apps ${CRATE_NAME})
 
 endfunction()
