@@ -24,6 +24,7 @@ include(nuttx_parse_function_args)
 # Convert architecture type to Rust NuttX target
 #
 # Supported architectures:
+#   - aarch64: aarch64-unknown-nuttx
 #   - armv7a: armv7a-nuttx-eabi, armv7a-nuttx-eabihf
 #   - thumbv6m: thumbv6m-nuttx-eabi
 #   - thumbv7a: thumbv7a-nuttx-eabi, thumbv7a-nuttx-eabihf
@@ -51,6 +52,8 @@ function(nuttx_rust_target_triple ARCHTYPE ABITYPE CPUTYPE OUTPUT)
     set(TARGET_TRIPLE "${APPDIR}/tools/x86_64-unknown-nuttx.json")
   elseif(ARCHTYPE STREQUAL "x86")
     set(TARGET_TRIPLE "${APPDIR}/tools/i486-unknown-nuttx.json")
+  elseif(ARCHTYPE STREQUAL "aarch64")
+    set(TARGET_TRIPLE "aarch64-unknown-nuttx")
   elseif(ARCHTYPE MATCHES "thumb")
     if(ARCHTYPE MATCHES "thumbv8m")
       # Extract just the base architecture type (thumbv8m.main or thumbv8m.base)
