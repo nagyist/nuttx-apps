@@ -150,6 +150,8 @@ endif
 ifeq ($(CONFIG_PM),y)
 MAINSRC  += drivertest_pm.c
 PROGNAME += cmocka_driver_pm
+MAINSRC  += drivertest_pm_callback.c
+PROGNAME += cmocka_driver_pm_callback
 ifeq ($(CONFIG_PM_GOVERNOR_STABILITY),y)
 MAINSRC  += drivertest_pm_gov_stability.c
 PROGNAME += cmocka_driver_pm_gov_stability
