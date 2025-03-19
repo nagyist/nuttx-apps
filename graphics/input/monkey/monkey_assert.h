@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/monkey/monkey_assert.h
+ * apps/graphics/input/monkey/monkey_assert.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_SYSTEM_MONKEY_MONKEY_ASSERT_H
-#define __APPS_SYSTEM_MONKEY_MONKEY_ASSERT_H
+#ifndef __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_ASSERT_H
+#define __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_ASSERT_H
 
 /****************************************************************************
  * Included Files
@@ -34,4 +34,4 @@
 #define MONKEY_ASSERT(expr)     DEBUGASSERT(expr)
 #define MONKEY_ASSERT_NULL(ptr) MONKEY_ASSERT(ptr != NULL)
 
-#endif /* __APPS_SYSTEM_MONKEY_MONKEY_ASSERT_H */
+#endif /* __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_ASSERT_H */

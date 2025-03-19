@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/monkey/monkey_utils.h
+ * apps/graphics/input/monkey/monkey_utils.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_SYSTEM_MONKEY_MONKEY_UTILS_H
-#define __APPS_SYSTEM_MONKEY_MONKEY_UTILS_H
+#ifndef __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_UTILS_H
+#define __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_UTILS_H
 
 /****************************************************************************
  * Included Files
@@ -103,4 +103,4 @@ FAR const char *monkey_event_type2name(enum monkey_event_e event);
 }
 #endif
 
-#endif /* __APPS_SYSTEM_MONKEY_MONKEY_UTILS_H */
+#endif /* __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_UTILS_H */

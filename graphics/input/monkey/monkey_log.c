@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/monkey/monkey_event.h
+ * apps/graphics/input/monkey/monkey_log.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,60 +18,78 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_SYSTEM_MONKEY_EVENT_H
-#define __APPS_SYSTEM_MONKEY_EVENT_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <stdint.h>
-#include "monkey_type.h"
+#include <stdarg.h>
+#include <syslog.h>
+#include <nuttx/streams.h>
+#include "monkey_log.h"
 
 /****************************************************************************
- * Public Types
+ * Pre-processor Definitions
  ****************************************************************************/
 
-struct monkey_event_param_s
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
+
+static enum monkey_log_level_type_e g_log_level = MONKEY_LOG_LEVEL_NOTICE;
+
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: monkey_log_printf
+ ****************************************************************************/
+
+void monkey_log_printf(enum monkey_log_level_type_e level,
+                       FAR const char *func,
+                       FAR const char *fmt,
+                       ...)
 {
-  enum monkey_event_e event;
-  int duration;
-  int x1;
-  int y1;
-  int x2;
-  int y2;
-};
+  struct va_format vaf;
+  va_list ap;
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+  static const int priority[MONKEY_LOG_LEVEL_LAST] =
+    {
+      LOG_INFO, LOG_NOTICE, LOG_WARNING, LOG_ERR
+    };
 
-#ifdef __cplusplus
-#define EXTERN extern "C"
-extern "C"
-{
-#else
-#define EXTERN extern
-#endif
+  if (level < g_log_level)
+    {
+      return;
+    }
 
-/****************************************************************************
- * Name: monkey_event_gen
- ****************************************************************************/
-
-void monkey_event_gen(FAR struct monkey_s *monkey,
-                      FAR struct monkey_event_param_s *param);
-
-/****************************************************************************
- * Name: monkey_event_exec
- ****************************************************************************/
-
-bool monkey_event_exec(FAR struct monkey_s *monkey,
-                       FAR struct monkey_dev_s *dev,
-                       FAR const struct monkey_event_param_s *param);
-
-#undef EXTERN
-#ifdef __cplusplus
+  va_start(ap, fmt);
+  vaf.fmt = fmt;
+  vaf.va  = &ap;
+  syslog(priority[level], "[monkey] %s: %pV\n", func, &vaf);
+  va_end(ap);
 }
-#endif
 
-#endif /* __APPS_SYSTEM_MONKEY_EVENT_H */
+/****************************************************************************
+ * Name: monkey_log_set_level
+ ****************************************************************************/
+
+void monkey_log_set_level(enum monkey_log_level_type_e level)
+{
+  if (level >= MONKEY_LOG_LEVEL_LAST)
+    {
+      MONKEY_LOG_WARN("error level: %d", level);
+      return;
+    }
+
+  g_log_level = level;
+}
+
+/****************************************************************************
+ * Name: monkey_log_get_level
+ ****************************************************************************/
+
+enum monkey_log_level_type_e monkey_log_get_level(void)
+{
+  return g_log_level;
+}

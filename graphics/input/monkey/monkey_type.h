@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/monkey/monkey_type.h
+ * apps/graphics/input/monkey/monkey_type.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,8 +18,8 @@
  *
  ****************************************************************************/
 
-#ifndef __APPS_SYSTEM_MONKEY_MONKEY_TYPE_H
-#define __APPS_SYSTEM_MONKEY_MONKEY_TYPE_H
+#ifndef __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_TYPE_H
+#define __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_TYPE_H
 
 /****************************************************************************
  * Included Files
@@ -129,4 +129,4 @@ struct monkey_s
   } playback_ctx;
 };
 
-#endif /* __APPS_SYSTEM_MONKEY_MONKEY_TYPE_H */
+#endif /* __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_TYPE_H */

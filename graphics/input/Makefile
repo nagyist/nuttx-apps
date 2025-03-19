@@ -26,4 +26,28 @@ ifneq ($(CONFIG_GRAPHICS_INPUT_GENERATOR),)
 CSRCS = $(wildcard generator/*.c)
 endif
 
+# Monkey test
+
+ifneq ($(CONFIG_GRAPHICS_INPUT_MONKEY),)
+PROGNAME  += monkey
+PRIORITY  += $(CONFIG_GRAPHICS_INPUT_MONKEY_PRIORITY)
+STACKSIZE += $(CONFIG_GRAPHICS_INPUT_MONKEY_STACKSIZE)
+MODULE    += $(CONFIG_GRAPHICS_INPUT_MONKEY)
+
+MAINSRC   += monkey/monkey_main.c
+
+CSRCS     += $(filter-out monkey/monkey_main.c, $(wildcard monkey/*.c))
+endif
+
+# Input tool
+
+ifneq ($(CONFIG_GRAPHICS_INPUT_TOOL),)
+PROGNAME  += input
+PRIORITY  += $(CONFIG_GRAPHICS_INPUT_TOOL_PRIORITY)
+STACKSIZE += $(CONFIG_GRAPHICS_INPUT_TOOL_STACKSIZE)
+MODULE    += $(CONFIG_GRAPHICS_INPUT_TOOL)
+
+MAINSRC   += generator/input.c
+endif
+
 include $(APPDIR)/Application.mk

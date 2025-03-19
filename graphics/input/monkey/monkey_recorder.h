@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/monkey/monkey_log.c
+ * apps/graphics/input/monkey/monkey_recorder.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,78 +18,93 @@
  *
  ****************************************************************************/
 
+#ifndef __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_RECORDER_H
+#define __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_RECORDER_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <stdarg.h>
-#include <syslog.h>
-#include <nuttx/streams.h>
-#include "monkey_log.h"
+#include "monkey_type.h"
 
 /****************************************************************************
- * Pre-processor Definitions
+ * Public Types
  ****************************************************************************/
 
-/****************************************************************************
- * Private Data
- ****************************************************************************/
-
-static enum monkey_log_level_type_e g_log_level = MONKEY_LOG_LEVEL_NOTICE;
-
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
-
-/****************************************************************************
- * Name: monkey_log_printf
- ****************************************************************************/
-
-void monkey_log_printf(enum monkey_log_level_type_e level,
-                       FAR const char *func,
-                       FAR const char *fmt,
-                       ...)
+enum monkey_recorder_mode_e
 {
-  struct va_format vaf;
-  va_list ap;
+  MONKEY_RECORDER_MODE_RECORD,
+  MONKEY_RECORDER_MODE_PLAYBACK
+};
 
-  static const int priority[MONKEY_LOG_LEVEL_LAST] =
-    {
-      LOG_INFO, LOG_NOTICE, LOG_WARNING, LOG_ERR
-    };
+struct monkey_recorder_s
+{
+  int fd;
+  enum monkey_recorder_mode_e mode;
+};
 
-  if (level < g_log_level)
-    {
-      return;
-    }
-
-  va_start(ap, fmt);
-  vaf.fmt = fmt;
-  vaf.va  = &ap;
-  syslog(priority[level], "[monkey] %s: %pV\n", func, &vaf);
-  va_end(ap);
-}
+enum monkey_recorder_res_e
+{
+  MONKEY_RECORDER_RES_OK,
+  MONKEY_RECORDER_RES_END_OF_FILE,
+  MONKEY_RECORDER_RES_DEV_TYPE_ERROR,
+  MONKEY_RECORDER_RES_WRITE_ERROR,
+  MONKEY_RECORDER_RES_READ_ERROR,
+  MONKEY_RECORDER_RES_PARSER_ERROR
+};
 
 /****************************************************************************
- * Name: monkey_log_set_level
+ * Public Function Prototypes
  ****************************************************************************/
 
-void monkey_log_set_level(enum monkey_log_level_type_e level)
+#ifdef __cplusplus
+#define EXTERN extern "C"
+extern "C"
 {
-  if (level >= MONKEY_LOG_LEVEL_LAST)
-    {
-      MONKEY_LOG_WARN("error level: %d", level);
-      return;
-    }
-
-  g_log_level = level;
-}
+#else
+#define EXTERN extern
+#endif
 
 /****************************************************************************
- * Name: monkey_log_get_level
+ * Name: monkey_recorder_create
  ****************************************************************************/
 
-enum monkey_log_level_type_e monkey_log_get_level(void)
-{
-  return g_log_level;
+FAR struct monkey_recorder_s *monkey_recorder_create(FAR const char *path,
+                                          enum monkey_recorder_mode_e mode);
+
+/****************************************************************************
+ * Name: monkey_recorder_delete
+ ****************************************************************************/
+
+void monkey_recorder_delete(FAR struct monkey_recorder_s *recorder);
+
+/****************************************************************************
+ * Name: monkey_recorder_write
+ ****************************************************************************/
+
+enum monkey_recorder_res_e monkey_recorder_write(
+                                FAR struct monkey_recorder_s *recorder,
+                                FAR const struct monkey_dev_state_s *state);
+
+/****************************************************************************
+ * Name: monkey_recorder_read
+ ****************************************************************************/
+
+enum monkey_recorder_res_e monkey_recorder_read(
+                                    FAR struct monkey_recorder_s *recorder,
+                                    FAR struct monkey_dev_state_s *state,
+                                    FAR uint32_t *time_stamp);
+
+/****************************************************************************
+ * Name: monkey_recorder_reset
+ ****************************************************************************/
+
+enum monkey_recorder_res_e monkey_recorder_reset(
+                                    FAR struct monkey_recorder_s *recorder);
+
+#undef EXTERN
+#ifdef __cplusplus
 }
+#endif
+
+#endif /* __APPS_GRAPHICS_INPUT_MONKEY_MONKEY_RECORDER_H */

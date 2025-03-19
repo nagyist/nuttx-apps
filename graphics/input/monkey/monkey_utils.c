@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/system/monkey/monkey_utils.c
+ * apps/graphics/input/monkey/monkey_utils.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
