@@ -154,44 +154,6 @@ bool monkey_dir_check(FAR const char *dir_path)
 }
 
 /****************************************************************************
- * Name: monkey_map
- ****************************************************************************/
-
-int monkey_map(int x, int min_in, int max_in, int min_out, int max_out)
-{
-  if (max_in >= min_in && x >= max_in)
-    {
-      return max_out;
-    }
-
-  if (max_in >= min_in && x <= min_in)
-    {
-      return min_out;
-    }
-
-  if (max_in <= min_in && x <= max_in)
-    {
-      return max_out;
-    }
-
-  if (max_in <= min_in && x >= min_in)
-    {
-      return min_out;
-    }
-
-  /* The equation should be:
-   *   ((x - min_in) * delta_out) / delta in) + min_out
-   * To avoid rounding error reorder the operations:
-   *   (x - min_in) * (delta_out / delta_min) + min_out
-   */
-
-  int delta_in = max_in - min_in;
-  int delta_out = max_out - min_out;
-
-  return ((x - min_in) * delta_out) / delta_in + min_out;
-}
-
-/****************************************************************************
  * Name: monkey_dev_type2name
  ****************************************************************************/
 

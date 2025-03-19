@@ -39,10 +39,10 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: monkey_update_uinput_ramdom
+ * Name: monkey_update_uinput_random
  ****************************************************************************/
 
-static bool monkey_update_uinput_ramdom(FAR struct monkey_s *monkey)
+static bool monkey_update_uinput_random(FAR struct monkey_s *monkey)
 {
   int i;
   bool retval = false;
@@ -64,28 +64,14 @@ static bool monkey_update_uinput_ramdom(FAR struct monkey_s *monkey)
 }
 
 /****************************************************************************
- * Name: monkey_search_dev
- ****************************************************************************/
-
-static FAR struct monkey_dev_s *monkey_search_dev(
-                                              FAR struct monkey_s *monkey,
-                                              enum monkey_dev_type_e type)
-{
-  int i;
-  for (i = 0; i < monkey->dev_num; i++)
-    {
-      FAR struct monkey_dev_s *dev = monkey->devs[i];
-      if (type == dev->type)
-        {
-          return dev;
-        }
-    }
-
-  return NULL;
-}
-
-/****************************************************************************
  * Name: monkey_recorder_get_next
+ *
+ * Description:
+ *   Gets the next recorder state
+ *
+ * Returned Value:
+ *   0 on error, 1 on end of file, 2 on success.
+ *
  ****************************************************************************/
 
 static int monkey_recorder_get_next(FAR struct monkey_s *monkey,
@@ -147,7 +133,6 @@ static bool monkey_update_uinput_playback(FAR struct monkey_s *monkey)
   struct monkey_dev_state_s next_state;
 
   uint32_t tick_elaps;
-  FAR struct monkey_dev_s *dev;
 
   int num_of_get;
 
@@ -166,18 +151,7 @@ static bool monkey_update_uinput_playback(FAR struct monkey_s *monkey)
         memset(&monkey->playback_ctx, 0, sizeof(monkey->playback_ctx));
         monkey_recorder_reset(monkey->recorder);
       case 2:
-        dev = monkey_search_dev(monkey,
-                                MONKEY_UINPUT_TYPE_MASK | cur_state.type);
-
-        if (dev)
-          {
-            monkey_dev_set_state(dev, &cur_state);
-          }
-        else
-          {
-            MONKEY_LOG_WARN("unsupport device type: %d", cur_state.type);
-          }
-
+        monkey_dev_set_state(monkey->input_gen_ctx, &cur_state);
         tick_elaps = monkey_tick_elaps(next_time_stamp, cur_time_stamp);
         monkey_set_period(monkey, tick_elaps);
         break;
@@ -201,7 +175,7 @@ static bool monkey_update_uinput(FAR struct monkey_s *monkey)
 
   if (monkey->mode == MONKEY_MODE_RANDOM)
     {
-      retval = monkey_update_uinput_ramdom(monkey);
+      retval = monkey_update_uinput_random(monkey);
     }
   else if(monkey->mode == MONKEY_MODE_PLAYBACK)
     {
