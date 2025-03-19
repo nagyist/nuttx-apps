@@ -43,6 +43,7 @@ if(CONFIG_APPS_DIR)
     file(TOUCH ${NUTTX_APPS_BINDIR}/dummy.c)
   endif()
   target_sources(apps PRIVATE ${NUTTX_APPS_BINDIR}/dummy.c)
+  include(nuttx_apps_symtab)
 endif()
 
 file(MAKE_DIRECTORY ${NUTTX_APPS_BINDIR}/include)

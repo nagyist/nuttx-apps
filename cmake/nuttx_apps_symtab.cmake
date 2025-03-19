@@ -1,5 +1,5 @@
 # ##############################################################################
-# apps/examples/hello/CMakeLists.txt
+# cmake/nuttx_apps_symtab.cmake
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,18 +18,26 @@
 #
 # ##############################################################################
 
-if(CONFIG_EXAMPLES_HELLO)
-  nuttx_add_application(
-    MODULE
-    ${CONFIG_EXAMPLES_HELLO}
-    NAME
-    ${CONFIG_EXAMPLES_HELLO_PROGNAME}
-    SRCS
-    hello_main.c
-    STACKSIZE
-    ${CONFIG_EXAMPLES_HELLO_STACKSIZE}
-    HEAPSIZE
-    ${CONFIG_EXAMPLES_HELLO_HEAPSIZE}
-    PRIORITY
-    ${CONFIG_EXAMPLES_HELLO_PRIORITY})
+if(NOT TARGET nuttx_apps_mksymtab)
+  add_custom_target(nuttx_apps_mksymtab)
+endif()
+
+if(NOT CONFIG_BUILD_KERNEL)
+  set(SYMTAB_APPS_SOURCE ${CMAKE_BINARY_DIR}/symtab_apps.c)
+
+  add_custom_command(
+    OUTPUT ${SYMTAB_APPS_SOURCE}
+    COMMAND ${NUTTX_APPS_DIR}/tools/mksymtab.sh ${CMAKE_BINARY_DIR}/bin >
+            ${CMAKE_BINARY_DIR}/symtab_apps.c
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS nuttx_apps_mksymtab
+    VERBATIM
+    COMMENT "Mksymtab: generating symbol table for apps")
+
+  # nuttx_add_system_library(apps_symtab)
+  add_library(apps_symtab)
+  target_compile_options(apps_symtab PRIVATE ${NO_LTO} -fno-builtin)
+  target_sources(apps_symtab PRIVATE ${SYMTAB_APPS_SOURCE})
+  nuttx_add_library_internal(apps_symtab)
+  set_property(GLOBAL APPEND PROPERTY NUTTX_SYSTEM_LIBRARIES apps_symtab)
 endif()
