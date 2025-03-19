@@ -148,6 +148,8 @@ endif
 
 ifneq ($(CONFIG_NETUTILS_LIBWEBSOCKETS_TEST),)
 	LIBWEBSOCKETS_API_TEST_DIR   = $(LIBWEBSOCKETS_UNPACK)/minimal-examples/api-tests
+	LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR   = $(LIBWEBSOCKETS_UNPACK)/minimal-examples/http-client
+	LIBWEBSOCKETS_WS_CLIENT_TEST_DIR   = $(LIBWEBSOCKETS_UNPACK)/minimal-examples/ws-client
 
 	PRIORITY  = SCHED_PRIORITY_DEFAULT
 	STACKSIZE = $(CONFIG_NETUTILS_LIBWEBSOCKETS_TEST_STACKSIZE)
@@ -182,6 +184,36 @@ ifneq ($(CONFIG_NETUTILS_LIBWEBSOCKETS_TEST),)
 		$(LIBWEBSOCKETS_UNPACK)/lib/misc/lws-struct-lejp.c
 	MAINSRC  += $(LIBWEBSOCKETS_API_TEST_DIR)/api-test-lws_struct-json/main.c
 	PROGNAME += libwebsockets_test_lws_struct_json
+
+	MAINSRC  += $(LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR)/minimal-http-client/minimal-http-client.c
+	PROGNAME += libwebsockets_test_lws_http_client
+
+	MAINSRC  += $(LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR)/minimal-http-client-certinfo/minimal-http-client-certinfo.c
+	PROGNAME += libwebsockets_test_lws_http_client_certinfo
+
+	MAINSRC  += $(LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR)/minimal-http-client-h2-rxflow/minimal-http-client.c
+	PROGNAME += libwebsockets_test_lws_http_client_h2_rxflow
+
+	MAINSRC  += $(LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR)/minimal-http-client-hugeurl/minimal-http-client-hugeurl.c
+	PROGNAME += libwebsockets_test_lws_http_client_hugeurl
+
+	MAINSRC  += $(LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR)/minimal-http-client-multi/minimal-http-client-multi.c
+	PROGNAME += libwebsockets_test_lws_http_client_multi
+
+	MAINSRC  += $(LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR)/minimal-http-client-post/minimal-http-client-post.c
+	PROGNAME += libwebsockets_test_lws_http_client_post
+
+	MAINSRC  += $(LIBWEBSOCKETS_WS_CLIENT_TEST_DIR)/minimal-ws-client/minimal-ws-client.c
+	PROGNAME += libwebsockets_test_lws_ws_client
+
+	MAINSRC  += $(LIBWEBSOCKETS_WS_CLIENT_TEST_DIR)/minimal-ws-client-ping/minimal-ws-client-ping.c
+	PROGNAME += libwebsockets_test_lws_ws_client_ping
+
+	MAINSRC  += $(LIBWEBSOCKETS_WS_CLIENT_TEST_DIR)/minimal-ws-client-rx/minimal-ws-client.c
+	PROGNAME += libwebsockets_test_lws_ws_client_rx
+
+	MAINSRC  += $(LIBWEBSOCKETS_WS_CLIENT_TEST_DIR)/minimal-ws-client-spam/minimal-ws-client-spam.c
+	PROGNAME += libwebsockets_test_lws_ws_client_spam
 endif
 
 ifeq ($(wildcard $(LIBWEBSOCKETS_UNPACK)/.git),)

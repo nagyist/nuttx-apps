@@ -193,6 +193,10 @@ if(CONFIG_NETUTILS_LIBWEBSOCKETS)
   if(CONFIG_NETUTILS_LIBWEBSOCKETS_TEST)
     set(LIBWEBSOCKETS_API_TEST_DIR
         ${LIBWEBSOCKETS_DIR}/minimal-examples/api-tests)
+    set(LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR
+        ${LIBWEBSOCKETS_DIR}/minimal-examples/http-client)
+    set(LIBWEBSOCKETS_WS_CLIENT_TEST_DIR
+        ${LIBWEBSOCKETS_DIR}/minimal-examples/ws-client)
 
     macro(add_lws_test_app PROG)
       nuttx_add_application(
@@ -242,6 +246,51 @@ if(CONFIG_NETUTILS_LIBWEBSOCKETS)
         ${LIBWEBSOCKETS_DIR}/minimal-examples/api-tests/api-test-lws_struct-json/test2.c
         ${LIBWEBSOCKETS_DIR}/lib/misc/lws-struct-lejp.c)
     add_lws_test_app(libwebsockets_test_lws_struct_json ${JSON_TEST_SRCS})
+
+    add_lws_test_app(
+      libwebsockets_test_lws_http_client
+      ${LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR}/minimal-http-client/minimal-http-client.c
+    )
+
+    add_lws_test_app(
+      libwebsockets_test_lws_http_client_certinfo
+      ${LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR}/minimal-http-client-certinfo/minimal-http-client-certinfo.c
+    )
+
+    add_lws_test_app(
+      libwebsockets_test_lws_http_client_h2_rxflow
+      ${LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR}/minimal-http-client-h2-rxflow/minimal-http-client.c
+    )
+
+    add_lws_test_app(
+      libwebsockets_test_lws_http_client_hugeurl
+      ${LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR}/minimal-http-client-hugeurl/minimal-http-client-hugeurl.c
+    )
+
+    add_lws_test_app(
+      libwebsockets_test_lws_http_client_multi
+      ${LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR}/minimal-http-client-multi/minimal-http-client-multi.c
+    )
+
+    add_lws_test_app(
+      libwebsockets_test_lws_http_client_post
+      ${LIBWEBSOCKETS_HTTP_CLIENT_TEST_DIR}/minimal-http-client-post/minimal-http-client-post.c
+    )
+
+    add_lws_test_app(
+      libwebsockets_test_lws_ws_client
+      ${LIBWEBSOCKETS_WS_CLIENT_TEST_DIR}/minimal-ws-client/minimal-ws-client.c)
+
+    add_lws_test_app(
+      libwebsockets_test_lws_ws_client_rx
+      ${LIBWEBSOCKETS_WS_CLIENT_TEST_DIR}/minimal-ws-client-rx/minimal-ws-client.c
+    )
+
+    add_lws_test_app(
+      libwebsockets_test_lws_ws_client_spam
+      ${LIBWEBSOCKETS_WS_CLIENT_TEST_DIR}/minimal-ws-client-spam/minimal-ws-client-spam.c
+    )
+
   endif()
 
 endif()
