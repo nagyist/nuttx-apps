@@ -112,11 +112,12 @@ function(wasm_add_application)
   set(APP_WAMR_MODE INT)
   set(APP_WCFLAGS "")
   set(APP_WLDFLAGS "")
+  set(APP_WRCFLAGS "")
   set(APP_WINCLUDES "")
 
   cmake_parse_arguments(
     APP "" "NAME;STACK_SIZE;INITIAL_MEMORY_SIZE;WAMR_MODE;INSTALL_NAME"
-    "SRCS;WLDFLAGS;WCFLAGS;WINCLUDES" ${ARGN})
+    "SRCS;WLDFLAGS;WRCFLAGS;WCFLAGS;WINCLUDES" ${ARGN})
 
   # Check if the APP_NAME (NAME) is provided
   if(NOT APP_NAME)
@@ -323,6 +324,7 @@ function(wasm_add_application)
   if(CONFIG_INTERPRETERS_WAMR_GC)
     list(APPEND RCFLAGS --enable-gc)
   endif()
+  list(APPEND RCFLAGS ${APP_WRCFLAGS})
 
   if(CONFIG_INTERPRETERS_WAMR_AOT)
     if("${APP_WAMR_MODE}" STREQUAL "AOT")
