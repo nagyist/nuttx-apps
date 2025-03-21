@@ -53,7 +53,7 @@ void *advertise_with_interval(void *data)
   int i = 0;
   int fd;
 
-  fd = orb_advertise_multi_queue_persist(ORB_ID(orb_test_medium_multi),
+  fd = orb_advertise_multi_queue_persist(ORB_ID(orb_test_multi),
                                          NULL, &instance, queue_size);
   orb_set_interval(fd, g_main_interval);
   while (i++ < max_publish)
@@ -65,7 +65,7 @@ void *advertise_with_interval(void *data)
 
       test_note("---------------------------");
       test_note("publ:%llu val:%i", sample.timestamp, sample.val);
-      orb_publish(ORB_ID(orb_test_medium_multi), fd, &sample);
+      orb_publish(ORB_ID(orb_test_multi), fd, &sample);
     }
 
   orb_unadvertise(fd);
@@ -90,7 +90,7 @@ static int down_sample_test(unsigned long user1_interval,
     }
 
   fds[0].events = POLLIN;
-  fds[0].fd = orb_subscribe(ORB_ID(orb_test_medium_multi));
+  fds[0].fd = orb_subscribe(ORB_ID(orb_test_multi));
   if (fds[0].fd < 0)
     {
       return test_fail("subscribe(1) failed, %d\n", fds[0].fd);
@@ -101,7 +101,7 @@ static int down_sample_test(unsigned long user1_interval,
   if (user2_interval)
     {
       fds[1].events = POLLIN;
-      fds[1].fd = orb_subscribe(ORB_ID(orb_test_medium_multi));
+      fds[1].fd = orb_subscribe(ORB_ID(orb_test_multi));
       if (fds[1].fd < 0)
         {
           orb_unsubscribe(fds[0].fd);
@@ -128,7 +128,7 @@ static int down_sample_test(unsigned long user1_interval,
     {
       if (fds[0].revents & POLLIN)
         {
-          ret = orb_copy(ORB_ID(orb_test_medium_multi), fds[0].fd,
+          ret = orb_copy(ORB_ID(orb_test_multi), fds[0].fd,
                          &sample);
           if (ret < 0)
             {
@@ -143,7 +143,7 @@ static int down_sample_test(unsigned long user1_interval,
 
       if (fds[1].revents & POLLIN)
         {
-          ret = orb_copy(ORB_ID(orb_test_medium_multi), fds[1].fd, &sample);
+          ret = orb_copy(ORB_ID(orb_test_multi), fds[1].fd, &sample);
           if (ret < 0)
             {
               test_note("copy2:%llu fail\n", orb_absolute_time());

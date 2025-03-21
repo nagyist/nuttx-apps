@@ -669,7 +669,7 @@ static FAR void *pub_test_multi2_entry(FAR void *arg)
   for (i = 0; i < num_instances; ++i)
     {
       orb_pub[i] = orb_advertise_multi_queue_persist(
-        ORB_ID(orb_test_medium_multi), &data_topic, &i, 1);
+        ORB_ID(orb_test_multi), &data_topic, &i, 1);
     }
 
   usleep(100 * 1000);
@@ -681,7 +681,7 @@ static FAR void *pub_test_multi2_entry(FAR void *arg)
       data_topic.timestamp = orb_absolute_time();
       data_topic.val       = data_next_idx;
 
-      orb_publish(ORB_ID(orb_test_medium_multi), orb_pub[data_next_idx],
+      orb_publish(ORB_ID(orb_test_multi), orb_pub[data_next_idx],
                   &data_topic);
 
       data_next_idx = (data_next_idx + 1) % num_instances;
@@ -723,7 +723,7 @@ static int test_multi2(void)
 
   for (i = 0; i < num_instances; ++i)
     {
-      orb_data_fd[i] = orb_subscribe_multi(ORB_ID(orb_test_medium_multi), i);
+      orb_data_fd[i] = orb_subscribe_multi(ORB_ID(orb_test_multi), i);
     }
 
   /* launch the publisher thread */
@@ -758,7 +758,7 @@ static int test_multi2(void)
               0, 0
             };
 
-          if (OK != orb_copy(ORB_ID(orb_test_medium_multi),
+          if (OK != orb_copy(ORB_ID(orb_test_multi),
                              orb_data_cur_fd, &msg))
             {
               test_fail("copy failed: %d", errno);
@@ -808,7 +808,7 @@ int test_queue(void)
 
   test_note("Testing orb queuing");
 
-  sfd = orb_subscribe(ORB_ID(orb_test_medium_queue));
+  sfd = orb_subscribe(ORB_ID(orb_test_queue));
 
   if (sfd < 0)
     {
@@ -824,13 +824,13 @@ int test_queue(void)
       orb_check(sfd, &updated);
       if (updated)
         {
-          orb_copy(ORB_ID(orb_test_medium_queue), sfd, &sub_sample);
+          orb_copy(ORB_ID(orb_test_queue), sfd, &sub_sample);
         }
     }
   while (updated);
 
   ptopic = orb_advertise_multi_queue_persist(
-    ORB_ID(orb_test_medium_queue), &sample, &instance, queue_size);
+    ORB_ID(orb_test_queue), &sample, &instance, queue_size);
   if (ptopic < 0)
     {
       orb_unsubscribe(sfd);
@@ -844,7 +844,7 @@ int test_queue(void)
       goto out;
     }
 
-  if (OK != orb_copy(ORB_ID(orb_test_medium_queue), sfd, &sub_sample))
+  if (OK != orb_copy(ORB_ID(orb_test_queue), sfd, &sub_sample))
     {
       test_fail("copy(1) failed: %d", errno);
       goto out;
@@ -881,7 +881,7 @@ int test_queue(void)
     }
 
 #define CHECK_COPY(i_got, i_correct) \
-  orb_copy(ORB_ID(orb_test_medium_queue), sfd, &sub_sample); \
+  orb_copy(ORB_ID(orb_test_queue), sfd, &sub_sample); \
   if (i_got != i_correct) \
     { \
       test_fail("got wrong element from the queue (got %i," \
@@ -896,7 +896,7 @@ int test_queue(void)
   for (i = 0; i < queue_size - 2; ++i)
     {
       sample.val = i;
-      orb_publish(ORB_ID(orb_test_medium_queue), ptopic, &sample);
+      orb_publish(ORB_ID(orb_test_queue), ptopic, &sample);
     }
 
   for (i = 0; i < queue_size - 2; ++i)
@@ -912,7 +912,7 @@ int test_queue(void)
   for (i = 0; i < queue_size + overflow_by; ++i)
     {
       sample.val = i;
-      orb_publish(ORB_ID(orb_test_medium_queue), ptopic, &sample);
+      orb_publish(ORB_ID(orb_test_queue), ptopic, &sample);
     }
 
   for (i = 0; i < queue_size; ++i)
@@ -933,7 +933,7 @@ int test_queue(void)
 
   sample.val = 943;
 
-  orb_publish(ORB_ID(orb_test_medium_queue), ptopic, &sample);
+  orb_publish(ORB_ID(orb_test_queue), ptopic, &sample);
 
   CHECK_UPDATED(-1);
   CHECK_COPY(sub_sample.val, sample.val);
@@ -968,7 +968,7 @@ static FAR void *pub_test_queue_entry(FAR void *arg)
   (void)arg;
   memset(&t, '\0', sizeof(t));
   ptopic = orb_advertise_multi_queue_persist(
-    ORB_ID(orb_test_medium_queue_poll), &t, &instance, queue_size);
+    ORB_ID(orb_test_queue_poll), &t, &instance, queue_size);
   if (ptopic < 0)
     {
       g_thread_should_exit = true;
@@ -988,7 +988,7 @@ static FAR void *pub_test_queue_entry(FAR void *arg)
         {
           /* make interval non-boundary aligned */
 
-          orb_publish(ORB_ID(orb_test_medium_queue_poll), ptopic, &t);
+          orb_publish(ORB_ID(orb_test_queue_poll), ptopic, &t);
           ++t.val;
         }
 
@@ -1016,7 +1016,7 @@ static int test_queue_poll_notify(void)
 
   test_note("Testing orb queuing (poll & notify)");
 
-  if ((sfd = orb_subscribe(ORB_ID(orb_test_medium_queue_poll))) < 0)
+  if ((sfd = orb_subscribe(ORB_ID(orb_test_queue_poll))) < 0)
     {
       return test_fail("subscribe failed: %d", errno);
     }
@@ -1030,7 +1030,7 @@ static int test_queue_poll_notify(void)
       orb_check(sfd, &updated);
       if (updated)
         {
-          orb_copy(ORB_ID(orb_test_medium_queue_poll), sfd, &t);
+          orb_copy(ORB_ID(orb_test_queue_poll), sfd, &t);
         }
     }
   while (updated);
@@ -1076,7 +1076,7 @@ static int test_queue_poll_notify(void)
 
       if (fds[0].revents & POLLIN)
         {
-          orb_copy(ORB_ID(orb_test_medium_queue_poll), sfd, &t);
+          orb_copy(ORB_ID(orb_test_queue_poll), sfd, &t);
           if (next_expected_val != t.val)
             {
               orb_unsubscribe(sfd);
