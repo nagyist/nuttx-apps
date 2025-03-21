@@ -47,6 +47,15 @@ function(generate_common_defs)
     set(EXTRA_INCLUDE_FLAG "${EXTRA_INCLUDE_FLAG} -I ${extra_path}")
   endforeach()
 
+  get_property(
+    EXTRA_COMPILE_OPTIONS
+    TARGET nuttx
+    PROPERTY NUTTX_COMPILE_OPTIONS)
+  set(EXTRA_FLAGS "")
+  foreach(extra_flag ${EXTRA_COMPILE_OPTIONS})
+    set(EXTRA_FLAGS "${EXTRA_FLAGS} ${extra_flag}")
+  endforeach()
+
   # cmake-format: off
   set(MAKE_DEFS
     [=[
@@ -61,6 +70,7 @@ function(generate_common_defs)
       MKDEP  := @CMAKE_BINARY_DIR@/bin/mkdeps
       EXTRAFLAGS := -I @CMAKE_BINARY_DIR@/include
       EXTRAFLAGS += @EXTRA_INCLUDE_FLAG@
+      EXTRAFLAGS += @EXTRA_FLAGS@
       DEPCONFIG := @CMAKE_BINARY_DIR@/.config
 
       include @CMAKE_BINARY_DIR@/.config
