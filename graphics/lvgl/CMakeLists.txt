@@ -143,7 +143,7 @@ if(CONFIG_GRAPHICS_LVGL)
   endif()
 
   if(NOT ${CONFIG_LV_OPTLEVEL} STREQUAL "")
-    add_compile_options(${CONFIG_LV_OPTLEVEL})
+    target_compile_options(lvgl PRIVATE ${CONFIG_LV_OPTLEVEL})
   endif()
 
   set_property(
