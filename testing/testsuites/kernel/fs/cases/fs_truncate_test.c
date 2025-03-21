@@ -57,9 +57,6 @@ void test_nuttx_fs_truncate01(FAR void **state)
   char buf[80];
   const char *s1 = "0123456789";
   const char *s2 = "abcde";
-  struct fs_testsuites_state_s *test_state;
-
-  test_state = (struct fs_testsuites_state_s *)*state;
 
   /* open file */
 
@@ -69,7 +66,6 @@ void test_nuttx_fs_truncate01(FAR void **state)
 #else
   assert_int_in_range(fd, 0, 512);
 #endif
-  test_state->fd1 = fd;
 
   /* do write */
 
@@ -102,7 +98,6 @@ void test_nuttx_fs_truncate01(FAR void **state)
 
   fd = open(TESTFILE, O_RDONLY);
   assert_true(fd > 0);
-  test_state->fd1 = fd;
 
   /* read file */
 

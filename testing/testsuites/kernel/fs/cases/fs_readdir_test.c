@@ -63,9 +63,6 @@ void test_nuttx_fs_readdir01(FAR void **state)
 
   DIR *test_dir;
   struct dirent *dptr;
-  struct fs_testsuites_state_s *test_state;
-
-  test_state = (struct fs_testsuites_state_s *)*state;
 
   for (int i = 0; i < 6; i++)
     {
@@ -73,7 +70,6 @@ void test_nuttx_fs_readdir01(FAR void **state)
 
       fd = open(filename[i], O_RDWR | O_CREAT, 0700);
       assert_true(fd > 0);
-      test_state->fd1 = fd;
 
       /* do wirte */
 
