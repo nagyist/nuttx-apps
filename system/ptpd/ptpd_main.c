@@ -35,17 +35,14 @@
 
 static int do_ptpd_start(FAR const char *interface)
 {
-  int pid;
+  int ret;
 
-  pid = ptpd_start(interface);
-  if (pid < 0)
-    {
-      fprintf(stderr, "ERROR: ptpd_start() failed\n");
-      return EXIT_FAILURE;
-    }
+  ret = ptpd_start(interface);
 
-  printf("Started the PTP daemon as PID=%d\n", pid);
-  return EXIT_SUCCESS;
+  /* Should never happen */
+
+  fprintf(stderr, "ERROR: ptpd_start() failed:%d\n", ret);
+  return EXIT_FAILURE;
 }
 
 static int do_ptpd_status(int pid)
