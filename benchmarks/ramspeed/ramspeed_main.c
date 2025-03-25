@@ -64,16 +64,19 @@
       } \
   } while (0)
 
-  #define HAS_IRQ_CONTROL !defined(CONFIG_BUILD_KERNEL) && \
-                          !defined(CONFIG_BUILD_PROTECTED)
+#if !defined(CONFIG_BUILD_KERNEL) && !defined(CONFIG_BUILD_PROTECTED)
+#  define HAS_IRQ_CONTROL 1
+#else
+#  define HAS_IRQ_CONTROL 0
+#endif
 
-  #if HAS_IRQ_CONTROL
-  #  define ENABLE_IRQ(flags) leave_critical_section(flags);
-  #  define DISABLE_IRQ(flags) flags=enter_critical_section();
-  #else
-  #  define ENABLE_IRQ(flags) (void)flags;
-  #  define DISABLE_IRQ(flags) (void)flags;
-  #endif
+#if HAS_IRQ_CONTROL
+#  define ENABLE_IRQ(flags) leave_critical_section(flags)
+#  define DISABLE_IRQ(flags) flags=enter_critical_section()
+#else
+#  define ENABLE_IRQ(flags) (void)(flags)
+#  define DISABLE_IRQ(flags) (void)(flags)
+#endif
 
 /****************************************************************************
  * Private Types

@@ -153,7 +153,7 @@ int interlock_test(void)
   void *value;
   char data[16];
   ssize_t nbytes;
-  int fd;
+  int fd = -1;
   int ret;
 
   /* Create a FIFO */
@@ -206,7 +206,7 @@ int interlock_test(void)
       fprintf(stderr, \
               "interlock_test: read failed, errno=%d\n", errno);
       ret = 4;
-      goto errout_with_file;
+      goto errout_with_null_writer_thread;
     }
   else if (ret != 0)
     {
@@ -214,7 +214,7 @@ int interlock_test(void)
               "interlock_test: Read %ld bytes of data -- aborting: %d\n",
               (long)nbytes, errno);
       ret = 5;
-      goto errout_with_file;
+      goto errout_with_null_writer_thread;
     }
 
   printf("interlock_test: read returned\n");
@@ -288,7 +288,7 @@ int interlock_test(void)
       fprintf(stderr, \
               "interlock_test: write failed, errno=%d\n", errno);
       ret = 10;
-      goto errout_with_file;
+      goto errout_with_null_reader_thread;
     }
   else if (ret != 0)
     {
@@ -296,18 +296,10 @@ int interlock_test(void)
               "interlock_test: Wrote %ld bytes of data -- aborting: %d\n",
               (long)nbytes, errno);
       ret = 11;
-      goto errout_with_file;
+      goto errout_with_null_reader_thread;
     }
 
   printf("interlock_test: write returned\n");
-
-  /* Close the file */
-
-  printf("interlock_test: Closing %s\n", FIFO_PATH2);
-  if (close(fd) != 0)
-    {
-      fprintf(stderr, "interlock_test: close failed: %d\n", errno);
-    }
 
   /* Wait for null_reader thread to complete */
 
@@ -333,12 +325,6 @@ int interlock_test(void)
   ret = 0;
   goto errout_with_fifo;
 
-errout_with_file:
-  if (close(fd) != 0)
-    {
-      fprintf(stderr, "interlock_test: close failed: %d\n", errno);
-    }
-
 errout_with_null_reader_thread:
   pthread_detach(readerid);
   pthread_cancel(readerid);
@@ -348,6 +334,14 @@ errout_with_null_writer_thread:
   pthread_cancel(writerid);
 
 errout_with_fifo:
+
+  /* Close the file */
+
+  printf("interlock_test: Closing %s\n", FIFO_PATH2);
+  if (fd != -1 && close(fd) != 0)
+    {
+      fprintf(stderr, "interlock_test: close failed: %d\n", errno);
+    }
 
   ret = remove(FIFO_PATH2);
   if (ret != 0)
