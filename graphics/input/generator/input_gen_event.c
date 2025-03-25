@@ -144,57 +144,38 @@ input_gen_single_finger(FAR struct touch_point_s *point,
                         FAR const struct input_gen_single_finger_s *finger,
                         uint32_t elapsed)
 {
-  point->h = 1;
-  point->w = 1;
-  point->pressure = INPUT_GEN_DEFAULT_PRESSURE;
-  point->flags    = TOUCH_DOWN | TOUCH_ID_VALID | TOUCH_POS_VALID |
-                    TOUCH_PRESSURE_VALID;
-
   if (elapsed < finger->press_duration)
     {
       /* Press */
 
-      point->x = finger->x1;
-      point->y = finger->y1;
+      input_gen_fill_point(point, finger->x1, finger->y1, TOUCH_DOWN);
       return false;
     }
 
   elapsed -= finger->press_duration;
   if (elapsed < finger->move_duration)
     {
-      /* Move */
-
-      point->x = ((int64_t)(finger->x2 - finger->x1) * elapsed) /
-                 finger->move_duration + finger->x1;
-      point->y = ((int64_t)(finger->y2 - finger->y1) * elapsed) /
-                 finger->move_duration + finger->y1;
-
-      /* Set TOUCH_MOVE when moving */
-
-      point->flags = TOUCH_MOVE | TOUCH_ID_VALID | TOUCH_POS_VALID |
-                     TOUCH_PRESSURE_VALID;
+      int16_t x = ((int64_t)(finger->x2 - finger->x1) * elapsed) /
+                  finger->move_duration + finger->x1;
+      int16_t y = ((int64_t)(finger->y2 - finger->y1) * elapsed) /
+                  finger->move_duration + finger->y1;
+      input_gen_fill_point(point, x, y, TOUCH_MOVE);
 
       return false;
     }
 
   elapsed -= finger->move_duration;
-
-  /* Set the final position for both hold and release */
-
-  point->x = finger->x2;
-  point->y = finger->y2;
-
   if (elapsed < finger->hold_duration)
     {
       /* Hold */
 
+      input_gen_fill_point(point, finger->x2, finger->y2, TOUCH_DOWN);
       return false;
     }
 
   /* Release */
 
-  point->pressure = 0;
-  point->flags    = TOUCH_UP | TOUCH_ID_VALID;
+  input_gen_fill_point(point, finger->x2, finger->y2, TOUCH_UP);
   return true;
 }
 
@@ -254,7 +235,7 @@ static int input_gen_write_motion(int fd,
           finished++;
         }
 
-      ginfo("Finger %d: x = %d, y = %d, flags = %02X\n",
+      ginfo("Finger %zu: x = %d, y = %d, flags = %02X\n",
             i, point->x, point->y, point->flags);
     }
 
@@ -560,3 +541,38 @@ int input_gen_mouse_wheel(input_gen_ctx_t ctx, int16_t wheel)
   return input_gen_umouse_write(dev->fd, wheel);
 }
 #endif
+
+/****************************************************************************
+ * Name: input_gen_fill_point
+ *
+ * Description:
+ *   Fill the touch point structure.
+ *
+ * Input Parameters:
+ *   point - The touch point structure.
+ *   x     - The x coordinate.
+ *   y     - The y coordinate.
+ *   flags - The TOUCH_DOWN, TOUCH_MOVE, TOUCH_UP flag.
+ *
+ ****************************************************************************/
+
+void input_gen_fill_point(FAR struct touch_point_s *point,
+                          int16_t x, int16_t y, uint8_t flags)
+{
+  point->x = x;
+  point->y = y;
+  point->h = 1;
+  point->w = 1;
+
+  if (flags & TOUCH_UP)
+    {
+      point->pressure = 0;
+      point->flags    = flags | TOUCH_ID_VALID;
+    }
+  else
+    {
+      point->pressure = INPUT_GEN_DEFAULT_PRESSURE;
+      point->flags    = flags | TOUCH_ID_VALID | TOUCH_POS_VALID |
+                        TOUCH_PRESSURE_VALID;
+    }
+}

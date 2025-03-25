@@ -32,6 +32,7 @@
 #include <stdint.h>
 
 #include <nuttx/input/buttons.h>
+#include <nuttx/input/touchscreen.h>
 
 /****************************************************************************
  * Pre-processor Definitions
@@ -257,6 +258,23 @@ int input_gen_mouse_wheel(input_gen_ctx_t ctx, int16_t wheel);
 #else
 #define input_gen_mouse_wheel(ctx, wheel) (-ENODEV)
 #endif
+
+/****************************************************************************
+ * Name: input_gen_fill_point
+ *
+ * Description:
+ *   Fill the touch point structure.
+ *
+ * Input Parameters:
+ *   point - The touch point structure.
+ *   x     - The x coordinate.
+ *   y     - The y coordinate.
+ *   flags - The TOUCH_DOWN, TOUCH_MOVE, TOUCH_UP flag.
+ *
+ ****************************************************************************/
+
+void input_gen_fill_point(FAR struct touch_point_s *point,
+                          int16_t x, int16_t y, uint8_t flags);
 
 /****************************************************************************
  * Name: input_gen_write_raw

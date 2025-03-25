@@ -38,10 +38,10 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define MONKEY_DEV_PATH_UTOUCH    "/dev/utouch"
-#define MONKEY_DEV_PATH_UBUTTON   "/dev/ubutton"
-#define MONKEY_DEV_PATH_UMOUSE    "/dev/umouse"
-#define MONKEY_DEV_PATH_UKEYBOARD "/dev/ukeyboard"
+#define INPUT_GEN_DEV_PATH_UTOUCH    "/dev/utouch"
+#define INPUT_GEN_DEV_PATH_UBUTTON   "/dev/ubutton"
+#define INPUT_GEN_DEV_PATH_UMOUSE    "/dev/umouse"
+#define INPUT_GEN_DEV_PATH_UKEYBOARD "/dev/ukeyboard"
 
 /****************************************************************************
  * Public Functions
@@ -66,13 +66,13 @@ FAR const char *input_gen_dev2path(input_gen_dev_t device)
   switch (device)
     {
       case INPUT_GEN_DEV_UTOUCH:
-        return MONKEY_DEV_PATH_UTOUCH;
+        return INPUT_GEN_DEV_PATH_UTOUCH;
       case INPUT_GEN_DEV_UBUTTON:
-        return MONKEY_DEV_PATH_UBUTTON;
+        return INPUT_GEN_DEV_PATH_UBUTTON;
       case INPUT_GEN_DEV_UMOUSE:
-        return MONKEY_DEV_PATH_UMOUSE;
+        return INPUT_GEN_DEV_PATH_UMOUSE;
       case INPUT_GEN_DEV_UKEYBOARD:
-        return MONKEY_DEV_PATH_UKEYBOARD;
+        return INPUT_GEN_DEV_PATH_UKEYBOARD;
       default:
         gerr("ERROR: Invalid device type: %d\n", device);
         return "";
