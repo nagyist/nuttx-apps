@@ -245,6 +245,38 @@ if(CONFIG_TESTING_DRIVER_TEST)
       drivertest_i2cdev_slave.c)
   endif()
 
+  if(CONFIG_SPI_DRIVER)
+    nuttx_add_application(
+      NAME
+      cmocka_driver_spidev_master
+      PRIORITY
+      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_DRIVER_TEST}
+      DEPENDS
+      cmocka
+      SRCS
+      drivertest_spidev_master.c)
+  endif()
+
+  if(CONFIG_SPI_SLAVE_DRIVER)
+    nuttx_add_application(
+      NAME
+      cmocka_driver_spidev_slave
+      PRIORITY
+      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_DRIVER_TEST}
+      DEPENDS
+      cmocka
+      SRCS
+      drivertest_spidev_slave.c)
+  endif()
+
   if(CONFIG_DEV_GPIO)
     nuttx_add_application(
       NAME
