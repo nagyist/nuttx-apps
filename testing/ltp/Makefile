@@ -69,6 +69,7 @@ BLACKSRCS += $(TESTDIR)/conformance/interfaces/pthread_sigmask/18-1.c
 BLACKSRCS += $(TESTDIR)/conformance/interfaces/pthread_sigmask/4-1.c
 BLACKSRCS += $(TESTDIR)/conformance/interfaces/sigprocmask/4-1.c
 ifeq ($(CONFIG_FDCHECK),y)
+BLACKSRCS += $(TESTDIR)/conformance/interfaces/mq_close/3-1.c
 BLACKSRCS += $(TESTDIR)/conformance/interfaces/mq_close/4-1.c
 endif
 ifeq ($(CONFIG_LIBC_LOCALTIME),)
