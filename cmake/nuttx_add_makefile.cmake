@@ -50,7 +50,7 @@ function(generate_common_defs)
   get_property(
     EXTRA_COMPILE_OPTIONS
     TARGET nuttx
-    PROPERTY NUTTX_COMPILE_OPTIONS)
+    PROPERTY NUTTX_EXTRA_COMPILE_OPTIONS)
   set(EXTRA_FLAGS "")
   foreach(extra_flag ${EXTRA_COMPILE_OPTIONS})
     set(EXTRA_FLAGS "${EXTRA_FLAGS} ${extra_flag}")
