@@ -143,6 +143,7 @@ int do_ptpd_stop(int pid)
 static void usage(FAR const char *progname)
 {
   fprintf(stderr, "Usage: %s [options]\n"
+                  " -s       client only synchronization mode\n"
                   " Network Transport:\n"
                   " -2       IEEE 802.3\n"
                   " -4       UDP IPV4 (default)\n"
@@ -151,10 +152,11 @@ static void usage(FAR const char *progname)
                   " -H       HARDWARE (default) depends on NET_TIMESTAMP\n"
                   " -S       SOFTWARE\n"
                   " -r       synchronize system (realtime) clock\n"
+                  " -E       E2E, support client delay request-response\n"
                   " -i [dev] interface device to use, for example 'eth0'\n"
                   " -p [dev] clock device to use\n"
                   " -t [pid] look the status of ptp daemon\n"
-                  " -s [pid] stop ptp daemon\n",
+                  " -d [pid] stop ptp daemon\n",
                   progname);
 }
 
@@ -175,6 +177,8 @@ int main(int argc, FAR char *argv[])
 
   config.interface = "eth0";
   config.clock = "realtime";
+  config.client_only = false;
+  config.delay_e2e = false;
 #ifdef CONFIG_NET_TIMESTAMP
   config.hardware_ts = true;
 #else
@@ -182,13 +186,16 @@ int main(int argc, FAR char *argv[])
 #endif
   config.af = AF_INET;
 
-  while ((option = getopt(argc, argv, "p:i:t:s:r246HS")) != ERROR)
+  while ((option = getopt(argc, argv, "p:i:t:d:rs246EHS")) != ERROR)
     {
       switch (option)
         {
+          case 's':
+            config.client_only = true;
+            break;
           case 't':
             return do_ptpd_status(atoi(optarg));
-          case 's':
+          case 'd':
             return do_ptpd_stop(atoi(optarg));
           case '2':
             config.af = AF_PACKET;
@@ -198,6 +205,9 @@ int main(int argc, FAR char *argv[])
             break;
           case '6':
             config.af = AF_INET6;
+            break;
+          case 'E':
+            config.delay_e2e = true;
             break;
 #ifdef CONFIG_NET_TIMESTAMP
           case 'H':
