@@ -81,4 +81,13 @@ config INTERPRETERS_QUICKJS_CPUPROFILING
 	bool "Enable QUICKJS_CPUPROFILING"
 	default n
 
+config INTERPRETERS_QUICKJS_DUMP_LEAKS
+	bool "Enable QuickJS DUMP_LEAKS"
+	default n
+	depends on (!QUICKAPP_BYTECODE_OPTIMIZATION)
+	---help---
+		Enable this if you want js dump leaks support.
+		by default, quickjs will only dump object leaks when closing, without string and atoms
+		open this option will dump all leaks when closing, contains object, string and atoms.
+
 endif # INTERPRETERS_QUICKJS
