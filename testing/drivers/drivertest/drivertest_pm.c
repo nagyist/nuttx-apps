@@ -159,6 +159,7 @@ static void drivertest_pm(FAR void **argv)
     }
 
   usleep(init_delay * 1000000);
+  pm_auto_update(domain, true);
   usleep(TEST_WAITTIME);
 
   for (int i = 0; i < PM_COUNT; i++)
