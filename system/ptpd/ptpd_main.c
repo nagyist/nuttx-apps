@@ -26,6 +26,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #include "netutils/ptpd.h"
 
@@ -140,15 +142,15 @@ int do_ptpd_stop(int pid)
 
 static void usage(FAR const char *progname)
 {
-  fprintf(stderr, "Usage: %s [options]\n\n"
-                  " Network Transport:\n\n"
+  fprintf(stderr, "Usage: %s [options]\n"
+                  " Network Transport:\n"
                   " -2       IEEE 802.3\n"
                   " -4       UDP IPV4 (default)\n"
-                  " -6       UDP IPV6\n\n"
-                  " Time Stamping:\n\n"
+                  " -6       UDP IPV6\n"
+                  " Time Stamping:\n"
                   " -H       HARDWARE (default) depends on NET_TIMESTAMP\n"
                   " -S       SOFTWARE\n"
-                  " -r       synchronize system (realtime) clock"
+                  " -r       synchronize system (realtime) clock\n"
                   " -i [dev] interface device to use, for example 'eth0'\n"
                   " -p [dev] clock device to use\n"
                   " -t [pid] look the status of ptp daemon\n"
@@ -167,12 +169,13 @@ static void usage(FAR const char *progname)
 int main(int argc, FAR char *argv[])
 {
   struct ptpd_config_s config;
+  int option;
 
   /* Default config for ptp daemon */
 
   config.interface = "eth0";
   config.clock = "realtime";
-#if CONFIG_NET_TIMESTAMP
+#ifdef CONFIG_NET_TIMESTAMP
   config.hardware_ts = true;
 #else
   config.hardware_ts = false;
@@ -196,7 +199,7 @@ int main(int argc, FAR char *argv[])
           case '6':
             config.af = AF_INET6;
             break;
-#if CONFIG_NET_TIMESTAMP
+#ifdef CONFIG_NET_TIMESTAMP
           case 'H':
             config.hardware_ts = true;
             break;
@@ -215,6 +218,7 @@ int main(int argc, FAR char *argv[])
             break;
           default:
             usage(argv[0]);
+            return 0;
         }
     }
 
