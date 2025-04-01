@@ -30,6 +30,7 @@ if(CONFIG_APPS_DIR)
   # add apps cmake modules
   list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
   include(nuttx_add_aidl)
+  include(nuttx_add_erpc)
   include(nuttx_add_jidl)
   include(nuttx_add_makefile)
   include(nuttx_add_luamod)
