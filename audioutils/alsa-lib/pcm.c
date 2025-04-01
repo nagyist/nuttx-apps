@@ -59,7 +59,18 @@ int snd_pcm_open(FAR snd_pcm_t **pcmp, FAR const char *name,
       name = stream == SND_PCM_STREAM_PLAYBACK ? "pcm0p" : "pcm0c";
     }
 
+  if (stream == SND_PCM_STREAM_CAPTURE)
+    {
+      return snd_pcm_hw_open(pcmp, name, stream, mode);
+    }
+
+#if defined(CONFIG_AUDIOUTILS_ALSA_LIB_DEVICE_DMIX)
+  return snd_pcm_dmix_open(pcmp, name, stream, mode);
+#elif defined(CONFIG_AUDIOUTILS_ALSA_LIB_DEVICE_HW)
   return snd_pcm_hw_open(pcmp, name, stream, mode);
+#else
+  return -EPERM;
+#endif
 }
 
 int snd_pcm_close(FAR snd_pcm_t *pcm)

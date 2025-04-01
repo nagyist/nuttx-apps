@@ -59,7 +59,9 @@ typedef enum
 
   SND_PCM_TYPE_HW,
 
-  SND_PCM_TYPE_LAST = SND_PCM_TYPE_HW
+  SND_PCM_TYPE_DMIX,
+
+  SND_PCM_TYPE_LAST = SND_PCM_TYPE_DMIX
 } snd_pcm_type_t;
 
 typedef struct

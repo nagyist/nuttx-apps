@@ -109,4 +109,7 @@ void snd_pcm_softvol_scale(snd_pcm_format_t format, float volume,
 int snd_pcm_hw_open(FAR snd_pcm_t **pcmp, FAR const char *name,
                     snd_pcm_stream_t stream, int mode);
 
+int snd_pcm_dmix_open(FAR snd_pcm_t **pcmp, FAR const char *name,
+                      snd_pcm_stream_t stream, int mode);
+
 #endif /* __APPS_AUDIOUTILS_ALSA_LIB_PCM_LOCAL_H */

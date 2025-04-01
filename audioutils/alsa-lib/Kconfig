@@ -15,12 +15,27 @@ config AUDIOUTILS_ALSA_LIB_DEV_PATH
 
 choice
 	prompt "Alsa Playback Device to be used"
-	default AUDIOUTILS_ALSA_LIB_DEVICE_HW
+	default AUDIOUTILS_ALSA_LIB_DEVICE_DMIX
+
+config AUDIOUTILS_ALSA_LIB_DEVICE_DMIX
+	bool "Use Dmix device(support mix)"
 
 config AUDIOUTILS_ALSA_LIB_DEVICE_HW
 	bool "Use hardware device(not support mix, more faster)"
 
 endchoice # Alsa lib Device
+
+config AUDIOUTILS_ALSA_LIB_OUTPUT_FORMAT
+	int "Dmix output format 0/16/32 (16: S16, 32: S32, 0: use input format)"
+	default 0
+
+config AUDIOUTILS_ALSA_LIB_OUTPUT_CHANNELS
+	int "Dmix output channels 0/1/2 (1: 1ch, 2: 2ch, 0: use input channels)"
+	default 0
+
+config AUDIOUTILS_ALSA_LIB_OUTPUT_RATE
+	int "Dmix output rate 0/8000/16000/32000/44100/48000/96000 (0: use input rate)"
+	default 0
 
 choice
 	prompt "Alsa LOG Output Controls"

@@ -19,7 +19,16 @@
 # ##############################################################################
 
 if(CONFIG_AUDIOUTILS_ALSA_LIB)
-  target_sources(apps PRIVATE error.c pcm_hw.c pcm_params.c pcm_softvol.c pcm.c)
+  target_sources(
+    apps
+    PRIVATE bits_convert.c
+            channels_map.c
+            error.c
+            pcm_dmix.c
+            pcm_hw.c
+            pcm_params.c
+            pcm_softvol.c
+            pcm.c)
 
   target_compile_definitions(apps PRIVATE OUTSIDE_SPEEX RANDOM_PREFIX=nuttx)
 
