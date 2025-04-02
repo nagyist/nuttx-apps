@@ -33,26 +33,24 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/poll.h>
-#include <nuttx/ioexpander/gpio.h>
-
 #include <stdarg.h>
 #include <stddef.h>
 #include <setjmp.h>
 #include <stdint.h>
 #include <cmocka.h>
 
+#include <nuttx/ioexpander/gpio.h>
+
 /****************************************************************************
  * Private Types
  ****************************************************************************/
 
-#define GPIOTEST_MAXVALUE 5
-
-struct pre_build_s
+struct gpio_test_s
 {
-  FAR char *gpio_a;
-  FAR char *gpio_b;
-  FAR char *gpio_c;
-  FAR char *gpio_d;
+  FAR const char *gpio_input;
+  FAR const char *gpio_output;
+  char irq_type;
+  bool gpio_val;
   bool loop;
 };
 
@@ -66,11 +64,13 @@ struct pre_build_s
 
 static void show_usage(FAR const char *progname, int exitcode)
 {
-  printf("Usage: %s -a <gpio_a>[dev/gpio0] -b"
-         " <gpio_b>[dev/gpio1] -l [loop test]\n", progname);
+  printf("Usage: %s -i /dev/gpio0 -o dev/gpio1"
+         "-p [value] -l [loop test]\n", progname);
   printf("Where:\n");
-  printf("  -a <gpio_a> gpio_a location [default location: dev/gpio0].\n");
-  printf("  -b <gpio_b> gpio_b location [default location: dev/gpio1].\n");
+  printf("  -i <gpio_input> gpio_input location [eg: /dev/gpio0].\n");
+  printf("  -o <gpio_output> gpio_output location [eg: /dev/gpio1].\n");
+  printf("  -p <gpio_output> gpio_output value [eg: 1 or 0].\n");
+  printf("  -r interrupt type[0:fall; 1:rise; 2:high; 3:low]\n");
   printf("  -l <loop test> [default: Test the input and output of GPIO ]\n");
   exit(exitcode);
 }
@@ -80,28 +80,28 @@ static void show_usage(FAR const char *progname, int exitcode)
  ****************************************************************************/
 
 static void parse_commandline(int argc, FAR char **argv,
-                              FAR struct pre_build_s *pre_build)
+                              FAR struct gpio_test_s *gpio)
 {
   int option;
 
-  while ((option = getopt(argc, argv, "a:b:c:d:l")) != ERROR)
+  while ((option = getopt(argc, argv, "i:o:p:r:l")) != ERROR)
     {
       switch (option)
         {
-          case 'a':
-            pre_build->gpio_a = optarg;
+          case 'i':
+            gpio->gpio_input = optarg;
             break;
-          case 'b':
-            pre_build->gpio_b = optarg;
-            break;
-          case 'c':
-            pre_build->gpio_c = optarg;
-            break;
-          case 'd':
-            pre_build->gpio_d = optarg;
+          case 'o':
+            gpio->gpio_output = optarg;
             break;
           case 'l':
-            pre_build->loop = true;
+            gpio->loop = true;
+            break;
+          case 'p':
+            gpio->gpio_val = atoi(optarg);
+            break;
+          case 'r':
+            gpio->irq_type = atoi(optarg);
             break;
           case '?':
             printf("Unknown option: %c\n", optopt);
@@ -112,13 +112,13 @@ static void parse_commandline(int argc, FAR char **argv,
 }
 
 /****************************************************************************
- * Name: gpiotest_randbin
+ * Name: gpio_test_randbin
  ****************************************************************************/
 
-static inline bool gpiotest_randbin(void)
+static inline bool gpio_test_randbin(void)
 {
-  int value = rand() % 18;
-  if (value > 9)
+  int value = rand() % 256;
+  if (value > 127)
     {
       return true;
     }
@@ -136,142 +136,16 @@ static inline bool gpiotest_randbin(void)
 
 static int setup(FAR void **state)
 {
-  FAR struct pre_build_s *pre_build;
+  FAR struct gpio_test_s *gpio;
   time_t t;
-  pre_build = (FAR struct pre_build_s *)*state;
+
+  gpio = (FAR struct gpio_test_s *)*state;
 
   /* Seed the random number generated */
 
   srand((unsigned)time(&t));
-  *state = pre_build;
+  *state = gpio;
   return 0;
-}
-
-/****************************************************************************
- * Name: drivertest_gpio_one
- ****************************************************************************/
-
-static void drivertest_gpio_one(FAR void **state)
-{
-  FAR struct pre_build_s *pre_build;
-  bool outvalue;
-  bool invalue;
-  int fd[2];
-  int ret;
-  int i;
-  int j;
-
-  pre_build = *state;
-  fd[0] = open(pre_build->gpio_a, O_RDWR);
-  assert_false(fd[0] < 0);
-
-  fd[1] = open(pre_build->gpio_b, O_RDWR);
-  assert_false(fd[1] < 0);
-
-  /* Test Single GPIO I/O functionality */
-
-  for (i = 0; i < 2; i++)
-    {
-      ret = ioctl(fd[i], GPIOC_SETPINTYPE, GPIO_INPUT_PIN | GPIO_OUTPUT_PIN);
-      assert_false(ret < 0);
-      for (j = 0; j < GPIOTEST_MAXVALUE; j++)
-        {
-          outvalue = gpiotest_randbin();
-          ret = ioctl(fd[i], GPIOC_WRITE, outvalue);
-          assert_false(ret < 0);
-
-          ret = ioctl(fd[i], GPIOC_READ, &invalue);
-          assert_false(ret < 0);
-
-          printf("[input and output test]  outvalue is %d, invalue is %d\n",
-                  outvalue, invalue);
-          assert_int_equal(invalue, outvalue);
-        }
-
-        close(fd[i]);
-    }
-}
-
-/****************************************************************************
- * Name: drivertest_gpio_loop
- ****************************************************************************/
-
-static void drivertest_gpio_loop(FAR void **state)
-{
-  FAR struct pre_build_s *pre_build;
-  int fd_a;
-  int fd_b;
-  bool outvalue;
-  bool invalue;
-  int ret;
-  int i;
-
-  pre_build = *state;
-
-  fd_a = open(pre_build->gpio_a, O_RDWR);
-  assert_false(fd_a < 0);
-  fd_b = open(pre_build->gpio_b, O_RDWR);
-  assert_false(fd_b < 0);
-
-  /* Test the input function
-   * Method: Output from gpio_a to gpio_b and
-   * compare the read values.
-   */
-
-  /* gpio_a to gpio_b */
-
-  ret = ioctl(fd_a, GPIOC_SETPINTYPE, (unsigned long) GPIO_OUTPUT_PIN);
-  assert_false(ret < 0);
-  ret = ioctl(fd_b, GPIOC_SETPINTYPE, (unsigned long) GPIO_INPUT_PIN);
-  assert_false(ret < 0);
-
-  for (i = 0; i < GPIOTEST_MAXVALUE; i++)
-    {
-      /* Set GPIO level */
-
-      outvalue = gpiotest_randbin();
-      assert_false(ret < 0);
-      ret = ioctl(fd_a, GPIOC_WRITE, (unsigned long) outvalue);
-      assert_false(ret < 0);
-
-      /* Read Pin Test */
-
-      ret = ioctl(fd_b, GPIOC_READ, (unsigned long)((uintptr_t)&invalue));
-      assert_false(ret < 0);
-
-      printf("[Loop test]  outvalue is %d, invalue is %d\n",
-            outvalue, invalue);
-      assert_int_equal(invalue, outvalue);
-    }
-
-  ret = ioctl(fd_b, GPIOC_SETPINTYPE, (unsigned long) GPIO_OUTPUT_PIN);
-  assert_false(ret < 0);
-  ret = ioctl(fd_a, GPIOC_SETPINTYPE, (unsigned long) GPIO_INPUT_PIN);
-  assert_false(ret < 0);
-
-  /* gpio_b to gpio_a */
-
-  for (i = 0; i < GPIOTEST_MAXVALUE; i++)
-    {
-      /* Set GPIO level */
-
-      outvalue = gpiotest_randbin();
-      assert_false(ret < 0);
-      ret = ioctl(fd_b, GPIOC_WRITE, (unsigned long) outvalue);
-      assert_false(ret < 0);
-
-      /* Read Pin Test */
-
-      ret = ioctl(fd_a, GPIOC_READ, (unsigned long)((uintptr_t)&invalue));
-      assert_false(ret < 0);
-
-      printf("[Loop test]  outvalue is %d, invalue is %d\n",
-             outvalue, invalue);
-      assert_int_equal(invalue, outvalue);
-    }
-
-  close(fd_a);
-  close(fd_b);
 }
 
 /****************************************************************************
@@ -284,102 +158,201 @@ static int teardown(FAR void **state)
 }
 
 /****************************************************************************
- * Name: drivertest_rw_gpio
+ * Name: drivertest_gpio_bool
  ****************************************************************************/
 
-static void drivertest_rw_gpio(FAR void **state)
+static void drivertest_gpio_bool(FAR void **state)
 {
-  FAR struct pre_build_s *pre_build;
-  char outvalue;
-  char invalue;
+  FAR struct gpio_test_s *gpio = *state;
+  bool outvalue;
   int fd;
   int ret;
-  int j;
 
-  pre_build = *state;
-
-  fd = open(pre_build->gpio_b, O_RDWR);
+  fd = open(gpio->gpio_output, O_RDWR);
   assert_false(fd < 0);
 
   /* Test Single GPIO I/O functionality */
 
   ret = ioctl(fd, GPIOC_SETPINTYPE, GPIO_OUTPUT_PIN);
   assert_false(ret < 0);
-  for (j = 0; j < GPIOTEST_MAXVALUE; j++)
-    {
-      outvalue = gpiotest_randbin() + '0';
-      ret = write(fd, &outvalue, sizeof(bool));
-      assert_false(ret < 0);
-      ret = lseek(fd, 0, SEEK_SET);
-      assert_false(ret < 0);
-      ret = read(fd, &invalue, sizeof(bool));
-      assert_false(ret < 0);
-      printf("[input and output test]  outvalue is %d, invalue is %d\n",
-              outvalue, invalue);
-      assert_int_equal(invalue, outvalue);
-    }
+
+  /* write gpio val */
+
+  ret = ioctl(fd, GPIOC_WRITE, gpio->gpio_val);
+  assert_false(ret < 0);
+
+  /* read gpio val */
+
+  ret = ioctl(fd, GPIOC_READ, &outvalue);
+  assert_false(ret < 0);
+
+  printf("[write and read output]  writevalue is %d, outvalue is %d\n",
+         gpio->gpio_val, outvalue);
+  assert_int_equal(gpio->gpio_val, outvalue);
+
   close(fd);
 }
 
 /****************************************************************************
- * Name: drivertest_int_edge
+ * Name: drivertest_gpio_loop
  ****************************************************************************/
 
-static void drivertest_int_edge(FAR void **state)
+static void drivertest_gpio_loop(FAR void **state)
 {
-  FAR struct pre_build_s *pre_build;
-  enum gpio_pintype_e pintype;
-  struct pollfd fds;
-  int fd_c;
+  FAR struct gpio_test_s *gpio = *state;
+  int fd_in;
+  int fd_out;
+  bool invalue;
   int ret;
 
-  pre_build = *state;
-  fd_c = open(pre_build->gpio_c, O_RDWR);
-  assert_false(fd_c < 0);
+  if (gpio->loop == false)
+    {
+      return;
+    }
 
-  fds.events = POLLIN;
-  fds.fd = fd_c;
-  ret = ioctl(fd_c, GPIOC_SETPINTYPE, GPIO_INTERRUPT_FALLING_PIN);
-  assert_false(ret < 0);
-  ret = ioctl(fd_c, GPIOC_PINTYPE, &pintype);
-  assert_false(ret < 0);
-  assert_int_equal(pintype, GPIO_INTERRUPT_FALLING_PIN);
+  fd_in = open(gpio->gpio_input, O_RDWR);
+  assert_false(fd_in < 0);
+  fd_out = open(gpio->gpio_output, O_RDWR);
+  assert_false(fd_out < 0);
 
-  ret = ioctl(fd_c, GPIOC_REGISTER, NULL);
-  assert_false(ret < 0);
-  ret = poll(&fds, 1, -1);
-  assert_false(ret < 0);
-  ret = ioctl(fd_c, GPIOC_UNREGISTER, NULL);
+  ret = ioctl(fd_out, GPIOC_SETPINTYPE, GPIO_OUTPUT_PIN);
   assert_false(ret < 0);
 
-  close(fd_c);
+  ret = ioctl(fd_in, GPIOC_SETPINTYPE, GPIO_INPUT_PIN);
+  assert_false(ret < 0);
+
+  /* Set GPIO level */
+
+  ret = ioctl(fd_out, GPIOC_WRITE, gpio->gpio_val);
+  assert_false(ret < 0);
+
+  /* Read Pin Test */
+
+  ret = ioctl(fd_in, GPIOC_READ, &invalue);
+  assert_false(ret < 0);
+
+  printf("[Loop test]  outvalue is %d, invalue is %d\n",
+         gpio->gpio_val, invalue);
+  assert_int_equal(gpio->gpio_val, invalue);
+
+  close(fd_in);
+  close(fd_out);
 }
 
 /****************************************************************************
- * Name: drivertest_int_edge
+ * Name: drivertest_gpio_rw
  ****************************************************************************/
 
-static void drivertest_int_level(FAR void **state)
+static void drivertest_gpio_rw(FAR void **state)
 {
-  FAR struct pre_build_s *pre_build;
-  struct pollfd fds;
-  int fd_d;
+  FAR struct gpio_test_s *gpio = *state;
+  char outvalue;
+  char invalue;
+  int fd;
   int ret;
 
-  pre_build = *state;
-  fd_d = open(pre_build->gpio_d, O_RDWR);
-  assert_false(fd_d < 0);
+  fd = open(gpio->gpio_output, O_RDWR);
+  assert_false(fd < 0);
+
+  ret = ioctl(fd, GPIOC_SETPINTYPE, GPIO_OUTPUT_PIN);
+  assert_false(ret < 0);
+
+  outvalue = gpio_test_randbin() + '0';
+  ret = write(fd, &outvalue, sizeof(bool));
+  assert_false(ret < 0);
+
+  ret = lseek(fd, 0, SEEK_SET);
+  assert_false(ret < 0);
+
+  ret = read(fd, &invalue, sizeof(bool));
+  assert_false(ret < 0);
+
+  printf("[input and output test]  outvalue is %d, invalue is %d\n",
+          outvalue, invalue);
+  assert_int_equal(invalue, outvalue);
+
+  close(fd);
+}
+
+/****************************************************************************
+ * Name: drivertest_gpio_trigger
+ ****************************************************************************/
+
+static FAR void *drivertest_gpio_trigger(FAR void *arg)
+{
+  FAR struct gpio_test_s *gpio = arg;
+  int fd_out;
+  int ret;
+
+  fd_out = open(gpio->gpio_output, O_RDWR);
+  assert_false(fd_out < 0);
+
+  ret = ioctl(fd_out, GPIOC_SETPINTYPE, (unsigned long) GPIO_OUTPUT_PIN);
+  assert_false(ret < 0);
+
+  ret = ioctl(fd_out, GPIOC_WRITE, 0);
+  assert_false(ret < 0);
+  usleep(300000);
+  ret = ioctl(fd_out, GPIOC_WRITE, 1);
+  assert_false(ret < 0);
+  sleep(2);
+
+  close(fd_out);
+  return NULL;
+}
+
+/****************************************************************************
+ * Name: drivertest_gpio_interrupt
+ ****************************************************************************/
+
+static void drivertest_gpio_interrupt(FAR void **state)
+{
+  FAR struct gpio_test_s *gpio = *state;
+  struct pollfd fds;
+  pthread_t tid;
+  int fd_in;
+  int ret;
+
+  ret = pthread_create(&tid, NULL, drivertest_gpio_trigger, gpio);
+  assert_false(ret < 0);
+
+  fd_in = open(gpio->gpio_input, O_RDWR);
+  assert_false(fd_in < 0);
+
+  switch (gpio->irq_type)
+    {
+      case 0:
+        ret = ioctl(fd_in, GPIOC_SETPINTYPE, GPIO_INTERRUPT_FALLING_PIN);
+        break;
+      case 1:
+        ret = ioctl(fd_in, GPIOC_SETPINTYPE, GPIO_INTERRUPT_RISING_PIN);
+        break;
+      case 2:
+        ret = ioctl(fd_in, GPIOC_SETPINTYPE, GPIO_INTERRUPT_BOTH_PIN);
+        break;
+      case 3:
+        ret = ioctl(fd_in, GPIOC_SETPINTYPE, GPIO_INTERRUPT_HIGH_PIN);
+        break;
+      default:
+        goto exit_out;
+    }
+
+  assert_false(ret < 0);
 
   fds.events = POLLIN;
-  fds.fd = fd_d;
-  ret = ioctl(fd_d, GPIOC_REGISTER, NULL);
-  assert_false(ret < 0);
-  ret = poll(&fds, 1, -1);
-  assert_false(ret < 0);
-  ret = ioctl(fd_d, GPIOC_UNREGISTER, NULL);
+  fds.fd = fd_in;
+  ret = ioctl(fd_in, GPIOC_REGISTER, NULL);
   assert_false(ret < 0);
 
-  close(fd_d);
+  ret = poll(&fds, 1, -1);
+  assert_false(ret < 0);
+
+  ret = ioctl(fd_in, GPIOC_UNREGISTER, NULL);
+  assert_false(ret < 0);
+
+exit_out:
+  pthread_join(tid, NULL);
+  close(fd_in);
 }
 
 /****************************************************************************
@@ -392,37 +365,31 @@ static void drivertest_int_level(FAR void **state)
 
 int main(int argc, FAR char *argv[])
 {
-  void (*drivertest_gpio)(FAR void **state);
-  FAR struct pre_build_s pre_build =
+  struct gpio_test_s gpio =
     {
-      .gpio_a = "dev/gpio0",
-      .gpio_b = "dev/gpio1",
-      .gpio_c = "dev/gpio2",
-      .gpio_d = "dev/gpio3",
-      .loop   = false
+      .gpio_input    = CONFIG_TESTING_DRIVER_GPIO_INPUT_PIN,
+      .gpio_output   = CONFIG_TESTING_DRIVER_GPIO_OUTPUT_PIN,
+      .gpio_val      = true,
+      .irq_type      = CONFIG_TESTING_DRIVER_GPIO_INTERRUPT_TYPE,
+      .loop          = CONFIG_TESTING_DRIVER_GPIO_LOOP,
     };
 
-  parse_commandline(argc, argv, &pre_build);
-
-  if (pre_build.loop)
-    {
-      drivertest_gpio = drivertest_gpio_loop;
-    }
-  else
-    {
-      drivertest_gpio = drivertest_gpio_one;
-    }
+  parse_commandline(argc, argv, &gpio);
 
   const struct CMUnitTest tests[] =
     {
-      cmocka_unit_test_prestate_setup_teardown(drivertest_gpio, setup,
-                                               teardown, &pre_build),
-      cmocka_unit_test_prestate_setup_teardown(drivertest_rw_gpio, setup,
-                                               teardown, &pre_build),
-      cmocka_unit_test_prestate_setup_teardown(drivertest_int_edge, setup,
-                                               teardown, &pre_build),
-      cmocka_unit_test_prestate_setup_teardown(drivertest_int_level, setup,
-                                               teardown, &pre_build),
+      cmocka_unit_test_prestate_setup_teardown(drivertest_gpio_bool,
+                                               setup, teardown,
+                                               &gpio),
+      cmocka_unit_test_prestate_setup_teardown(drivertest_gpio_loop,
+                                               setup, teardown,
+                                               &gpio),
+      cmocka_unit_test_prestate_setup_teardown(drivertest_gpio_rw,
+                                                setup, teardown,
+                                                &gpio),
+      cmocka_unit_test_prestate_setup_teardown(drivertest_gpio_interrupt,
+                                               setup, teardown,
+                                               &gpio),
     };
 
   return cmocka_run_group_tests(tests, NULL, NULL);
