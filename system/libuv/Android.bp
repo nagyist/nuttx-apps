@@ -49,6 +49,7 @@ cc_library_static {
     cflags: [
         //"-DANDROID",
         "-D_GNU_SOURCE",    // For LibUV on Android/Linux
+        "-DDEF_THREADPOOL_SIZE=1",
         "-DCONFIG_NET_RPMSG",
         "-Werror",
         "-Wno-missing-field-initializers",
