@@ -136,6 +136,11 @@ MAINSRC  += drivertest_cpufreq.c
 PROGNAME += cmocka_driver_cpufreq
 endif
 
+ifneq ($(CONFIG_DEVFREQ),)
+MAINSRC  += drivertest_devfreq.c
+PROGNAME += cmocka_driver_devfreq
+endif
+
 ifneq ($(CONFIG_VIDEO_FB),)
 MAINSRC  += drivertest_framebuffer.c
 PROGNAME += cmocka_driver_framebuffer

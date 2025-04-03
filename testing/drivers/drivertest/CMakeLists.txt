@@ -357,6 +357,22 @@ if(CONFIG_TESTING_DRIVER_TEST)
       drivertest_cpufreq.c)
   endif()
 
+  if(CONFIG_DEVFREQ)
+    nuttx_add_application(
+      NAME
+      cmocka_driver_devfreq
+      PRIORITY
+      ${CONFIG_TESTING_DRIVER_TEST_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_DRIVER_TEST_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_DRIVER_TEST}
+      DEPENDS
+      cmocka
+      SRCS
+      drivertest_devfreq.c)
+  endif()
+
   if(CONFIG_VIDEO_FB)
     nuttx_add_application(
       NAME
