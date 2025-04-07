@@ -562,7 +562,11 @@ static int rpsock_stream_client_latency(FAR char *argv[], int argc)
     }
 
   printf("client connect times: %d, len:%d\n", cnt, len);
-  rpsock_logout("avg", total_time / cnt);
+  if (cnt)
+    {
+      rpsock_logout("avg", total_time / cnt);
+    }
+
   rpsock_logout("min", min);
   rpsock_logout("max", max);
 
