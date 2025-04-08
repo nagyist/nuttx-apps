@@ -317,7 +317,7 @@ static int trace_cmd_mode(FAR const char *name, int index, int argc,
   /* Get current trace mode */
 
   strlcpy(mode.name, name, NAME_MAX);
-  ioctl(notectlfd, NOTE_GETMODE, (unsigned long)&mode);
+  ioctl(notectlfd, NOTE_GETFILTER, (unsigned long)&mode);
   owmode = trace_dump_get_overwrite();
 
   /* Parse the mode setting parameters */
@@ -416,7 +416,7 @@ static int trace_cmd_mode(FAR const char *name, int index, int argc,
     {
       /* Update trace mode */
 
-      ioctl(notectlfd, NOTE_SETMODE, (unsigned long)&mode);
+      ioctl(notectlfd, NOTE_SETFILTER, (unsigned long)&mode);
       trace_dump_set_overwrite(owmode);
 
       return index;
@@ -499,7 +499,7 @@ static int trace_cmd_switch(FAR const char *name, int index, int argc,
   /* Get current filter setting */
 
   strlcpy(mode.name, name, NAME_MAX);
-  ioctl(notectlfd, NOTE_GETMODE, (unsigned long)&mode);
+  ioctl(notectlfd, NOTE_GETFILTER, (unsigned long)&mode);
 
   /* Parse the setting parameters */
 
@@ -525,7 +525,7 @@ static int trace_cmd_switch(FAR const char *name, int index, int argc,
               mode.mode.flag &= ~NOTE_FILTER_MODE_FLAG_SWITCH;
             }
 
-          ioctl(notectlfd, NOTE_SETMODE, (unsigned long)&mode);
+          ioctl(notectlfd, NOTE_SETFILTER, (unsigned long)&mode);
         }
     }
 
