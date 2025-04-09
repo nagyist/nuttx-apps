@@ -387,6 +387,17 @@ int compress_set_event_callback(FAR struct compress *compress,
                                 compress_event_t on_event,
                                 FAR void *cookie);
 
+/* compress_get_current_config: get current config info from driver
+ *
+ * return 0 on success, negative on error
+ *
+ * @compress: compress stream for which metadata has to set
+ * @config: pointer to current config
+ */
+
+int compress_get_current_config(FAR struct compress *compress,
+                                FAR struct compr_config *config);
+
 /* compress_get_file_descriptor: get the poll file descriptor
  * return 0 on success, negative on error
  *

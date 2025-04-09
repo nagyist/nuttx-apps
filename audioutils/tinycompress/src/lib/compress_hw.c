@@ -574,11 +574,6 @@ static void *compress_hw_open_by_name(FAR const char *name,
   FAR struct compress_hw_data *compress;
   int ret;
 
-  if (!config)
-    {
-      return NULL;
-    }
-
   if (!((flags & COMPRESS_OUT) || (flags & COMPRESS_IN)))
     {
       return NULL;
@@ -598,6 +593,11 @@ static void *compress_hw_open_by_name(FAR const char *name,
   if (ret < 0)
     {
       goto fail;
+    }
+
+  if (!config)
+    {
+      return compress;
     }
 
   ret = compress_hw_configure(compress, config);
@@ -1027,6 +1027,29 @@ static int compress_hw_set_params(FAR void *compress_data,
   return 0;
 }
 
+static int compress_hw_get_current_config(FAR void *compress_data,
+                                          FAR struct compr_config *config)
+{
+  FAR struct compress_hw_data *compress = compress_data;
+  struct ap_buffer_info_s buf_info;
+  int ret;
+
+  if (!config)
+    {
+      return -EINVAL;
+    }
+
+  ret = ioctl(compress->fd, AUDIOIOC_GETBUFFERINFO, &buf_info);
+  if (ret < 0)
+    {
+      return -errno;
+    }
+
+  config->fragments = buf_info.nbuffers;
+  config->fragment_size = buf_info.buffer_size;
+  return compress_hw_get_codec_params(compress, config->codec);
+}
+
 static int compress_hw_set_event_callback(FAR void *compress_data,
                                           compress_event_t on_event,
                                           FAR void *cookie)
@@ -1073,6 +1096,7 @@ const struct compress_ops g_compress_hw_ops =
   .set_volume = compress_hw_set_volume,
   .set_params = compress_hw_set_params,
   .set_event_callback = compress_hw_set_event_callback,
+  .get_current_config = compress_hw_get_current_config,
   .get_file_descriptor = compress_hw_get_file_descriptor,
   .poll_available = compress_hw_poll_available,
   .flush = compress_hw_flush,

@@ -62,6 +62,8 @@ struct compress_ops
   int (*set_params)(FAR void *compress_data, FAR const char *params);
   int (*set_event_callback)(FAR void *compress_data, compress_event_t event,
                             FAR void *cookie);
+  int (*get_current_config)(FAR void *compress_data,
+                            FAR struct compr_config *config);
   int (*get_file_descriptor)(FAR void *compress_data);
   int (*poll_available)(FAR void *compress_data);
   int (*flush)(FAR void *compress_data);
