@@ -21,7 +21,7 @@
 if(CONFIG_TESTING_UNITY)
   nuttx_add_library(unity)
 
-  if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/unity)
+  if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/Unity)
     FetchContent_Declare(
       unity
       DOWNLOAD_NAME "v${CONFIG_TESTING_UNITY_VERSION}.tar.gz"
