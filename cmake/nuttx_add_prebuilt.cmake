@@ -98,6 +98,11 @@ function(nuttx_add_prebuilt)
   if(EXPORT_LIBS)
     foreach(lib ${EXPORT_LIBS})
       string(REGEX REPLACE "[^a-zA-Z0-9]" "_" prebuilt_target "${lib}")
+
+      if(NOT EXISTS "${PREBUILT_LIB_PATH}")
+        file(MAKE_DIRECTORY "${PREBUILT_LIB_PATH}")
+      endif()
+
       add_custom_target(
         ${prebuilt_target}
         COMMAND
