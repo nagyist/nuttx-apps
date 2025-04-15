@@ -67,7 +67,9 @@ struct performance_entry_s
 static size_t pthread_create_performance(void);
 static size_t pthread_switch_performance(void);
 static size_t context_switch_performance(void);
+#ifdef CONFIG_BUILD_FLAT
 static size_t hpwork_performance(void);
+#endif
 static size_t poll_performance(void);
 static size_t semwait_performance(void);
 static size_t sempost_performance(void);
@@ -81,7 +83,9 @@ static const struct performance_entry_s g_entry_list[] =
   {"pthread-create", pthread_create_performance},
   {"pthread-switch", pthread_switch_performance},
   {"context-switch", context_switch_performance},
+#ifdef CONFIG_BUILD_FLAT
   {"hpwork", hpwork_performance},
+#endif
   {"poll-write", poll_performance},
   {"semwait", semwait_performance},
   {"sempost", sempost_performance},
@@ -209,6 +213,7 @@ static size_t context_switch_performance(void)
   return performance_gettime(&time);
 }
 
+#ifdef CONFIG_BUILD_FLAT
 /****************************************************************************
  * wdog performance
  ****************************************************************************/
@@ -244,6 +249,7 @@ static size_t hpwork_performance(void)
   sem_wait(&sem);
   return performance_gettime(&result);
 }
+#endif
 
 /****************************************************************************
  * poll-write performance
@@ -352,11 +358,15 @@ static void performance_run(const FAR struct performance_entry_s *item,
 
   for (i = 0; i < count; i++)
     {
+#ifdef CONFIG_BUILD_FLAT
       irqstate_t flags = up_irq_save();
+#endif
       sched_lock();
       size_t time = item->entry();
-      up_irq_restore(flags);
       sched_unlock();
+#ifdef CONFIG_BUILD_FLAT
+      up_irq_restore(flags);
+#endif
 
       total += time;
       if (time > max)
