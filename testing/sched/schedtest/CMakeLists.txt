@@ -139,6 +139,8 @@ if(CONFIG_TESTING_SCHEDTEST)
   nuttx_add_application(
     NAME
     signaltest
+    INCLUDE_DIRECTORIES
+    ${NUTTX_DIR}/sched
     PRIORITY
     ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
     STACKSIZE
