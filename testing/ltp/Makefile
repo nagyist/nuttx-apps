@@ -524,7 +524,9 @@ CSRCS   += ltp/lib/parse_opts.c
 CSRCS   += ltp/lib/self_exec.c
 CSRCS   += ltp/lib/tst_ansi_color.c
 CSRCS   += ltp/lib/tst_assert.c
+ifeq ($(CONFIG_DEV_LOOP),y)
 CSRCS   += ltp/lib/tst_device.c
+endif
 CSRCS   += ltp/lib/tst_res.c
 CSRCS   += ltp/lib/tst_sys_conf.c
 CSRCS   += ltp/lib/tst_test.c
