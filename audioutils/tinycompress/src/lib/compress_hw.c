@@ -63,6 +63,9 @@ struct compress_hw_data
   FAR void *session;
   dq_queue_t bufferq;
   struct compr_config config;
+
+  compress_event_t on_event;
+  FAR void *cookie;
 };
 
 /****************************************************************************
@@ -481,6 +484,13 @@ static int compress_hw_poll_available(FAR void *compress_data)
           buffer = msg.u.ptr;
           buffer->curbyte = 0;
           dq_addlast(&buffer->dq_entry, &compress->bufferq);
+        }
+      else
+        {
+          if (compress->on_event)
+            {
+              compress->on_event(compress->cookie, msg.msg_id, msg.u.ptr);
+            }
         }
 
       received = true;
@@ -1008,6 +1018,17 @@ static int compress_hw_set_codec_params(FAR void *compress_data,
   return -ENOTSUP;
 }
 
+static int compress_hw_set_event_callback(FAR void *compress_data,
+                                          compress_event_t on_event,
+                                          FAR void *cookie)
+{
+  FAR struct compress_hw_data *compress = compress_data;
+
+  compress->cookie = cookie;
+  compress->on_event  = on_event;
+  return 0;
+}
+
 static int compress_hw_get_file_descriptor(FAR void *compress_data)
 {
   FAR struct compress_hw_data *compress = compress_data;
@@ -1041,7 +1062,8 @@ const struct compress_ops g_compress_hw_ops =
   .set_codec_params = compress_hw_set_codec_params,
   .set_volume = compress_hw_set_volume,
   .set_params = compress_hw_set_params,
-  .poll_available = compress_hw_poll_available,
+  .set_event_callback = compress_hw_set_event_callback,
   .get_file_descriptor = compress_hw_get_file_descriptor,
+  .poll_available = compress_hw_poll_available,
   .flush = compress_hw_flush,
 };

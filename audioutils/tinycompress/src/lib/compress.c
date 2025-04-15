@@ -296,6 +296,13 @@ int compress_set_params(FAR struct compress *compress,
   return compress->ops->set_params(compress->data, params);
 }
 
+int compress_set_event_callback(FAR struct compress *compress,
+                                compress_event_t on_event,
+                                FAR void *cookie)
+{
+  return compress->ops->set_event_callback(compress->data, on_event, cookie);
+}
+
 int compress_get_file_descriptor(FAR struct compress *compress)
 {
   return compress->ops->get_file_descriptor(compress->data);

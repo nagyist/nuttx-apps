@@ -97,6 +97,9 @@ struct compr_gapless_mdata
 
 struct compress;
 
+typedef void (*compress_event_t)(FAR void *cookie, int msgid,
+                                 FAR const void *extra);
+
 /****************************************************************************
  * Public Function Prototypes
  ****************************************************************************/
@@ -360,6 +363,19 @@ int compress_set_volume(FAR struct compress *compress, float volume);
 
 int compress_set_params(FAR struct compress *compress,
                         FAR const char *params);
+
+/* compress_set_event_callback: set event callback function
+ *
+ * return 0 on success, negative on error
+ *
+ * @compress: compress stream for which callback has to set
+ * @on_event: event callback
+ * @cookie:   callback argument
+ */
+
+int compress_set_event_callback(FAR struct compress *compress,
+                                compress_event_t on_event,
+                                FAR void *cookie);
 
 /* compress_get_file_descriptor: get the poll file descriptor
  * return 0 on success, negative on error
