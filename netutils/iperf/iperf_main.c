@@ -25,12 +25,12 @@
 #include <nuttx/config.h>
 
 #include <arpa/inet.h>
+#include <getopt.h>
 #include <net/if.h>
 #include <strings.h>
 #include <sys/time.h>
 #include <sys/vm_sockets.h>
 
-#include "argtable3.h"
 #include "iperf.h"
 #include "netutils/netlib.h"
 
@@ -52,20 +52,17 @@
  * Private Types
  ****************************************************************************/
 
-struct wifi_iperf_t
+struct wifi_iperf_s
 {
-  FAR struct arg_str *ip;
-  FAR struct arg_lit *server;
-  FAR struct arg_lit *udp;
-  FAR struct arg_str *local;
-  FAR struct arg_str *rpmsg;
-  FAR struct arg_str *vsock;
-  FAR struct arg_str *bind;
-  FAR struct arg_int *port;
-  FAR struct arg_int *interval;
-  FAR struct arg_int *time;
-  FAR struct arg_lit *abort;
-  FAR struct arg_end *end;
+  FAR char *client;
+  FAR char *local;
+  FAR char *rpmsg;
+  FAR char *vsock;
+  FAR char *bind;
+  int port;
+  int interval;
+  int abort;
+  int time;
 };
 
 /****************************************************************************
@@ -80,17 +77,25 @@ struct wifi_iperf_t
  *
  ****************************************************************************/
 
-static void iperf_showusage(FAR const char *progname,
-                            FAR struct wifi_iperf_t *args, int exitcode)
+static void iperf_showusage(FAR const char *progname)
 {
   printf("USAGE: %s [-sua] [-c <ip|cpu>] [-p <port>] [-i <interval>] "
          "[-t <time>] [--local <path>] [--rpmsg <name>] "
          "[--vsock <host/guest>]\n", progname);
-  printf("iperf command:\n");
-  arg_print_glossary(stdout, (FAR void **)args, NULL);
-
-  arg_freetable((FAR void **)args, 1);
-  exit(exitcode);
+  printf("iperf command:\n"
+         "  -c, --client=<ip>    run in client mode, connecting to <host>\n"
+         "  -s, --server         run in server mode\n"
+         "  -u, --udp            use UDP rather than TCP\n"
+         "  --local=[<path>]     use local socket\n"
+         "  --rpmsg=<name>       use RPMsg socket\n"
+         "  --vsock=<host/guest> use Vsocket\n"
+         "  -B, --bind=<ip>      ip to bind\n"
+         "  -p, --port=<port>    server port to listen on/connect to\n"
+         "  -i, --interval=<interval> seconds between periodic bandwidth"
+         " reports\n"
+         "  -t, --time=<time>    time in seconds to transmit for (default 10"
+         " secs)\n"
+         "  -a, --abort          abort running iperf\n");
 }
 
 /****************************************************************************
@@ -142,110 +147,136 @@ static void iperf_printcfg(FAR struct iperf_cfg_t *cfg)
 
 int main(int argc, FAR char *argv[])
 {
-  struct wifi_iperf_t iperf_args;
+  struct wifi_iperf_s iperf;
   struct iperf_cfg_t cfg;
   struct in_addr addr;
-  int nerrors;
+  int opt;
+
+  struct option loptions[] =
+  {
+    {"local", optional_argument, 0, 'L'},
+    {"rpmsg", required_argument, 0, 'R'},
+    {"vsock", required_argument, 0, 'V'},
+    {0, 0, 0, 0}
+  };
 
 #ifdef CONFIG_NET_IPv4
   char inetaddr[INET_ADDRSTRLEN];
 #endif
 
-  bzero(&addr, sizeof(struct in_addr));
+  bzero(&iperf, sizeof(iperf));
+  bzero(&addr, sizeof(addr));
   bzero(&cfg, sizeof(cfg));
 
-  iperf_args.ip = arg_str0("c", "client", "<ip>",
-                           "run in client mode, connecting to <host>");
-  iperf_args.server = arg_lit0("s", "server", "run in server mode");
-  iperf_args.udp = arg_lit0("u", "udp", "use UDP rather than TCP");
-  iperf_args.local = arg_str0(NULL, "local", "<path>", "use local socket");
-  iperf_args.rpmsg = arg_str0(NULL, "rpmsg", "<name>", "use RPMsg socket");
-  iperf_args.vsock = arg_str0(NULL, "vsock", "<host/guest>", "use Vsocket");
-  iperf_args.bind = arg_str0("B", "bind", "<ip>", "ip to bind");
-  iperf_args.port = arg_int0("p", "port", "<port>",
-                             "server port to listen on/connect to");
-  iperf_args.interval = arg_int0("i", "interval", "<interval>",
-                            "seconds between periodic bandwidth reports");
-  iperf_args.time = arg_int0("t", "time", "<time>",
-                        "time in seconds to transmit for (default 10 secs)");
-  iperf_args.abort = arg_lit0("a", "abort", "abort running iperf");
-  iperf_args.end = arg_end(1);
+  cfg.flag |= IPERF_FLAG_TCP;
+  cfg.interval = IPERF_DEFAULT_INTERVAL;
+  cfg.sport = IPERF_DEFAULT_PORT;
+  cfg.dport = IPERF_DEFAULT_PORT;
 
-  /* Value of local is needed for server, optional for client. */
-
-  iperf_args.local->hdr.flag |= ARG_HASOPTVALUE;
-
-  nerrors = arg_parse(argc, argv, (FAR void**) &iperf_args);
-  if (nerrors != 0)
+  while ((opt = getopt_long(argc, argv, "sua:c:B:p:i:t:",
+                            loptions, NULL)) != -1)
     {
-      arg_print_errors(stderr, iperf_args.end, argv[0]);
-      iperf_showusage(argv[0], &iperf_args, 0);
+      switch (opt)
+        {
+          case 's':
+            cfg.flag |= IPERF_FLAG_SERVER;
+            break;
+          case 'u':
+            cfg.flag &= ~IPERF_FLAG_TCP;
+            cfg.flag |= IPERF_FLAG_UDP;
+            break;
+          case 'a':
+            iperf.abort = 1;
+          case 'c':
+            cfg.flag |= IPERF_FLAG_CLIENT;
+            iperf.client = optarg;
+            break;
+          case 'B':
+            iperf.bind = optarg;
+            break;
+          case 'p':
+            iperf.port = strtoul(optarg, NULL, 0);
+            break;
+          case 'i':
+            iperf.interval = strtoul(optarg, NULL, 0);
+            break;
+          case 't':
+            iperf.time = strtoul(optarg, NULL, 0);
+            break;
+          case 'L':
+            cfg.flag |= IPERF_FLAG_LOCAL;
+            iperf.local = optarg;
+            break;
+          case 'R':
+            cfg.flag |= IPERF_FLAG_RPMSG;
+            iperf.rpmsg = optarg;
+            break;
+          case 'V':
+            cfg.flag |= IPERF_FLAG_VSOCK;
+            iperf.vsock = optarg;
+            break;
+          case '?':
+            iperf_showusage(argv[0]);
+            exit(EXIT_FAILURE);
+      }
     }
 
-  if (iperf_args.abort->count != 0)
+  if (iperf.abort != 0)
     {
       iperf_stop();
-      printf("ERROR: abort->count: %d\n", iperf_args.abort->count);
-      iperf_showusage(argv[0], &iperf_args, 0);
+      printf("ERROR: abort: %d\n", iperf.abort);
+      goto out;
     }
 
-  if (((iperf_args.ip->count == 0) && (iperf_args.server->count == 0)) ||
-         ((iperf_args.ip->count != 0) && (iperf_args.server->count != 0)))
+  if (((cfg.flag & IPERF_FLAG_SERVER) == 0 &&
+       (cfg.flag & IPERF_FLAG_CLIENT) == 0) ||
+      ((cfg.flag & IPERF_FLAG_SERVER) != 0 &&
+       (cfg.flag & IPERF_FLAG_CLIENT) != 0))
     {
       printf("ERROR: should specific client/server mode\n");
-      iperf_showusage(argv[0], &iperf_args, 0);
+      goto out;
     }
 
-  if (iperf_args.ip->count == 0)
+  if (cfg.flag & IPERF_FLAG_SERVER)
     {
-      cfg.host  = "";
-      cfg.flag |= IPERF_FLAG_SERVER;
+      cfg.host = "";
     }
   else
     {
-      cfg.dip   = inet_addr(iperf_args.ip->sval[0]);
-      cfg.host  = iperf_args.ip->sval[0];
-      cfg.flag |= IPERF_FLAG_CLIENT;
+      cfg.dip  = inet_addr(iperf.client);
+      cfg.host = iperf.client;
     }
 
-  if (iperf_args.local->count > 0)
+  if (cfg.flag & IPERF_FLAG_LOCAL)
     {
-      cfg.flag |= IPERF_FLAG_LOCAL;
-      if (strlen(iperf_args.local->sval[0]) > 0)
+      if (iperf.local)
         {
-          /* iperf -s --local <path> or iperf -c <whatever> --local <path> */
-
-          cfg.path = iperf_args.local->sval[0];
+          cfg.path = iperf.local;
         }
-      else if (iperf_args.ip->count > 0)
+      else if (iperf.client)
         {
-          /* iperf -c <path> --local */
-
-          cfg.path = iperf_args.ip->sval[0];
+          cfg.path = iperf.client;
         }
       else
         {
           printf("ERROR: should specific local socket path\n");
-          iperf_showusage(argv[0], &iperf_args, 0);
+          goto out;
         }
     }
-  else if (iperf_args.rpmsg->count > 0)
+  else if (cfg.flag & IPERF_FLAG_RPMSG)
     {
-      cfg.flag |= IPERF_FLAG_RPMSG;
-      cfg.path  = iperf_args.rpmsg->sval[0];
+      cfg.path = iperf.rpmsg;
     }
-  else if (iperf_args.vsock->count > 0)
+  else if (cfg.flag & IPERF_FLAG_VSOCK)
     {
-      cfg.flag |= IPERF_FLAG_VSOCK;
-      if (strlen(iperf_args.vsock->sval[0]) > 0 &&
-          strncmp(iperf_args.vsock->sval[0], "guest", 5) == 0)
+      if (strncmp(iperf.vsock, "guest", 5) == 0)
         {
           cfg.flag |= IPERF_FLAG_VGUEST;
         }
 
-      if (iperf_args.ip->count > 0)
+      if (cfg.flag & IPERF_FLAG_CLIENT)
         {
-          cfg.cid = atoi(iperf_args.ip->sval[0]);
+          cfg.cid = atoi(iperf.client);
         }
       else
         {
@@ -255,9 +286,9 @@ int main(int argc, FAR char *argv[])
   else
     {
 #ifdef CONFIG_NET_IPv4
-      if (iperf_args.bind->count > 0)
+      if (iperf.bind)
         {
-          addr.s_addr = inet_addr(iperf_args.bind->sval[0]);
+          addr.s_addr = inet_addr(iperf.bind);
           if (addr.s_addr == INADDR_NONE)
             {
               printf("ERROR: access IP is 0xffffffff\n");
@@ -275,7 +306,6 @@ int main(int argc, FAR char *argv[])
         }
 
       printf("     IP: %s\n", inet_ntoa_r(addr, inetaddr, sizeof(inetaddr)));
-
       cfg.sip = addr.s_addr;
 #else
       printf("ERROR: IPv4 Not Enabled\n");
@@ -283,53 +313,27 @@ int main(int argc, FAR char *argv[])
 #endif
     }
 
-  if (iperf_args.udp->count == 0)
-    {
-      cfg.flag |= IPERF_FLAG_TCP;
-    }
-  else
-    {
-      cfg.flag |= IPERF_FLAG_UDP;
-    }
-
-  if (iperf_args.port->count == 0)
-    {
-      cfg.sport = IPERF_DEFAULT_PORT;
-      cfg.dport = IPERF_DEFAULT_PORT;
-    }
-  else
+  if (iperf.port != 0)
     {
       if (cfg.flag & IPERF_FLAG_SERVER)
         {
-          cfg.sport = iperf_args.port->ival[0];
-          cfg.dport = IPERF_DEFAULT_PORT;
+          cfg.sport = iperf.port;
         }
       else
         {
-          cfg.sport = IPERF_DEFAULT_PORT;
-          cfg.dport = iperf_args.port->ival[0];
+          cfg.dport = iperf.port;
         }
     }
 
-  if (iperf_args.interval->count == 0)
+  if (iperf.interval > 0)
     {
-      cfg.interval = IPERF_DEFAULT_INTERVAL;
-    }
-  else
-    {
-      cfg.interval = iperf_args.interval->ival[0];
-      if (cfg.interval <= 0)
-        {
-          cfg.interval = IPERF_DEFAULT_INTERVAL;
-        }
+      cfg.interval = iperf.interval;
     }
 
-  if (iperf_args.time->count == 0)
+  if (iperf.time == 0)
     {
-      if (iperf_args.server->count != 0)
+      if (cfg.flag & IPERF_FLAG_SERVER)
         {
-          /* Note: -t is a client-only option for the original iperf 2. */
-
           cfg.time = 0;
         }
       else
@@ -339,7 +343,7 @@ int main(int argc, FAR char *argv[])
     }
   else
     {
-      cfg.time = iperf_args.time->ival[0];
+      cfg.time = iperf.time;
       if (cfg.time != 0 && cfg.time <= cfg.interval)
         {
           cfg.time = cfg.interval;
@@ -348,9 +352,9 @@ int main(int argc, FAR char *argv[])
 
   iperf_printcfg(&cfg);
   iperf_start(&cfg);
+  return 0;
 
 out:
-  arg_freetable((FAR void **)&iperf_args, 1);
-
+  iperf_showusage(argv[0]);
   return 0;
 }

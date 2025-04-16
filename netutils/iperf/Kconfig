@@ -9,7 +9,6 @@ config NETUTILS_IPERF
 	depends on NET
 	select NETUTILS_NETLIB
 	select LIBC_FLOATINGPOINT
-	select SYSTEM_ARGTABLE3
 	---help---
 		Enable the \"iperf example\"
 
