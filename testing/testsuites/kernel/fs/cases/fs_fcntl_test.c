@@ -60,13 +60,11 @@ void test_nuttx_fs_fcntl01(FAR void **state)
 
   oldfd = open(TEST_FILE_1, O_CREAT | O_RDWR, 0700);
   assert_true(oldfd > 0);
-  test_state->fd1 = oldfd;
 
   /* do fcntl */
 
   newfd = fcntl(oldfd, F_DUPFD, 0);
   assert_true(newfd > 0);
-  test_state->fd2 = newfd;
 
   /* malloc memory */
 
@@ -82,6 +80,9 @@ void test_nuttx_fs_fcntl01(FAR void **state)
 
   ret = write(newfd, buf, BUFSIZ);
   assert_int_in_range(ret, 1, BUFSIZ);
+
+  close(oldfd);
+  close(newfd);
 }
 
 /****************************************************************************
@@ -103,9 +104,6 @@ void test_nuttx_fs_fcntl02(FAR void **state)
   int fd;
   int ret;
   int v;
-  struct fs_testsuites_state_s *test_state;
-
-  test_state = (struct fs_testsuites_state_s *)*state;
 
   /* open file */
 
@@ -116,7 +114,6 @@ void test_nuttx_fs_fcntl02(FAR void **state)
 
   v = fcntl(fd, F_GETFD);
   assert_int_in_range(v, 0, 255);
-  test_state->fd1 = fd;
 
   v |= FD_CLOEXEC;
 
@@ -124,9 +121,10 @@ void test_nuttx_fs_fcntl02(FAR void **state)
 
   ret = fcntl(fd, F_SETFD, v);
   assert_int_in_range(ret, 0, 255);
-  test_state->fd2 = ret;
   ret = (v == fcntl(fd, F_GETFD) ? 1 : 0);
   assert_int_equal(ret, 1);
+
+  close(fd);
 }
 
 /****************************************************************************
