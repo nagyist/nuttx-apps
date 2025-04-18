@@ -33,6 +33,7 @@
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/poll.h>
 
 #include <nuttx/ioexpander/gpio.h>
 
@@ -50,8 +51,8 @@ static void show_usage(FAR const char *progname)
           "driver.\n");
   fprintf(stderr, "\t-t <pintype>:  Change the pin to this pintype "
           "(0-10):\n");
-  fprintf(stderr, "\t-w <signo>:    Wait for a signal if this is an "
-          "interrupt pin.\n");
+  fprintf(stderr, "\t-w <signo>:    Wait for a signal if given "
+          "otherwise POLL mode if this is an interrupt pin.\n");
   fprintf(stderr, "\t-o <value>:    Write this value (0 or 1) if this is an "
           "output pin.\n");
   fprintf(stderr, "\t-h: Print this usage information and exit.\n");
@@ -375,23 +376,50 @@ int main(int argc, FAR char *argv[])
                       return EXIT_FAILURE;
                     }
                 }
+            }
+          else
+            {
+              /* poll POLLIN event interrupt pin */
 
-              /* Re-read the pin value */
+              struct pollfd fds;
+              fds.events = POLLIN;
+              fds.fd = fd;
 
-              ret = ioctl(fd, GPIOC_READ,
-                          (unsigned long)((uintptr_t)&invalue));
+              ret = ioctl(fd, GPIOC_REGISTER, NULL);
               if (ret < 0)
                 {
-                  int errcode = errno;
-                  fprintf(stderr,
-                          "ERROR: Failed to re-read value from %s: %d\n",
-                          devpath, errcode);
+                  fprintf(stderr, "ERROR: Failed to register irq: %s\n",
+                          strerror(errno));
                   close(fd);
                   return EXIT_FAILURE;
                 }
 
-              printf("  Verify:        Value=%u\n", (unsigned int)invalue);
+              ret = poll(&fds, 1, -1);
+              if (ret < 0)
+                {
+                  fprintf(stderr, "ERROR: Failed to poll events: %s\n",
+                          strerror(errno));
+                  close(fd);
+                  return EXIT_FAILURE;
+                }
+
+              ioctl(fd, GPIOC_UNREGISTER, 0);
             }
+
+          /* Re-read the pin value */
+
+          ret = ioctl(fd, GPIOC_READ, (unsigned long)((uintptr_t)&invalue));
+          if (ret < 0)
+            {
+              int errcode = errno;
+              fprintf(stderr,
+                      "ERROR: Failed to re-read value from %s: %d\n",
+                      devpath, errcode);
+              close(fd);
+              return EXIT_FAILURE;
+            }
+
+          printf("  Verify:        Value=%u\n", (unsigned int)invalue);
         }
         break;
 
