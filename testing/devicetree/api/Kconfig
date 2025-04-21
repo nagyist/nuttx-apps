@@ -1,0 +1,27 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config TESTING_DEVICETREE
+	tristate "vela cmocka devicetree test"
+	default n
+	depends on TESTING_CMOCKA
+	---help---
+		Enable the cmocka devicetree test
+
+if TESTING_DEVICETREE
+
+config TESTING_DEVICETREE_PRIORITY
+	int "Task priority"
+	default 100
+
+config TESTING_DEVICETREE_STACKSIZE
+	int "Stack size"
+	default DEFAULT_TASK_STACKSIZE
+
+config TESTING_DEVICETREE_OVERLAY_FILE
+	string "overlay file name"
+	default "app.overlay"
+
+endif
