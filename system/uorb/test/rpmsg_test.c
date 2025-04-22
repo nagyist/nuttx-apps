@@ -269,10 +269,28 @@ int main(int argc, FAR char *argv[])
   if (atoi(argv[1]) == 5)
     {
       ret = open(argv[2], 0);
-      ioctl(ret, SNIOC_GET_STATE, &state);
-      close(ret);
-      test_note("nadv:%"PRIu32", nsub:%"PRIu32"\n",
-                state.nadvertisers, state.nsubscribers);
+      if (ret >= 0)
+        {
+          if (ioctl(ret, SNIOC_GET_STATE, &state) < 0)
+            {
+              test_note("get state failed. errno:%d", errno);
+            }
+          else
+            {
+              test_note("nadv:%"PRIu32", nsub:%"PRIu32"\n",
+                        state.nadvertisers, state.nsubscribers);
+            }
+
+          close(ret);
+        }
+      else if(errno == ENOENT)
+        {
+          test_note("nadv:0, nsub:0");
+        }
+      else
+        {
+          test_note("failed to query path:%s. errno:%d", argv[2], errno);
+        }
     }
   else
     {
