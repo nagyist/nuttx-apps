@@ -23,6 +23,7 @@
 if(CONFIG_GRAPHICS_INPUT_GENERATOR)
   nuttx_add_library(input_generator)
   file(GLOB CSRCS generator/*.c)
+  list(REMOVE_ITEM CSRCS generator/input.c)
   target_sources(input_generator PRIVATE ${CSRCS})
 endif()
 

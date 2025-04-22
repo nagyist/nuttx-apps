@@ -23,7 +23,7 @@
 include $(APPDIR)/Make.defs
 
 ifneq ($(CONFIG_GRAPHICS_INPUT_GENERATOR),)
-CSRCS = $(wildcard generator/*.c)
+CSRCS = $(filter-out generator/input.c, $(wildcard generator/*.c))
 endif
 
 # Monkey test
