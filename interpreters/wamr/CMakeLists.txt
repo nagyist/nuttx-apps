@@ -45,6 +45,10 @@ if(CONFIG_INTERPRETERS_WAMR)
     endif()
   endif()
 
+  # NuttX don't support mremap even it has sys/mman.h, refer to the
+  # core/shared/platform/common/posix/platform_api_posix.cmake
+  set(MREMAP_EXISTS 0)
+
   nuttx_add_library(wamr STATIC)
 
   set_property(
