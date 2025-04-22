@@ -37,6 +37,7 @@
 #include <sys/poll.h>
 
 #include <nuttx/sched.h>
+#include <nuttx/wqueue.h>
 
 /****************************************************************************
  * Private Types
