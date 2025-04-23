@@ -133,12 +133,7 @@ static int orb_advsub_open(FAR const struct orb_metadata *meta, int flags,
 
   if (queue_size)
     {
-      ret = ioctl(fd, SNIOC_SET_BUFFER_NUMBER, (unsigned long)queue_size);
-      if (ret < 0)
-        {
-          close(fd);
-          return -errno;
-        }
+      ioctl(fd, SNIOC_SET_BUFFER_NUMBER, (unsigned long)queue_size);
     }
 
   return fd;
