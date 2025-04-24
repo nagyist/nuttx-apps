@@ -229,9 +229,6 @@ int mbedtls_aes_crypt_ctr(FAR mbedtls_aes_context *ctx,
     }
 
   ctx->dev.session.cipher = CRYPTO_AES_CTR;
-  memcpy(ctx->key + ctx->dev.session.keylen,
-         nonce_counter, NONCE_LENGTH);
-  ctx->dev.session.keylen += NONCE_LENGTH;
   ret = cryptodev_get_session(&ctx->dev);
   if (ret != 0)
     {
@@ -243,7 +240,7 @@ int mbedtls_aes_crypt_ctr(FAR mbedtls_aes_context *ctx,
   ctx->dev.crypt.len = length;
   ctx->dev.crypt.src = (caddr_t)input;
   ctx->dev.crypt.dst = (caddr_t)output;
-  ctx->dev.crypt.iv = (caddr_t)nonce_counter + NONCE_LENGTH;
+  ctx->dev.crypt.iv = (caddr_t)nonce_counter;
   ret = cryptodev_crypt(&ctx->dev);
   if (ret == 0)
     {
@@ -296,7 +293,6 @@ int mbedtls_aes_crypt_xts(FAR mbedtls_aes_xts_context *ctx,
                           FAR unsigned char *output)
 {
   int ret;
-  unsigned char iv[16];
 
   if (mode != MBEDTLS_AES_ENCRYPT && mode != MBEDTLS_AES_DECRYPT)
     {
@@ -324,14 +320,13 @@ int mbedtls_aes_crypt_xts(FAR mbedtls_aes_xts_context *ctx,
       return ret;
     }
 
-  memcpy(iv, data_unit, 16);
   ctx->dev.crypt.ses = ctx->dev.session.ses;
   ctx->dev.crypt.op = mode == MBEDTLS_AES_ENCRYPT ?
                               COP_ENCRYPT : COP_DECRYPT;
   ctx->dev.crypt.len = length;
   ctx->dev.crypt.src = (caddr_t)input;
   ctx->dev.crypt.dst = (caddr_t)output;
-  ctx->dev.crypt.iv = (caddr_t)iv;
+  ctx->dev.crypt.iv = (caddr_t)data_unit;
   ret = cryptodev_crypt(&ctx->dev);
   cryptodev_free_session(&ctx->dev);
   return ret;
