@@ -65,7 +65,7 @@ static void note_ioctl(int cmd, unsigned long arg)
  *
  ****************************************************************************/
 
-int trace_dump(FAR FILE *out)
+int trace_dump(FAR FILE *out, bool binary)
 {
   uint8_t tracedata[1024];
   int ret;
@@ -78,6 +78,17 @@ int trace_dump(FAR FILE *out)
     {
       fprintf(stderr, "trace: cannot open /dev/note/ram\n");
       return ERROR;
+    }
+
+  if (binary)
+    {
+      unsigned int mode = NOTE_MODE_READ_BINARY;
+      ret = ioctl(fd, NOTE_SETREADMODE, &mode);
+      if (ret < 0)
+        {
+          fprintf(stderr, "trace: cannot set read mode\n");
+          return ERROR;
+        }
     }
 
   /* Read and output all notes */
