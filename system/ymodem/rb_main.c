@@ -62,7 +62,7 @@ static int flush_data(FAR struct ymodem_priv_s *priv)
 {
   while (priv->fd > 0 && circbuf_used(&priv->circ))
     {
-      FAR uint8_t *buffer;
+      FAR const uint8_t *buffer;
       size_t i = 0;
       size_t size;
 
