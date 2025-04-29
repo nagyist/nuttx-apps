@@ -774,42 +774,89 @@ static int trace_cmd_irq(FAR const char *name, int index, int argc,
 static int trace_cmd_print(FAR const char *name, int index, int argc,
                            FAR char **argv, int notectlfd)
 {
+  struct note_filter_named_tag_s mode;
+  bool modified = false;
   bool enable;
-  struct note_filter_named_mode_s mode;
 
   /* Usage: trace print [+|-] */
 
   /* Get current filter setting */
 
   strlcpy(mode.name, name, NAME_MAX);
-  ioctl(notectlfd, NOTE_GETFILTER, (unsigned long)&mode);
+  ioctl(notectlfd, NOTE_GETTAGFILTER, (unsigned long)&mode);
 
   /* Parse the setting parameters */
 
-  if (index < argc)
+  while (index < argc)
     {
       if (argv[index][0] == '-' || argv[index][0] == '+')
         {
-          enable = (argv[index++][0] == '+');
-          if (enable ==
-              ((mode.mode.flag & NOTE_FILTER_MODE_FLAG_DUMP) != 0))
+          enable = (argv[index][0] == '+');
+          if (argv[index][1] == '*')
             {
-              /* Already set */
+              /* Mask or unmask all dump events */
 
-              return index;
-            }
-
-          if (enable)
-            {
-              mode.mode.flag |= NOTE_FILTER_MODE_FLAG_DUMP;
+              modified = true;
+              if (enable)
+                {
+                  NOTE_FILTER_TAGMASK_ZERO(&mode.tag_mask);
+                }
+              else
+                {
+                  NOTE_FILTER_TAGMASK_FILL(&mode.tag_mask);
+                }
             }
           else
             {
-              mode.mode.flag &= ~NOTE_FILTER_MODE_FLAG_DUMP;
+              FAR char *endptr;
+              int tag;
+
+              /* Get tag number */
+
+              tag = strtoul(&argv[index][1], &endptr, 0);
+              if (endptr == &argv[index][1] || *endptr != '\0' ||
+                  tag >= NOTE_TAG_LAST)
+                {
+                  fprintf(stderr,
+                          "trace irq: invalid argument '%s'\n", argv[index]);
+                  return ERROR;
+                }
+
+              /* Update the masked IRQ number list */
+
+              if (enable)
+                {
+                  NOTE_FILTER_TAGMASK_CLR(tag, &mode.tag_mask);
+                }
+              else
+                {
+                  NOTE_FILTER_TAGMASK_SET(tag, &mode.tag_mask);
+                }
             }
 
-          ioctl(notectlfd, NOTE_SETFILTER, (unsigned long)&mode);
+          index++;
+          modified = true;
         }
+    }
+
+  if (modified)
+    {
+      ioctl(notectlfd, NOTE_SETTAGFILTER, (unsigned long)&mode);
+    }
+  else
+    {
+      int n;
+
+      printf("Filtered Tags:");
+      for (n = 0; n < NOTE_TAG_LAST; n++)
+        {
+          if (NOTE_FILTER_TAGMASK_ISSET(n, &mode.tag_mask))
+            {
+              printf("  %d", n);
+            }
+        }
+
+      printf("\n");
     }
 
   return index;
