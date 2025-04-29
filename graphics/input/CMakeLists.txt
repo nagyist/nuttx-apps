@@ -23,13 +23,13 @@
 if(CONFIG_GRAPHICS_INPUT_GENERATOR)
   nuttx_add_library(input_generator)
   file(GLOB CSRCS generator/*.c)
-  list(REMOVE_ITEM CSRCS generator/input.c)
+  list(REMOVE_ITEM CSRCS ${CMAKE_CURRENT_SOURCE_DIR}/generator/input.c)
   target_sources(input_generator PRIVATE ${CSRCS})
 endif()
 
 if(CONFIG_GRAPHICS_INPUT_MONKEY)
   file(GLOB MONKEY_SRCS monkey/*.c)
-  list(REMOVE_ITEM MONKEY_SRCS monkey/monkey_main.c)
+  list(REMOVE_ITEM MONKEY_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/monkey/monkey_main.c)
   set(SRCS monkey/monkey_main.c ${MONKEY_SRCS})
 
   nuttx_add_application(
