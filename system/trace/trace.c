@@ -580,26 +580,42 @@ static int trace_cmd_syscall(FAR const char *name, int index, int argc,
 
       enable = (argv[index][0] == '+');
 
-      /* Check whether the given pattern matches for each syscall names */
-
-      for (syscallno = 0; syscallno < SYS_nsyscalls; syscallno++)
+      if (argv[index][1] == '*')
         {
-          if (fnmatch(&argv[index][1], g_funcnames[syscallno], 0))
-            {
-              continue;
-            }
-
-          /* If matches, update the masked syscall number list */
+          /* Mask or unmask all syscalls */
 
           if (enable)
             {
-              NOTE_FILTER_SYSCALLMASK_SET(syscallno,
-                                          &filter_syscall.syscall_mask);
+              NOTE_FILTER_SYSCALLMASK_ZERO(&filter_syscall.syscall_mask);
             }
           else
             {
-              NOTE_FILTER_SYSCALLMASK_CLR(syscallno,
-                                          &filter_syscall.syscall_mask);
+              NOTE_FILTER_SYSCALLMASK_FILL(&filter_syscall.syscall_mask);
+            }
+        }
+      else
+        {
+          /* Check whether the given pattern matches for each syscall names */
+
+          for (syscallno = 0; syscallno < SYS_nsyscalls; syscallno++)
+            {
+              if (fnmatch(&argv[index][1], g_funcnames[syscallno], 0))
+                {
+                  continue;
+                }
+
+              /* If matches, update the masked syscall number list */
+
+              if (enable)
+                {
+                  NOTE_FILTER_SYSCALLMASK_CLR(syscallno,
+                                              &filter_syscall.syscall_mask);
+                }
+              else
+                {
+                  NOTE_FILTER_SYSCALLMASK_SET(syscallno,
+                                              &filter_syscall.syscall_mask);
+                }
             }
         }
 
@@ -681,14 +697,11 @@ static int trace_cmd_irq(FAR const char *name, int index, int argc,
 
           if (enable)
             {
-              for (n = 0; n < NR_IRQS; n++)
-                {
-                  NOTE_FILTER_IRQMASK_SET(n, &filter_irq.irq_mask);
-                }
+              NOTE_FILTER_IRQMASK_ZERO(&filter_irq.irq_mask);
             }
           else
             {
-              NOTE_FILTER_IRQMASK_ZERO(&filter_irq.irq_mask);
+              NOTE_FILTER_IRQMASK_FILL(&filter_irq.irq_mask);
             }
         }
       else
@@ -708,11 +721,11 @@ static int trace_cmd_irq(FAR const char *name, int index, int argc,
 
           if (enable)
             {
-              NOTE_FILTER_IRQMASK_SET(irqno, &filter_irq.irq_mask);
+              NOTE_FILTER_IRQMASK_CLR(irqno, &filter_irq.irq_mask);
             }
           else
             {
-              NOTE_FILTER_IRQMASK_CLR(irqno, &filter_irq.irq_mask);
+              NOTE_FILTER_IRQMASK_SET(irqno, &filter_irq.irq_mask);
             }
         }
 
