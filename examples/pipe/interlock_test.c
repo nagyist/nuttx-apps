@@ -228,6 +228,7 @@ int interlock_test(void)
 
   /* Wait for null_writer thread to complete */
 
+  fd = -1;
   printf("interlock_test: Waiting for null_writer thread\n");
   ret = pthread_join(tid, &value);
   if (ret != 0)
