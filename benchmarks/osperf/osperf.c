@@ -74,6 +74,7 @@ static size_t hpwork_performance(void);
 static size_t poll_performance(void);
 static size_t semwait_performance(void);
 static size_t sempost_performance(void);
+static size_t nullop_performance(void);
 
 /****************************************************************************
  * Private Data
@@ -90,6 +91,7 @@ static const struct performance_entry_s g_entry_list[] =
   {"poll-write", poll_performance},
   {"semwait", semwait_performance},
   {"sempost", sempost_performance},
+  {"null-op", nullop_performance},
 };
 
 /****************************************************************************
@@ -328,6 +330,20 @@ static size_t sempost_performance(void)
   performance_end(&result);
 
   sem_destroy(&sem);
+  return performance_gettime(&result);
+}
+
+/****************************************************************************
+ * null_performance
+ ****************************************************************************/
+
+static size_t nullop_performance(void)
+{
+  struct performance_time_s result;
+
+  performance_start(&result);
+  performance_end(&result);
+
   return performance_gettime(&result);
 }
 
