@@ -56,12 +56,10 @@ void test_nuttx_syscall_symlink01(FAR void **state)
   sprintf(fname, "%s_tfile", __func__);
   fd = open(fname, O_RDWR | O_CREAT, 0700);
   assert_true(fd > 0);
-  if (fd > 0)
-    close(fd);
+  close(fd);
+
   sprintf(symlnk, "/%s_t_%d", __func__, gettid());
   ret = symlink(fname, symlnk);
-  if (fd > 0)
-    close(fd);
   assert_int_equal(ret, OK);
 
   assert_int_equal(unlink(fname), 0);
