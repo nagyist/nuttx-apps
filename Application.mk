@@ -299,7 +299,7 @@ $(PREFIX).built: $(AROBJS)
 	$(Q) touch $@
 
 ifeq ($(BUILD_MODULE),y)
-
+ifeq ($(WASM_BUILD),)
 $(MAINCXXOBJ): $(PREFIX)%$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)
 	$(if $(and $(CONFIG_MODULES),$(MODCXXFLAGS)), \
 		$(call ELFCOMPILEXX, $<, $@), $(call COMPILEXX, $<, $@))
@@ -332,7 +332,7 @@ endif
 
 install:: $(PROGLIST)
 	@:
-
+endif # WASM_BUILD
 else
 
 $(MAINCXXOBJ): $(PREFIX)%$(CXXEXT)$(SUFFIX)$(OBJEXT): %$(CXXEXT)

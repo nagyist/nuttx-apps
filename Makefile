@@ -93,6 +93,7 @@ ifeq ($(CONFIG_BUILD_KERNEL),y)
 install: $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_install)
 
 $(BIN): $(foreach SDIR, $(CONFIGURED_APPS), $(SDIR)_all)
+	$(call LINK_WASM)
 
 .import: $(BIN)
 	$(Q) install libapps.a $(APPDIR)$(DELIM)import$(DELIM)libs
