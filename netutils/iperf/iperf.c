@@ -66,6 +66,7 @@ struct iperf_ctrl_t
 {
   FAR struct iperf_ctrl_t *flink;
   struct iperf_cfg_t cfg;
+  pthread_t report_thread;
   bool finish;
   uintmax_t total_len;
   uint32_t buffer_len;
@@ -388,8 +389,7 @@ static int iperf_start_report(FAR struct iperf_ctrl_t *ctrl)
       return -1;
     }
 
-  pthread_detach(thread);
-
+  ctrl->report_thread = thread;
   return 0;
 }
 
@@ -605,6 +605,7 @@ static int iperf_tcp_server(FAR struct iperf_ctrl_t *ctrl,
     }
 
   ctrl->finish = true;
+  pthread_join(ctrl->report_thread, NULL);
   close(listen_socket);
 
   return 0;
@@ -688,6 +689,7 @@ static int iperf_udp_server(FAR struct iperf_ctrl_t *ctrl,
     }
 
   ctrl->finish = true;
+  pthread_join(ctrl->report_thread, NULL);
   close(sockfd);
 
   return 0;
@@ -782,6 +784,7 @@ static int iperf_udp_client(FAR struct iperf_ctrl_t *ctrl,
     }
 
   ctrl->finish = true;
+  pthread_join(ctrl->report_thread, NULL);
   close(sockfd);
 
   return 0;
@@ -848,6 +851,7 @@ static int iperf_tcp_client(FAR struct iperf_ctrl_t *ctrl,
     }
 
   ctrl->finish = true;
+  pthread_join(ctrl->report_thread, NULL);
   close(sockfd);
 
   return 0;
