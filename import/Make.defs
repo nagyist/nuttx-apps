@@ -97,6 +97,10 @@ ifeq ($(CONFIG_BINFMT_ELF_RELOCATABLE),y)
 endif
 LDELFFLAGS += -e __start -Bstatic
 
+ifeq ($(CONFIG_DEBUG_OPT_UNUSED_SECTIONS),y)
+LDELFFLAGS += --gc-sections
+endif
+
 # Remove other ld scripts, just use import ld scripts
 #
 LDFILE := $(filter -T %.ld, $(LDELFFLAGS))
