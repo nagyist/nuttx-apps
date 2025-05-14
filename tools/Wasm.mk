@@ -137,6 +137,9 @@ $(BINDIR)/wasm:
 
 depend:: $(BINDIR)/wasm
 
+install::
+	@:
+
 $(WOBJS): %.c$(SUFFIX).wo : %.c
 	$(Q) $(WCC) $(WCFLAGS) -c $^ -o $@
 
