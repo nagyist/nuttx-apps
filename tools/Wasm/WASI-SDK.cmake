@@ -263,6 +263,13 @@ function(wasm_add_application)
     set(LLVM_ABITYPE eabi)
   endif()
 
+  # arch x86_64
+  if(CONFIG_ARCH_X86_64)
+    set(LLVM_CPUTYPE x86-64)
+    set(LLVM_ARCHTYPE x86_64)
+    set(LLVM_ABITYPE gnu)
+  endif()
+
   set(RCFLAGS)
   set(WRC wamrc)
 
