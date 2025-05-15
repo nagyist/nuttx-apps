@@ -52,6 +52,7 @@
  ****************************************************************************/
 
 #define ICMP_IOBUFFER_SIZE(x) (sizeof(struct icmp_hdr_s) + (x))
+#define ICMP_SET_FILTER(t) (UINT32_MAX - (1U << (t)))
 
 /****************************************************************************
  * Private Types
@@ -222,6 +223,7 @@ void icmp_ping(FAR const struct ping_info_s *info)
   int ret;
   int ch;
   int i;
+  int filter;
 
   g_exiting = false;
   signal(SIGINT, sigexit);
@@ -272,6 +274,17 @@ void icmp_ping(FAR const struct ping_info_s *info)
         }
     }
 #endif
+
+  filter = ICMP_SET_FILTER(ICMP_ECHO_REPLY);
+  ret = setsockopt(priv->sockfd, IPPROTO_ICMP, ICMP_FILTER,
+                   &filter, sizeof(filter));
+  if (ret < 0)
+    {
+      icmp_callback(&result, ICMP_E_FILTER, errno);
+      close(priv->sockfd);
+      free(priv);
+      return;
+    }
 
   priv->kickoff = clock();
 
