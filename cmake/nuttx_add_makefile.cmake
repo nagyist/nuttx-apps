@@ -83,6 +83,14 @@ function(generate_common_defs)
       include $(TOPDIR)/arch/arm/src/armv8-m/Toolchain.defs
       endif
 
+      ifeq ($(CONFIG_ARCH_ARMV7R),y)
+      include $(TOPDIR)/arch/arm/src/armv7-r/Toolchain.defs
+      endif
+
+      ifeq ($(CONFIG_ARCH_ARMV8R),y)
+      include $(TOPDIR)/arch/arm/src/armv8-r/Toolchain.defs
+      endif
+
       # SIM specific
       ifeq ($(CONFIG_ARCH_SIM),y)
       include $(TOPDIR)/boards/sim/sim/sim/scripts/Make.defs
