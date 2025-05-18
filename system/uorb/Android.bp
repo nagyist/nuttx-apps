@@ -1,11 +1,11 @@
 cc_defaults {
     name: "uorb_defaults",
     cflags: [
+        "-DCODE=",
+        "-DCONFIG_DEBUG_UORB",
+        "-DERROR=-1",
         "-DFAR=",
         "-DOK=0",
-        "-DCODE=",
-        "-DERROR=-1",
-        "-DCONFIG_DEBUG_UORB"
     ],
     static_libs: [
         "libuorb",
@@ -30,12 +30,12 @@ cc_library_static {
         "sensor/*.c",
     ],
     cflags: [
-        "-DFAR=",
         "-DCODE=",
-        "-DOK=0",
-        "-DERROR=-1",
         "-DCONFIG_DEBUG_UORB",
-        "-DCONFIG_UORB_LOOP_MAX_EVENTS=16"
+        "-DCONFIG_UORB_LOOP_MAX_EVENTS=16",
+        "-DERROR=-1",
+        "-DFAR=",
+        "-DOK=0",
     ],
     static_libs: [
         "libnuttx_libc",
@@ -52,6 +52,12 @@ cc_library_static {
 cc_binary {
     name: "uorb_listener",
     srcs: ["listener.c"],
+    cflags: [
+        "-DCODE=",
+        "-DERROR=-1",
+        "-DFAR=",
+        "-DOK=0",
+    ],
     defaults: ["uorb_defaults"]
 }
 
@@ -93,7 +99,7 @@ cc_binary {
     ],
     defaults: ["uorb_defaults"],
     cflags: [
+        "-DCONFIG_UORB_STACKSIZE=2048",
         "-DSCHED_PRIORITY_MAX=255",
-        "-DCONFIG_UORB_STACKSIZE=2048"
     ]
 }

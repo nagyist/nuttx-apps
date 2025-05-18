@@ -19,5 +19,8 @@ cc_binary {
         "rpmsg_tun_server.c",
         "rpmsg_tun_util.c",
         ],
+    cflags: [
+        "-DCONFIG_NETUTILS_RPMSG_TUN_BUFSIZE=2048",
+    ],
     proprietary: true,
 }
