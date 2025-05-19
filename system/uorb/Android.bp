@@ -2,10 +2,11 @@ cc_defaults {
     name: "uorb_defaults",
     cflags: [
         "-DCODE=",
-        "-DCONFIG_DEBUG_UORB",
         "-DERROR=-1",
         "-DFAR=",
         "-DOK=0",
+        "-DCONFIG_DEBUG_UORB",
+        "-DCONFIG_UORB_PRIORITY=60"
     ],
     static_libs: [
         "libuorb",
