@@ -132,14 +132,20 @@ if(CONFIG_GRAPHICS_LVGL)
     target_compile_definitions(
       lvgl
       PRIVATE "LV_PROFILER_END=sched_note_endex(NOTE_TAG_GRAPHICS, __func__)")
-    target_compile_definitions(
-      lvgl
-      PRIVATE
-        "LV_PROFILER_BEGIN_TAG(str)=sched_note_beginex(NOTE_TAG_GRAPHICS, str)")
-    target_compile_definitions(
-      lvgl
-      PRIVATE
-        "LV_PROFILER_END_TAG(str)=sched_note_endex(NOTE_TAG_GRAPHICS, str)")
+
+    # ##########################################################################
+    set(LVGL_PROFILER_TAG_DEF
+        [=[
+#define LV_PROFILER_BEGIN_TAG(str) sched_note_beginex(NOTE_TAG_GRAPHICS, str)
+#define LV_PROFILER_END_TAG(str) sched_note_endex(NOTE_TAG_GRAPHICS, str)
+      ]=])
+
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/def_lvgl_profiler.h
+         "${LVGL_PROFILER_TAG_DEF}")
+    target_compile_options(
+      lvgl PRIVATE -include "${CMAKE_CURRENT_BINARY_DIR}/def_lvgl_profiler.h")
+    # ##########################################################################
+
   endif()
 
   if(NOT ${CONFIG_LV_OPTLEVEL} STREQUAL "")
