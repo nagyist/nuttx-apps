@@ -35,15 +35,13 @@ else
   WASM_BUILD ?= n
 endif
 
-# Force disable wasm build when WASM_SYSROOT is not defined and on specific
-# targets that do not support wasm build.
-# Since some architecture level inline assembly instructions can not be
-# recognized by wasm-clang. For example:
-# Error: /github/workspace/sources/nuttx/include/arch/chip/irq.h:220:27: error: invalid output constraint '=a' in asm
-# asm volatile("rdtscp" : "=a" (lo), "=d" (hi)::"memory");
+# If compiling for a 64-bit platform (X64 or ARM64 is set),
+# set the target to wasm64. This ensures that the generated WebAssembly
+# module uses the 64-bit WebAssembly target, which is necessary for
+# compatibility with 64-bit architectures.
 
-ifeq ($(CONFIG_ARCH_INTEL64)$(CONFIG_ARCH_SPARC_V8)$(CONFIG_ARCH_AVR)$(CONFIG_ARCH_XTENSA),y)
-  WASM_BUILD = n
+ifeq ($(CONFIG_ARCH_64BIT),y)
+  WCFLAGS += --target=wasm64
 endif
 
 # Build optimization flags from scratch
