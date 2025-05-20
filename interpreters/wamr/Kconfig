@@ -207,6 +207,14 @@ config INTERPRETERS_WAMR_MEMORY_TRACING
 	bool "Enable memory tracing"
 	default n
 
+config INTERPRETERS_WAMR_MEMORY64
+	bool "Enable memory64 support"
+	default n
+	---help---
+		Enable support for the WebAssembly MEMORY64 proposal, allowing
+		modules to use 64-bit memory addressing. This is an experimental
+		feature and may not be supported on all platforms or WAMR versions.
+
 config INTERPRETERS_WAMR_DUMP_CALL_STACK
 	bool "Enable dump call stack (on exception)"
 	default n
