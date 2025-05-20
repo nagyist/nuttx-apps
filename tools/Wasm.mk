@@ -42,10 +42,10 @@ define LINK_WASM
 	    $(if $(RETVAL), \
 	        $(error wasm build failed for $(PROGNAME).wasm) \
 	    ) \
-	    $(eval RETVAL=$(shell $(WASI_SDK_PATH)/wasm-opt -Oz -o $(BINDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).wasm \
+	    $(eval RETVAL=$(shell $(WASI_SDK_PATH)$(DELIM)wasm-opt $(WOPTFLAGS) -Oz -o $(BINDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).wasm \
 	        $(BINDIR)$(DELIM)wasm$(DELIM)$(PROGNAME).wasm || echo 1;)) \
 	    $(if $(RETVAL), \
-	        $(error wasm build failed for $(PROGNAME).wasm) \
+	        $(error wasm opt failed for $(PROGNAME).wasm) \
 	    ) \
 	    $(call STRIP_CONSTANT_SECTION,$(PROGNAME).wasm) \
 	    $(call WAMR_AOT_COMPILE) \

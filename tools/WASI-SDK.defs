@@ -42,6 +42,7 @@ endif
 
 ifeq ($(CONFIG_ARCH_64BIT),y)
   WCFLAGS += --target=wasm64
+  WOPTFLAGS += --enable-memory64
 endif
 
 # Build optimization flags from scratch
