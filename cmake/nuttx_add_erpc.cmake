@@ -27,7 +27,7 @@ include(nuttx_parse_function_args)
 #   Generate source code files using erpcgen and add them to the given target
 #
 # Example:
-#  nuttx_add_aidl(
+#  nuttx_add_erpc(
 #    TARGET
 #    apps
 #    ERPC_OUT_DIR
