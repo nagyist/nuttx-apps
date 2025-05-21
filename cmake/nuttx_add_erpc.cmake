@@ -33,7 +33,7 @@ include(nuttx_parse_function_args)
 #    ERPC_OUT_DIR
 #    ${CMAKE_CURRENT_BINARY_DIR}
 #    ERPCS
-#    TEST.erpc
+#    TEST.erpc)
 # ~~~
 
 function(nuttx_add_erpc)
@@ -61,7 +61,7 @@ function(nuttx_add_erpc)
     set(ERPC_TARGET erpc_${erpc_name}_target)
     add_custom_command(
       OUTPUT ${ERPC_SRC}
-      COMMAND erpcgen -o ${ERPC_OUT_DIR} ${erpc_file}
+      COMMAND erpcgen -a -o ${ERPC_OUT_DIR} ${erpc_file}
       WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
       COMMENT "ERPC: generating erpc files for ${erpc_name}.erpc"
       DEPENDS ${erpc_file}
@@ -69,6 +69,7 @@ function(nuttx_add_erpc)
 
     add_custom_target(${ERPC_TARGET} DEPENDS ${ERPC_SRC})
     target_include_directories(${TARGET} PRIVATE ${ERPC_OUT_DIR})
+    target_sources(${TARGET} PRIVATE ${ERPC_SRC})
     add_dependencies(${TARGET} erpc_${erpc_name}_target)
   endforeach()
 
