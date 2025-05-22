@@ -24,6 +24,7 @@
 
 #include <nuttx/config.h>
 #include <stdio.h>
+#include <unistd.h>
 
 /****************************************************************************
  * Public Functions
