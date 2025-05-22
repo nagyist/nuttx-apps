@@ -25,7 +25,7 @@ STACKSIZE = $(CONFIG_TESTING_SCHEDTEST_STACKSIZE)
 MODULE    = $(CONFIG_TESTING_SCHEDTEST)
 
 CFLAGS  += -I$(TOPDIR)/sched
-MAINSRC += wqueue.c rwsem.c signaltest.c
+MAINSRC += rwsem.c signaltest.c
 
 ifneq ($(CONFIG_SCHED_EVENTS),)
 MAINSRC += eventtest.c

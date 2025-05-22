@@ -39,6 +39,8 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+#define wqtest_assert(f, msg) __ASSERT__(f, __FILE__, __LINE__, msg)
+
 #define SLEEP_TIME   (100 * 1000)
 #define TEST_COUNT   (100)
 #define VERIFY_COUNT (100)
@@ -50,6 +52,39 @@
 #  define TEST_QUEUE           HPWORK
 #  define TEST_QUEUE_PRIORITY  CONFIG_SCHED_HPWORKPRIORITY
 #endif
+
+#define WORK_NOTIFIER_TEST_TIMEOUT_US 100000
+#define FD1                           10
+#define FD2                           11
+
+/****************************************************************************
+ * Private Types
+ ****************************************************************************/
+
+struct test_work1_s
+{
+  bool completed;
+};
+
+struct test_work2_s
+{
+  bool completed;
+  bool first_notify;
+};
+
+struct test_state_s
+{
+  struct test_work1_s test_work1;
+  struct test_work2_s test_work2;
+};
+
+/****************************************************************************
+ * Private Functions Prototypes
+ ****************************************************************************/
+
+/****************************************************************************
+ * Private Data
+ ****************************************************************************/
 
 /****************************************************************************
  * Private Functions
@@ -264,6 +299,161 @@ void wqueue_priority_test(int qid, FAR void *wq, int prio)
     }
 }
 
+#ifdef CONFIG_WQUEUE_NOTIFIER
+static void test_notifier1_callback(FAR void *arg)
+{
+  FAR struct test_work1_s *test_work = (FAR struct test_work1_s *)arg;
+  printf("notifier_callback: triggered.\n");
+  fflush(stdout);
+  if (test_work)
+    {
+      test_work->completed = true;
+      printf("test_work1 completed.\n");
+      printf("start triggering notifier signal 2.\n");
+      work_notifier_signal(WORK_NET_DOWN, (FAR void *)(intptr_t)FD2);
+    }
+}
+
+static void test_notifier2_callback(FAR void *arg)
+{
+  FAR struct test_work1_s *test_work = (struct test_work1_s *)arg;
+  test_work->completed               = true;
+  printf("notifier callback2 triggered.\n");
+}
+
+static int create_and_add_notifier(FAR void *test_work,
+                                   int evtype,
+                                   int fd,
+                                   worker_t worker)
+{
+  struct work_notifier_s info;
+  memset(&info, 0, sizeof(struct work_notifier_s));
+  info.evtype    = evtype;
+  info.qid       = HPWORK;
+  info.qualifier = (void *)(intptr_t)fd;
+  info.arg       = test_work;
+  info.worker    = worker;
+
+  int ret = work_notifier_setup(&info);
+  wqtest_assert(ret != -ENOMEM, "wqueue_test: work_notifier_setup() failed");
+
+  return ret;
+}
+
+static void test_work_notifier_signal(void)
+{
+  struct test_state_s test_state;
+  unsigned int elapsed  = 0;
+  unsigned int elapsed2 = 0;
+  int notifier_key1;
+  int notifier_key2;
+
+  memset(&test_state.test_work1, 0, sizeof(test_state.test_work1));
+  memset(&test_state.test_work2, 0, sizeof(test_state.test_work2));
+
+  notifier_key1 = create_and_add_notifier(
+      &test_state.test_work1, WORK_NET_DOWN, FD1, test_notifier1_callback);
+  wqtest_assert(notifier_key1 != -ENOMEM,
+                "wqueue_test: work_notifier_setup() failed");
+
+  notifier_key2 = create_and_add_notifier(
+      &test_state.test_work2, WORK_NET_DOWN, FD2, test_notifier2_callback);
+  wqtest_assert(notifier_key2 != -ENOMEM,
+                "wqueue_test: work_notifier_setup() failed");
+
+  printf("start sending notifier signal 1.\n");
+  work_notifier_signal(WORK_NET_DOWN, (void *)(intptr_t)FD1);
+
+  while (!test_state.test_work1.completed
+         && elapsed < WORK_NOTIFIER_TEST_TIMEOUT_US)
+    {
+      usleep(1000);
+      elapsed += 1000;
+    }
+
+  wqtest_assert(test_state.test_work1.completed, NULL);
+
+  if (test_state.test_work1.completed)
+    {
+      printf("notifier 1 processed success.\n");
+    }
+  else
+    {
+      printf("notifier 1 processing failed.\n");
+    }
+
+  while (!test_state.test_work2.completed
+         && elapsed2 < WORK_NOTIFIER_TEST_TIMEOUT_US)
+    {
+      usleep(1000);
+      elapsed2 += 1000;
+    }
+
+  wqtest_assert(test_state.test_work2.completed, NULL);
+
+  if (test_state.test_work2.completed)
+    {
+      printf("notifier 2 processed success.\n");
+    }
+  else
+    {
+      printf("notifier 2 processing failed.\n");
+    }
+
+  work_notifier_teardown(notifier_key1);
+  work_notifier_teardown(notifier_key2);
+}
+
+static void test_notifier_callback2(FAR void *arg)
+{
+  FAR struct test_work2_s *test_work = (struct test_work2_s *)arg;
+  if (test_work->first_notify)
+    {
+      printf("notifier callback2 triggered:first notify.\n");
+      test_work->first_notify = false;
+    }
+  else
+    {
+      printf("notifier callback2 triggered:second notify.\n");
+      test_work->completed = true;
+    }
+}
+
+static void test_work_notifier_teardown(void)
+{
+  struct test_work2_s test_work;
+  int notifier_key;
+  int fd                 = 1;
+  unsigned int elapsed   = 0;
+  test_work.first_notify = true;
+
+  memset(&test_work, 0, sizeof(test_work));
+
+  notifier_key = create_and_add_notifier(&test_work, WORK_NET_DOWN, fd,
+                                         test_notifier_callback2);
+
+  printf("start sending notifier signal.\n");
+  work_notifier_signal(WORK_NET_DOWN, (FAR void *)(intptr_t)(fd));
+
+  printf("start sending teardown notifier.\n");
+  work_notifier_teardown(notifier_key);
+  printf("notifier successfully torn down on first attempt.\n");
+
+  test_work.completed = false;
+  printf("sending second notifier signal.\n");
+  work_notifier_signal(WORK_NET_DOWN, (FAR void *)(intptr_t)fd);
+
+  while (!test_work.completed && elapsed < WORK_NOTIFIER_TEST_TIMEOUT_US)
+    {
+      usleep(1000);
+      elapsed += 1000;
+    }
+
+  printf("test completed,work status:%s\n",
+         test_work.completed ? "completed" : "teardown");
+}
+#endif /* CONFIG_WQUEUE_NOTIFIER */
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -294,6 +484,15 @@ void wqueue_test(void)
       work_queue_free(wq);
       printf("wqueue_test: test %d done\n", i);
     }
+
+#ifdef CONFIG_WQUEUE_NOTIFIER
+  printf("wqueue_test: work notifier test start...\n");
+  test_work_notifier_signal();
+  test_work_notifier_teardown();
+  printf("wqueue_test: work notifier test done.\n");
+#endif
+
+  return;
 }
 
 #endif /* CONFIG_SCHED_WORKQUEUE */

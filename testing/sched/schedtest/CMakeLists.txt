@@ -19,17 +19,6 @@
 # ##############################################################################
 
 if(CONFIG_TESTING_SCHEDTEST)
-  nuttx_add_application(
-    NAME
-    wqueuetest
-    PRIORITY
-    ${CONFIG_TESTING_SCHEDTEST_PRIORITY}
-    STACKSIZE
-    ${CONFIG_TESTING_SCHEDTEST_STACKSIZE}
-    MODULE
-    ${CONFIG_TESTING_SCHEDTEST}
-    SRCS
-    wqueue.c)
 
   if(CONFIG_SCHED_EVENTS)
     nuttx_add_application(
