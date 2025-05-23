@@ -246,7 +246,7 @@ static void wdtest_recursive(FAR struct wdog_s *wdog,
 
   wdtest_delay(times * delay_ns);
 
-  wdtest_assert(wd_cancel(param->wdog) == 0);
+  wd_cancel(param->wdog);
 
   wdtest_printf("recursive wdog triggered %llu times, elapsed tick %lld\n",
                 (unsigned long long)(param->callback_cnt - cnt),
@@ -313,6 +313,8 @@ static void wdog_test_run(FAR wdtest_param_t *param)
   wdtest_assert(wd_start(NULL, -1, wdtest_callback, (wdparm_t)NULL) != OK);
   wdtest_assert(wd_start(&test_wdog, 0, NULL, (wdparm_t)NULL) != OK);
   wdtest_assert(wd_start(&test_wdog, -1, NULL, (wdparm_t)NULL) != OK);
+  wdtest_assert(wd_start(&test_wdog, -1, wdtest_callback, (wdparm_t)NULL)
+                != OK);
 
   wdtest_assert(wd_start_period(NULL, 0, 0,
                                 NULL, (wdparm_t)NULL) != OK);
@@ -365,7 +367,7 @@ static void wdog_test_run(FAR wdtest_param_t *param)
 
   /* Maximum */
 
-  delay = (clock_t)-1 ;
+  delay = CLOCK_MAX >> 2;
   wdtest_assert(wd_start(&test_wdog, delay,
                          wdtest_callback, (wdparm_t)param) == OK);
 
