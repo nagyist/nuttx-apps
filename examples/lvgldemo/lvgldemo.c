@@ -81,6 +81,10 @@ static void lv_nuttx_uv_loop(uv_loop_t *loop, lv_nuttx_result_t *result)
   uv_info.uindev = result->utouch_indev;
 #endif
 
+#ifdef CONFIG_LV_USE_NUTTX_MOUSE
+  uv_info.mouse_indev = result->mouse_indev;
+#endif
+
   data = lv_nuttx_uv_init(&uv_info);
   uv_run(loop, UV_RUN_DEFAULT);
   lv_nuttx_uv_deinit(&data);
