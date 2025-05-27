@@ -71,7 +71,7 @@ void test_nuttx_syscall_read01(FAR void **state)
 
 void test_nuttx_syscall_read02(FAR void **state)
 {
-#ifndef CONFIG_FDSAN
+#if !defined(CONFIG_FDSAN) && !defined(CONFIG_FDCHECK)
 
   /* Define an invalid file descriptor */
 
