@@ -359,7 +359,7 @@ int cmd_time(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   vtbl->np.np_bg       = bgsave;
 #endif
   vtbl->np.np_redir_out = redirsave_out;
-  vtbl->np.np_redir_out = redirsave_in;
+  vtbl->np.np_redir_in  = redirsave_in;
 
   return ret;
 }
