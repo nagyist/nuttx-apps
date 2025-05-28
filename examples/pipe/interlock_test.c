@@ -148,8 +148,7 @@ static void *null_writer(pthread_addr_t pvarg)
 
 int interlock_test(void)
 {
-  pthread_t readerid;
-  pthread_t writerid;
+  pthread_t tid;
   void *value;
   char data[16];
   ssize_t nbytes;
@@ -169,7 +168,7 @@ int interlock_test(void)
   /* Start the null_writer thread */
 
   printf("interlock_test: Starting null_writer thread\n");
-  ret = pthread_create(&writerid, NULL, null_writer, NULL);
+  ret = pthread_create(&tid, NULL, null_writer, NULL);
   if (ret != 0)
     {
       fprintf(stderr, \
@@ -192,7 +191,7 @@ int interlock_test(void)
               "errno=%d\n",
               FIFO_PATH2, errno);
       ret = 3;
-      goto errout_with_null_writer_thread;
+      goto errout_with_null_thread;
     }
 
   /* Attempt to read one byte from the FIFO. This should return end-of-file
@@ -206,15 +205,15 @@ int interlock_test(void)
       fprintf(stderr, \
               "interlock_test: read failed, errno=%d\n", errno);
       ret = 4;
-      goto errout_with_null_writer_thread;
+      goto errout_with_file;
     }
-  else if (ret != 0)
+  else if (nbytes != 0)
     {
       fprintf(stderr, \
               "interlock_test: Read %ld bytes of data -- aborting: %d\n",
               (long)nbytes, errno);
       ret = 5;
-      goto errout_with_null_writer_thread;
+      goto errout_with_file;
     }
 
   printf("interlock_test: read returned\n");
@@ -230,7 +229,7 @@ int interlock_test(void)
   /* Wait for null_writer thread to complete */
 
   printf("interlock_test: Waiting for null_writer thread\n");
-  ret = pthread_join(writerid, &value);
+  ret = pthread_join(tid, &value);
   if (ret != 0)
     {
       fprintf(stderr, \
@@ -251,7 +250,7 @@ int interlock_test(void)
   /* Start the null_reader thread */
 
   printf("interlock_test: Starting null_reader thread\n");
-  ret = pthread_create(&readerid, NULL, null_reader, NULL);
+  ret = pthread_create(&tid, NULL, null_reader, NULL);
   if (ret != 0)
     {
       fprintf(stderr, \
@@ -274,37 +273,42 @@ int interlock_test(void)
               "errno=%d\n",
               FIFO_PATH2, errno);
       ret = 9;
-      goto errout_with_null_reader_thread;
+      goto errout_with_null_thread;
     }
 
-  /* Attempt to write one byte from the FIFO. This should return 0 bytes
-   * written because the null_reader closes the FIFO.
+  /* Attempt to write one byte from the FIFO. This should return n bytes
+   * written since the null_reader has opened the FIFO.
    */
 
   printf("interlock_test: Writing to %s\n", FIFO_PATH2);
   nbytes = write(fd, data, 16);
-  if (nbytes < 0)
+  if (nbytes <= 0)
     {
       fprintf(stderr, \
               "interlock_test: write failed, errno=%d\n", errno);
       ret = 10;
-      goto errout_with_null_reader_thread;
+      goto errout_with_file;
     }
-  else if (ret != 0)
+  else
     {
       fprintf(stderr, \
-              "interlock_test: Wrote %ld bytes of data -- aborting: %d\n",
-              (long)nbytes, errno);
-      ret = 11;
-      goto errout_with_null_reader_thread;
+              "interlock_test: Wrote %ld bytes of data\n", (long)nbytes);
     }
 
   printf("interlock_test: write returned\n");
 
+  /* Close the file */
+
+  printf("interlock_test: Closing %s\n", FIFO_PATH2);
+  if (close(fd) != 0)
+    {
+      fprintf(stderr, "interlock_test: close failed: %d\n", errno);
+    }
+
   /* Wait for null_reader thread to complete */
 
   printf("interlock_test: Waiting for null_reader thread\n");
-  ret = pthread_join(readerid, &value);
+  ret = pthread_join(tid, &value);
   if (ret != 0)
     {
       fprintf(stderr, \
@@ -325,23 +329,19 @@ int interlock_test(void)
   ret = 0;
   goto errout_with_fifo;
 
-errout_with_null_reader_thread:
-  pthread_detach(readerid);
-  pthread_cancel(readerid);
+errout_with_file:
+  if (close(fd) != 0)
+    {
+      fprintf(stderr, "interlock_test: close failed: %d\n", errno);
+    }
 
-errout_with_null_writer_thread:
-  pthread_detach(writerid);
-  pthread_cancel(writerid);
+errout_with_null_thread:
+  pthread_detach(tid);
+  pthread_cancel(tid);
 
 errout_with_fifo:
 
   /* Close the file */
-
-  printf("interlock_test: Closing %s\n", FIFO_PATH2);
-  if (fd != -1 && close(fd) != 0)
-    {
-      fprintf(stderr, "interlock_test: close failed: %d\n", errno);
-    }
 
   ret = remove(FIFO_PATH2);
   if (ret != 0)
