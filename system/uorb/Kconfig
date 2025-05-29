@@ -16,7 +16,7 @@ config UORB_PRIORITY
 
 config UORB_STACKSIZE
 	int "stack size"
-	default DEFAULT_TASK_STACKSIZE
+	default 8192
 
 config UORB_LISTENER
 	bool "uorb listener"
