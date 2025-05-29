@@ -67,9 +67,10 @@ endif
 # -W%: Warning flags, clang is more strict than gcc
 # --param%: Warning flags, wasm-clang does not support
 # -fprofile-arcs -ftest-coverage -fprofile-instr-generate -fcoverage-mapping etc
+# asan-%: AddressSanitizer flags, e.g. asan-stack, asan-globals, asan-instrumentation-with-call-threshold, etc. (wasm-clang does not implement)
 
 CFLAGS_STRIP = -m% -Wl,% -fsanitize% -fno-sanitize% -W% --param%
-CFLAGS_STRIP += -fprofile% -f%coverage%
+CFLAGS_STRIP += -fprofile% -f%coverage% asan-%
 
 WCFLAGS += $(filter-out $(CFLAGS_STRIP),$(CFLAGS))
 WCFLAGS += --sysroot=$(WSYSROOT) -nostdlib -D__NuttX__
