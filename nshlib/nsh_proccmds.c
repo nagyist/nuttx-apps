@@ -793,6 +793,7 @@ static int top_cmpcpuload(FAR const void *item1, FAR const void *item2)
     }
 }
 
+#ifndef CONFIG_DISABLE_SIGNALS
 /****************************************************************************
  * Name: top_exit
  ****************************************************************************/
@@ -802,7 +803,9 @@ static void top_exit(int signo, FAR siginfo_t *siginfo, FAR void *context)
   *(FAR bool *)siginfo->si_user = true;
 }
 
-#endif
+#endif /* !CONFIG_DISABLE_SIGNALS */
+
+#endif /* !CONFIG_NSH_DISABLE_TOP && NSH_HAVE_CPULOAD */
 
 /****************************************************************************
  * Public Functions
@@ -1277,7 +1280,9 @@ int cmd_top(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   FAR char *pidlist = NULL;
   size_t num = SIZE_MAX;
   size_t i;
+#ifndef CONFIG_DISABLE_SIGNALS
   struct sigaction act;
+#endif
   bool quit = false;
   int delay = 3;
   int ret = 0;
@@ -1313,6 +1318,7 @@ int cmd_top(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
         }
     }
 
+#ifndef CONFIG_DISABLE_SIGNALS
   act.sa_user = &quit;
   act.sa_sigaction = top_exit;
   sigemptyset(&act.sa_mask);
@@ -1322,6 +1328,7 @@ int cmd_top(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       nsh_error(vtbl, g_fmtcmdfailed, "top", "sigaction", NSH_ERRNO);
       return ERROR;
     }
+#endif
 
   if (vtbl->isctty)
     {
