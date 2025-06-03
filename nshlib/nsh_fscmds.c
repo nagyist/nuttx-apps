@@ -1291,7 +1291,7 @@ int cmd_lomtd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
   int sectsize = -1;
   off_t offset = 0;
   bool badarg = false;
-#  ifdef CONFIG_MTD_CONFIG
+#  ifndef CONFIG_MTD_CONFIG_NONE
   int configdata = 0;
 #  endif
   int ret = ERROR;
@@ -1307,7 +1307,7 @@ int cmd_lomtd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
    * NOTE that the -o and -r options are accepted with the -d option, but
    * will be ignored.
    */
-#  ifdef CONFIG_MTD_CONFIG
+#  ifndef CONFIG_MTD_CONFIG_NONE
   while ((option = getopt(argc, argv, "d:o:e:b:c:")) != ERROR)
 #  else
   while ((option = getopt(argc, argv, "d:o:e:b:")) != ERROR)
@@ -1332,7 +1332,7 @@ int cmd_lomtd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
           sectsize = atoi(optarg);
           break;
 
-#  ifdef CONFIG_MTD_CONFIG
+#  ifndef CONFIG_MTD_CONFIG_NONE
         case 'c':
           configdata = atoi(optarg);
           break;
@@ -1418,7 +1418,7 @@ int cmd_lomtd(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       setup.sectsize   = sectsize;   /* The sector size to use with the block device */
       setup.erasesize  = erasesize;  /* The sector size to use with the block device */
       setup.offset     = offset;     /* An offset that may be applied to the device */
-#  ifdef CONFIG_MTD_CONFIG
+#  ifndef CONFIG_MTD_CONFIG_NONE
       setup.configdata = configdata; /* Is a loop mtdconfig device */
 #  endif
 
