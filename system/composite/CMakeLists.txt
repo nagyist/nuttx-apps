@@ -19,5 +19,6 @@
 # ##############################################################################
 
 if(CONFIG_SYSTEM_COMPOSITE)
-  nuttx_add_application(NAME composite SRCS composite_main.c)
+  nuttx_add_application(NAME conn SRCS composite_main.c)
+  nuttx_add_application(NAME disconn)
 endif()
