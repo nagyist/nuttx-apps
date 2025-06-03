@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <inttypes.h>
 #include <syslog.h>
 #include <stdint.h>
