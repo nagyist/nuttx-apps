@@ -286,6 +286,11 @@ static void period_worker(FAR void *arg)
           work_cancel_wq(p->wq, &p->work);
         }
     }
+  else
+    {
+      work_queue_next_wq(p->wq, &p->work, period_worker,
+                         arg, p->period);
+    }
 }
 
 static void recursive_worker(FAR void *arg)
@@ -739,8 +744,7 @@ static void wqueue_period_and_cancel_test(void)
       work->runing_cnt = &running_sem;
       work->enough_cnt = &enough_sem;
       work->added_tick = clock_systime_ticks();
-      work_queue_period_wq(wq, &work->work, period_worker, work, work->delay,
-                           work->period);
+      work_queue_wq(wq, &work->work, period_worker, work, work->delay);
     }
 
   do
@@ -760,7 +764,7 @@ static void wqueue_period_and_cancel_test(void)
 
       if (!work->cancel_self)
         {
-          work_cancel_wq(wq, &work->work);
+          work_cancel_sync_wq(wq, &work->work);
         }
 
       wqtest_assert(work->work.worker == NULL,
