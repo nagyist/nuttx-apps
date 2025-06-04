@@ -5,7 +5,7 @@
 
 config GRAPHICS_LVCTL
 	tristate "LVGL control utility"
-	default n
+	default y
 	depends on GRAPHICS_LVGL
 	depends on LV_USE_NUTTX_LIBUV
 	depends on LV_USE_REMOTE_CTRL
