@@ -32,6 +32,8 @@
 #include <fcntl.h>
 #include <fnmatch.h>
 #include <sys/ioctl.h>
+
+#include <nuttx/sched_note.h>
 #include <nuttx/note/note_driver.h>
 
 #include "trace.h"
@@ -48,33 +50,29 @@
  * Name: notectl_enable
  ****************************************************************************/
 
-static bool notectl_enable(FAR const char *name, int flag, int notectlfd)
+static bool notectl_enable(FAR const char *name, int enable, int notectlfd)
 {
   struct note_filter_named_mode_s mode;
-  int oldflag;
-
   strlcpy(mode.name, name, NAME_MAX);
   ioctl(notectlfd, NOTE_GETFILTER, (unsigned long)&mode);
 
-  oldflag = (mode.mode.flag & NOTE_FILTER_MODE_FLAG_ENABLE) != 0;
-  if (flag == oldflag)
+  if (NOTE_FILTER_TYPEMASK_ISSET(NOTE_ALL, &mode.mode) != enable)
     {
-      /* Already set */
+      /* No change */
 
       return false;
     }
 
-  if (flag)
+  if (enable)
     {
-      mode.mode.flag |= NOTE_FILTER_MODE_FLAG_ENABLE;
+      NOTE_FILTER_TYPEMASK_CLR(NOTE_ALL, &mode.mode);
     }
   else
     {
-      mode.mode.flag &= ~NOTE_FILTER_MODE_FLAG_ENABLE;
+      NOTE_FILTER_TYPEMASK_SET(NOTE_ALL, &mode.mode);
     }
 
   ioctl(notectlfd, NOTE_SETFILTER, (unsigned long)&mode);
-
   return true;
 }
 
@@ -356,11 +354,11 @@ static int trace_cmd_mode(FAR const char *name, int index, int argc,
           case 'w':   /* Switch trace */
             if (enable)
               {
-                mode.mode.flag |= NOTE_FILTER_MODE_FLAG_SWITCH;
+                mode.mode.type_mask &= ~NOTE_FILTER_MODE_FLAG_SWITCH;
               }
             else
               {
-                mode.mode.flag &= ~NOTE_FILTER_MODE_FLAG_SWITCH;
+                mode.mode.type_mask |= NOTE_FILTER_MODE_FLAG_SWITCH;
               }
             break;
 #endif
@@ -369,22 +367,11 @@ static int trace_cmd_mode(FAR const char *name, int index, int argc,
           case 's':   /* Syscall trace */
             if (enable)
               {
-                mode.mode.flag |= NOTE_FILTER_MODE_FLAG_SYSCALL;
+                mode.mode.type_mask &= ~NOTE_FILTER_MODE_FLAG_SYSCALL;
               }
             else
               {
-                mode.mode.flag &= ~NOTE_FILTER_MODE_FLAG_SYSCALL;
-              }
-            break;
-
-          case 'a':   /* Record syscall arguments */
-            if (enable)
-              {
-                mode.mode.flag |= NOTE_FILTER_MODE_FLAG_SYSCALL_ARGS;
-              }
-            else
-              {
-                mode.mode.flag &= ~NOTE_FILTER_MODE_FLAG_SYSCALL_ARGS;
+                mode.mode.type_mask |= NOTE_FILTER_MODE_FLAG_SYSCALL;
               }
             break;
 #endif
@@ -393,11 +380,11 @@ static int trace_cmd_mode(FAR const char *name, int index, int argc,
           case 'i':   /* IRQ trace */
             if (enable)
               {
-                mode.mode.flag |= NOTE_FILTER_MODE_FLAG_IRQ;
+                mode.mode.type_mask &= ~NOTE_FILTER_MODE_FLAG_IRQ;
               }
             else
               {
-                mode.mode.flag &= ~NOTE_FILTER_MODE_FLAG_IRQ;
+                mode.mode.type_mask |= NOTE_FILTER_MODE_FLAG_IRQ;
               }
             break;
 #endif
@@ -406,11 +393,11 @@ static int trace_cmd_mode(FAR const char *name, int index, int argc,
           case 'd':   /* Dump trace */
             if (enable)
               {
-                mode.mode.flag |= NOTE_FILTER_MODE_FLAG_DUMP;
+                mode.mode.type_mask &= ~NOTE_FILTER_MODE_FLAG_DUMP;
               }
             else
               {
-                mode.mode.flag &= ~NOTE_FILTER_MODE_FLAG_DUMP;
+                mode.mode.type_mask |= NOTE_FILTER_MODE_FLAG_DUMP;
               }
             break;
 #endif
@@ -439,12 +426,29 @@ static int trace_cmd_mode(FAR const char *name, int index, int argc,
 
   printf("Task trace mode(%s):\n", mode.name);
   printf(" Trace                   : %s\n",
-         (mode.mode.flag & NOTE_FILTER_MODE_FLAG_ENABLE) ?
-          "enabled" : "disabled");
+         NOTE_FILTER_TYPEMASK_ISSET(NOTE_ALL, &mode.mode) ?
+         "disabled" : "enabled");
+  printf(" Trace filter mode       : %016" PRIx64 "\n", mode.mode.type_mask);
 
 #ifdef CONFIG_DRIVERS_NOTERAM
   printf(" Overwrite               : %s\n",
          owmode ? "on  (+o)" : "off (-o)");
+#endif
+
+#ifdef CONFIG_SMP
+  printf(" CPU trace mask          : %08" PRIx32 "\n", mode.mode.cpuset);
+#endif
+
+#ifdef CONFIG_SCHED_INSTRUMENTATION_SWITCH
+  printf(" Switch trace            : %s\n",
+         (mode.mode.type_mask & NOTE_FILTER_MODE_FLAG_SWITCH) ?
+         "off  (-w)" : "on (+w)");
+#endif
+
+#ifdef CONFIG_SCHED_INSTRUMENTATION_DUMP
+  printf(" Dump trace              : %s\n",
+         (mode.mode.type_mask & NOTE_FILTER_MODE_FLAG_DUMP) ?
+         "off  (-d)" : "on (+d)");
 #endif
 
 #ifdef CONFIG_SCHED_INSTRUMENTATION_SYSCALL
@@ -460,16 +464,12 @@ static int trace_cmd_mode(FAR const char *name, int index, int argc,
     }
 
   printf(" Syscall trace           : %s\n",
-         mode.mode.flag & NOTE_FILTER_MODE_FLAG_SYSCALL ?
-          "on  (+s)" : "off (-s)");
-  if (mode.mode.flag & NOTE_FILTER_MODE_FLAG_SYSCALL)
+         (mode.mode.type_mask & NOTE_FILTER_MODE_FLAG_SYSCALL) ?
+          "off  (-s)" : "on  (+s)");
+  if ((mode.mode.type_mask & NOTE_FILTER_MODE_FLAG_SYSCALL) == 0)
     {
       printf("  Filtered Syscalls      : %d\n", count);
     }
-
-  printf(" Syscall trace with args : %s\n",
-         mode.mode.flag & NOTE_FILTER_MODE_FLAG_SYSCALL_ARGS ?
-          "on  (+a)" : "off (-a)");
 #endif
 
 #ifdef CONFIG_SCHED_INSTRUMENTATION_IRQHANDLER
@@ -485,9 +485,9 @@ static int trace_cmd_mode(FAR const char *name, int index, int argc,
     }
 
   printf(" IRQ trace               : %s\n",
-         mode.mode.flag & NOTE_FILTER_MODE_FLAG_IRQ ?
-          "on  (+i)" : "off (-i)");
-  if (mode.mode.flag & NOTE_FILTER_MODE_FLAG_IRQ)
+         (mode.mode.type_mask & NOTE_FILTER_MODE_FLAG_IRQ) ?
+          "off  (-i)" : "on  (+i)");
+  if ((mode.mode.type_mask & NOTE_FILTER_MODE_FLAG_IRQ) == 0)
     {
       printf("  Filtered IRQs          : %d\n", count);
     }
@@ -522,7 +522,7 @@ static int trace_cmd_switch(FAR const char *name, int index, int argc,
         {
           enable = (argv[index++][0] == '+');
           if (enable ==
-              ((mode.mode.flag & NOTE_FILTER_MODE_FLAG_SWITCH) != 0))
+              ((mode.mode.type_mask & NOTE_FILTER_MODE_FLAG_SWITCH) == 0))
             {
               /* Already set */
 
@@ -531,11 +531,11 @@ static int trace_cmd_switch(FAR const char *name, int index, int argc,
 
           if (enable)
             {
-              mode.mode.flag |= NOTE_FILTER_MODE_FLAG_SWITCH;
+              mode.mode.type_mask &= NOTE_FILTER_MODE_FLAG_SWITCH;
             }
           else
             {
-              mode.mode.flag &= ~NOTE_FILTER_MODE_FLAG_SWITCH;
+              mode.mode.type_mask |= ~NOTE_FILTER_MODE_FLAG_SWITCH;
             }
 
           ioctl(notectlfd, NOTE_SETFILTER, (unsigned long)&mode);
@@ -864,6 +864,91 @@ static int trace_cmd_print(FAR const char *name, int index, int argc,
 #endif
 
 /****************************************************************************
+ * Name: trace_cmd_filter
+ ****************************************************************************/
+
+#ifdef CONFIG_SCHED_INSTRUMENTATION_FILTER
+static int trace_cmd_filter(FAR const char *name, int index, int argc,
+                            FAR char **argv, int notectlfd)
+{
+  struct note_filter_named_mode_s mode;
+  bool modified = false;
+  bool enable;
+
+  /* Usage: trace filter [+|-] */
+
+  /* Get current filter setting */
+
+  strlcpy(mode.name, name, NAME_MAX);
+  ioctl(notectlfd, NOTE_GETFILTER, (unsigned long)&mode);
+
+  /* Parse the setting parameters */
+
+  while (index < argc)
+    {
+      if (argv[index][0] == '-' || argv[index][0] == '+')
+        {
+          enable = (argv[index][0] == '+');
+          if (argv[index][1] == '*')
+            {
+              /* Mask or unmask all dump events */
+
+              modified = true;
+              if (enable)
+                {
+                  NOTE_FILTER_TYPEMASK_ZERO(&mode.mode);
+                }
+              else
+                {
+                  NOTE_FILTER_TYPEMASK_FILL(&mode.mode);
+                }
+            }
+          else
+            {
+              FAR char *endptr;
+              int type;
+
+              /* Get type number */
+
+              type = strtoul(&argv[index][1], &endptr, 0);
+              if (endptr == &argv[index][1] || *endptr != '\0' ||
+                  type >= NOTE_TYPE_LAST)
+                {
+                  fprintf(stderr, "trace filter: invalid argument %s\n",
+                          argv[index]);
+                  return ERROR;
+                }
+
+              if (enable)
+                {
+                  NOTE_FILTER_TYPEMASK_CLR(type, &mode.mode);
+                }
+              else
+                {
+                  NOTE_FILTER_TYPEMASK_SET(type, &mode.mode);
+                }
+            }
+
+          index++;
+          modified = true;
+        }
+    }
+
+  if (modified)
+    {
+      ioctl(notectlfd, NOTE_SETFILTER, (unsigned long)&mode);
+    }
+  else
+    {
+      printf("Filter is set to: %016" PRIx64 "\n",
+             mode.mode.type_mask);
+    }
+
+  return index;
+}
+#endif
+
+/****************************************************************************
  * Name: show_usage
  ****************************************************************************/
 
@@ -886,6 +971,8 @@ static void show_usage(void)
 #endif
           " mode    [{+|-}{o|w|s|a|i|d}...]     :"
                                 " Set task trace options\n"
+          " filter  [+|-]type                   :"
+                                " Configure trace filter\n"
 #ifdef CONFIG_SCHED_INSTRUMENTATION_SWITCH
           " switch  [+|-]                       :"
                                 " Configure switch trace filter\n"
@@ -972,6 +1059,10 @@ int main(int argc, FAR char *argv[])
       else if (strcmp(argv[i], "mode") == 0)
         {
           i = trace_cmd_mode(name, i + 1, argc, argv, notectlfd);
+        }
+      else if (strcmp(argv[i], "filter") == 0)
+        {
+          i = trace_cmd_filter(name, i + 1, argc, argv, notectlfd);
         }
 #ifdef CONFIG_SCHED_INSTRUMENTATION_SWITCH
       else if (strcmp(argv[i], "switch") == 0)
