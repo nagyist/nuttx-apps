@@ -284,7 +284,10 @@ static const uint16_t g_ipv6_netmask[8] =
     defined(HAVE_MAC)
 static void netinit_set_macaddr(void)
 {
-#if defined(CONFIG_NETINIT_UIDMAC)
+#if defined(CONFIG_NETINIT_WIFIMAC)
+  char macstr[20];
+  uint8_t wifi_mac[IFHWADDRLEN];
+#elif defined(CONFIG_NETINIT_UIDMAC)
   uint8_t uid[CONFIG_BOARDCTL_UNIQUEID_SIZE];
 #elif defined(CONFIG_NET_ETHERNET)
   uint8_t mac[IFHWADDRLEN];
@@ -294,7 +297,15 @@ static void netinit_set_macaddr(void)
 
   /* Many embedded network interfaces must have a software assigned MAC */
 
-#if defined(CONFIG_NETINIT_UIDMAC)
+#if defined(CONFIG_NETINIT_WIFIMAC)
+  #define BOARDIOC_USER_MAC_WIFI (BOARDIOC_USER + 3)
+
+  boardctl(BOARDIOC_USER_MAC_WIFI, (uintptr_t)macstr);
+  if (netlib_ethaddrconv(macstr, wifi_mac))
+    {
+      netlib_setmacaddr(NET_DEVNAME, wifi_mac);
+    }
+#elif defined(CONFIG_NETINIT_UIDMAC)
   boardctl(BOARDIOC_UNIQUEID, (uintptr_t)&uid);
   uid[0] = (uid[0] & 0b11110000) | 2; /* Locally Administered MAC */
   netlib_setmacaddr(NET_DEVNAME, uid);

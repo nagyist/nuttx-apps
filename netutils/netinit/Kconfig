@@ -488,6 +488,12 @@ config NETINIT_SWMAC
 		With this choice, you can assign a fixed MAC address determined by
 		a NuttX configuration option.
 
+config NETINIT_WIFIMAC
+	bool "Device Wi-Fi MAC"
+	---help---
+		With this choice, you can assign a fixed MAC address in the file
+		device.info (DEVICE_INFO_PATH) defined by user.
+
 endchoice # MAC address selection
 
 config NETINIT_MACADDR_1
