@@ -50,6 +50,7 @@
 
 #include <nuttx/clock.h>
 
+#include "netutils/netlib.h"
 #include "netutils/ntpclient.h"
 
 #include "ntpv3.h"
@@ -100,6 +101,8 @@
 #define NTP_VERSION          NTP_VERSION_V4
 
 #define MAX_SERVER_SELECTION_RETRIES 3
+
+#define MAX_RETRY_INTERVAL 120
 
 #ifndef STR
 #  define STR2(x) #x
@@ -1231,6 +1234,7 @@ static int ntpc_daemon(int argc, FAR char **argv)
   FAR struct ntp_servers_s *srvs;
   int exitcode = EXIT_SUCCESS;
   int retries = 0;
+  int retry_delay = 1;
   int nsamples;
   int ret;
 
@@ -1300,21 +1304,24 @@ static int ntpc_daemon(int argc, FAR char **argv)
       clock_gettime(CLOCK_REALTIME, &start_realtime);
       clock_gettime(CLOCK_MONOTONIC, &start_monotonic);
 
-      /* Collect samples. */
-
       nsamples = 0;
-      for (i = 0; i < CONFIG_NETUTILS_NTPCLIENT_NUM_SAMPLES; i++)
+      if (netlib_check_ipconnectivity(NULL, 1, 1) > 0)
         {
-          /* Get next sample. */
+          /* Collect samples. */
 
-          ret = ntpc_get_ntp_sample(srvs, samples, nsamples);
-          if (ret < 0)
+          for (i = 0; i < CONFIG_NETUTILS_NTPCLIENT_NUM_SAMPLES; i++)
             {
-              errval = errno;
-            }
-          else
-            {
-              ++nsamples;
+              /* Get next sample. */
+
+              ret = ntpc_get_ntp_sample(srvs, samples, nsamples);
+              if (ret < 0)
+                {
+                  errval = errno;
+                }
+              else
+                {
+                  ++nsamples;
+                }
             }
         }
 
@@ -1403,6 +1410,7 @@ static int ntpc_daemon(int argc, FAR char **argv)
 
               sleep(CONFIG_NETUTILS_NTPCLIENT_POLLDELAYSEC);
               retries = 0;
+              retry_delay = 1;
             }
 
           continue;
@@ -1422,7 +1430,14 @@ static int ntpc_daemon(int argc, FAR char **argv)
 
       if (errval != EINTR)
         {
-          sleep(1);
+          ninfo("Retry %d in %d seconds...\n", retries, retry_delay);
+          sleep(retry_delay);
+
+          retry_delay *= 2;
+          if (retry_delay > MAX_RETRY_INTERVAL)
+            {
+              retry_delay = MAX_RETRY_INTERVAL;
+            }
         }
 
       /* Keep retrying. */
