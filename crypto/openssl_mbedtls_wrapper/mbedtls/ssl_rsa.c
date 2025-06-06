@@ -123,6 +123,11 @@ int SSL_CTX_use_certificate_file(SSL_CTX *ctx, const char *file, int type)
   return 0;
 }
 
+int SSL_CTX_use_certificate_chain_file(SSL_CTX *ctx, const char *file)
+{
+  return 0;
+}
+
 int SSL_use_certificate_file(SSL *ssl, const char *file, int type)
 {
   return 0;

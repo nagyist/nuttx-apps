@@ -42,6 +42,10 @@
 
 #define EVP_PKEY_X25519 NID_X25519
 
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
+
 struct evp_pkey_st
 {
   void *pkey_pm;
@@ -163,6 +167,10 @@ int PKCS5_PBKDF2_HMAC(const char *password, size_t password_len,
                       size_t key_len, uint8_t *out_key);
 
 const PKEY_METHOD *EVP_PKEY_method(void);
+
+int OpenSSL_add_all_algorithms(void);
+
+void EVP_cleanup(void);
 
 #ifdef __cplusplus
 }

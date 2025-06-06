@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/crypto/openssl_mbedtls_wrapper/mbedtls/err.c
+ * apps/crypto/openssl_mbedtls_wrapper/include/openssl/crypto.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -15,55 +15,34 @@
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
  * License for the specific language governing permissions and limitations
  * under the License.
- *
  ****************************************************************************/
+
+#ifndef OPENSSL_MBEDTLS_WRAPPER_CRYPTO_H
+#define OPENSSL_MBEDTLS_WRAPPER_CRYPTO_H
 
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <openssl/err.h>
-#include <mbedtls/error.h>
-#include <mbedtls/cipher.h>
-#include <errno.h>
+#include <openssl/base.h>
 
 /****************************************************************************
- * Public Functions
+ * Pre-processor Definitions
  ****************************************************************************/
 
-unsigned long ERR_peek_last_error(void)
-{
-  return errno;
-}
+#define CRYPTO_num_locks()      1
+#define CRYPTO_set_locking_callback(func)
 
-void ERR_free_strings(void)
-{
-}
+#define CRYPTO_set_id_callback(func)
 
-void ERR_error_string_n(unsigned long e, char *buf, size_t len)
-{
-  mbedtls_strerror(e, buf, len);
-}
+/* These defines where used in combination with the old locking callbacks,
+ * they are not called anymore, but old code that's not called might still
+ * use them.
+ */
 
-void ERR_clear_error(void)
-{
-}
+#define CRYPTO_LOCK             1
+#define CRYPTO_UNLOCK           2
+#define CRYPTO_READ             4
+#define CRYPTO_WRITE            8
 
-unsigned long ERR_get_error(void)
-{
-  return errno;
-}
-
-void ERR_remove_state(unsigned long pid)
-{
-}
-
-int ERR_load_crypto_strings(void)
-{
-  return 1;
-}
-
-void ERR_print_errors_cb(int (*cb)(const char *str, size_t len, void *u),
-                         void *u)
-{
-}
+#endif /* OPENSSL_MBEDTLS_WRAPPER_CRYPTO_H */
