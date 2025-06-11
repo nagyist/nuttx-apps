@@ -29,6 +29,7 @@
 
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <pthread.h>
 
 #include <nuttx/wireless/ieee802154/ieee802154_mac.h>
 
