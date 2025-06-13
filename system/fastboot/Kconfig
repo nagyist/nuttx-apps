@@ -6,7 +6,7 @@
 menuconfig SYSTEM_FASTBOOTD
 	bool "fastbootd"
 	default n
-	depends on USBFASTBOOT
+	depends on USBFASTBOOT || NET_TCP
 	---help---
 		support usb fastboot function.
 
@@ -28,6 +28,7 @@ config FASTBOOTD_USB_BOARDCTL
 	bool "USB Board Control"
 	depends on BOARDCTL
 	depends on BOARDCTL_USBDEVCTRL
+	depends on USBFASTBOOT
 	---help---
 		Connect usbdev before running fastboot daemon.
 
