@@ -62,6 +62,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <debug.h>
+#include <pthread.h>
 
 #include <arpa/inet.h>
 
