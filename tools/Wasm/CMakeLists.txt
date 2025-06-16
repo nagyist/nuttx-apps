@@ -40,6 +40,10 @@ include(${TOPDIR}/cmake/nuttx_kconfig.cmake)
 # Parse the input KCONFIG_FILE_PATH to get the configuration.
 nuttx_export_kconfig(${KCONFIG_FILE_PATH})
 
+# Sync NuttX build environment same variables to the Wasm build environment.
+set(NUTTX_DIR ${TOPDIR})
+set(NUTTX_APPS_DIR ${APPDIR})
+
 # Include the WASI-SDK.cmake file to setup the necessary flags for building
 include(WASI-SDK.cmake)
 
