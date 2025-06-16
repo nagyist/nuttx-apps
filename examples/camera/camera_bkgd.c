@@ -31,6 +31,7 @@
 #include <semaphore.h>
 #include <errno.h>
 #include <debug.h>
+#include <pthread.h>
 
 #include <arch/board/board.h>
 #include <nuttx/nx/nx.h>
