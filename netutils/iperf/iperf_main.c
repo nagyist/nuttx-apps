@@ -26,9 +26,9 @@
 
 #include <arpa/inet.h>
 #include <net/if.h>
-#include <netpacket/vm_sockets.h>
 #include <strings.h>
 #include <sys/time.h>
+#include <sys/vm_sockets.h>
 
 #include "argtable3.h"
 #include "iperf.h"

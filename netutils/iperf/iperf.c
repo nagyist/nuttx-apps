@@ -27,12 +27,12 @@
 #include <net/if.h>
 #include <netinet/in.h>
 #include <netpacket/rpmsg.h>
-#include <netpacket/vm_sockets.h>
 #include <pthread.h>
 #include <sched.h>
 #include <stdbool.h>
 #include <sys/prctl.h>
 #include <sys/socket.h>
+#include <sys/vm_sockets.h>
 #include <sys/time.h>
 #include <sys/un.h>
 #include <unistd.h>

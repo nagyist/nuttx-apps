@@ -32,7 +32,7 @@
 
 #ifdef __NuttX__
 #include <nuttx/config.h>
-#include <netpacket/vm_sockets.h>
+#include <sys/vm_sockets.h>
 #else
 #include <linux/vm_sockets.h>
 #endif
