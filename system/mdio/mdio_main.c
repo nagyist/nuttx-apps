@@ -100,7 +100,7 @@ int get_phy_id(void)
   return phy_id;
 }
 
-int get_phy_reg(uint16_t phy_id, uint32_t reg_num, uint32_t *val)
+int get_phy_reg(uint16_t phy_id, uint16_t reg_num, uint16_t *val)
 {
   int ret;
   struct ifreq ifr;
@@ -120,7 +120,7 @@ int get_phy_reg(uint16_t phy_id, uint32_t reg_num, uint32_t *val)
   return ret;
 }
 
-int set_phy_reg(uint16_t phy_id, uint32_t reg_num, uint32_t val)
+int set_phy_reg(uint16_t phy_id, uint16_t reg_num, uint16_t val)
 {
   int ret;
   struct ifreq ifr;
@@ -152,9 +152,9 @@ int main(int argc, FAR char *argv[])
   /* test related */
 
   uint16_t phy_id;
-  uint32_t reg_num;
-  uint32_t val_in;
-  uint32_t val_out;
+  uint16_t reg_num;
+  uint16_t val_in;
+  uint16_t val_out;
 
   /* -- SETUP ------------------------------------------------------------- */
 
