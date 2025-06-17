@@ -30,6 +30,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include <nuttx/lcd/ft80x.h>
 

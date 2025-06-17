@@ -27,6 +27,8 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <mqueue.h>
+#include <unistd.h>
+#include <pthread.h>
 #include <sys/ioctl.h>
 #include <sys/boardctl.h>
 
