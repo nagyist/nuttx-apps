@@ -5,3 +5,4 @@
 /cromfs.c
 /dirlist.c
 /symtab.c
+/Kconfig
