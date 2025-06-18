@@ -277,7 +277,15 @@ int main(int argc, FAR char *argv[])
 
       if (cfg.flag & IPERF_FLAG_CLIENT)
         {
-          cfg.cid = atoi(iperf.client);
+          FAR char *endptr;
+
+          cfg.cid = strtoul(iperf.client, &endptr, 0);
+          if (errno != 0 || *endptr != '\0')
+            {
+              cfg.cid = 0;
+              strncpy((FAR char *)&cfg.cid, iperf.client,
+                      MIN(sizeof(cfg.cid), strlen(iperf.client)));
+            }
         }
       else
         {
