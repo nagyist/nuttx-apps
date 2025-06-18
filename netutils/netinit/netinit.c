@@ -844,7 +844,7 @@ static int netinit_monitor(void)
           goto errout_with_notification;
         }
 
-      ninfo("%s: devup=%d PHY address=%02"PRIx16" MSR=%04"PRIx32"\n",
+      ninfo("%s: devup=%d PHY address=%02x MSR=%04x\n",
             ifr.ifr_name, devup, ifr.ifr_mii_phy_id, ifr.ifr_mii_val_out);
 
       /* Check for link up or down */
