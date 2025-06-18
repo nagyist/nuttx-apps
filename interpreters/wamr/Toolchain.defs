@@ -20,7 +20,7 @@
 
 # Wamrc toolchain flags
 
-WRC ?= wamrc
+WRC = $(WASM_TOOLCHAIN_PATH)/wamrc
 
 ifeq ($(CONFIG_ARCH_XTENSA),y)
   WTARGET = xtensa

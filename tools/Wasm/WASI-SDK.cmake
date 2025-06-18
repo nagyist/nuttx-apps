@@ -271,7 +271,13 @@ function(wasm_add_application)
   endif()
 
   set(RCFLAGS)
-  set(WRC wamrc)
+  if(NOT DEFINED ENV{WASM_TOOLCHAIN_PATH})
+    message(
+      FATAL_ERROR
+        "WASM_TOOLCHAIN_PATH environment variable is not set. Please set it to the path of the WASM toolchain."
+    )
+  endif()
+  set(WRC $ENV{WASM_TOOLCHAIN_PATH}/wamrc)
 
   if(CONFIG_ARCH_XTENSA)
     set(WTARGET "xtensa")
