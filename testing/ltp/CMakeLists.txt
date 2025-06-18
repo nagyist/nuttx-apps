@@ -539,7 +539,8 @@ if(CONFIG_TESTING_LTP)
         "setrlimit64"
         "prlimit64"
         "rlimit64"
-        "rlim64_t")
+        "rlim64_t"
+        "nftw64")
     endif()
     if(NOT CONFIG_ARCH_SETJMP_H)
       list(APPEND BLACKWORDS "setjmp" "longjmp")
@@ -587,19 +588,6 @@ if(CONFIG_TESTING_LTP)
       ${CMAKE_CURRENT_LIST_DIR}/ltp/testcases/kernel/io/disktest/main.c
       ${CMAKE_CURRENT_LIST_DIR}/ltp/testcases/kernel/io/direct_io/dma_thread_diotest.c
     )
-
-    # syscalls/nftw/test_func.c has provide the implementation of test_func*(),
-    # and the implementation are completely same as syscalls/nftw/test_func64.c
-    # provided implementation, we just need to keep one of them. and the
-    # following test64.c/lib64.c/tools64.c are deleted from source list with
-    # same reason as test_func64.c
-    list(
-      APPEND
-      BLACKSRCS
-      ${CMAKE_CURRENT_LIST_DIR}/ltp/testcases/kernel/syscalls/nftw/test_func64.c
-      ${CMAKE_CURRENT_LIST_DIR}/ltp/testcases/kernel/syscalls/nftw/test64.c
-      ${CMAKE_CURRENT_LIST_DIR}/ltp/testcases/kernel/syscalls/nftw/lib64.c
-      ${CMAKE_CURRENT_LIST_DIR}/ltp/testcases/kernel/syscalls/nftw/tools64.c)
 
     add_compile_options(
       -DHAVE_FCHOWNAT

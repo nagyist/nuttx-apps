@@ -428,6 +428,7 @@ BLACKWORDS  += setrlimit64
 BLACKWORDS  += prlimit64
 BLACKWORDS  += rlimit64
 BLACKWORDS  += rlim64_t
+BLACKWORDS  += nftw64
 endif
 ifeq ($(CONFIG_ARCH_SETJMP_H),)
 BLACKWORDS  += setjmp
@@ -475,16 +476,6 @@ BLACKWORDS += firmware # nuttx do not support linux firmware load framework
 
 BLACKSRCS += $(TESTLINUX_DIR)/io/disktest/main.c
 BLACKSRCS += $(TESTLINUX_DIR)/io/direct_io/dma_thread_diotest.c
-
-# syscalls/nftw/test_func.c has provide the implementation of test_func*(),
-# and the implementation are completely same as syscalls/nftw/test_func64.c
-# provided implementation, we just need to keep one of them.
-# and the following test64.c/lib64.c/tools64.c are deleted from source list
-# with same reason as test_func64.c
-BLACKSRCS += $(TESTLINUX_DIR)/syscalls/nftw/test_func64.c
-BLACKSRCS += $(TESTLINUX_DIR)/syscalls/nftw/test64.c
-BLACKSRCS += $(TESTLINUX_DIR)/syscalls/nftw/lib64.c
-BLACKSRCS += $(TESTLINUX_DIR)/syscalls/nftw/tools64.c
 
 LTP_LINUX_ORIGS := $(shell find $(TESTLINUX_DIR) -name *.c)
 
