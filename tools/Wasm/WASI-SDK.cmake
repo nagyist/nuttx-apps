@@ -69,6 +69,10 @@ if(NOT CONFIG_LIBM)
   include_directories(${APPDIR}/include/wasm)
 endif()
 
+if(CONFIG_ARCH_64BIT)
+  add_compile_options(--target=wasm64)
+endif()
+
 add_link_options(-Wl,--export=main)
 add_link_options(-Wl,--export=__main_argc_argv)
 add_link_options(-Wl,--export=__heap_base)
@@ -76,11 +80,6 @@ add_link_options(-Wl,--export=__data_end)
 add_link_options(-Wl,--no-entry)
 add_link_options(-Wl,--strip-all)
 add_link_options(-Wl,--allow-undefined)
-
-execute_process(
-  COMMAND ${CMAKE_C_COMPILER} --print-libgcc-file-name
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-  OUTPUT_VARIABLE WCC_COMPILER_RT_LIB)
 
 # ~~~
 # Function "wasm_add_application" to add a WebAssembly application to the
@@ -148,15 +147,20 @@ function(wasm_add_application)
                       -Wl,--initial-memory=${APP_INITIAL_MEMORY_SIZE})
   target_link_options(${APP_NAME} PRIVATE ${APP_WLDFLAGS})
 
-  target_link_libraries(${APP_NAME} PRIVATE ${WCC_COMPILER_RT_LIB})
   # Set the target properties
   set_target_properties(${APP_NAME} PROPERTIES OUTPUT_NAME ${APP_NAME}.wasm)
 
   # do WASM OPTIMIZATION
+  set(WASM_OPT_FLAGS -Oz --enable-bulk-memory)
+  if(CONFIG_ARCH_64BIT)
+    list(APPEND WASM_OPT_FLAGS --enable-memory64)
+    target_link_options(${APP_NAME} PRIVATE --target=wasm64)
+  endif()
+
   add_custom_target(
     ${APP_NAME}_OPT ALL
-    COMMAND ${WASI_SDK_PATH}/wasm-opt -Oz --enable-bulk-memory -o
-            ${APP_NAME}.wasm ${APP_NAME}.wasm
+    COMMAND ${WASI_SDK_PATH}/wasm-opt ${WASM_OPT_FLAGS} -o ${APP_NAME}.wasm
+            ${APP_NAME}.wasm
     DEPENDS ${APP_NAME}
     COMMENT "WASM build:Optimizing ${APP_NAME}")
 
