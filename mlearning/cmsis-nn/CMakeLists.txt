@@ -85,6 +85,8 @@ if(CONFIG_MLEARNING_CMSIS_NN)
 
   nuttx_add_library(cmsis_nn STATIC)
   target_compile_options(cmsis_nn PRIVATE ${CFLAGS})
+  # Add CMSIS-NN public headers
+  target_include_directories(cmsis_nn PRIVATE ${CMSIS_NN_DIR}/Include)
   target_sources(cmsis_nn PRIVATE ${CMSIS_NN_SRCS})
 
 endif()

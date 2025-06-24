@@ -71,10 +71,19 @@ if(CONFIG_TFLITEMICRO)
       -Wno-unused-variable
       -Wno-undef
       -Wno-shadow
+      -DTFLITE_WITH_STABLE_ABI=0
+      -DTFLITE_USE_OPAQUE_DELEGATE=0
+      -DTFLITE_SINGLE_ROUNDING=0
       -O3)
 
   if(CONFIG_MLEARNING_CMSIS_NN)
     list(APPEND COMMON_FLAGS -DCMSIS_NN)
+  endif()
+
+  # ############################################################################
+  # Additional flags for TFLM tool and hardware operators
+  if(CONFIG_TFLITEMICRO_TOOL)
+    list(APPEND COMMON_FLAGS -DTFLITE_MODEL_COMPILER)
   endif()
 
   # ############################################################################
@@ -131,11 +140,46 @@ if(CONFIG_TFLITEMICRO)
       list(
         APPEND
         TFLITE_MICRO_SRCS
-        ${TFLITE_MICRO_DIR}/operators/neon/arm_convolve_s8.c
-        ${TFLITE_MICRO_DIR}/operators/neon/arm_nn_mat_mult_kernel_s8_s16.c
-        ${TFLITE_MICRO_DIR}/operators/neon/arm_q7_to_q15_with_offset.c
-        ${TFLITE_MICRO_DIR}/operators/neon/arm_elementwise_add_s8.c)
+        ${TFLITE_MICRO_DIR}/../operators/neon/arm_convolve_s8.c
+        ${TFLITE_MICRO_DIR}/../operators/neon/arm_nn_mat_mult_kernel_s8_s16.c
+        ${TFLITE_MICRO_DIR}/../operators/neon/arm_q7_to_q15_with_offset.c
+        ${TFLITE_MICRO_DIR}/../operators/neon/arm_elementwise_add_s8.c)
     endif()
+  endif()
+
+  # ############################################################################
+  # Beco hardware operator support
+  if(CONFIG_BES_BECO_CONV)
+    # When building the standalone tool, enable all third-party hardware
+    # operators. Set BECO include directories for the tool - adaptive path
+    # detection
+
+    # Check for services_1700 directory first, then fallback to services
+    if(EXISTS ${CMAKE_SOURCE_DIR}/../vendor/bes/framework/services_1700)
+      set(BES_SERVICES_DIR
+          ${CMAKE_SOURCE_DIR}/../vendor/bes/framework/services_1700)
+    else()
+      set(BES_SERVICES_DIR ${CMAKE_SOURCE_DIR}/../vendor/bes/framework/services)
+    endif()
+
+    set(BECO_INCLUDE_DIRS
+        ${BES_SERVICES_DIR}/include/beco
+        ${BES_SERVICES_DIR}/include/beco/beco_nn
+        ${BES_SERVICES_DIR}/include/cmsis_dsp
+        ${BES_SERVICES_DIR}/platform/cmsis/inc
+        ${BES_SERVICES_DIR}/platform/hal
+        ${CMAKE_CURRENT_LIST_DIR}/../cmsis-nn/cmsis-nn/Include)
+
+    set(NEW_BECO_SRCS
+        ${TFLITE_MICRO_DIR}/tensorflow/lite/micro/kernels/beco/conv.cc)
+
+    # Remove any existing conv.cc introduced from the generic or CMSIS-NN paths
+    get_filename_component(beconv_filename ${NEW_BECO_SRCS} NAME)
+    list(FILTER TFLITE_MICRO_SRCS EXCLUDE REGEX ".*/${beconv_filename}$")
+    list(FILTER TFLITE_MICRO_SRCS EXCLUDE REGEX
+         ".*/tensorflow/lite/micro/kernels/cmsis_nn/${beconv_filename}$")
+
+    list(APPEND TFLITE_MICRO_SRCS ${NEW_BECO_SRCS})
   endif()
 
   # ############################################################################
@@ -146,10 +190,24 @@ if(CONFIG_TFLITEMICRO)
       ${CMAKE_BINARY_DIR}/apps/math/gemmlowp/gemmlowp
       ${CMAKE_BINARY_DIR}/apps/math/ruy/ruy
       ${CMAKE_BINARY_DIR}/apps/math/kissfft/kissfft
-      ${CMAKE_BINARY_DIR}/apps/math/tflite-micro/tflite-micro)
+      ${CMAKE_BINARY_DIR}/apps/math/tflite-micro/tflite-micro
+      # Source directory of tflite-micro (contains tensorflow/* headers)
+      ${TFLITE_MICRO_DIR})
+
+  # Additional third-party headers required by TFLite Micro
+  list(APPEND INCDIR ${CMAKE_CURRENT_LIST_DIR}/../../math/gemmlowp/gemmlowp
+       ${CMAKE_CURRENT_LIST_DIR}/../../math/ruy/ruy
+       ${CMAKE_CURRENT_LIST_DIR}/../../system/flatbuffers/flatbuffers/include)
+
+  # Append BECO include directories if they were collected
+  if(DEFINED BECO_INCLUDE_DIRS)
+    list(APPEND INCDIR ${BECO_INCLUDE_DIRS})
+  endif()
 
   if(CONFIG_MLEARNING_CMSIS_NN)
     list(APPEND INCDIR ${CMAKE_BINARY_DIR}/apps/mlearning/cmsis-nn/cmsis-nn)
+    list(APPEND INCDIR ${CMAKE_CURRENT_LIST_DIR}/../cmsis-nn/cmsis-nn)
+    list(APPEND INCDIR ${CMAKE_CURRENT_LIST_DIR}/../cmsis-nn/cmsis-nn/Include)
   endif()
 
   # ############################################################################
@@ -160,5 +218,25 @@ if(CONFIG_TFLITEMICRO)
   target_compile_options(tflite_micro PRIVATE ${COMMON_FLAGS})
   target_sources(tflite_micro PRIVATE ${TFLITE_MICRO_SRCS})
   target_include_directories(tflite_micro PUBLIC ${INCDIR})
+
+  # ############################################################################
+  # Application Configuration
+  # ############################################################################
+
+  if(CONFIG_TFLITEMICRO_TOOL)
+    nuttx_add_application(
+      NAME
+      tflm
+      STACKSIZE
+      ${CONFIG_TFLITEMICRO_TOOL_STACKSIZE}
+      PRIORITY
+      ${CONFIG_TFLITEMICRO_TOOL_PRIORITY}
+      MODULE
+      ${CONFIG_TFLITEMICRO_TOOL}
+      SRCS
+      tflm_tool.cc)
+    target_include_directories(apps_tflm PUBLIC ${INCDIR})
+    target_compile_options(apps_tflm PRIVATE ${COMMON_FLAGS})
+  endif()
 
 endif()
