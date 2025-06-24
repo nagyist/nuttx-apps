@@ -27,9 +27,17 @@ if(CONFIG_LIB_MQTT5)
 
   file(GLOB CSRCS paho_mqtt/src/*.c)
 
+  if(CONFIG_UTILS_MQTT5)
+    list(APPEND CSRCS
+         ${CMAKE_CURRENT_LIST_DIR}/paho_mqtt/src/samples/pubsub_opts.c)
+  endif()
+
   if(CONFIG_OPENSSL_MBEDTLS_WRAPPER)
     list(REMOVE_ITEM CSRCS ${CMAKE_CURRENT_LIST_DIR}/paho_mqtt/src/SHA1.c)
   endif()
+
+  list(REMOVE_ITEM CSRCS ${CMAKE_CURRENT_LIST_DIR}/paho_mqtt/src/MQTTClient.c
+       ${CMAKE_CURRENT_LIST_DIR}/paho_mqtt/src/MQTTVersion.c)
 
   nuttx_add_library(mqtt5)
 
@@ -60,7 +68,6 @@ if(CONFIG_LIB_MQTT5)
       mqtt_pub
       SRCS
       paho_mqtt/src/samples/paho_c_pub.c
-      paho_mqtt/src/samples/pubsub_opts.c
       DEPENDS
       mqtt5
       INCLUDE_DIRECTORIES
@@ -77,7 +84,6 @@ if(CONFIG_LIB_MQTT5)
       mqtt_sub
       SRCS
       paho_mqtt/src/samples/paho_c_sub.c
-      paho_mqtt/src/samples/pubsub_opts.c
       DEPENDS
       mqtt5
       INCLUDE_DIRECTORIES

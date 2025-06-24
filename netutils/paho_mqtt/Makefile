@@ -27,7 +27,15 @@ ifeq ($(CONFIG_LIB_MQTT5), y)
 ifeq ($(CONFIG_OPENSSL_MBEDTLS_WRAPPER), y)
 SKIP  = $(SRCDIR)/SHA1.c
 endif
-CSRCS   = $(filter-out $(SKIP), $(wildcard $(SRCDIR)/*.c))
+
+SKIP += $(SRCDIR)/MQTTClient.c
+SKIP += $(SRCDIR)/MQTTVersion.c
+
+CSRCS = $(filter-out $(SKIP), $(wildcard $(SRCDIR)/*.c))
+
+ifeq ($(CONFIG_UTILS_MQTT5),y)
+CSRCS += $(SRCDIR)/samples/pubsub_opts.c
+endif
 
 VARS  = BUILD_TIMESTAMP PROJECT_VERSION PROJECT_VERSION_MAJOR
 VARS += PROJECT_VERSION_MINOR PROJECT_VERSION_PATCH
