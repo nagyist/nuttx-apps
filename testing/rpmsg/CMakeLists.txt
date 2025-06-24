@@ -21,13 +21,13 @@
 if(CONFIG_TESTING_RPMSG)
 
   if(CONFIG_TESTING_RPMSGMTD)
-    nuttx_add_application(NAME rpmsgmtd MODULE ${CONFIG_TESTING_RPMSGMTD} SRCS
-                          rpmsgmtd.c)
+    nuttx_add_application(NAME cmocka_rpmsgmtdtest MODULE
+                          ${CONFIG_TESTING_RPMSGMTD} SRCS rpmsgmtd.c)
   endif()
 
   if(CONFIG_TESTING_RPMSGBLK)
-    nuttx_add_application(NAME rpmsgblk MODULE ${CONFIG_TESTING_RPMSGBLK} SRCS
-                          rpmsgblk.c)
+    nuttx_add_application(NAME cmocka_rpmsgblktest MODULE
+                          ${CONFIG_TESTING_RPMSGBLK} SRCS rpmsgblk.c)
   endif()
 
 endif()
