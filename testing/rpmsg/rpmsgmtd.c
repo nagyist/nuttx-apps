@@ -32,6 +32,7 @@
 #include <syslog.h>
 #include <fcntl.h>
 #include <cmocka.h>
+#include <unistd.h>
 
 #include <nuttx/fs/fs.h>
 #include <nuttx/kmalloc.h>
@@ -300,9 +301,9 @@ static void testcase1(FAR void** state)
               partinfo.startsector == 0);
 
   syslog(LOG_INFO, "partinfo.numsectors = %d partinfo.sectorsize = %d\
-         partinfo.startsector = %d partinfo.parent = %s\n",
+         partinfo.startsector = %lld partinfo.parent = %s\n",
          partinfo.numsectors, partinfo.sectorsize,
-         partinfo.startsector, partinfo.parent[0]);
+         partinfo.startsector, partinfo.parent);
 
   close(fd);
 }
@@ -375,6 +376,7 @@ static void testcase2(FAR void ** state)
     }
 
   free(input);
+  close(pre->fd);
 }
 #endif
 

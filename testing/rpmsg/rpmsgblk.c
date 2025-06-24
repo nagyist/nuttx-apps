@@ -31,6 +31,7 @@
 #include <cmocka.h>
 #include <fcntl.h>
 #include <syslog.h>
+#include <unistd.h>
 
 #include <sys/ioctl.h>
 #include <sys/mount.h>
