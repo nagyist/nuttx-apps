@@ -51,10 +51,50 @@ if(CONFIG_MATH_RUY)
   set(INCDIR ${CMAKE_CURRENT_LIST_DIR}/ruy)
 
   # ############################################################################
+  # Collect source files
+  # ############################################################################
+
+  set(RUY_SOURCES
+      ${RUY_DIR}/ruy/allocator.cc
+      ${RUY_DIR}/ruy/apply_multiplier.cc
+      ${RUY_DIR}/ruy/blocking_counter.cc
+      ${RUY_DIR}/ruy/block_map.cc
+      ${RUY_DIR}/ruy/context.cc
+      ${RUY_DIR}/ruy/context_get_ctx.cc
+      ${RUY_DIR}/ruy/cpuinfo.cc
+      ${RUY_DIR}/ruy/ctx.cc
+      ${RUY_DIR}/ruy/denormal.cc
+      ${RUY_DIR}/ruy/frontend.cc
+      ${RUY_DIR}/ruy/have_built_path_for_avx.cc
+      ${RUY_DIR}/ruy/have_built_path_for_avx2_fma.cc
+      ${RUY_DIR}/ruy/have_built_path_for_avx512.cc
+      ${RUY_DIR}/ruy/kernel_arm32.cc
+      ${RUY_DIR}/ruy/kernel_arm64.cc
+      ${RUY_DIR}/ruy/kernel_avx.cc
+      ${RUY_DIR}/ruy/kernel_avx2_fma.cc
+      ${RUY_DIR}/ruy/kernel_avx512.cc
+      ${RUY_DIR}/ruy/pack_arm.cc
+      ${RUY_DIR}/ruy/pack_avx.cc
+      ${RUY_DIR}/ruy/pack_avx2_fma.cc
+      ${RUY_DIR}/ruy/pack_avx512.cc
+      ${RUY_DIR}/ruy/pmu.cc
+      ${RUY_DIR}/ruy/prepacked_cache.cc
+      ${RUY_DIR}/ruy/prepare_packed_matrices.cc
+      ${RUY_DIR}/ruy/system_aligned_alloc.cc
+      ${RUY_DIR}/ruy/thread_pool.cc
+      ${RUY_DIR}/ruy/trmul.cc
+      ${RUY_DIR}/ruy/tune.cc
+      ${RUY_DIR}/ruy/wait.cc)
+
+  # ############################################################################
   # Library Configuration
   # ############################################################################
 
-  nuttx_add_library(ruy STATIC)
+  nuttx_add_library(ruy STATIC ${RUY_SOURCES})
+  target_compile_options(ruy PRIVATE -fomit-frame-pointer)
   target_include_directories(ruy PUBLIC ${INCDIR})
+
+  # Disable specific warnings for ruy library to avoid compilation errors
+  target_compile_options(ruy PRIVATE -Wno-shadow -Wno-error=shadow -Wno-error)
 
 endif()
