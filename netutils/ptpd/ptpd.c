@@ -446,6 +446,25 @@ static int ptp_adjtime(FAR struct ptp_state_s *state, int64_t delta_ns,
     }
 }
 
+static void ptp_adjphase(FAR struct ptp_state_s *state, int64_t delta_ns)
+{
+  if (state->clockid != CLOCK_REALTIME)
+    {
+      struct timex offset;
+      int ret;
+
+      memset(&offset, 0, sizeof(offset));
+      offset.offset = (long)-delta_ns;
+      offset.modes = ADJ_OFFSET | ADJ_NANO;
+
+      ret = clock_adjtime(state->clockid, &offset);
+      if (ret != OK)
+        {
+          ptperr("ptp_adjphase() failed: %d\n", errno);
+        }
+    }
+}
+
 /* Get timestamp of latest received packet */
 
 static int ptp_getrxtime(FAR struct ptp_state_s *state,
@@ -1174,14 +1193,18 @@ static int ptp_update_local_clock(FAR struct ptp_state_s *state,
               (long long)state->last_adjtime_ns,
               (long long)state->drift_ppb);
 
-      if (absdelta_ns > CONFIG_NETUTILS_PTPD_ADJTIME_THRESHOLD_NS)
+      /* Using the modulation method can increase the convergence speed
+       * and ensure that the final result after fine-tuning meets the jitter
+       * requirements of the vehicle-mounted Ethernet.
+       */
+
+      if ((abs(delta_ns) > CONFIG_NETUTILS_PTPD_ADJTIME_THRESHOLD_NS))
         {
-          ret = ptp_adjtime(state, delta_ns, drift_ppb);
+          state->drift_ppb += delta_ns;
+          ptp_adjphase(state, delta_ns);
         }
-      else
-        {
-          ret = ptp_adjtime(state, adjustment_ns, state->drift_ppb);
-        }
+
+      ret = ptp_adjtime(state, adjustment_ns, state->drift_ppb);
 
       if (ret != OK)
         {
