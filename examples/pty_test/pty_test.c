@@ -31,6 +31,7 @@
 #include <sys/stat.h>
 #include <termios.h>
 #include <poll.h>
+#include <pthread.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/ioctl.h>
