@@ -25,12 +25,14 @@
 
 #include <debug.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <nuttx/drivers/drivers.h>
 #include <nuttx/mtd/nand.h>
 #include <nuttx/mtd/nand_scheme.h>
 #include <nuttx/mtd/nand_ram.h>
 #include <nuttx/mtd/nand_wrapper.h>
+#include <nuttx/kmalloc.h>
 
 /****************************************************************************
  * Pre-processor Definitions
