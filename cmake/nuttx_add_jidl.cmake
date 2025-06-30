@@ -82,6 +82,7 @@ function(nuttx_add_jidl)
     MULTI_VALUE
     FEATURE_SRCS
     JIDLS
+    JIDL_OUT_NAMES
     FEATURE_NAMES
     REQUIRED
     TARGET
@@ -102,18 +103,33 @@ function(nuttx_add_jidl)
   target_include_directories(
     ${TARGET} PRIVATE ${NUTTX_APPS_DIR}/frameworks/runtimes/feature/include)
 
-  foreach(JIDL_PATH ${JIDLS})
+  list(LENGTH JIDLS len)
+  math(EXPR len "${len} - 1")
+
+  if(NOT JIDL_OUT_NAMES)
+    foreach(index RANGE ${len})
+      list(GET JIDLS ${index} JIDL_PATH)
+      get_filename_component(JIDL_OUT_NAME ${JIDL_PATH} NAME_WE)
+      list(APPEND JIDL_OUT_NAMES ${JIDL_OUT_NAME})
+    endforeach()
+  endif()
+
+  foreach(index RANGE ${len})
+    list(GET JIDLS ${index} JIDL_PATH)
+    list(GET JIDL_OUT_NAMES ${index} JIDL_OUT_NAME)
     get_filename_component(JIDL_NAME ${JIDL_PATH} NAME_WE)
-    set(JIDL_SRC ${JIDL_OUT_DIR}/${JIDL_NAME}.${OUT_SRC_EXT})
-    set(JIDL_HEADER ${JIDL_OUT_DIR}/${JIDL_NAME}.h)
+
+    set(JIDL_SRC ${JIDL_OUT_DIR}/${JIDL_OUT_NAME}.${OUT_SRC_EXT})
+    set(JIDL_HEADER ${JIDL_OUT_DIR}/${JIDL_OUT_NAME}.h)
     file(WRITE ${JIDL_SRC} )
     file(WRITE ${JIDL_HEADER} )
 
     set(JIDL_TARGET jidl_${JIDL_NAME}_target)
     add_custom_target(
       ${JIDL_TARGET}
-      COMMAND ${JIDL_TOOL} ${JIDL_PATH} ${JIDL_FLAGS} --out-dir ${JIDL_OUT_DIR}
-              --header ${JIDL_NAME}.h --source ${JIDL_NAME}.${OUT_SRC_EXT}
+      COMMAND
+        ${JIDL_TOOL} ${JIDL_PATH} ${JIDL_FLAGS} --out-dir ${JIDL_OUT_DIR}
+        --header ${JIDL_OUT_NAME}.h --source ${JIDL_OUT_NAME}.${OUT_SRC_EXT}
       WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
       COMMENT "JIDL: generating glue files for ${JIDL_NAME}.jidl")
 
