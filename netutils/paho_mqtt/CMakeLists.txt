@@ -45,6 +45,14 @@ if(CONFIG_LIB_MQTT5)
 
   target_include_directories(mqtt5 PRIVATE ${MQTT5_INCDIR})
 
+  if(CONFIG_LIB_MQTT5_TLS)
+    set(MQTT5_FLAGS
+        -DOPENSSL
+        -DSSL_OP_NO_TLSv1_2
+        -DLIBRESSL_VERSION_NUMBER
+        -DOPENSSL_VERSION_NUMBER=${CONFIG_LIB_MQTT5_OPENSSL_VERSION_NUMBER})
+  endif()
+
   target_compile_options(mqtt5 PRIVATE ${MQTT5_FLAGS})
 
   if(CONFIG_UTILS_MQTT5)

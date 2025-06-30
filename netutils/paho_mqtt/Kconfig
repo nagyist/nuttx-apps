@@ -20,6 +20,21 @@ config LIB_MQTT5
 	---help---
 		A library for accessing mqtt5 client services through C libraries calls in a simple manner.
 
+if LIB_MQTT5
+
+config LIB_MQTT5_TLS
+	bool "Enable mqtt5 TLS/DTLS"
+	depends on OPENSSL_MBEDTLS_WRAPPER
+	default y
+
+if LIB_MQTT5_TLS
+
+config LIB_MQTT5_OPENSSL_VERSION_NUMBER
+	int "OpenSSL version number of MQTT5"
+	default 9470208
+
+endif # LIB_MQTT5_TLS
+
 config UTILS_MQTT5
 	tristate "Enable mqtt5 tool"
 	depends on LIB_MQTT5
@@ -27,6 +42,7 @@ config UTILS_MQTT5
 		Enable mqtt utility
 
 if UTILS_MQTT5
+
 config UTILS_MQTT5_PRIORITY
 	int "mqtt utility priority"
 	default 100
@@ -34,4 +50,7 @@ config UTILS_MQTT5_PRIORITY
 config UTILS_MQTT5_STACKSIZE
 	int "mqtt utility statcksize"
 	default 16384
-endif
+
+endif # UTILS_MQTT5
+
+endif # LIB_MQTT5
