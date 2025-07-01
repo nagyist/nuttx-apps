@@ -6,7 +6,7 @@
 config TESTING_CHARCAN
 	tristate "vela auto tests for charcan"
 	default n
-	depends on TESTING_CMOCKA
+	depends on TESTING_CMOCKA && CAN
 	---help---
 		Unit test for Can
 
