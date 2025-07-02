@@ -52,8 +52,10 @@ if(CONFIG_CRYPTO_MBEDTLS)
   # Flags
   # ############################################################################
 
-  set_source_files_properties(${MBEDTLS_DIR}/library/bignum.c
-                              PROPERTIES COMPILE_FLAGS -fno-lto)
+  if(CONFIG_ARCH_TOOLCHAIN_GNU)
+    set_source_files_properties(${MBEDTLS_DIR}/library/bignum.c
+                                PROPERTIES COMPILE_FLAGS ${NO_LTO})
+  endif()
 
   if(CONFIG_FRAME_POINTER)
     if(CONFIG_DEBUG_OPTLEVEL STREQUAL -O3)
