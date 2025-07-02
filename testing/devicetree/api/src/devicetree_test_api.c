@@ -94,6 +94,10 @@
 #define assert_within(a, b, d) \
   assert(((a) >= ((b) - (d))) && ((a) <= ((b) + (d))))
 
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+int g_board_id;
+#endif
+
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
@@ -124,6 +128,41 @@ static void test_path_props(FAR void** state)
   assert_int_equal(DT_PROP_LEN_OR(TEST_ABCD1234, invalid_property, 0), 0);
   assert_true(!strcmp(DT_PROP_BY_IDX(TEST_ABCD1234, compatible, 0),
     "vnd,gpio-device"));
+
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+  g_board_id = 1;
+  assert_int_equal(DT_NUM_REGS_DYNAMIC(TEST_DEADBEEF), 1);
+  assert_int_equal(DT_PROP_DYNAMIC(TEST_DEADBEEF, gpio_controller), 1);
+  assert_int_equal(DT_PROP_DYNAMIC(TEST_DEADBEEF, ngpios), 100);
+  assert_true(!strcmp(DT_PROP_DYNAMIC(TEST_DEADBEEF, status), "okay"));
+  assert_int_equal(DT_PROP_LEN_DYNAMIC(TEST_DEADBEEF, compatible), 1);
+  assert_true(!strcmp(DT_PROP_BY_IDX_DYNAMIC(TEST_DEADBEEF, compatible, 0),
+    "vnd,gpio-device"));
+
+  assert_int_equal(DT_NUM_REGS_DYNAMIC(TEST_ABCD1234), 2);
+  assert_int_equal(DT_PROP_DYNAMIC(TEST_ABCD1234, gpio_controller), 1);
+  assert_int_equal(DT_PROP_DYNAMIC(TEST_ABCD1234, ngpios), 200);
+  assert_true(!strcmp(DT_PROP_DYNAMIC(TEST_ABCD1234, status), "okay"));
+  assert_int_equal(DT_PROP_LEN_DYNAMIC(TEST_ABCD1234, compatible), 1);
+  assert_true(!strcmp(DT_PROP_BY_IDX_DYNAMIC(TEST_ABCD1234, compatible, 0),
+    "vnd,gpio-device"));
+  g_board_id = 2;
+  assert_int_equal(DT_NUM_REGS_DYNAMIC(TEST_DEADBEEF), 2);
+  assert_int_equal(DT_PROP_DYNAMIC(TEST_DEADBEEF, gpio_controller), 1);
+  assert_int_equal(DT_PROP_DYNAMIC(TEST_DEADBEEF, ngpios), 300);
+  assert_true(!strcmp(DT_PROP_DYNAMIC(TEST_DEADBEEF, status), "disabled"));
+  assert_int_equal(DT_PROP_LEN_DYNAMIC(TEST_DEADBEEF, compatible), 1);
+  assert_true(!strcmp(DT_PROP_BY_IDX_DYNAMIC(TEST_DEADBEEF, compatible, 0),
+    "vnd,gpio-device"));
+
+  assert_int_equal(DT_NUM_REGS_DYNAMIC(TEST_ABCD1234), 2);
+  assert_int_equal(DT_PROP_DYNAMIC(TEST_ABCD1234, gpio_controller), 1);
+  assert_int_equal(DT_PROP_DYNAMIC(TEST_ABCD1234, ngpios), 600);
+  assert_true(!strcmp(DT_PROP_DYNAMIC(TEST_ABCD1234, status), "disabled"));
+  assert_int_equal(DT_PROP_LEN_DYNAMIC(TEST_ABCD1234, compatible), 1);
+  assert_true(!strcmp(DT_PROP_BY_IDX_DYNAMIC(TEST_ABCD1234, compatible, 0),
+    "vnd,gpio-device"));
+#endif
 }
 
 static void test_alias_props(FAR void** state)
@@ -498,10 +537,28 @@ static void test_reg(FAR void** state)
   assert_int_equal(DT_REG_ADDR_BY_IDX(TEST_ABCD1234, 0), 0xabcd1234);
   assert_int_equal(DT_REG_ADDR_BY_IDX(TEST_ABCD1234, 1), 0x98765432);
 
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+  g_board_id = 1;
+  assert_int_equal(DT_REG_ADDR_BY_IDX_DYNAMIC(TEST_ABCD1234, 0), 0xabcd1234);
+  assert_int_equal(DT_REG_ADDR_BY_IDX_DYNAMIC(TEST_ABCD1234, 1), 0x98765432);
+  g_board_id = 2;
+  assert_int_equal(DT_REG_ADDR_BY_IDX_DYNAMIC(TEST_ABCD1234, 0), 0xaabb5678);
+  assert_int_equal(DT_REG_ADDR_BY_IDX_DYNAMIC(TEST_ABCD1234, 1), 0x11223344);
+#endif
+
   /* DT_REG_SIZE_BY_IDX */
 
   assert_int_equal(DT_REG_SIZE_BY_IDX(TEST_ABCD1234, 0), 0x500);
   assert_int_equal(DT_REG_SIZE_BY_IDX(TEST_ABCD1234, 1), 0xff);
+
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+  g_board_id = 1;
+  assert_int_equal(DT_REG_SIZE_BY_IDX_DYNAMIC(TEST_ABCD1234, 0), 0x500);
+  assert_int_equal(DT_REG_SIZE_BY_IDX_DYNAMIC(TEST_ABCD1234, 1), 0xff);
+  g_board_id = 2;
+  assert_int_equal(DT_REG_SIZE_BY_IDX_DYNAMIC(TEST_ABCD1234, 0), 0x600);
+  assert_int_equal(DT_REG_SIZE_BY_IDX_DYNAMIC(TEST_ABCD1234, 1), 0xaa);
+#endif
 
   /* DT_REG_ADDR */
 
@@ -522,6 +579,19 @@ static void test_reg(FAR void** state)
   assert_int_equal(DT_REG_ADDR_BY_NAME(TEST_ABCD1234, two),
                    0x98765432);
 
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+  g_board_id = 1;
+  assert_int_equal(DT_REG_ADDR_BY_NAME_DYNAMIC(TEST_ABCD1234, one),
+                   0xabcd1234);
+  assert_int_equal(DT_REG_ADDR_BY_NAME_DYNAMIC(TEST_ABCD1234, two),
+                   0x98765432);
+  g_board_id = 2;
+  assert_int_equal(DT_REG_ADDR_BY_NAME_DYNAMIC(TEST_ABCD1234, one),
+                   0xaabb5678);
+  assert_int_equal(DT_REG_ADDR_BY_NAME_DYNAMIC(TEST_ABCD1234, two),
+                   0x11223344);
+#endif
+
   /* DT_REG_ADDR_BY_NAME_OR */
 
   assert_int_equal(DT_REG_ADDR_BY_NAME_OR(TEST_ABCD1234, one, 0x10),
@@ -540,6 +610,15 @@ static void test_reg(FAR void** state)
 
   assert_int_equal(DT_REG_SIZE_BY_NAME(TEST_ABCD1234, one), 0x500);
   assert_int_equal(DT_REG_SIZE_BY_NAME(TEST_ABCD1234, two), 0xff);
+
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+  g_board_id = 1;
+  assert_int_equal(DT_REG_SIZE_BY_NAME_DYNAMIC(TEST_ABCD1234, one), 0x500);
+  assert_int_equal(DT_REG_SIZE_BY_NAME_DYNAMIC(TEST_ABCD1234, two), 0xff);
+  g_board_id = 2;
+  assert_int_equal(DT_REG_SIZE_BY_NAME_DYNAMIC(TEST_ABCD1234, one), 0x600);
+  assert_int_equal(DT_REG_SIZE_BY_NAME_DYNAMIC(TEST_ABCD1234, two), 0xaa);
+#endif
 
   /* DT_REG_SIZE_BY_NAME_OR */
 
@@ -721,6 +800,18 @@ static void test_irq(void** state)
   assert_int_equal(DT_IRQN_BY_IDX(DT_INST(0, DT_DRV_COMPAT), 0), 30);
   assert_int_equal(DT_IRQN_BY_IDX(DT_INST(0, DT_DRV_COMPAT), 1), 40);
   assert_int_equal(DT_IRQN_BY_IDX(DT_INST(0, DT_DRV_COMPAT), 2), 60);
+
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+  g_board_id = 1;
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 0), 30);
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 1), 40);
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 2), 60);
+  g_board_id = 2;
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 0), 40);
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 1), 50);
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 2), 70);
+#endif
+
 #else
   assert_int_equal(DT_IRQN_BY_IDX(DT_INST(0, DT_DRV_COMPAT), 0),
     ((30 + 1) << CONFIG_1ST_LEVEL_INTERRUPT_BITS) | 11);
@@ -822,6 +913,16 @@ static void test_irq(void** state)
 #else
   assert_int_equal(DT_IRQN_BY_IDX(TEST_IRQ_EXT, 0), 70);
   assert_int_equal(DT_IRQN_BY_IDX(TEST_IRQ_EXT, 2), 42);
+
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+  g_board_id = 1;
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(TEST_IRQ_EXT, 0), 70);
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(TEST_IRQ_EXT, 2), 42);
+  g_board_id = 2;
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(TEST_IRQ_EXT, 0), 65);
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(TEST_IRQ_EXT, 2), 47);
+#endif
+
 #endif
 }
 
@@ -1987,6 +2088,15 @@ static void test_child_nodes_number(void** state)
   assert_int_equal(DT_INST_CHILD_NUM(0), 3);
   assert_int_equal(DT_CHILD_NUM_STATUS_OKAY(TEST_CHILDREN), 2);
   assert_int_equal(DT_INST_CHILD_NUM_STATUS_OKAY(0), 2);
+
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+  g_board_id = 1;
+  assert_int_equal(DT_CHILD_NUM_DYNAMIC(TEST_CHILDREN), 3);
+  assert_int_equal(DT_CHILD_NUM_STATUS_OKAY_DYNAMIC(TEST_CHILDREN), 2);
+  g_board_id = 2;
+  assert_int_equal(DT_CHILD_NUM_DYNAMIC(TEST_CHILDREN), 4);
+  assert_int_equal(DT_CHILD_NUM_STATUS_OKAY_DYNAMIC(TEST_CHILDREN), 3);
+#endif
 }
 
 static void test_great_grandchild(void** state)
@@ -2658,6 +2768,177 @@ static void test_interrupt_controller(void** state)
   assert_true(DT_SAME_NODE(DT_INST_IRQ_INTC(0), TEST_INTC));
 }
 
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+
+#define USER_ARRAY_MAX_SIZE 5
+uint32_t g_user_array[USER_ARRAY_MAX_SIZE];
+struct user_config_s
+{
+  int m_child_enable;
+  int m_child_bits;
+};
+
+struct user_config_s g_user_config_0[USER_ARRAY_MAX_SIZE];
+struct user_config_s g_user_config_1[USER_ARRAY_MAX_SIZE];
+struct user_config_s g_user_config_2[USER_ARRAY_MAX_SIZE];
+struct user_config_s g_user_config_3[USER_ARRAY_MAX_SIZE];
+
+static void test_dynamic_foreach_usage(void** state)
+{
+  /* Test foreach macros to dynamically select and assign values to
+   * user arrays
+   */
+
+#define DT_INIT_USER_ARRAY(node_id) \
+  g_user_array[DT_PROP(node_id, device_id)] = DT_PROP(node_id, device_id);
+
+  g_board_id = 1;
+  memset(g_user_array, 0, USER_ARRAY_MAX_SIZE * sizeof(uint32_t));
+  DT_FOREACH_DYNAMIC(g_board_id, DT_NODELABEL(test_foreach), \
+    DT_FOREACH_CHILD, DT_INIT_USER_ARRAY);
+  for (int i = 0; i < (DT_CHILD_NUM_DYNAMIC(DT_NODELABEL(test_foreach))); \
+       i++)
+    {
+      assert_int_equal(g_user_array[i], i);
+    }
+
+  g_board_id = 2;
+  memset(g_user_array, 0, USER_ARRAY_MAX_SIZE * sizeof(uint32_t));
+  DT_FOREACH_DYNAMIC(g_board_id, DT_NODELABEL(test_foreach), \
+    DT_FOREACH_CHILD, DT_INIT_USER_ARRAY);
+  for (int i = 0; i < (DT_CHILD_NUM_DYNAMIC(DT_NODELABEL(test_foreach))); \
+       i++)
+    {
+      assert_int_equal(g_user_array[i], i);
+    }
+
+#undef DT_INIT_USER_ARRAY
+
+  /* Test foreach macros with vargs to dynamically select and
+   * assign values to user arrays
+   */
+
+#define DT_INIT_USER_ARRAY(node_id, prop) \
+  g_user_array[DT_PROP(node_id, device_id)] = DT_PHA_BY_IDX(node_id, prop, 0, flags);
+
+  g_board_id = 1;
+  memset(g_user_array, 0, USER_ARRAY_MAX_SIZE * sizeof(uint32_t));
+  DT_FOREACH_VARGS_DYNAMIC(g_board_id, DT_NODELABEL(test_foreach), \
+    DT_FOREACH_CHILD_VARGS, DT_INIT_USER_ARRAY, gpios);
+  assert_int_equal(g_user_array[0], 32);
+  assert_int_equal(g_user_array[1], 56);
+  assert_int_equal(g_user_array[2], 35);
+  assert_int_equal(g_user_array[3], 37);
+  assert_int_equal(g_user_array[4], 0);
+
+  g_board_id = 2;
+  memset(g_user_array, 0, USER_ARRAY_MAX_SIZE * sizeof(uint32_t));
+  DT_FOREACH_VARGS_DYNAMIC(g_board_id, DT_NODELABEL(test_foreach), \
+    DT_FOREACH_CHILD_VARGS, DT_INIT_USER_ARRAY, gpios);
+  assert_int_equal(g_user_array[0], 34);
+  assert_int_equal(g_user_array[1], 66);
+  assert_int_equal(g_user_array[2], 75);
+  assert_int_equal(g_user_array[3], 0);
+  assert_int_equal(g_user_array[4], 0);
+
+#undef DT_INIT_USER_ARRAY
+
+/* Test nested foreach macros to dynamically select and assign
+ * values to user configuration arrays
+ */
+
+#define DT_INIT_DEVICE_CHANNEL(node_id, var) \
+  { \
+    DT_CAT_EVAL(g_user_config_, var)[DT_PROP(node_id, child_id)].m_child_enable = DT_PROP(node_id, m_child_enable); \
+    DT_CAT_EVAL(g_user_config_, var)[DT_PROP(node_id, child_id)].m_child_bits = DT_PROP(node_id, m_child_bits); \
+  } \
+
+#define DT_INIT_DEVICE(node_id) \
+  DT_FOREACH_CHILD_VARGS(node_id, DT_INIT_DEVICE_CHANNEL, DT_PROP(node_id, device_id))
+
+  g_board_id = 1;
+  DT_FOREACH_DYNAMIC(g_board_id, DT_NODELABEL(test_foreach), \
+    DT_FOREACH_CHILD_STATUS_OKAY, DT_INIT_DEVICE);
+  assert_int_equal(g_user_config_0[0].m_child_enable, 1);
+  assert_int_equal(g_user_config_0[0].m_child_bits, 1);
+  assert_int_equal(g_user_config_0[1].m_child_enable, 0);
+  assert_int_equal(g_user_config_0[1].m_child_bits, 2);
+  assert_int_equal(g_user_config_1[0].m_child_enable, 1);
+  assert_int_equal(g_user_config_1[0].m_child_bits, 4);
+  assert_int_equal(g_user_config_1[1].m_child_enable, 1);
+  assert_int_equal(g_user_config_1[1].m_child_bits, 8);
+  assert_int_equal(g_user_config_2[0].m_child_enable, 0);
+  assert_int_equal(g_user_config_2[0].m_child_bits, 16);
+  assert_int_equal(g_user_config_2[1].m_child_enable, 0);
+  assert_int_equal(g_user_config_2[1].m_child_bits, 32);
+  assert_int_equal(g_user_config_3[0].m_child_enable, 0);
+  assert_int_equal(g_user_config_3[0].m_child_bits, 64);
+  assert_int_equal(g_user_config_3[1].m_child_enable, 1);
+  assert_int_equal(g_user_config_3[1].m_child_bits, 128);
+
+  g_board_id = 2;
+  DT_FOREACH_DYNAMIC(g_board_id, DT_NODELABEL(test_foreach), \
+    DT_FOREACH_CHILD_STATUS_OKAY, DT_INIT_DEVICE);
+  assert_int_equal(g_user_config_0[0].m_child_enable, 0);
+  assert_int_equal(g_user_config_0[0].m_child_bits, 3);
+  assert_int_equal(g_user_config_0[1].m_child_enable, 1);
+  assert_int_equal(g_user_config_0[1].m_child_bits, 5);
+  assert_int_equal(g_user_config_1[0].m_child_enable, 0);
+  assert_int_equal(g_user_config_1[0].m_child_bits, 15);
+
+#undef DT_INIT_DEVICE
+#undef DT_INIT_DEVICE_CHANNEL
+
+  /* Test foreach okays macros with compats to dynamically
+   * select and foreach nodes with compatibles
+   */
+
+#define FOREACH_NODE_PATH_MAX 50
+#define FOREACH_NODE_NUM_MAX  8
+
+  char foreach_compats_okay_nodes_path \
+  [FOREACH_NODE_NUM_MAX][FOREACH_NODE_PATH_MAX] =
+  {
+    "/test/test-foreach-1/device_1/child_1_1",
+    "/test/test-foreach-1/device_1/child_1_2",
+    "/test/test-foreach-1/device_2/child_2_1",
+    "/test/test-foreach-1/device_2/child_2_2",
+    "/test/test-foreach-1/device_3/child_3_1",
+    "/test/test-foreach-1/device_3/child_3_2",
+    "/test/test-foreach-1/device_4/child_4_1",
+    "/test/test-foreach-1/device_4/child_4_2"
+  };
+
+#define DT_GET_DEVICE_PATH(node_id) \
+  assert_string_equal(DT_NODE_PATH(node_id), \
+    foreach_compats_okay_nodes_path[DT_PROP(node_id, m_child_idx) - 1]);
+
+  g_board_id = 1;
+  DT_FOREACH_STATUS_OKAY_DYNAMIC(g_board_id, \
+    vnd_foreach_child_test, DT_GET_DEVICE_PATH);
+
+  g_board_id = 2;
+  DT_FOREACH_STATUS_OKAY_DYNAMIC(g_board_id, \
+    vnd_foreach_child_test, DT_GET_DEVICE_PATH);
+
+#undef DT_GET_DEVICE_PATH
+
+#define DT_GET_DEVICE_PATH(node_id, off) \
+  assert_string_equal(DT_NODE_PATH(node_id), \
+    foreach_compats_okay_nodes_path[DT_PROP(node_id, m_child_idx) - off]);
+
+  g_board_id = 1;
+  DT_FOREACH_STATUS_OKAY_VARGS_DYNAMIC(g_board_id, \
+    vnd_foreach_child_test, DT_GET_DEVICE_PATH, 1);
+
+  g_board_id = 2;
+  DT_FOREACH_STATUS_OKAY_VARGS_DYNAMIC(g_board_id, \
+    vnd_foreach_child_test, DT_GET_DEVICE_PATH, 1);
+
+#undef DT_GET_DEVICE_PATH
+}
+#endif
+
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -2725,6 +3006,9 @@ int main(int argc, FAR char *argv[])
   cmocka_unit_test(test_string_escape),
   cmocka_unit_test(test_string_array_escape),
   cmocka_unit_test(test_interrupt_controller),
+#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+  cmocka_unit_test(test_dynamic_foreach_usage),
+#endif
   };
 
   return cmocka_run_group_tests(tests, NULL, NULL);
