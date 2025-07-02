@@ -94,7 +94,6 @@ static int cm_regexmatch(FAR const char *pattern, FAR const char *str)
 int main(int argc, FAR char *argv[])
 {
   const char prefix[] = CONFIG_TESTING_CMOCKA_PROGNAME"_";
-  FAR const struct builtin_s *builtin;
   int prefix_len  = strlen(prefix);
   FAR char *testcase = NULL;
   FAR char *bypass[argc + 1];
@@ -106,6 +105,21 @@ int main(int argc, FAR char *argv[])
   int ret;
   int i;
   int list_tests = 0;
+
+#ifndef CONFIG_BUILD_KERNEL
+  FAR const struct builtin_s *builtin;
+#else
+  FAR DIR *dir;
+  FAR struct dirent *entry;
+  posix_spawn_file_actions_t file_actions;
+  posix_spawnattr_t attr;
+  char filepath[PATH_MAX];
+  FAR char *spawn_argv[2];
+  FAR char *path_env;
+  pid_t pid;
+  int dir_len = 0;
+  int status;
+#endif
 
   if (strlen(argv[0]) < prefix_len  - 1 ||
       strncmp(argv[0], prefix, prefix_len  - 1))
@@ -151,7 +165,7 @@ int main(int argc, FAR char *argv[])
       else if (argv[i][0] == '-')
         {
           printf("Unrecognized arguments: %s\nGet more"
-                 " infomation by --help\n", argv[i]);
+                 " information by --help\n", argv[i]);
           return 0;
         }
       else
@@ -183,6 +197,8 @@ int main(int argc, FAR char *argv[])
     }
 
   print_message("Cmocka Test Start.");
+
+#ifndef CONFIG_BUILD_KERNEL
   for (i = 0; (builtin = builtin_for_index(i)) != NULL; i++)
     {
       if (builtin->main == NULL ||
@@ -205,6 +221,73 @@ int main(int argc, FAR char *argv[])
           waitpid(ret, &ret, WUNTRACED);
         }
     }
+#else /* CONFIG_BUILD_KERNEL */
+  posix_spawn_file_actions_init(&file_actions);
+  posix_spawnattr_init(&attr);
+  path_env = getenv("PATH");
+  if (path_env == NULL)
+    {
+      return 0;
+    }
+
+  i = 0;
+  while (path_env[i++] != '\0')
+    {
+      dir_len++;
+      if (path_env[i] != ':' && path_env[i] != '\0')
+        {
+          continue;
+        }
+
+      memcpy(filepath, path_env + i - dir_len, dir_len);
+      filepath[dir_len] = '\0';
+
+      dir = opendir(filepath);
+      if (dir == NULL)
+        {
+          return 0;
+        }
+
+      filepath[dir_len++] = '/';
+      while ((entry = readdir(dir)) != NULL)
+        {
+          if (!DIRENT_ISFILE(entry->d_type))
+            {
+              continue;
+            }
+
+          if (strlen(entry->d_name) < prefix_len ||
+              strncmp(entry->d_name, prefix, prefix_len))
+            {
+              continue;
+            }
+
+          if (suite != NULL && !cm_regexmatch(suite, entry->d_name))
+            {
+              continue;
+            }
+
+          strlcpy(&filepath[dir_len], entry->d_name,
+                  sizeof(filepath) - dir_len);
+
+          spawn_argv[0] = entry->d_name;
+          spawn_argv[1] = NULL;
+
+          ret = posix_spawn(&pid, filepath, &file_actions, &attr, spawn_argv,
+                            NULL);
+          if (ret == 0)
+            {
+              waitpid(pid, &status, WUNTRACED);
+            }
+        }
+
+      closedir(dir);
+      dir_len = 0;
+    }
+
+  posix_spawn_file_actions_destroy(&file_actions);
+  posix_spawnattr_destroy(&attr);
+#endif /* CONFIG_BUILD_KERNEL */
 
   print_message("Cmocka Test Completed.");
   return 0;
