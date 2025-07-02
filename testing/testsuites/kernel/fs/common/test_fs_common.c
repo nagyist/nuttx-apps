@@ -82,6 +82,8 @@ int cm_unlink_recursive(FAR char *path)
   ret = lstat(path, &stat);
   if (ret < 0)
     {
+      syslog(LOG_INFO, "INFO: lstat %s errno %d\n",
+             path, errno);
       return ret;
     }
 
@@ -93,6 +95,8 @@ int cm_unlink_recursive(FAR char *path)
   dp = opendir(path);
   if (dp == NULL)
     {
+      syslog(LOG_INFO, "ERROR: Failed to open directory %s errno %d\n",
+                 path, errno);
       return -1;
     }
 
@@ -113,6 +117,8 @@ int cm_unlink_recursive(FAR char *path)
       ret = cm_unlink_recursive(path);
       if (ret < 0)
         {
+          syslog(LOG_INFO, "ERROR: Failed to unlink %s errno %d\n",
+                 path, errno);
           closedir(dp);
           return ret;
         }
@@ -123,6 +129,11 @@ int cm_unlink_recursive(FAR char *path)
     {
       path[len] = '\0';
       ret = rmdir(path);
+      if (ret < 0)
+        {
+          syslog(LOG_INFO, "ERROR: Failed to rmdir %s errno %d\n",
+                 path, errno);
+        }
     }
 
   return ret;
@@ -145,7 +156,8 @@ int test_nuttx_fs_test_group_setup(void **state)
   res = chdir(MOUNT_DIR);
   if (res != 0)
     {
-      syslog(LOG_INFO, "ERROR: Failed to switch the mount dir\n");
+      syslog(LOG_INFO, "ERROR: Failed to switch the mount dir errno %d\n",
+             errno);
       exit(1);
     }
 
@@ -170,7 +182,8 @@ int test_nuttx_fs_test_group_setup(void **state)
       if (res != 0)
         {
           syslog(LOG_INFO,
-                 "ERROR: Failed to creat the test directory\n");
+                 "ERROR: Failed to creat the test directory errno %d\n",
+                 errno);
           exit(1);
         }
 
@@ -215,7 +228,8 @@ int test_nuttx_fs_test_group_teardown(void **state)
   res = chdir(MOUNT_DIR);
   if (res != 0)
     {
-      syslog(LOG_INFO, "ERROR: Failed to switch the mount dir\n");
+      syslog(LOG_INFO, "ERROR: Failed to switch the mount dir errno %d\n",
+             errno);
       exit(1);
     }
 
