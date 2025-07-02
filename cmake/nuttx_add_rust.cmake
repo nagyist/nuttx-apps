@@ -177,7 +177,7 @@ function(nuttx_add_rust)
     COMMAND
       ${CMAKE_COMMAND} -E env
       NUTTX_INCLUDE_DIR=${PROJECT_SOURCE_DIR}/include:${CMAKE_BINARY_DIR}/include:${CMAKE_BINARY_DIR}/include/arch
-      cargo build ${CARGO_BUILD_FLAGS}
+      NUTTX_APPS_DIR=${NUTTX_APPS_DIR} cargo build ${CARGO_BUILD_FLAGS}
     COMMENT "Building Rust crate ${CRATE_NAME}"
     VERBATIM)
 

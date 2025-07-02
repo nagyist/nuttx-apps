@@ -90,6 +90,7 @@ endef
 ifeq ($(CONFIG_DEBUG_FULLOPT),y)
 define RUST_CARGO_BUILD
 	NUTTX_INCLUDE_DIR=$(TOPDIR)/include:$(TOPDIR)/include/arch \
+	NUTTX_APPS_DIR=$(APPDIR) \
 		cargo build --release -Zbuild-std=std,panic_abort \
 		-Zbuild-std-features=panic_immediate_abort \
 		--manifest-path $(2)/$(1)/Cargo.toml \
@@ -99,6 +100,7 @@ else
 define RUST_CARGO_BUILD
 	@echo "Building Rust code with cargo..."
 	NUTTX_INCLUDE_DIR=$(TOPDIR)/include:$(TOPDIR)/include/arch \
+	NUTTX_APPS_DIR=$(APPDIR) \
 		cargo build -Zbuild-std=std,panic_abort \
 		--manifest-path $(2)/$(1)/Cargo.toml \
 		--target $(call RUST_TARGET_TRIPLE)
