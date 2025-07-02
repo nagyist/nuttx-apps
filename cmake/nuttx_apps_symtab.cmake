@@ -26,16 +26,19 @@ if(NOT CONFIG_BUILD_KERNEL)
   set(SYMTAB_APPS_SOURCE ${CMAKE_BINARY_DIR}/symtab_apps.c)
 
   add_custom_command(
-    OUTPUT ${SYMTAB_APPS_SOURCE}
+    OUTPUT ${SYMTAB_APPS_SOURCE} always_rebuild_symtab
     COMMAND ${NUTTX_APPS_DIR}/tools/mksymtab.sh ${CMAKE_BINARY_DIR}/bin >
             ${CMAKE_BINARY_DIR}/symtab_apps.c
+    COMMAND ${CMAKE_COMMAND} -E touch always_rebuild_symtab
+    COMMAND ${CMAKE_COMMAND} -E remove always_rebuild_symtab
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     DEPENDS nuttx_apps_mksymtab
     VERBATIM
     COMMENT "Mksymtab: generating symbol table for apps")
+  add_custom_target(symtab_source_gen ALL DEPENDS ${SYMTAB_APPS_SOURCE})
 
-  # nuttx_add_system_library(apps_symtab)
   add_library(apps_symtab)
+  add_dependencies(apps_symtab symtab_source_gen)
   target_compile_options(apps_symtab PRIVATE ${NO_LTO} -fno-builtin)
   target_sources(apps_symtab PRIVATE ${SYMTAB_APPS_SOURCE})
   nuttx_add_library_internal(apps_symtab)
