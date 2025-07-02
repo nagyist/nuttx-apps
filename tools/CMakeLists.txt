@@ -41,6 +41,16 @@ if(CONFIG_TOOLS_WASM_BUILD OR CONFIG_INTERPRETERS_WAMR_BUILD_MODULES_FOR_NUTTX)
 
   # ensure the Wasm build dirs are unique
   list(REMOVE_DUPLICATES WASM_DIRS)
+
+  # Get the Wasm aot compile flags from the wasm_interface target
+  get_property(
+    WASM_AOT_FLAGS
+    TARGET wasm_interface
+    PROPERTY WASM_AOT_FLAG)
+
+  # ensure the Wasm aot compile flags are unique
+  list(REMOVE_DUPLICATES WASM_AOT_FLAGS)
+
   # Configure and build the Wasm based application
   add_custom_target(
     configure_wasm_build
@@ -49,7 +59,8 @@ if(CONFIG_TOOLS_WASM_BUILD OR CONFIG_INTERPRETERS_WAMR_BUILD_MODULES_FOR_NUTTX)
       ${CMAKE_CURRENT_SOURCE_DIR}/Wasm -DAPPDIR=${APPDIR} -DTOPDIR=${TOPDIR}
       -DNUTTX_APPS_DIR=${NUTTX_APPS_DIR} -DTOPBINDIR=${CMAKE_BINARY_DIR}
       -DKCONFIG_FILE_PATH=${KCONFIG_FILE_PATH}
-      -DWASI_SDK_PATH=$ENV{WASI_SDK_PATH} -DWASM_DIRS="${WASM_DIRS}")
+      -DWASI_SDK_PATH=$ENV{WASI_SDK_PATH} -DWASM_DIRS="${WASM_DIRS}"
+      -DWASM_AOT_FLAGS="${WASM_AOT_FLAGS}")
 
   add_custom_target(wasm_build COMMAND ${CMAKE_COMMAND} --build
                                        ${CMAKE_BINARY_DIR}/Wasm)

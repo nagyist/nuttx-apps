@@ -97,7 +97,14 @@ function(nuttx_add_library)
 
 endfunction()
 
+# Fake wasm_collect_aot_flag to avoid error in the Wasm build process.
+function(wasm_collect_aot_flag flag)
+
+endfunction()
+
 separate_arguments(WASM_DIRS)
+
+separate_arguments(WASM_AOT_FLAGS)
 
 # ~~~
 # Add all the Wasm apps to the build process.

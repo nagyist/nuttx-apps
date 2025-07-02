@@ -56,3 +56,10 @@ function(wasm_add_library)
     APPEND
     PROPERTY WASM_DIR ${CMAKE_CURRENT_LIST_DIR})
 endfunction()
+
+function(wasm_collect_aot_flag flag)
+  set_property(
+    TARGET wasm_interface
+    APPEND
+    PROPERTY WASM_AOT_FLAG "${flag}")
+endfunction()

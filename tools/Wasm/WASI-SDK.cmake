@@ -324,7 +324,7 @@ function(wasm_add_application)
   if(CONFIG_INTERPRETERS_WAMR_GC)
     list(APPEND RCFLAGS --enable-gc)
   endif()
-  list(APPEND RCFLAGS ${APP_WRCFLAGS})
+  list(APPEND RCFLAGS ${APP_WRCFLAGS} ${WASM_AOT_FLAGS})
 
   if(CONFIG_INTERPRETERS_WAMR_AOT)
     if("${APP_WAMR_MODE}" STREQUAL "AOT")
