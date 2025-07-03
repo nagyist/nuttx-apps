@@ -6,6 +6,7 @@
 config TESTING_MM
 	tristate "Memory management test"
 	default n
+	depends on BUILD_FLAT
 	---help---
 		Enable the memory management test
 

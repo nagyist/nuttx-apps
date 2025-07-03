@@ -53,6 +53,7 @@ int main(int argc, char *argv[])
       cmocka_unit_test(test_nuttx_sched_pthread07),
       cmocka_unit_test(test_nuttx_sched_pthread08),
       cmocka_unit_test(test_nuttx_sched_pthread09),
+#ifdef CONFIG_BUILD_FLAT
       cmocka_unit_test(test_nuttx_sched_task01),
       cmocka_unit_test(test_nuttx_sched_task02),
       cmocka_unit_test(test_nuttx_sched_task03),
@@ -60,6 +61,7 @@ int main(int argc, char *argv[])
       cmocka_unit_test(test_nuttx_sched_task05),
       cmocka_unit_test(test_nuttx_sched_task06),
       cmocka_unit_test(test_nuttx_sched_task07),
+#endif
   };
 
   /* Run Test cases */

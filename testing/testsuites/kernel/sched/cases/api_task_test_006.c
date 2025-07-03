@@ -42,6 +42,8 @@
 #include <cmocka.h>
 #include "SchedTest.h"
 
+#ifdef CONFIG_BUILD_FLAT
+
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
@@ -81,3 +83,4 @@ void test_nuttx_sched_task06(FAR void **state)
   assert_int_equal(priority_min, SCHED_PRIORITY_MIN);
   waitpid(pid, &status, 0);
 }
+#endif
