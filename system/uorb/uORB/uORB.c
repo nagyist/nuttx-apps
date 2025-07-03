@@ -431,7 +431,7 @@ int orb_sscanf(FAR const char *buf, FAR const char *format, FAR void *data)
   int lastc;
 
   lib_meminstream(&meminstream, buf, strlen(buf));
-  return lib_bscanf(&meminstream.common, &lastc, format, data);
+  return lib_oscanf(&meminstream.common, &lastc, format, data);
 }
 
 void orb_info(FAR const char *format, FAR const char *name,
@@ -454,6 +454,6 @@ int orb_fprintf(FAR FILE *stream, FAR const char *format,
   struct lib_stdoutstream_s stdoutstream;
 
   lib_stdoutstream(&stdoutstream, stream);
-  return lib_bsprintf(&stdoutstream.common, format, data);
+  return lib_osprintf(&stdoutstream.common, format, data);
 }
 #endif

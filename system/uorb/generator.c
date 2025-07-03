@@ -182,7 +182,7 @@ static int replay_worker(FAR struct sensor_gen_info_s *sensor_gen)
   while (fgets(line, GENERATOR_CACHE_BUFF, sensor_gen->file) != NULL)
     {
       lib_meminstream(&meminstream, line, GENERATOR_CACHE_BUFF);
-      ret = lib_bscanf(&meminstream.common, &lastc,
+      ret = lib_oscanf(&meminstream.common, &lastc,
                        sensor_gen->obj.meta->o_format, data);
       if (ret >= 0)
         {
@@ -259,7 +259,7 @@ static int fake_worker(FAR struct sensor_gen_info_s *sensor_gen,
     }
 
   lib_meminstream(&meminstream, buffer, strlen(buffer));
-  if (lib_bscanf(&meminstream.common, &lastc,
+  if (lib_oscanf(&meminstream.common, &lastc,
                  sensor_gen->obj.meta->o_format, data) < 0)
     {
       uorbinfo_raw("Input string data parsing error![%s]", buffer);
