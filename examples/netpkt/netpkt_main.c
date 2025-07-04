@@ -30,6 +30,7 @@
 #include <netinet/if_ether.h>
 #include <netinet/in.h>
 #include <netpacket/packet.h>
+#include <net/if.h>
 
 /****************************************************************************
  * Private Functions
@@ -39,11 +40,17 @@
  * Name: psock_create
  ****************************************************************************/
 
-static int psock_create(void)
+static int psock_create(const char *ifname)
 {
   int sd;
   struct sockaddr_ll addr;
   int addrlen = sizeof(addr);
+  unsigned int ifindex = 0;
+
+  if (ifname && ifname[0])
+    {
+      ifindex = if_nametoindex(ifname);
+    }
 
   sd = socket(AF_PACKET, SOCK_RAW, 0);
   if (sd < 0)
@@ -55,7 +62,7 @@ static int psock_create(void)
   /* Prepare sockaddr struct */
 
   addr.sll_family = AF_PACKET;
-  addr.sll_ifindex = 0;
+  addr.sll_ifindex = ifindex;
   addr.sll_protocol = htons(ETH_P_ALL);
   if (bind(sd, (const struct sockaddr *)&addr, addrlen) < 0)
     {
@@ -106,6 +113,7 @@ static void netpkt_usage(void)
   printf(" -r     receive\n");
   printf(" -t     transmit\n");
   printf(" -v     verbose\n");
+  printf(" -i <IF> specify interface name (e.g. eth0)\n");
   printf("\n");
 }
 
@@ -117,7 +125,7 @@ static void netpkt_usage(void)
  * Name: netpkt_main
  ****************************************************************************/
 
-int main(int argc, FAR char *argv[])
+int main(int argc, char *argv[])
 {
   int sd;
   int i;
@@ -141,6 +149,9 @@ int main(int argc, FAR char *argv[])
   int do_rxtimes = 3;
   int do_tx = 0;
   int do_txtimes = 3;
+  char ifname[IFNAMSIZ];
+
+  memset(ifname, 0, sizeof(ifname));
 
   if (argc == 1)
     {
@@ -150,7 +161,7 @@ int main(int argc, FAR char *argv[])
 
   /* Parse arguments */
 
-  while ((opt = getopt(argc, argv, "artv")) != -1)
+  while ((opt = getopt(argc, argv, "artvi:")) != -1)
     {
       switch (opt)
         {
@@ -171,13 +182,17 @@ int main(int argc, FAR char *argv[])
             verbose = 1;
             break;
 
+          case 'i':
+            strlcpy(ifname, optarg, sizeof(ifname));
+            break;
+
           default:
             netpkt_usage();
             return -1;
       }
   }
 
-  sd = psock_create();
+  sd = psock_create(ifname);
 
   if (do_tx)
     {
