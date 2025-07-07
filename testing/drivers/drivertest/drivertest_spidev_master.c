@@ -218,11 +218,13 @@ static int teardown(FAR void **state)
   if (spi->tx_buffer != NULL)
     {
       free(spi->tx_buffer);
+      spi->tx_buffer = NULL;
     }
 
   if (spi->rx_buffer != NULL)
     {
       free(spi->rx_buffer);
+      spi->rx_buffer = NULL;
     }
 
   close(spi->fd);

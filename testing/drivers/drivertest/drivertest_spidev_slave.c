@@ -142,11 +142,13 @@ static int teardown(FAR void **state)
   if (spislv->tx_buffer)
     {
       free(spislv->tx_buffer);
+      spislv->tx_buffer = NULL;
     }
 
   if (spislv->rx_buffer)
     {
       free(spislv->rx_buffer);
+      spislv->rx_buffer = NULL;
     }
 
   close(spislv->fd);
