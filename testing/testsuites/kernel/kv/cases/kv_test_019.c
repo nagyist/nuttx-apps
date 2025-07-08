@@ -98,15 +98,21 @@ static void *store_data(void *arg)
 void test_nuttx_kv19(FAR void **state)
 {
   pthread_t nthread[10];
+  pthread_attr_t attr;
   int status;
   int num_thread = 3;
   int test_flag = 0;
+
+  status = pthread_attr_init(&attr);
+  assert_int_equal(status, 0);
+  status = pthread_attr_setstacksize(&attr, 8192);
+  assert_int_equal(status, 0);
 
   for (int i = 0; i < num_thread; i++)
     {
       /* creat test thread */
 
-      status = pthread_create(&nthread[i], NULL, store_data, &test_flag);
+      status = pthread_create(&nthread[i], &attr, store_data, &test_flag);
       assert_int_equal(status, 0);
     }
 
