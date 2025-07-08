@@ -27,6 +27,10 @@ config LIB_MQTT5_TLS
 	depends on OPENSSL_MBEDTLS_WRAPPER
 	default y
 
+config MQTT5_THREAD_STACKSIZE
+	int "mqtt thread statcksize"
+	default 16384
+
 if LIB_MQTT5_TLS
 
 config LIB_MQTT5_OPENSSL_VERSION_NUMBER
