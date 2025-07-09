@@ -103,13 +103,14 @@ int input_gen_utouch_write(int fd, FAR const struct touch_sample_s *sample)
   if (ret != nbytes)
     {
       gerr("ERROR: utouch_write failed: nbytes = %zu, ret = %zd, error = %d,"
-           " data = %d points, first at x = %d, y = %d, pressure = %u\n",
+           " data = %" PRId32 " points, first at x = %d, y = %d,"
+           " pressure = %u\n",
            nbytes, ret, errno, sample->npoints, sample->point[0].x,
            sample->point[0].y, sample->point[0].pressure);
       return ret < 0 ? -errno : -EIO;
     }
 
-  ginfo("utouch_write: %d points, first at x = %d, y = %d, pressure = %u\n",
+  ginfo("utouch_write: %" PRId32 " points, first at x = %d, y = %d, pressure = %u\n",
         sample->npoints, sample->point[0].x, sample->point[0].y,
         sample->point[0].pressure);
   return OK;
