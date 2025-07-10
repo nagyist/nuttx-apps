@@ -146,16 +146,17 @@ typedef struct delay_work_s
 
 typedef struct workthread_work_s
 {
+  sem_t finish_sem;
+  atomic64_t total_ticks __attribute__((aligned(8))); /* total time consumed
+                                                       *  by all works */
   FAR struct kwork_wqueue_s *wq;
   FAR struct work_s *works;
-  int nthread;
-  int nworks;
-  bool is_first;
   atomic_t pending_cnt;
   atomic_t total_cnt;
   atomic_t finish_cnt;
-  atomic64_t total_ticks; /* total time consumed by all works */
-  sem_t finish_sem;
+  int nthread;
+  int nworks;
+  bool is_first;
 } workthread_work_t;
 
 typedef struct
