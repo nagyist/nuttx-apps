@@ -19,6 +19,7 @@
 # ##############################################################################
 
 include(nuttx_parse_function_args)
+include(nuttx_add_rust)
 
 # ~~~
 # nuttx_add_jidl
@@ -154,4 +155,84 @@ function(nuttx_add_jidl)
     target_sources(${TARGET} PRIVATE ${feature_src})
   endforeach()
 
+endfunction()
+
+function(nuttx_add_jidl_rust)
+
+  # parse arguments into variables
+  nuttx_parse_function_args(
+    FUNC
+    nuttx_add_jidl_rust
+    ONE_VALUE
+    TARGET
+    JIDL_OUT_DIR
+    JIDL_FLAGS
+    MULTI_VALUE
+    FEATURE_CRATE
+    JIDLS
+    FEATURE_NAMES
+    REQUIRED
+    TARGET
+    FEATURE_CRATE
+    FEATURE_NAMES
+    JIDLS
+    ARGN
+    ${ARGN})
+
+  if(NOT JIDL_OUT_DIR)
+    set(JIDL_OUT_DIR ${QUICKAPP_FEATURES_OUT_DIR}/jidl)
+  endif()
+
+  target_include_directories(
+    ${TARGET} PRIVATE ${NUTTX_APPS_DIR}/frameworks/runtimes/feature/include)
+
+  foreach(JIDL_PATH ${JIDLS})
+    get_filename_component(JIDL_NAME ${JIDL_PATH} NAME_WE)
+    set(JIDL_SRC ${JIDL_OUT_DIR}/${JIDL_NAME}.c)
+    set(JIDL_HEADER ${JIDL_OUT_DIR}/${JIDL_NAME}.h)
+    file(WRITE ${JIDL_SRC} )
+    file(WRITE ${JIDL_HEADER} )
+
+    set(JIDL_TARGET jidl_rust_${JIDL_NAME}_target)
+    # TODO: add rust flags to the jidl tool
+    add_custom_target(
+      ${JIDL_TARGET}
+      COMMAND ${JIDL_TOOL} ${JIDL_PATH} ${JIDL_FLAGS} --out-dir ${JIDL_OUT_DIR}
+              --header ${JIDL_NAME}.h --source ${JIDL_NAME}.c
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+      COMMENT "JIDL: generating glue files for ${JIDL_NAME}.jidl")
+
+    add_dependencies(${TARGET} ${JIDL_TARGET})
+    target_sources(${TARGET} PRIVATE ${JIDL_SRC})
+  endforeach()
+
+  foreach(CRATE_PATH ${FEATURE_CRATE})
+    get_filename_component(CRATE_NAME ${CRATE_PATH} NAME)
+    nuttx_add_rust(CRATE_NAME ${CRATE_NAME} CRATE_PATH ${CRATE_PATH})
+  endforeach(CRATE_PATH ${FEATURE_CRATE})
+
+  target_include_directories(${TARGET} PRIVATE ${JIDL_OUT_DIR})
+  target_include_directories(${TARGET} PRIVATE ${QUICKAPP_FEATURES_OUT_DIR})
+
+  set(FEATURE_REGISTRY_TABLE
+      ${QUICKAPP_FEATURES_OUT_DIR}/features_registry_table.h)
+  foreach(feature_name ${FEATURE_NAMES})
+    set(FEATURE_PDAT ${QUICKAPP_FEATURES_OUT_DIR}/feature_${feature_name}.pdat)
+    set(QUICKAPP_FEATURE_LIST
+        ${QUICKAPP_FEATURES_OUT_DIR}/cfeatures_registry_list.h)
+    add_custom_command(
+      OUTPUT ${FEATURE_PDAT}
+      COMMAND
+        echo
+        "bool jse_${feature_name}_initFeature(FeatureRegistryHandle handle); "
+        >> ${QUICKAPP_FEATURE_LIST}
+      COMMAND echo "jse_${feature_name}_initFeature," >>
+              ${FEATURE_REGISTRY_TABLE}
+      COMMAND touch ${FEATURE_PDAT}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+      VERBATIM
+      COMMENT "generate quickapp feature registry info: ${feature_name}")
+    add_custom_target(quickapp_feature_${feature_name} DEPENDS ${FEATURE_PDAT})
+    add_dependencies(apps_context quickapp_feature_${feature_name})
+  endforeach()
 endfunction()
