@@ -246,9 +246,19 @@ int nxplayer_parse_mp3(int fd, FAR uint32_t *samplerate,
                  (buffer[9] & ID3V2_BIT_MASK) +
                  sizeof(buffer);
 
-      lseek(fd, position, SEEK_SET);
-      read(fd, buffer, 4);
+      position = lseek(fd, position, SEEK_SET);
+      if (position < 0)
+        {
+          return -errno;
+        }
+
+      ret = read(fd, buffer, 4);
+      if (ret < 4)
+        {
+          return -ENODATA;
+        }
     }
+
   else
     {
       position = 0;
@@ -265,7 +275,12 @@ int nxplayer_parse_mp3(int fd, FAR uint32_t *samplerate,
       return ret;
     }
 
-  lseek(fd, position, SEEK_SET);
+  position = lseek(fd, position, SEEK_SET);
+  if (position < 0)
+    {
+      return -errno;
+    }
+
   return OK;
 }
 
