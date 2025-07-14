@@ -539,8 +539,7 @@ if(CONFIG_TESTING_LTP)
         "setrlimit64"
         "prlimit64"
         "rlimit64"
-        "rlim64_t"
-        "nftw64")
+        "rlim64_t")
     endif()
     if(NOT CONFIG_ARCH_SETJMP_H)
       list(APPEND BLACKWORDS "setjmp" "longjmp")
@@ -580,7 +579,7 @@ if(CONFIG_TESTING_LTP)
       "open_kconfig"
       "close_kconfig"
       "firmware" # nuttx do not support linux firmware load framework
-    )
+      "nftw64")
 
     list(
       APPEND

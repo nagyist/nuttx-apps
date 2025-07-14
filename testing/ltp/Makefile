@@ -428,7 +428,6 @@ BLACKWORDS  += setrlimit64
 BLACKWORDS  += prlimit64
 BLACKWORDS  += rlimit64
 BLACKWORDS  += rlim64_t
-BLACKWORDS  += nftw64
 endif
 ifeq ($(CONFIG_ARCH_SETJMP_H),)
 BLACKWORDS  += setjmp
@@ -473,6 +472,7 @@ BLACKWORDS += open_kconfig
 BLACKWORDS += close_kconfig
 
 BLACKWORDS += firmware # nuttx do not support linux firmware load framework
+BLACKWORDS += nftw64
 
 BLACKSRCS += $(TESTLINUX_DIR)/io/disktest/main.c
 BLACKSRCS += $(TESTLINUX_DIR)/io/direct_io/dma_thread_diotest.c
