@@ -126,11 +126,6 @@ static int test_cpufreq_fake_driver_init(void)
 static int notifier(FAR struct notifier_block *nb,
                     unsigned long action, FAR void *data)
 {
-  struct cpufreq_freqs *freqs = data;
-
-  syslog(1, "%s, action %ld, old %d, new %d, line %d\n",
-            __func__, action, freqs->old, freqs->new, __LINE__);
-
   return 0;
 }
 
@@ -164,7 +159,7 @@ static FAR void *test_cpufreq_thread(void *arg)
         }
 
       cpufreq_qos_remove_request(qos);
-      sleep(1);
+      usleep(1000);
     }
 
   cpufreq_unregister_notifier(policy, &nb);
@@ -181,14 +176,14 @@ static void drivertest_cpufreq(FAR void **state)
   pthread_attr_init(&attr);
 
   pthread_create(&thread0, &attr, test_cpufreq_thread, "thread0");
-  sleep(1);
+  usleep(1000);
   pthread_create(&thread1, &attr, test_cpufreq_thread, "thread1");
-  sleep(1);
+  usleep(1000);
   pthread_create(&thread2, &attr, test_cpufreq_thread, "thread1");
-  sleep(3);
+  usleep(3000);
 
   cpufreq_suspend(policy);
-  sleep(3);
+  usleep(3000);
   cpufreq_resume(policy);
 
   pthread_join(thread0, NULL);
