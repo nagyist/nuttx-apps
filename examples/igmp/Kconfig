@@ -6,6 +6,7 @@
 config EXAMPLES_IGMP
 	tristate "IGMP example"
 	default n
+	depends on NET_IGMP
 	---help---
 		Enable the IGMP example
 

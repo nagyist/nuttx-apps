@@ -6,6 +6,7 @@
 config EXAMPLES_DHCPD
 	tristate "DHCP server example"
 	default n
+	depends on NETUTILS_DHCPD
 	---help---
 		Enable the DHCP server example
 
