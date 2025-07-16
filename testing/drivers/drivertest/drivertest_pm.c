@@ -62,33 +62,10 @@
 
 #define TEST_DOMAIN 0
 #define TEST_STAYTIMEOUT 10 /* in ms */
-#define TEST_WAITTIME 1000  /* in us */
-
-/****************************************************************************
- * Private Functions Prototypes
- ****************************************************************************/
-
-static void test_pm_callback_notify(FAR struct pm_callback_s *cb,
-                                    int domain,
-                                    enum pm_state_e pmstate);
-
-/****************************************************************************
- * Private Types
- ****************************************************************************/
-
-struct test_pm_s
-{
-  enum pm_state_e state;
-};
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
-
-static struct pm_callback_s g_test_pm_callback =
-{
-  .notify  = test_pm_callback_notify
-};
 
 static struct pm_wakelock_s g_test_wakelock[PM_COUNT];
 static char test_wakelock_name[PM_COUNT][32] =
@@ -99,48 +76,108 @@ static char test_wakelock_name[PM_COUNT][32] =
   "test_pm_wakelock_sleep"
 };
 
-static struct test_pm_s g_test_pm_dev;
-
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-static int test_pm_fake_driver_init(void)
+static void test_pm_stay(int domain, int state, bool check)
 {
-  g_test_pm_dev.state = PM_NORMAL;
-  return 0;
+  int staycount;
+  int newstate;
+
+  staycount = pm_staycount(domain, state);
+
+  pm_stay(domain, state);
+
+  newstate = pm_checkstate(domain);
+  ASSERT_LESS_EQUAL_IF_CHECK(newstate, state, check);
+  ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state),
+                             staycount + 1, check);
 }
 
-static void test_pm_callback_notify(FAR struct pm_callback_s *cb,
-                                   int domain,
-                                   enum pm_state_e pmstate)
+static void test_pm_relax(int domain, int state, bool check)
 {
-  switch (pmstate)
-    {
-      case PM_NORMAL:
-      case PM_IDLE:
-      case PM_STANDBY:
-      case PM_SLEEP:
-        {
-          g_test_pm_dev.state = pmstate;
-        }
+  int staycount = pm_staycount(domain, state);
 
-        break;
+  pm_relax(domain, state);
+  ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state),
+                             staycount - 1, check);
+}
 
-      default:
+static void test_pm_staytimeout(int domain, int state, bool check)
+{
+  int staycount;
+  int newstate;
+  irqstate_t flag;
 
-        break;
-    }
+  flag = up_irq_save();
 
-  return;
+  staycount = pm_staycount(domain, state);
+
+  pm_staytimeout(domain, state, TEST_STAYTIMEOUT);
+
+  newstate = pm_checkstate(domain);
+  ASSERT_LESS_EQUAL_IF_CHECK(newstate, state, check);
+  ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state),
+                             staycount + 1, check);
+
+  up_irq_restore(flag);
+
+  usleep(TEST_STAYTIMEOUT * 1000);
+  ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state), staycount, check);
+}
+
+static void test_pm_wakelock_stay(int domain, int state, bool check)
+{
+  int staycount;
+  int newstate;
+
+  staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
+
+  pm_wakelock_stay(&g_test_wakelock[state]);
+
+  newstate = pm_checkstate(domain);
+  ASSERT_LESS_EQUAL_IF_CHECK(newstate, state, check);
+  ASSERT_LESS_EQUAL_IF_CHECK(pm_wakelock_staycount(&g_test_wakelock[state]),
+                             staycount + 1, check);
+}
+
+static void test_pm_wakelock_relax(int domain, int state, bool check)
+{
+  int staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
+
+  pm_wakelock_relax(&g_test_wakelock[state]);
+  ASSERT_LESS_EQUAL_IF_CHECK(pm_wakelock_staycount(&g_test_wakelock[state]),
+                             staycount - 1, check);
+}
+
+static void test_pm_wakelock_staytimeout(int domain, int state, bool check)
+{
+  int staycount;
+  int newstate;
+  irqstate_t flag;
+
+  flag = up_irq_save();
+
+  staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
+
+  pm_wakelock_staytimeout(&g_test_wakelock[state], TEST_STAYTIMEOUT);
+
+  newstate = pm_checkstate(domain);
+  ASSERT_LESS_EQUAL_IF_CHECK(newstate, state, check);
+  ASSERT_LESS_EQUAL_IF_CHECK(pm_wakelock_staycount(&g_test_wakelock[state]),
+                             staycount + 1, check);
+
+  up_irq_restore(flag);
+
+  usleep(TEST_STAYTIMEOUT * 1000);
+  ASSERT_LESS_EQUAL_IF_CHECK(pm_wakelock_staycount(&g_test_wakelock[state]),
+                             staycount, check);
 }
 
 static void drivertest_pm(FAR void **argv)
 {
-  int persist_stay_cnt[PM_COUNT];
   int init_delay;
-  int staycount;
-  int target;
   bool check;
   int domain = TEST_DOMAIN;
   int ret    = 0;
@@ -160,144 +197,44 @@ static void drivertest_pm(FAR void **argv)
 
   usleep(init_delay * 1000000);
   pm_auto_update(domain, true);
-  usleep(TEST_WAITTIME);
-
-  for (int i = 0; i < PM_COUNT; i++)
-    {
-      persist_stay_cnt[i] = pm_staycount(domain, i);
-    }
 
   while (cnt--)
     {
-      ret = pm_domain_register(domain, &g_test_pm_callback);
       assert_int_equal(ret, 0);
 
       for (int state = 0; state < PM_COUNT; state++)
         {
-          target = persist_stay_cnt[state] + 0;
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state),
-                                     target, check);
-
-          pm_stay(domain, state);
-          usleep(TEST_WAITTIME);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, state);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), state, check);
-          target = persist_stay_cnt[state] + 1;
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state),
-                                     target, check);
-
+          test_pm_stay(domain, state, check);
+          test_pm_relax(domain, state, check);
 #ifndef CONFIG_PM_GOVERNOR_STABILITY
-          pm_staytimeout(domain, state, TEST_STAYTIMEOUT);
-          usleep(TEST_WAITTIME);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, state);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), state, check);
-          target = persist_stay_cnt[state] + 2;
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state),
-                                     target, check);
-          usleep(TEST_STAYTIMEOUT * 1000);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, state);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), state, check);
-          target = persist_stay_cnt[state] + 1;
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state),
-                                     target, check);
-#endif
-          pm_relax(domain, state);
-          usleep(TEST_WAITTIME);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, PM_SLEEP);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
-          target = persist_stay_cnt[state] + 0;
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state),
-                                     target, check);
-
-#ifndef CONFIG_PM_GOVERNOR_STABILITY
-          pm_staytimeout(domain, state, TEST_STAYTIMEOUT);
-          usleep(TEST_WAITTIME);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, state);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), state, check);
-          target = persist_stay_cnt[state] + 1;
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state),
-                                     target, check);
-          usleep(TEST_STAYTIMEOUT * 1000);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, PM_SLEEP);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
-          target = persist_stay_cnt[state] + 0;
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_staycount(domain, state),
-                                     target, check);
+          test_pm_staytimeout(domain, state, check);
 #endif
         }
 
       for (int state = 0; state < PM_COUNT; state++)
         {
-          staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
-          ASSERT_LESS_EQUAL_IF_CHECK(staycount, 0, check);
-
-          pm_wakelock_stay(&g_test_wakelock[state]);
-          usleep(TEST_WAITTIME);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, state);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), state, check);
-          staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
-          ASSERT_LESS_EQUAL_IF_CHECK(staycount, 1, check);
-
+          test_pm_wakelock_stay(domain, state, check);
+          test_pm_wakelock_relax(domain, state, check);
 #ifndef CONFIG_PM_GOVERNOR_STABILITY
-          pm_wakelock_staytimeout(&g_test_wakelock[state], TEST_STAYTIMEOUT);
-          usleep(TEST_WAITTIME);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, state);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), state, check);
-          staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
-          ASSERT_LESS_EQUAL_IF_CHECK(staycount, 2, check);
-          usleep(TEST_STAYTIMEOUT * 1000);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, state);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), state, check);
-          staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
-          ASSERT_LESS_EQUAL_IF_CHECK(staycount, 1, check);
-#endif
-          pm_wakelock_relax(&g_test_wakelock[state]);
-          usleep(TEST_WAITTIME);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, PM_SLEEP);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
-          staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
-          ASSERT_LESS_EQUAL_IF_CHECK(staycount, 0, check);
-
-#ifndef CONFIG_PM_GOVERNOR_STABILITY
-          pm_wakelock_staytimeout(&g_test_wakelock[state], TEST_STAYTIMEOUT);
-          usleep(TEST_WAITTIME);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, state);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), state, check);
-          staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
-          ASSERT_LESS_EQUAL_IF_CHECK(staycount, 1, check);
-          usleep(TEST_STAYTIMEOUT * 1000);
-          ASSERT_LESS_EQUAL(g_test_pm_dev.state, PM_SLEEP);
-          ASSERT_LESS_EQUAL_IF_CHECK(pm_querystate(domain), PM_SLEEP, check);
-          staycount = pm_wakelock_staycount(&g_test_wakelock[state]);
-          ASSERT_LESS_EQUAL_IF_CHECK(staycount, 0, check);
+          test_pm_wakelock_staytimeout(domain, state, check);
 #endif
         }
 
-      ret = pm_domain_unregister(domain, &g_test_pm_callback);
       assert_int_equal(ret, 0);
     }
 }
 
 static int setup(FAR void **argv)
 {
-  int domain = TEST_DOMAIN;
-  int ret = 0;
-
-  ret = test_pm_fake_driver_init();
-  if (ret < 0)
-    {
-      return ret;
-    }
-
   for (int state = 0; state < PM_COUNT; state++)
     {
       pm_wakelock_init(&g_test_wakelock[state],
                        test_wakelock_name[state],
-                       domain,
+                       TEST_DOMAIN,
                        state);
     }
 
-  return ret;
+  return 0;
 }
 
 static int teardown(FAR void **argv)
