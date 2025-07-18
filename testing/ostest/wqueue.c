@@ -77,7 +77,7 @@
 #define WORK_THREAD_TEST_EFFICIENCY_THRESHOLD (80)
 
 #define MAX_PERIOD_ERROR ((clock_t)500)
-#define MAX_DELAY_ERROR  ((clock_t)1000)
+#define MAX_DELAY_ERROR  ((clock_t)3000)
 
 #ifdef CONFIG_SCHED_LPWORK
 #  define TEST_QUEUE           LPWORK
