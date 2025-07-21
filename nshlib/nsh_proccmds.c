@@ -545,7 +545,7 @@ static void ps_title(FAR struct nsh_vtbl_s *vtbl, bool heap)
   nsh_output(vtbl,
              "%5s %5s "
 #ifdef CONFIG_SMP
-              "%3s "
+              "%-15s "
 #endif
               "%3s %-8s %-7s %3s %-8s %-9s %-16s "
 #ifdef PS_SHOW_HEAPSIZE
@@ -563,7 +563,7 @@ static void ps_title(FAR struct nsh_vtbl_s *vtbl, bool heap)
               "%s\n"
               , "PID", "GROUP"
 #ifdef CONFIG_SMP
-              , "CPU"
+              , "CPU(AFFINITY)"
 #endif
               , "PRI", "POLICY", "TYPE", "NPX", "STATE", "EVENT", "SIGMASK"
 #ifdef PS_SHOW_HEAPSIZE
@@ -606,7 +606,7 @@ static void ps_output(FAR struct nsh_vtbl_s *vtbl, bool heap,
   nsh_output(vtbl,
              "%5d %5s "
 #ifdef CONFIG_SMP
-             "%3s "
+             "%15s "
 #endif
              "%3s %-8s %-7s %3s %-8s %-9s %-8s "
 #ifdef PS_SHOW_HEAPSIZE
