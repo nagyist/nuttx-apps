@@ -1259,7 +1259,7 @@ err_out:
 
   close(pplayer->dev_fd);                 /* Close the device */
   pplayer->dev_fd = -1;                   /* Mark device as closed */
-  mq_close(pplayer->mq);                  /* Close the message queue */
+  DEBUGVERIFY(mq_close(pplayer->mq));     /* Close the message queue */
   mq_unlink(pplayer->mqname);             /* Unlink the message queue */
   pplayer->ops   = NULL;                  /* Clear offload parser */
   pplayer->state = NXPLAYER_STATE_IDLE;   /* Go to IDLE */
@@ -1600,8 +1600,7 @@ int nxplayer_fforward(FAR struct nxplayer_s *pplayer, uint8_t subsample)
   struct audio_caps_desc_s cap_desc;
   int ret;
 
-  DEBUGASSERT(pplayer && subsample >= AUDIO_SUBSAMPLE_NONE &&
-              subsample <= AUDIO_SUBSAMPLE_MAX);
+  DEBUGASSERT(pplayer && subsample <= AUDIO_SUBSAMPLE_MAX);
 
   /* Send a CONFIGURE ioctl to the device to set the forward rate */
 
