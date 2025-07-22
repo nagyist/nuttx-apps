@@ -496,7 +496,7 @@ errout_with_waiter:
   sem_post(&g_interferer_sem);
   do
     {
-      usleep(500 * 1000L);
+      usleep(50 * 1000L);
     }
   while (g_waiter_running || g_interferer_running);
 

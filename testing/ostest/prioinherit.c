@@ -213,7 +213,7 @@ static FAR void *highpri_thread(FAR void *parameter)
 
   printf("highpri_thread-%d: Started\n", threadno);
   FFLUSH();
-  sleep(1);
+  usleep(10 * 1000);
 
   printf("highpri_thread-%d: Calling sem_wait()\n", threadno);
   g_highstate[threadno - 1] = WAITING;
@@ -361,7 +361,7 @@ static FAR void *lowpri_thread(FAR void *parameter)
           printf("    I still have a count on the semaphore\n");
           sem_enumholders(&g_sem);
           FFLUSH();
-          sleep(1);
+          usleep(10 * 1000);
         }
 
       /* Account for all of the semaphore counts.  At any given time if there
@@ -572,7 +572,7 @@ void priority_inheritance(void)
     }
 
   printf("priority_inheritance: Waiting...\n");
-  sleep(2);
+  usleep(20 * 1000);
   dump_nfreeholders("priority_inheritance:");
 
   /* Start the medium priority thread */
@@ -613,7 +613,7 @@ void priority_inheritance(void)
     }
 
   printf("priority_inheritance: Waiting...\n");
-  sleep(1);
+  usleep(10 * 1000);
   dump_nfreeholders("priority_inheritance:");
 
   /* Start the high priority threads */

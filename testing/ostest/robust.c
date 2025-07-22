@@ -69,7 +69,7 @@ static FAR void *robust_waiter(FAR void *parameter)
       printf("robust_waiter: Exiting with mutex\n");
     }
 
-  sleep(2);
+  usleep(20 * 1000);
   return NULL;
 }
 
@@ -159,7 +159,7 @@ void robust_test(void)
 
   /* Wait one second.. the robust waiter should still be waiting */
 
-  sleep(1);
+  usleep(10 * 1000);
 
   /* Now try to take the mutex held by the robust waiter.  This should wait
    * one second there fail with EOWNERDEAD.
@@ -206,7 +206,7 @@ void robust_test(void)
 
   do
     {
-      sleep(1);
+      usleep(10 * 1000);
     }
   while (kill(waiter, 0) == 0 || errno != ESRCH);
 

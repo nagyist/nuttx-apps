@@ -38,7 +38,7 @@
 
 #define wqtest_assert(f, msg) __ASSERT__(f, __FILE__, __LINE__, msg)
 
-#define SLEEP_TIME   (100 * 1000)
+#define SLEEP_TIME   (10 * 1000)
 #define TEST_COUNT   (100)
 #define VERIFY_COUNT (100)
 

@@ -64,7 +64,7 @@ static int waitpid_main(int argc, char *argv[])
   pid_t me = getpid();
 
   printf("waitpid_main: PID %d Started\n", me);
-  sleep(3);
+  usleep(30 * 1000);
   printf("waitpid_main: PID %d exitting with result=%d\n",
           me, RETURN_STATUS);
   return RETURN_STATUS;
@@ -235,7 +235,7 @@ int waitpid_test(void)
   /* Wait a bit to make sure that the other threads complete */
 
   waitpid_last();
-  sleep(1);
+  usleep(10 * 1000);
 
 #ifdef CONFIG_SCHED_HAVE_PARENT
   /* Start the children and wait for first one to complete */
@@ -292,7 +292,7 @@ int waitpid_test(void)
   /* Wait a bit to make sure that the other threads complete */
 
   waitpid_last();
-  sleep(1);
+  usleep(10 * 1000);
 
   /* Start the children and wait for any one to complete */
 
@@ -341,7 +341,7 @@ int waitpid_test(void)
   /* Wait a bit to make sure that the other threads complete */
 
   waitpid_last();
-  sleep(1);
+  usleep(10 * 1000);
 
   /* Start the children and wait for first one to complete */
 
@@ -390,7 +390,7 @@ int waitpid_test(void)
   /* Wait a bit to make sure that the other threads complete */
 
   waitpid_last();
-  sleep(1);
+  usleep(10 * 1000);
 #endif
 
   return 0;

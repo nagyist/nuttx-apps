@@ -308,7 +308,7 @@ static void wdog_test_run(FAR wdtest_param_t *param)
 
   /* Sleep for 1s */
 
-  wdtest_delay(USEC_PER_SEC);
+  wdtest_delay(USEC_PER_SEC / 100);
 
   /* Testing wd_gettime */
 
