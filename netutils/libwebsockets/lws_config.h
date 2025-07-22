@@ -142,9 +142,9 @@
 
 /* #undef LWS_HAVE_SSL_CTX_get0_certificate */
 
-/* #undef LWS_HAVE_SSL_CTX_load_verify_file */
+#define LWS_HAVE_SSL_CTX_load_verify_file
 
-/* #undef LWS_HAVE_SSL_CTX_load_verify_dir */
+#define LWS_HAVE_SSL_CTX_load_verify_dir
 
 /* #undef LWS_HAVE_SSL_CTX_set1_param */
 
@@ -185,7 +185,7 @@
 
 /* #undef LWS_NO_CLIENT */
 #define LWS_NO_DAEMONIZE
-#define LWS_OPENSSL_CLIENT_CERTS "/etc/ssl/certs"
+#define LWS_OPENSSL_CLIENT_CERTS CONFIG_NETUTILS_LIBWEBSOCKETS_CERTS
 #define LWS_OPENSSL_SUPPORT
 /* #undef LWS_PLAT_OPTEE */
 #define LWS_PLAT_UNIX

@@ -16,4 +16,9 @@ config NETUTILS_LIBWEBSOCKETS_VERSION
 	string "Version number"
 	default "4.3.1"
 
+config NETUTILS_LIBWEBSOCKETS_CERTS
+	string "Libwebsocket Certificate Authorize Path"
+	default "/etc/ssl/curl"
+	depends on CRYPTO_MBEDTLS
+
 endif
