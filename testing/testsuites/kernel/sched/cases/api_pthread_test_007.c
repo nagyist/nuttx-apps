@@ -87,7 +87,6 @@ void test_nuttx_sched_pthread07(FAR void **state)
   pthread_join(pt_1, NULL);
   pthread_join(pt_2, NULL);
   pthread_join(pt_3, NULL);
-  sleep(5);
 
   assert_int_equal(run_flag, 300);
 }

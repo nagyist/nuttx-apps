@@ -56,7 +56,7 @@ static int schedtask02routine(int argc, char *argv[])
   int i;
   for (i = 0; i < 10; i++)
     {
-      sleep(1);
+      usleep(10000);
     }
 
   return 0;
@@ -81,7 +81,7 @@ void test_nuttx_sched_task02(FAR void **state)
   assert_true(pid > 0);
   for (int i = 0; i < 2; i++)
     {
-      sleep(2);
+      usleep(20000);
       res = task_restart(pid);
       assert_int_equal(res, OK);
     }

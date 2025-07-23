@@ -89,7 +89,7 @@ void test_nuttx_sched_pthread08(FAR void **state)
 
   while (1)
     {
-      sleep(2);
+      usleep(10000);
       res = sem_post(&schedtask08_sem);
       assert_int_equal(res, OK);
       if (run_flag == 5)

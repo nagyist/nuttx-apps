@@ -56,7 +56,7 @@ static int schedtask04routine(int argc, char *argv[])
     {
       /* Run some simulated tasks */
 
-      sleep(1);
+      usleep(100000);
     }
 
   return 0;

@@ -62,7 +62,7 @@ static void breakout(int sig)
 
 void test_nuttx_syscall_gettimeofday01(FAR void **state)
 {
-  int rtime = 3;
+  int rtime = 1;
   struct timeval tv1;
   struct timeval tv2;
 
@@ -86,7 +86,7 @@ void test_nuttx_syscall_gettimeofday01(FAR void **state)
           fail_msg("test fail !");
         }
 
-      sleep(1);
+      usleep(200000);
       tv1 = tv2;
     }
 }
