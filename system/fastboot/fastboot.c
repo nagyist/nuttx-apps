@@ -993,7 +993,7 @@ static void fastboot_oem(FAR struct fastboot_ctx_s *context,
     }
 }
 
-static void fastboot_command_loop(FAR struct fastboot_ctx_s *context)
+static int fastboot_command_loop(FAR struct fastboot_ctx_s *context)
 {
   if (context->left > 0)
     {
@@ -1004,7 +1004,7 @@ static void fastboot_command_loop(FAR struct fastboot_ctx_s *context)
 
       if (poll(fds, 1, context->left) <= 0)
         {
-          return;
+          return -ETIMEDOUT;
         }
     }
 
@@ -1041,6 +1041,8 @@ static void fastboot_command_loop(FAR struct fastboot_ctx_s *context)
           fastboot_fail(context, "Unknown command");
         }
     }
+
+  return OK;
 }
 
 static void fastboot_publish(FAR struct fastboot_ctx_s *context,
@@ -1401,7 +1403,7 @@ static void fastboot_context_deinit(FAR struct fastboot_ctx_s *ctx)
  * Public Functions
  ****************************************************************************/
 
-int main(int argc, FAR char **argv)
+int fastboot_handler(uint64_t timeout)
 {
   struct fastboot_ctx_s context;
   int ret;
@@ -1411,6 +1413,27 @@ int main(int argc, FAR char **argv)
     {
       return ret;
     }
+
+  context.left = timeout;
+
+  ret = context.ops->init(&context);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
+  fastboot_create_publish(&context);
+  ret = fastboot_command_loop(&context);
+  fastboot_free_publish(&context);
+  context.ops->deinit(&context);
+  fastboot_context_deinit(&context);
+
+  return ret;
+}
+
+int main(int argc, FAR char **argv)
+{
+  uint64_t timeout = 0;
 
   if (argc > 1)
     {
@@ -1422,23 +1445,11 @@ int main(int argc, FAR char **argv)
           return 0;
         }
 
-      if (sscanf(argv[1], "%" SCNu64 , &context.left) != 1)
+      if (sscanf(argv[1], "%" SCNu64 , &timeout) != 1)
         {
           return -EINVAL;
         }
     }
 
-  ret = context.ops->init(&context);
-  if (ret < 0)
-    {
-      return ret;
-    }
-
-  fastboot_create_publish(&context);
-  fastboot_command_loop(&context);
-  fastboot_free_publish(&context);
-  context.ops->deinit(&context);
-  fastboot_context_deinit(&context);
-
-  return ret;
+  return fastboot_handler(timeout);
 }
