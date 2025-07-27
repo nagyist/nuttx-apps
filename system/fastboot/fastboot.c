@@ -50,6 +50,10 @@
 #include <sys/poll.h>
 #include <sys/wait.h>
 
+#ifdef CONFIG_SYSTEM_FASTBOOTD_NET_INIT
+#  include "netutils/netinit.h"
+#endif
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -1193,6 +1197,12 @@ static int fastboot_usbdev_write(FAR struct fastboot_ctx_s *ctx,
 static int fastboot_tcp_initialize(FAR struct fastboot_ctx_s *ctx)
 {
   struct sockaddr_in addr;
+
+#ifdef CONFIG_SYSTEM_FASTBOOTD_NET_INIT
+  /* Bring up the network */
+
+  netinit_bringup();
+#endif
 
   ctx->tran_fd[0] = socket(AF_INET, SOCK_STREAM, 0);
   if (ctx->tran_fd[0] < 0)
