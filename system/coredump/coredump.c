@@ -449,9 +449,9 @@ static int coredump_now(int pid, FAR char *filename)
   /* Do core dump */
 
 #ifdef CONFIG_BOARD_MEMORY_RANGE
-  coredump(g_memory_region, stream, pid);
+  coredump(g_memory_region, stream, pid, NULL);
 #else
-  coredump(NULL, stream, pid);
+  coredump(NULL, stream, pid, NULL);
 #endif
 
   setlogmask(logmask);
