@@ -187,6 +187,7 @@ int main(int argc, FAR char *argv[])
             break;
           case 'a':
             iperf.abort = 1;
+            break;
           case 'c':
             cfg.flag |= IPERF_FLAG_CLIENT;
             iperf.client = optarg;
