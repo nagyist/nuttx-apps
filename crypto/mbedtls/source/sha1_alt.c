@@ -46,7 +46,12 @@ void mbedtls_sha1_free(FAR mbedtls_sha1_context *ctx)
 int mbedtls_sha1_starts(FAR mbedtls_sha1_context *ctx)
 {
   ctx->session.mac = CRYPTO_SHA1;
-  return cryptodev_get_session(ctx);
+  if (cryptodev_get_session(ctx) != 0)
+    {
+      return MBEDTLS_ERR_SHA1_BAD_INPUT_DATA;
+    }
+
+  return 0;
 }
 
 int mbedtls_sha1_update(FAR mbedtls_sha1_context *ctx,
@@ -57,7 +62,12 @@ int mbedtls_sha1_update(FAR mbedtls_sha1_context *ctx,
   ctx->crypt.flags |= COP_FLAG_UPDATE;
   ctx->crypt.src = (caddr_t)input;
   ctx->crypt.len = ilen;
-  return cryptodev_crypt(ctx);
+  if (cryptodev_crypt(ctx) != 0)
+    {
+      return MBEDTLS_ERR_SHA1_BAD_INPUT_DATA;
+    }
+
+  return 0;
 }
 
 int mbedtls_sha1_finish(FAR mbedtls_sha1_context *ctx,
@@ -72,6 +82,11 @@ int mbedtls_sha1_finish(FAR mbedtls_sha1_context *ctx,
   ctx->crypt.olen = 20;
   ctx->crypt.mac = (caddr_t)output;
   ret = cryptodev_crypt(ctx);
+  if (ret != 0)
+    {
+      ret = MBEDTLS_ERR_SHA1_BAD_INPUT_DATA;
+    }
+
   cryptodev_free_session(ctx);
   return ret;
 }

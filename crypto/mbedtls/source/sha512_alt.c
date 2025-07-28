@@ -45,6 +45,11 @@ void mbedtls_sha512_free(FAR mbedtls_sha512_context *ctx)
 
 int mbedtls_sha512_starts(FAR mbedtls_sha512_context *ctx, int is384)
 {
+  if (is384 != 0 && is384 != 1)
+    {
+      return MBEDTLS_ERR_SHA512_BAD_INPUT_DATA;
+    }
+
   if (is384)
     {
       ctx->session.mac = CRYPTO_SHA2_384;
@@ -54,7 +59,12 @@ int mbedtls_sha512_starts(FAR mbedtls_sha512_context *ctx, int is384)
       ctx->session.mac = CRYPTO_SHA2_512;
     }
 
-  return cryptodev_get_session(ctx);
+  if (cryptodev_get_session(ctx) != 0)
+    {
+      return MBEDTLS_ERR_SHA512_BAD_INPUT_DATA;
+    }
+
+  return 0;
 }
 
 int mbedtls_sha512_update(FAR mbedtls_sha512_context *ctx,
@@ -65,7 +75,12 @@ int mbedtls_sha512_update(FAR mbedtls_sha512_context *ctx,
   ctx->crypt.flags |= COP_FLAG_UPDATE;
   ctx->crypt.src = (caddr_t)input;
   ctx->crypt.len = ilen;
-  return cryptodev_crypt(ctx);
+  if (cryptodev_crypt(ctx) != 0)
+    {
+      return MBEDTLS_ERR_SHA512_BAD_INPUT_DATA;
+    }
+
+  return 0;
 }
 
 int mbedtls_sha512_finish(FAR mbedtls_sha512_context *ctx,
@@ -80,6 +95,11 @@ int mbedtls_sha512_finish(FAR mbedtls_sha512_context *ctx,
   ctx->crypt.olen = 64;
   ctx->crypt.mac = (caddr_t)output;
   ret = cryptodev_crypt(ctx);
+  if (ret != 0)
+    {
+      ret = MBEDTLS_ERR_SHA512_BAD_INPUT_DATA;
+    }
+
   cryptodev_free_session(ctx);
   return ret;
 }

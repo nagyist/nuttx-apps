@@ -44,7 +44,12 @@ int mbedtls_poly1305_starts(FAR mbedtls_poly1305_context *ctx,
   ctx->session.mac = CRYPTO_POLY1305;
   ctx->session.mackey = (caddr_t)key;
   ctx->session.mackeylen = 32;
-  return cryptodev_get_session(ctx);
+  if (cryptodev_get_session(ctx) != 0)
+    {
+      return MBEDTLS_ERR_POLY1305_BAD_INPUT_DATA;
+    }
+
+  return 0;
 }
 
 int mbedtls_poly1305_update(FAR mbedtls_poly1305_context *ctx,
@@ -55,7 +60,12 @@ int mbedtls_poly1305_update(FAR mbedtls_poly1305_context *ctx,
   ctx->crypt.flags |= COP_FLAG_UPDATE;
   ctx->crypt.src = (caddr_t)input;
   ctx->crypt.len = ilen;
-  return cryptodev_crypt(ctx);
+  if (cryptodev_crypt(ctx) != 0)
+    {
+      return MBEDTLS_ERR_POLY1305_BAD_INPUT_DATA;
+    }
+
+  return 0;
 }
 
 int mbedtls_poly1305_finish(FAR mbedtls_poly1305_context *ctx,
@@ -70,6 +80,11 @@ int mbedtls_poly1305_finish(FAR mbedtls_poly1305_context *ctx,
   ctx->crypt.olen = 16;
   ctx->crypt.mac = (caddr_t)mac;
   ret = cryptodev_crypt(ctx);
+  if (ret != 0)
+    {
+      ret = MBEDTLS_ERR_POLY1305_BAD_INPUT_DATA;
+    }
+
   cryptodev_free_session(ctx);
   return ret;
 }
