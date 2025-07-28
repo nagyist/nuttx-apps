@@ -26,6 +26,7 @@
 #include <poll.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/ioctl.h>
 
 #include "charcantest.h"
 
@@ -50,46 +51,44 @@ extern uint8_t g_can_chrdev1_txconfirm_cnt;
  * Private Functions
  ****************************************************************************/
 
-static void can_echo(int fd0, int fd1, struct can_msg_s *txmsg,
-                     struct can_msg_s *rxmsg, int msgsize)
+static void can_echo(int sender, int receiver, struct can_msg_s *txmsg,
+                     int msgsize)
 {
-  ssize_t nbytes = write(fd0, txmsg, msgsize);
+  struct can_msg_s tmp;
+  ssize_t nbytes;
+  int cnt = 0;
+  int ret;
+
+  nbytes = write(sender, txmsg, msgsize);
 
   assert_int_equal(msgsize, nbytes);
-  sleep(1);
+  usleep(100000);
 
-  nbytes = read(fd1, rxmsg, sizeof(struct can_msg_s));
+#ifdef CONFIG_CAN_TXCONFIRM
+  /* Check whether the txconfirm msg is sent */
 
-  /* juage whether the msg that is belonged to fd1 is txconfirm msg */
+  ret = ioctl(sender, FIONREAD, &cnt);
+  assert(ret == 0);
+  assert_int_equal(cnt, 1);
 
-  if (rxmsg->cm_hdr.ch_tcf)
-    {
-      g_can_chrdev1_txconfirm_cnt++;
-      nbytes = read(fd1, rxmsg, sizeof(struct can_msg_s));
-      assert_int_equal(memcmp(txmsg, rxmsg, msgsize), 0);
-    }
-  else
-    {
-      assert_int_equal(memcmp(txmsg, rxmsg, msgsize), 0);
-    }
+  /* Read the txconfirm msg */
 
-  nbytes = write(fd1, rxmsg, msgsize);
-  assert_int_equal(msgsize, nbytes);
-  sleep(1);
-  nbytes = read(fd0, txmsg, sizeof(struct can_msg_s));
+  memset(&tmp, 0, sizeof(struct can_msg_s));
+  nbytes = read(sender, &tmp, sizeof(struct can_msg_s));
+  assert_int_equal(nbytes, sizeof(struct can_msg_s));
+  assert_int_equal(tmp.cm_hdr.ch_tcf, 1);
+#endif
 
-  /* juage whether the msg that is belonged to fd0 is txconfirm msg */
+  ret = ioctl(receiver, FIONREAD, &cnt);
+  assert(ret == 0);
+  assert_int_equal(cnt, 1);
 
-  if (txmsg->cm_hdr.ch_tcf)
-    {
-      g_can_chrdev0_txconfirm_cnt++;
-      nbytes = read(fd0, txmsg, sizeof(struct can_msg_s));
-      assert_int_equal(memcmp(rxmsg, txmsg, msgsize), 0);
-    }
-  else
-    {
-      assert_int_equal(memcmp(rxmsg, txmsg, msgsize), 0);
-    }
+  /* Read the msg which is echoed by sender */
+
+  memset(&tmp, 0, sizeof(struct can_msg_s));
+  nbytes = read(receiver, &tmp, sizeof(struct can_msg_s));
+  assert_int_equal(nbytes, sizeof(struct can_msg_s));
+  assert_int_equal(memcmp(&tmp, txmsg, msgsize), 0);
 }
 
 /****************************************************************************
@@ -109,11 +108,7 @@ void test_charcan_multi_echo(FAR void **state)
   uint8_t canmsg_databyte;
   size_t msgsize;
   int i;
-
-  struct can_msg_s rxmsg =
-    {
-      0
-    };
+  int j;
 
   assert_true(confs && confs->txmsg != NULL);
 
@@ -128,11 +123,19 @@ void test_charcan_multi_echo(FAR void **state)
                                       CM_CLASS_CAN_DLC ? 1 : 0;
 
       canmsg_databyte = cm_charcan_dlc2bytes(confs->txmsg[i].cm_hdr.ch_dlc);
+
+      for (j = 0; j < canmsg_databyte; j++)
+        {
+          confs->txmsg[i].cm_data[j] = i + j;
+        }
+
       msgsize = CAN_MSGLEN(canmsg_databyte);
 
       /* check whether the sending result is right or not */
 
       can_echo(confs->fd[0], confs->fd[1], &confs->txmsg[i],
-               &rxmsg, msgsize);
+               msgsize);
+      can_echo(confs->fd[1], confs->fd[0], &confs->txmsg[i],
+               msgsize);
     }
 }
