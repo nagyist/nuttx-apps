@@ -850,7 +850,7 @@ static int wqueue_delay_test_base(FAR const clock_t *special_delay,
   srand(clock_systime_ticks());
   works   = zalloc(n * sizeof(delay_work_t));
   threads = malloc(nthreads * sizeof(pthread_t));
-  wqueues = malloc(nwq * sizeof(struct kwork_wqueue_s *));
+  wqueues = zalloc(nwq * sizeof(struct kwork_wqueue_s *));
   thread_work_adder_args
       = malloc(nthreads * sizeof(delay_work_adder_thread_arg_t));
 
@@ -915,7 +915,8 @@ static int wqueue_delay_test_base(FAR const clock_t *special_delay,
         {
           printf("wqueue_test: work_queue_create "
                  "failed\n");
-          return -1;
+          ret = -1;
+          goto errout;
         }
     }
 
@@ -1024,7 +1025,7 @@ static int wqueue_delay_test_base(FAR const clock_t *special_delay,
               state = "Passed";
               success_count++;
             }
-          else if (work->wqid != nwq - 1)
+          else if (wq_priorities[work->wqid] < 255)
             {
               state = "Warning";
               warning_count++;
@@ -1087,18 +1088,22 @@ static int wqueue_delay_test_base(FAR const clock_t *special_delay,
       ret = -2;
     }
 
-  for (i = 0; i < nwq; i++)
-    {
-      work_queue_free(wqueues[i]);
-    }
-
 errout:
   if (works != NULL)
     free(works);
   if (threads != NULL)
     free(threads);
   if (wqueues != NULL)
-    free(wqueues);
+    {
+      for (i = 0; i < nwq; i++)
+        {
+          if (wqueues[i] != NULL)
+            work_queue_free(wqueues[i]);
+        }
+
+      free(wqueues);
+    }
+
   if (thread_work_adder_args != NULL)
     free(thread_work_adder_args);
 
