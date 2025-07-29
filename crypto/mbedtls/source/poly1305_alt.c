@@ -65,6 +65,9 @@ int mbedtls_poly1305_finish(FAR mbedtls_poly1305_context *ctx,
 
   ctx->crypt.op = COP_ENCRYPT;
   ctx->crypt.flags = 0;
+  ctx->crypt.len = 0;
+  ctx->crypt.src = NULL;
+  ctx->crypt.olen = 16;
   ctx->crypt.mac = (caddr_t)mac;
   ret = cryptodev_crypt(ctx);
   cryptodev_free_session(ctx);

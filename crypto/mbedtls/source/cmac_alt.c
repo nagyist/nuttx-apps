@@ -119,7 +119,18 @@ int mbedtls_cipher_cmac_finish(FAR mbedtls_cipher_context_t *ctx,
     }
 
   ctx->cmac_ctx->dev.crypt.flags = 0;
+  ctx->cmac_ctx->dev.crypt.len = 0;
+  ctx->cmac_ctx->dev.crypt.src = NULL;
   ctx->cmac_ctx->dev.crypt.mac = (caddr_t)output;
+  switch (ctx->cipher_info->type)
+    {
+      case MBEDTLS_CIPHER_AES_128_ECB:
+          ctx->cmac_ctx->dev.crypt.olen = 16;
+          break;
+      default:
+          return MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
+    }
+
   ret = cryptodev_crypt(&ctx->cmac_ctx->dev);
   cryptodev_free_session(&ctx->cmac_ctx->dev);
   cryptodev_free(&ctx->cmac_ctx->dev);
