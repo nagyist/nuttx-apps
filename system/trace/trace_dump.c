@@ -87,6 +87,7 @@ int trace_dump(FAR FILE *out, bool binary)
       if (ret < 0)
         {
           fprintf(stderr, "trace: cannot set read mode\n");
+          close(fd);
           return ERROR;
         }
     }
