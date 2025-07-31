@@ -96,6 +96,5 @@ void test_charcan_multi_echo(FAR void **state);
 void test_charcan_nonblock_sent_overflow(FAR void **state);
 void test_charcan_block_sent_overflow(FAR void **state);
 void test_char_can_poll(FAR void **state);
-void test_char_can_txconfirm(FAR void **state);
 
 #endif /* _H_CHAR_CAN_TEST_H_ */

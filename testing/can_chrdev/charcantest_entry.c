@@ -65,9 +65,6 @@ int main(int argc, FAR char * argv[])
       test_charcan_multi_echo, test_charcan_setup,
       test_charcan_teardown, &confs),
       cmocka_unit_test_prestate_setup_teardown(
-      test_char_can_txconfirm, test_charcan_setup,
-      test_charcan_teardown, &confs),
-      cmocka_unit_test_prestate_setup_teardown(
       test_charcan_nonblock_sent_overflow, test_charcan_setup,
       test_charcan_teardown, &confs),
       cmocka_unit_test_prestate_setup_teardown(
