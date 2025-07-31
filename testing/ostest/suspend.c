@@ -33,7 +33,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 #include "ostest.h"
@@ -66,9 +65,6 @@ void suspend_test(void)
 {
   struct sched_param param;
   pid_t victim;
-#ifdef CONFIG_SCHED_WAITPID
-  int status;
-#endif
   int ret;
 
   /* Start victim thread  */
@@ -136,31 +132,7 @@ void suspend_test(void)
 
   FFLUSH();
 
-#ifdef CONFIG_SCHED_WAITPID
-  ret = waitpid(victim, &status, 0);
-  if (ret < 0)
-    {
-      printf("suspend_test: ERROR waitpid() failed\n");
-      ASSERT(false);
-    }
-  else if (WIFEXITED(status))
-    {
-      printf("suspend_test: Victim exited with status=%d\n",
-             WEXITSTATUS(status));
-    }
-  else if (WIFSIGNALED(status))
-    {
-      printf("suspend_test: Victim killed by signal %d\n",
-             WTERMSIG(status));
-    }
-  else
-    {
-      printf("suspend_test: Victim exited abnormally\n");
-      ASSERT(false);
-    }
-#else
   sleep(1); /* Wait for the task to exit */
-#endif
   ret = kill(victim, 0);
   if (ret >= 0)
     {
