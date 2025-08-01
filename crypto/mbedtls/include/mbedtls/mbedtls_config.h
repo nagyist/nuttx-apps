@@ -38,6 +38,11 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
+#include <sys/endian.h>
+
+#ifndef __ORDER_BIG_ENDIAN__
+#define __ORDER_BIG_ENDIAN__ BIG_ENDIAN
+#endif
 
 /**
  * This is an optional version symbol that enables compatibility handling of
