@@ -20,26 +20,48 @@
 
 if(CONFIG_EXAMPLES_SOTEST)
 
-  # FIXME: fix all empty a after the kernel build is implemented
+  if(CONFIG_EXAMPLES_SOTEST_BUILTINFS)
+    add_custom_target(
+      sotest_romfs
+      COMMAND genromfs -f sotest_romfs.img -d ${CMAKE_BINARY_DIR}/bin
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      DEPENDS nuttx_apps_mksymtab)
+    add_custom_command(
+      OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sotest_romfs.c
+      COMMAND xxd -i sotest_romfs.img >
+              ${CMAKE_CURRENT_BINARY_DIR}/sotest_romfs.c
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      DEPENDS sotest_romfs)
+
+    add_library(sotest_romfs_lib)
+    target_sources(sotest_romfs_lib
+                   PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/sotest_romfs.c)
+    nuttx_add_library_internal(sotest_romfs_lib)
+    set_property(GLOBAL APPEND PROPERTY NUTTX_SYSTEM_LIBRARIES sotest_romfs_lib)
+
+  endif()
+
+  nuttx_add_application(NAME sotest SRCS sotest_main.c)
+
+  set(SYMTAB_APPS_SOURCE ${CMAKE_BINARY_DIR}/sotest_symtab_apps.c)
+
   add_custom_command(
-    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/sotest_symtab.c
-    COMMAND
-      ${NUTTX_APPS_DIR}/tools/mksymtab.sh ${CMAKE_CURRENT_BINARY_DIR}/empty
-      g_sot > ${CMAKE_CURRENT_BINARY_DIR}/sotest_symtab.c)
+    OUTPUT ${SYMTAB_APPS_SOURCE} always_rebuild_symtab
+    COMMAND ${NUTTX_APPS_DIR}/tools/mksymtab.sh ${CMAKE_BINARY_DIR}/bin g_sot >
+            ${CMAKE_BINARY_DIR}/sotest_symtab_apps.c
+    COMMAND ${CMAKE_COMMAND} -E touch always_rebuild_symtab
+    COMMAND ${CMAKE_COMMAND} -E remove always_rebuild_symtab
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    DEPENDS nuttx_apps_mksymtab
+    VERBATIM
+    COMMENT "Mksymtab: generating symbol table for sotest")
+  add_custom_target(sotest_symtab_source_gen ALL DEPENDS ${SYMTAB_APPS_SOURCE})
 
-  add_custom_target(
-    sotest_romfs
-    COMMAND genromfs -f sotest_romfs.img -d empty
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
-  add_custom_command(
-    OUTPUT sotest_romfs.c
-    COMMAND xxd -i sotest_romfs.img > sotest_romfs.c
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS sotest_romfs)
-
-  nuttx_add_application(
-    NAME sotest SRCS sotest_main.c ${CMAKE_CURRENT_BINARY_DIR}/sotest_symtab.c
-    ${CMAKE_CURRENT_BINARY_DIR}/sotest_romfs.c)
+  add_library(sotest_symtab)
+  add_dependencies(sotest_symtab sotest_symtab_source_gen)
+  target_compile_options(sotest_symtab PRIVATE ${NO_LTO} -fno-builtin)
+  target_sources(sotest_symtab PRIVATE ${SYMTAB_APPS_SOURCE})
+  nuttx_add_library_internal(sotest_symtab)
+  set_property(GLOBAL APPEND PROPERTY NUTTX_SYSTEM_LIBRARIES sotest_symtab)
 
 endif()
