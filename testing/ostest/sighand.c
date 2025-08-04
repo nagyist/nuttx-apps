@@ -203,6 +203,11 @@ static FAR void *waiter_main(FAR void *arg)
   FFLUSH();
 
   thread1exited = true;
+
+  /* Wakeup main thread */
+
+  sem_post(&sem2);
+
   return 0;
 }
 
@@ -312,7 +317,7 @@ void sighand_test(void)
 
   /* Wait a bit */
 
-  usleep(2000);
+  sem_wait(&sem2);
 
   /* Then check the result */
 
