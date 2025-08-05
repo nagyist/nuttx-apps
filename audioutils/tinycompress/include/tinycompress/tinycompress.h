@@ -343,6 +343,16 @@ FAR const char *compress_get_error(FAR struct compress *compress);
 int compress_set_codec_params(FAR struct compress *compress,
                               FAR struct snd_codec *codec);
 
+/* compress_get_codec_params: get current codec info
+ * return 0 on success, negative on error
+ *
+ * @compress: compress stream for which metadata has to set
+ * @codec: stream config for next track
+ */
+
+int compress_get_codec_params(FAR struct compress *compress,
+                              FAR struct snd_codec *codec);
+
 /* compress_set_volume: set volume to driver
  *
  * return 0 on success, negative on error

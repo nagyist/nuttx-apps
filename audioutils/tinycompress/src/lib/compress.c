@@ -285,6 +285,12 @@ int compress_set_codec_params(FAR struct compress *compress,
   return compress->ops->set_codec_params(compress->data, codec);
 }
 
+int compress_get_codec_params(FAR struct compress *compress,
+                              FAR struct snd_codec *codec)
+{
+  return compress->ops->get_codec_params(compress->data, codec);
+}
+
 int compress_set_volume(FAR struct compress *compress, float volume)
 {
   return compress->ops->set_volume(compress->data, volume);

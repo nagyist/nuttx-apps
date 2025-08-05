@@ -325,43 +325,16 @@ out:
   return ret;
 }
 
-static int compress_hw_get_bps(int format)
+static int compress_hw_set_codec_params(FAR void *compress_data,
+                                        FAR struct snd_codec *codec)
 {
-  switch (format)
-    {
-      case SND_AUDIOMODE_PCM_S16_LE:
-      case SND_AUDIOMODE_PCM_S16_BE:
-      case SND_AUDIOMODE_PCM_U16_LE:
-      case SND_AUDIOMODE_PCM_U16_BE:
-        return 16;
-      case SND_AUDIOMODE_PCM_S32_LE:
-      case SND_AUDIOMODE_PCM_S32_BE:
-      case SND_AUDIOMODE_PCM_U32_LE:
-      case SND_AUDIOMODE_PCM_U32_BE:
-        return 32;
-      default:
-        return 8;
-    }
-}
-
-static int compress_hw_configure(FAR struct compress_hw_data *compress,
-                                 FAR struct compr_config *config)
-{
-  FAR struct snd_codec *codec = config->codec;
+  FAR struct compress_hw_data *compress = compress_data;
   struct audio_caps_desc_s caps_desc;
-  struct audio_buf_desc_s buf_desc;
-  struct ap_buffer_info_s buf_info;
   int ret;
-  int bps;
-  int i;
 
-  if (codec->id == SND_AUDIOCODEC_PCM)
+  if (!codec)
     {
-      bps = compress_hw_get_bps(codec->format);
-    }
-  else
-    {
-      bps = codec->bit_rate;
+      return -EINVAL;
     }
 
   memset(&caps_desc, 0, sizeof(caps_desc));
@@ -371,15 +344,78 @@ static int compress_hw_configure(FAR struct compress_hw_data *compress,
   caps_desc.caps.ac_channels = codec->ch_in;
   caps_desc.caps.ac_controls.hw[0] = codec->sample_rate;
   caps_desc.caps.ac_controls.b[3] = codec->sample_rate >> 16;
-  caps_desc.caps.ac_controls.b[2] = bps;
+  caps_desc.caps.ac_format.b[0] = codec->pcm_format;
   caps_desc.caps.ac_subtype = codec->id;
+
+  caps_desc.caps.ac_codec.ch_mode = codec->ch_mode;
+  caps_desc.caps.ac_codec.level = codec->level;
+  caps_desc.caps.ac_codec.profile = codec->profile;
+  caps_desc.caps.ac_codec.rate_control = codec->rate_control;
+  caps_desc.caps.ac_codec.format = codec->format;
+  caps_desc.caps.ac_codec.align = codec->align;
+  caps_desc.caps.ac_codec.bit_rate = codec->bit_rate;
+
+  memcpy(&caps_desc.caps.ac_codec.options, &codec->options,
+    sizeof(codec->options));
 
   ret = ioctl(compress->fd, AUDIOIOC_CONFIGURE, &caps_desc);
   audinfo("configure, codec:%d, bit_rate:%d, ch:%d, rate:%d, ret:%d\n",
-          codec->id, codec->bit_rate, codec->ch_in, codec->sample_rate, ret);
+    codec->id, codec->bit_rate, codec->ch_in, codec->sample_rate, ret);
   if (ret < 0)
     {
       return -errno;
+    }
+
+  return 0;
+}
+
+static int compress_hw_get_codec_params(FAR void *compress_data,
+                                        FAR struct snd_codec *codec)
+{
+  FAR struct compress_hw_data *compress = compress_data;
+  struct audio_info_s info;
+  int ret;
+
+  if (!codec)
+    {
+      return -EINVAL;
+    }
+
+  ret = ioctl(compress->fd, AUDIOIOC_GETAUDIOINFO, &info);
+  if (ret < 0)
+    {
+      return -errno;
+    }
+
+  codec->id = info.format;
+  codec->ch_in = info.channels;
+  codec->ch_out = info.channels;
+  codec->sample_rate = info.samplerate;
+  codec->pcm_format = info.subformat;
+  codec->ch_mode = info.codec.ch_mode;
+  codec->level = info.codec.level;
+  codec->profile = info.codec.profile;
+  codec->rate_control = info.codec.rate_control;
+  codec->format = info.codec.format;
+  codec->align = info.codec.align;
+  codec->bit_rate = info.codec.bit_rate;
+
+  memcpy(&codec->options, &info.codec.options, sizeof(info.codec.options));
+  return 0;
+}
+
+static int compress_hw_configure(FAR struct compress_hw_data *compress,
+                                 FAR struct compr_config *config)
+{
+  struct audio_buf_desc_s buf_desc;
+  struct ap_buffer_info_s buf_info;
+  int ret;
+  int i;
+
+  ret = compress_hw_set_codec_params(compress, config->codec);
+  if (ret < 0)
+    {
+      return ret;
     }
 
   if (config->fragments)
@@ -561,20 +597,22 @@ static void *compress_hw_open_by_name(FAR const char *name,
   ret = compress_hw_init(compress, name);
   if (ret < 0)
     {
-      free(compress);
-      return NULL;
+      goto fail;
     }
 
   ret = compress_hw_configure(compress, config);
   if (ret < 0)
     {
       compress_hw_deinit(compress);
-      free(compress);
-      return NULL;
+      goto fail;
     }
 
   memcpy(&compress->config, config, sizeof(compress->config));
   return compress;
+
+fail:
+  free(compress);
+  return NULL;
 }
 
 static int compress_hw_is_compress_running(FAR void *compress_data)
@@ -989,12 +1027,6 @@ static int compress_hw_set_params(FAR void *compress_data,
   return 0;
 }
 
-static int compress_hw_set_codec_params(FAR void *compress_data,
-                                        FAR struct snd_codec *codec)
-{
-  return -ENOTSUP;
-}
-
 static int compress_hw_set_event_callback(FAR void *compress_data,
                                           compress_event_t on_event,
                                           FAR void *cookie)
@@ -1037,6 +1069,7 @@ const struct compress_ops g_compress_hw_ops =
   .is_compress_ready = compress_hw_is_compress_ready,
   .get_error = compress_hw_get_error,
   .set_codec_params = compress_hw_set_codec_params,
+  .get_codec_params = compress_hw_get_codec_params,
   .set_volume = compress_hw_set_volume,
   .set_params = compress_hw_set_params,
   .set_event_callback = compress_hw_set_event_callback,

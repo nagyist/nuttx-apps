@@ -56,6 +56,8 @@ struct compress_ops
   FAR const char *(*get_error)(FAR void *compress_data);
   int (*set_codec_params)(FAR void *compress_data,
                           FAR struct snd_codec *codec);
+  int (*get_codec_params)(FAR void *compress_data,
+                          FAR struct snd_codec *codec);
   int (*set_volume)(FAR void *compress_data, float volume);
   int (*set_params)(FAR void *compress_data, FAR const char *params);
   int (*set_event_callback)(FAR void *compress_data, compress_event_t event,
