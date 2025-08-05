@@ -49,8 +49,10 @@
 
 static int victim_main(int argc, char *argv[])
 {
-  printf("victim_main: Victim started\n");
+  FAR sem_t *sem = (FAR sem_t *)(uintptr_t)strtoul(argv[2], NULL, 16);
 
+  sem_post(sem);
+  printf("victim_main: Victim started\n");
   for (; ; )
     {
       sleep(3);
@@ -65,6 +67,9 @@ void suspend_test(void)
 {
   struct sched_param param;
   pid_t victim;
+  FAR char *argv[3];
+  FAR char arg1[32];
+  sem_t sem;
   int ret;
 
   /* Start victim thread  */
@@ -78,8 +83,13 @@ void suspend_test(void)
       param.sched_priority = PTHREAD_DEFAULT_PRIORITY;
     }
 
+  sem_init(&sem, 0, 0);
+  snprintf(arg1, sizeof(arg1), "%p", &sem);
+  argv[0] = "victim";
+  argv[1] = arg1;
+  argv[2] = NULL;
   victim = task_create("victim", param.sched_priority,
-                           STACKSIZE, victim_main, NULL);
+                           STACKSIZE, victim_main, argv);
   if (victim == ERROR)
     {
       printf("suspend_test: ERROR failed to start victim_main\n");
@@ -94,7 +104,7 @@ void suspend_test(void)
 
   printf("suspend_test:  Is the victim saying anything?\n");
   FFLUSH();
-  usleep(10 * 1000);
+  sem_wait(&sem);
 
   /* Then signal the victim thread. */
 
@@ -140,6 +150,7 @@ void suspend_test(void)
       ASSERT(false);
     }
 
+  sem_destroy(&sem);
   printf("suspend_test: done\n");
   FFLUSH();
 }
