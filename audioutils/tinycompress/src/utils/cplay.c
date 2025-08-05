@@ -704,9 +704,9 @@ exit:
 static void get_codec_aac(FAR FILE *file, FAR struct compr_config *config,
                           FAR struct snd_codec *codec)
 {
-  unsigned int channels;
-  unsigned int format;
-  unsigned int rate;
+  unsigned int channels = 0;
+  unsigned int format = 0;
+  unsigned int rate = 0;
 
   if (parse_aac_header(file, &channels, &rate, &format) == 0)
     {
