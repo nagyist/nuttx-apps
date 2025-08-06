@@ -593,16 +593,16 @@ static void *compress_hw_open_by_name(FAR const char *name,
 static int compress_hw_is_compress_running(FAR void *compress_data)
 {
   FAR struct compress_hw_data *compress = compress_data;
-  enum audio_state_e state;
+  struct audio_status_s status;
   int ret;
 
-  ret = ioctl(compress->fd, AUDIOIOC_GETSTATE, &state);
+  ret = ioctl(compress->fd, AUDIOIOC_GETSTATUS, &status);
   if (ret < 0)
     {
       return -errno;
     }
 
-  return state == AUDIO_STATE_RUNNING;
+  return status.state == AUDIO_STATE_RUNNING;
 }
 
 static int compress_hw_stop(FAR void *compress_data)
@@ -622,10 +622,10 @@ static void compress_hw_close(FAR void *compress_data)
 {
   FAR struct compress_hw_data *compress = compress_data;
   struct audio_buf_desc_s buf_desc;
-  enum audio_state_e state;
+  struct audio_status_s status;
 
-  if (ioctl(compress->fd, AUDIOIOC_GETSTATE, &state) >= 0 &&
-      state == AUDIO_STATE_RUNNING)
+  if (ioctl(compress->fd, AUDIOIOC_GETSTATUS, &status) >= 0 &&
+      status.state == AUDIO_STATE_RUNNING)
     {
       compress_hw_stop(compress);
     }
@@ -842,16 +842,16 @@ static int compress_hw_drain(FAR void *compress_data)
 {
   FAR struct compress_hw_data *compress = compress_data;
   FAR struct ap_buffer_s *buffer;
-  enum audio_state_e state;
+  struct audio_status_s status;
   int ret;
 
-  ret = ioctl(compress->fd, AUDIOIOC_GETSTATE, &state);
+  ret = ioctl(compress->fd, AUDIOIOC_GETSTATUS, &status);
   if (ret < 0)
     {
       return -errno;
     }
 
-  if (state != AUDIO_STATE_RUNNING)
+  if (status.state != AUDIO_STATE_RUNNING)
     {
       auderr("device not started");
       return -ENODEV;
