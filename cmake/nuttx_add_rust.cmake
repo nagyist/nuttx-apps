@@ -179,6 +179,7 @@ function(nuttx_add_rust)
       NUTTX_INCLUDE_DIR=${PROJECT_SOURCE_DIR}/include:${CMAKE_BINARY_DIR}/include:${CMAKE_BINARY_DIR}/include/arch
       NUTTX_APPS_DIR=${NUTTX_APPS_DIR} cargo build ${CARGO_BUILD_FLAGS}
     COMMENT "Building Rust crate ${CRATE_NAME}"
+    BYPRODUCTS DUMMY_OUTPUT
     VERBATIM)
 
   # Add a custom target that depends on the built library
