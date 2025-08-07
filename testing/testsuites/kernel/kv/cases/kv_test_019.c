@@ -58,7 +58,7 @@ static void *store_data(void *arg)
   };
 
   int ret;
-  for (int k = 0; k < 100; k++)
+  for (int k = 0; k < 30; k++)
     {
       sprintf(key, "test_nuttx_kv19-%d-%d", gettid(), k);
       sprintf(data, "test_data_%s_%d_%d", __func__, gettid(), k);

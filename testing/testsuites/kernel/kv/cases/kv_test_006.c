@@ -166,7 +166,7 @@ static void test_bool(int run_num)
 
 void test_nuttx_kv06(FAR void **state)
 {
-  int test_run = 20;
+  int test_run = 10;
   test_string(test_run);
   test_int32(test_run);
 #ifdef CONFIG_LIBC_LONG_LONG

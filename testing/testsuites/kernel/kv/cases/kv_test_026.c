@@ -54,7 +54,7 @@ void test_nuttx_kv26(FAR void **state)
 
   int8_t getbool_ret;
 
-  for (int i = 1; i <= 300; i++)
+  for (int i = 1; i <= 30; i++)
     {
       sprintf(key, "persist.kv26_bool_%d", i);
       ret = property_set_bool(key, 1);

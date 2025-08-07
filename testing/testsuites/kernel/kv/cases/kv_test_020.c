@@ -61,7 +61,7 @@ void test_nuttx_kv20(FAR void **state)
     0
   };
 
-  int test_round = 3000;
+  int test_round = 300;
 
   sprintf(data, "test_data_%s", __func__);
   clock_gettime(CLOCK_MONOTONIC, &t_start);

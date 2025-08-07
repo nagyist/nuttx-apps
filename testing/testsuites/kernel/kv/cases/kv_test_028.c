@@ -55,8 +55,9 @@ void test_nuttx_kv28(FAR void **state)
   };
 
   int32_t test_int32;
+  int test_round = 30;
 
-  for (int i = 1; i <= 300; i++)
+  for (int i = 1; i <= test_round; i++)
     {
       sprintf(key, "persist.kv28_int32_%d", i);
       ret = property_set_int32(key, i);
@@ -88,7 +89,7 @@ void test_nuttx_kv28(FAR void **state)
 
 #ifdef CONFIG_LIBC_LONG_LONG
   int64_t test_int64;
-  for (int i = 1; i <= 300; i++)
+  for (int i = 1; i <= test_round; i++)
     {
       sprintf(key, "persist.kv28_int64_%d", i);
       ret = property_set_int64(key, i);

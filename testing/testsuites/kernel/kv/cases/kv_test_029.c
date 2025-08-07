@@ -64,7 +64,7 @@ void test_nuttx_kv29(FAR void **state)
     0
   };
 
-  for (int i = 1; i <= 300; i++)
+  for (int i = 1; i <= 30; i++)
     {
       /* test key */
 

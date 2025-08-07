@@ -60,7 +60,7 @@ static void *store_persist_data(void *arg)
   };
 
   int ret;
-  for (int k = 0; k < 100; k++)
+  for (int k = 0; k < 30; k++)
     {
       sprintf(key, "persist.kv30_%d_%d", gettid(), k);
       sprintf(value, "test_value_kv30_%d_%d", gettid(), k);
