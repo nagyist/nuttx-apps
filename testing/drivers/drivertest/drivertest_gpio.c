@@ -316,7 +316,7 @@ static void drivertest_gpio_interrupt(FAR void **state)
   ret = pthread_create(&tid, NULL, drivertest_gpio_trigger, gpio);
   assert_false(ret < 0);
 
-  fd_in = open(gpio->gpio_input, O_RDWR);
+  fd_in = open(gpio->gpio_input, O_RDWR | O_NONBLOCK);
   assert_false(fd_in < 0);
 
   switch (gpio->irq_type)
@@ -344,7 +344,9 @@ static void drivertest_gpio_interrupt(FAR void **state)
   ret = ioctl(fd_in, GPIOC_REGISTER, NULL);
   assert_false(ret < 0);
 
-  ret = poll(&fds, 1, -1);
+  /* timeout set 2000ms */
+
+  ret = poll(&fds, 1, 2000);
   assert_false(ret < 0);
 
   ret = ioctl(fd_in, GPIOC_UNREGISTER, NULL);
