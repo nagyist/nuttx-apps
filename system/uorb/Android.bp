@@ -1,5 +1,6 @@
 cc_defaults {
     name: "uorb_defaults",
+    header_libs: ["kernel_modules_headers"],
     cflags: [
         "-DCODE=",
         "-DERROR=-1",
@@ -42,7 +43,8 @@ cc_library_static {
         "libnuttx_libc",
     ],
     header_libs: [
-        "nuttx_libc_headers"
+        "nuttx_libc_headers",
+        "kernel_modules_headers"
     ],
     defaults: [
         "nuttx_libc_defaults"
