@@ -517,9 +517,11 @@ static int user_main(int argc, char *argv[])
       signest_test();
       check_test_memory_usage();
 
+#ifdef CONFIG_BUILD_FLAT
       printf("\nuser_main: spinlock test\n");
       spinlock_test();
       check_test_memory_usage();
+#endif
 
 #if defined(CONFIG_SIG_SIGSTOP_ACTION) && defined(CONFIG_SIG_SIGKILL_ACTION) && \
     !defined(CONFIG_BUILD_KERNEL)
