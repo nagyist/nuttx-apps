@@ -20,6 +20,19 @@
 
 include(nuttx_parse_function_args)
 
+# Check if required LLVM parameters are defined If any are missing, warn and
+# skip the entire Rust logic
+if(NOT DEFINED LLVM_ARCHTYPE
+   OR NOT DEFINED LLVM_ABITYPE
+   OR NOT DEFINED LLVM_CPUTYPE)
+  message(
+    WARNING
+      "Missing required LLVM parameters for Rust support. Skipping Rust build logic. "
+      "Required: LLVM_ARCHTYPE='${LLVM_ARCHTYPE}', LLVM_ABITYPE='${LLVM_ABITYPE}', LLVM_CPUTYPE='${LLVM_CPUTYPE}'"
+  )
+  return()
+endif()
+
 # ~~~
 # Convert architecture type to Rust NuttX target
 #
@@ -99,6 +112,69 @@ function(nuttx_rust_target_triple ARCHTYPE ABITYPE CPUTYPE OUTPUT)
       PARENT_SCOPE)
 endfunction()
 
+# Build flags for rust_unified_lib, this file will be included only once in the
+# NuttX build system, so it's safe to set these variables globally
+set(RUST_UNIFIED_CARGO_BUILD_FLAGS "-Zbuild-std=std,panic_abort")
+if(NOT CONFIG_DEBUG_NOOPT)
+  list(APPEND RUST_UNIFIED_CARGO_BUILD_FLAGS "--release")
+  list(APPEND RUST_UNIFIED_CARGO_BUILD_FLAGS
+       "-Zbuild-std-features=panic_immediate_abort")
+  set(RUST_UNIFIED_CARGO_PROFILE "release")
+else()
+  set(RUST_UNIFIED_CARGO_PROFILE "debug")
+endif()
+nuttx_rust_target_triple(${LLVM_ARCHTYPE} ${LLVM_ABITYPE} ${LLVM_CPUTYPE}
+                         RUST_UNIFIED_CARGO_TARGET)
+
+# Handle JSON target: use base name for target directory if needed
+if(RUST_UNIFIED_CARGO_TARGET MATCHES ".json$")
+  get_filename_component(RUST_UNIFIED_TARGET_BASE ${RUST_UNIFIED_CARGO_TARGET}
+                         NAME_WE)
+else()
+  set(RUST_UNIFIED_TARGET_BASE ${RUST_UNIFIED_CARGO_TARGET})
+endif()
+
+list(APPEND RUST_UNIFIED_CARGO_BUILD_FLAGS
+     "--target=${RUST_UNIFIED_CARGO_TARGET}")
+list(APPEND RUST_UNIFIED_CARGO_BUILD_FLAGS
+     "--manifest-path=${CMAKE_BINARY_DIR}/rust_unified_lib/Cargo.toml")
+
+set(RUST_UNIFIED_LIBPATH
+    ${CMAKE_BINARY_DIR}/rust_unified_lib/target/${RUST_UNIFIED_TARGET_BASE}/${RUST_UNIFIED_CARGO_PROFILE}/librust_unified_lib.a
+)
+
+# Create a global target to collect all Rust crate information Step 1: Generate
+# the unified Rust library source
+if(NOT TARGET rust_unified_lib)
+  add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/rust_unified_lib
+    DEPENDS ${NUTTX_APPS_DIR}/tools/generate_rust_unified_lib.py
+    COMMAND
+      python3 ${NUTTX_APPS_DIR}/tools/generate_rust_unified_lib.py
+      --crate-name=$<TARGET_PROPERTY:rust_unified_lib,RUST_CRATE_NAMES>
+      --crate-path=$<TARGET_PROPERTY:rust_unified_lib,RUST_CRATE_PATHS>
+      --output-dir ${CMAKE_BINARY_DIR}/rust_unified_lib
+    COMMENT "Generating unified Rust library sources"
+    VERBATIM)
+
+  # Step 2: Build the Rust static library
+  add_custom_command(
+    OUTPUT ${RUST_UNIFIED_LIBPATH}
+    DEPENDS ${CMAKE_BINARY_DIR}/rust_unified_lib
+    COMMAND
+      ${CMAKE_COMMAND} -E env
+      NUTTX_INCLUDE_DIR=${PROJECT_SOURCE_DIR}/include:${CMAKE_BINARY_DIR}/include:${CMAKE_BINARY_DIR}/include/arch
+      NUTTX_APPS_DIR=${NUTTX_APPS_DIR} cargo build
+      ${RUST_UNIFIED_CARGO_BUILD_FLAGS}
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/rust_unified_lib
+    COMMENT "Building unified Rust static library"
+    BYPRODUCTS ${CMAKE_BINARY_DIR}/rust_unified_lib/dummy_product
+    VERBATIM)
+
+  # Step 3: Create the target and make it depend on the static library
+  add_custom_target(rust_unified_lib DEPENDS ${RUST_UNIFIED_LIBPATH})
+endif()
+
 # ~~~
 # nuttx_add_rust
 #
@@ -129,72 +205,27 @@ function(nuttx_add_rust)
     ARGN
     ${ARGN})
 
-  set(CARGO_BUILD_FLAGS "-Zbuild-std=std,panic_abort")
+  # Import the unified Rust static library only once
+  if(NOT TARGET rust_unified_lib_static)
 
-  # Determine build profile based on CONFIG_DEBUG_FULLOPT
-  if(CONFIG_DEBUG_FULLOPT)
-    set(CARGO_PROFILE "release")
-    # Append --release flag to cargo build flags
-    list(APPEND CARGO_BUILD_FLAGS "--release")
-    list(APPEND CARGO_BUILD_FLAGS "-Zbuild-std-features=panic_immediate_abort")
-  else()
-    set(CARGO_PROFILE "debug")
+    add_custom_target(rust_unified_lib_static)
+
+    add_dependencies(apps rust_unified_lib)
+
+    # Add the Rust library to NuttX build
+    nuttx_add_extra_library(${RUST_UNIFIED_LIBPATH})
+
   endif()
 
-  # Get the Rust target triple
-  nuttx_rust_target_triple(${LLVM_ARCHTYPE} ${LLVM_ABITYPE} ${LLVM_CPUTYPE}
-                           CARGO_TARGET)
-
-  # Get binary directory path using target triple base name if it's a JSON file
-  if(CARGO_TARGET MATCHES ".json$")
-    get_filename_component(TARGET_BASE ${CARGO_TARGET} NAME_WE)
-  else()
-    set(TARGET_BASE ${CARGO_TARGET})
-  endif()
-
-  # Append target triple to cargo build flags
-  list(APPEND CARGO_BUILD_FLAGS "--target=${CARGO_TARGET}")
-
-  # Append --manifest-path flag to cargo build flags
-  list(APPEND CARGO_BUILD_FLAGS "--manifest-path=${CRATE_PATH}/Cargo.toml")
-
-  # Set the cargo target directory
-  set(CARGO_TARGET_DIR "${CMAKE_CURRENT_BINARY_DIR}/${CRATE_NAME}")
-
-  # Append target directory to cargo build flags
-  list(APPEND CARGO_BUILD_FLAGS "--target-dir=${CARGO_TARGET_DIR}")
-
-  # Set paths for build artifacts
-  set(CARGO_BUILD_DIR "${CARGO_TARGET_DIR}/${TARGET_BASE}")
-  set(CARGO_LIB_PATH "${CARGO_BUILD_DIR}/${CARGO_PROFILE}/lib${CRATE_NAME}.a")
-
-  # Create build directory
-  file(MAKE_DIRECTORY ${CARGO_BUILD_DIR})
-
-  # Add a custom command to build the Rust crate
-  add_custom_command(
-    OUTPUT ${CARGO_LIB_PATH}
-    COMMAND
-      ${CMAKE_COMMAND} -E env
-      NUTTX_INCLUDE_DIR=${PROJECT_SOURCE_DIR}/include:${CMAKE_BINARY_DIR}/include:${CMAKE_BINARY_DIR}/include/arch
-      NUTTX_APPS_DIR=${NUTTX_APPS_DIR} cargo build ${CARGO_BUILD_FLAGS}
-    COMMENT "Building Rust crate ${CRATE_NAME}"
-    BYPRODUCTS DUMMY_OUTPUT
-    VERBATIM)
-
-  # Add a custom target that depends on the built library
-  add_custom_target(${CRATE_NAME}_build ALL DEPENDS ${CARGO_LIB_PATH})
-
-  # Add imported library target
-  add_library(${CRATE_NAME} STATIC IMPORTED GLOBAL)
-  set_target_properties(${CRATE_NAME} PROPERTIES IMPORTED_LOCATION
-                                                 ${CARGO_LIB_PATH})
-
-  # Add the Rust library to NuttX build
-  nuttx_add_extra_library(${CARGO_LIB_PATH})
-
-  # Ensure the Rust library is built before linking
-  add_dependencies(${CRATE_NAME} ${CRATE_NAME}_build)
-  add_dependencies(apps ${CRATE_NAME})
+  # Add crate information to the unified target properties Store crate name and
+  # path as target properties
+  set_property(
+    TARGET rust_unified_lib
+    APPEND
+    PROPERTY RUST_CRATE_NAMES ${CRATE_NAME})
+  set_property(
+    TARGET rust_unified_lib
+    APPEND
+    PROPERTY RUST_CRATE_PATHS ${CRATE_PATH})
 
 endfunction()
