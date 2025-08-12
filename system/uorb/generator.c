@@ -22,6 +22,7 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/kmalloc.h>
 #include <nuttx/signal.h>
 #include <nuttx/streams.h>
 
