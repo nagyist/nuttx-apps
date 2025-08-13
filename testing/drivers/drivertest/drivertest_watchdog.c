@@ -89,7 +89,9 @@ struct wdg_state_s
   bool test_getstatus;
 };
 
+#if !defined(CONFIG_ARCH_ARMV7A) || !defined(CONFIG_ARCH_HAVE_TRUSTZONE)
 static sem_t g_semaphore;
+#endif
 
 /****************************************************************************
  * Private Data
@@ -280,6 +282,7 @@ static void parse_commandline(FAR struct wdg_state_s *wdg_state, int argc,
     }
 }
 
+#if !defined(CONFIG_ARCH_ARMV7A) || !defined(CONFIG_ARCH_HAVE_TRUSTZONE)
 /****************************************************************************
  * Name: capture_callback
  ****************************************************************************/
@@ -289,6 +292,7 @@ static int capture_callback(int irq, FAR void *context, FAR void *arg)
   sem_post(&g_semaphore);
   return OK;
 }
+#endif
 
 /****************************************************************************
  * Name: drivertest_watchdog_feeding
@@ -430,6 +434,7 @@ static void drivertest_watchdog_loop(FAR void **state)
     }
 }
 
+#if !defined(CONFIG_ARCH_ARMV7A) || !defined(CONFIG_ARCH_HAVE_TRUSTZONE)
 /****************************************************************************
  * Name: drivertest_watchdog_api
  *
@@ -518,6 +523,7 @@ static void drivertest_watchdog_api(FAR void **state)
   ret = close(dev_fd);
   assert_return_code(ret, OK);
 }
+#endif
 
 /****************************************************************************
  * Public Functions
