@@ -20,6 +20,6 @@ config GRAPHICS_LVCTL_PRIORITY
 
 config GRAPHICS_LVCTL_STACKSIZE
 	int "LVCTL stack size"
-	default DEFAULT_TASK_STACKSIZE
+	default 4096
 
 endif

@@ -51,7 +51,7 @@ static void print_func(FAR const char *format, ...)
  * Name: send_cmd
  ****************************************************************************/
 
-static int send_cmd(FAR const lv_remote_ctrl_cmd_t *cmd)
+static int send_cmd(FAR const void * cmd, size_t size)
 {
   int sock = socket(PF_LOCAL, SOCK_STREAM, 0);
   struct sockaddr_un addr;
@@ -75,7 +75,7 @@ static int send_cmd(FAR const lv_remote_ctrl_cmd_t *cmd)
       goto errout;
     }
 
-  if (send(sock, cmd, sizeof(*cmd), 0) < 0)
+  if (send(sock, cmd, size, 0) < 0)
     {
       perror("Failed to send command");
       ret = -errno;
@@ -103,18 +103,18 @@ errout:
  *
  ****************************************************************************/
 
-int main(int argc, FAR char *argv[])
+int main(int argc, FAR const char *argv[])
 {
-  lv_remote_ctrl_cmd_t cmd;
   int ret;
+  lv_remote_ctrl_args_t args;
 
-  if (lv_remote_ctrl_cmd_parse(&cmd, argv + 1, argc - 1) != LV_RESULT_OK)
+  if (lv_remote_ctrl_args_init(&args, argc - 1, argv + 1) != LV_RESULT_OK)
     {
       lv_remote_ctrl_show_help(argv[0], print_func);
       return 1;
     }
 
-  ret = send_cmd(&cmd);
+  ret = send_cmd(&args, sizeof(args));
   if (ret < 0)
     {
       printf("Failed to send command: %s\n", strerror(ret));
