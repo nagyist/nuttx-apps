@@ -88,7 +88,7 @@
  * then some.
  */
 
-#define MAX_ARGUMENTS 12
+#define MAX_ARGUMENTS CONFIG_NSH_MAXARGUMENTS
 
 /* Maximum size of one command line */
 
