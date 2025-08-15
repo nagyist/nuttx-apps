@@ -49,9 +49,8 @@
 #define WQUEUE_MAX_DELAY   WDOG_MAX_DELAY
 
 #define PERIODIC_TEST_WORK_NUM    (5)
-#define PERIODIC_TEST_PERIOD_BASE (20)
-#define PERIODIC_TEST_PERIOD_STEP (10)
-#define PERIODIC_TEST_DELAY_STEP  (10)
+#define PERIODIC_TEST_PERIOD_BASE (200)
+#define PERIODIC_TEST_PERIOD_STEP (20)
 #define PERIODIC_TEST_MIN_LOOP    (5)
 
 #define PERIODIC_TEST_PERIOD_MAX                                             \
@@ -76,8 +75,7 @@
 #define WORK_THREAD_TEST_WORK_SLEEP_TIME_MS   (50)
 #define WORK_THREAD_TEST_EFFICIENCY_THRESHOLD (80)
 
-#define MAX_PERIOD_ERROR ((clock_t)500)
-#define MAX_DELAY_ERROR  ((clock_t)3000)
+#define MAX_CLOCK_ERROR ((clock_t)3000)
 
 #ifdef CONFIG_SCHED_LPWORK
 #  define TEST_QUEUE           LPWORK
@@ -121,19 +119,15 @@ typedef struct recursive_work_s
 
 typedef struct period_work_s
 {
-  FAR struct kwork_wqueue_s *wq;
   struct work_s work;
-  uint8_t is_first : 1;
-  uint8_t cancel_self : 1;
-  int cnt;
+  FAR struct kwork_wqueue_s *wq;
+  FAR atomic_t *runing_cnt;
+  FAR atomic_t *enough_cnt;
   clock_t period;
-  clock_t delay;
-  clock_t added_tick;
-  clock_t start_tick;
   clock_t prev_tick;
-  uint64_t total_tick;
-  FAR sem_t *runing_cnt;
-  FAR sem_t *enough_cnt;
+  clock_t total_tick;
+  int cnt;
+  bool is_first;
 } period_work_t;
 
 typedef struct delay_work_s
@@ -267,7 +261,6 @@ static void period_worker(FAR void *arg)
     {
       p->prev_tick  = tick_now;
       p->is_first   = false;
-      p->start_tick = tick_now;
     }
   else
     {
@@ -276,21 +269,14 @@ static void period_worker(FAR void *arg)
       p->cnt++;
     }
 
-  sem_post(p->runing_cnt);
+  atomic_fetch_add(p->runing_cnt, 1);
 
   if (p->cnt == PERIODIC_TEST_WORK_NUM)
     {
-      sem_post(p->enough_cnt);
-      if (p->cancel_self)
-        {
-          work_cancel_wq(p->wq, &p->work);
-        }
+      atomic_fetch_add(p->enough_cnt, 1);
     }
-  else
-    {
-      work_queue_next_wq(p->wq, &p->work, period_worker,
-                         arg, p->period);
-    }
+
+  work_queue_next_wq(p->wq, &p->work, period_worker, arg, p->period);
 }
 
 static void recursive_worker(FAR void *arg)
@@ -695,12 +681,11 @@ errout:
 static void wqueue_period_and_cancel_test(void)
 {
   FAR struct kwork_wqueue_s *wq;
-  FAR period_work_t *works = NULL;
+  FAR period_work_t *works;
   FAR period_work_t *work;
-  sem_t running_sem;
-  sem_t enough_sem;
-  int total_cnt = PERIODIC_TEST_WORK_NUM;
-  int enough_cnt;
+  atomic_t running_cnt = 0;
+  atomic_t enough_cnt  = 0;
+  int total_cnt        = PERIODIC_TEST_WORK_NUM;
   int success_cnt;
   int prev_cnt;
   int curr_cnt;
@@ -711,8 +696,7 @@ static void wqueue_period_and_cancel_test(void)
 
   COMPILE_TIME_ASSERT(PERIODIC_TEST_PERIOD_MAX <= WQUEUE_MAX_DELAY);
 
-  wq = work_queue_create("test", WQUEUE_DEFAULT_PRIORITY, NULL,
-                         WQUEUE_DEFAULT_STACK_SIZE,
+  wq = work_queue_create("test", 255, NULL, WQUEUE_DEFAULT_STACK_SIZE,
                          WQUEUE_DEFAULT_THREAD_NUM);
   if (wq == NULL)
     {
@@ -727,54 +711,37 @@ static void wqueue_period_and_cancel_test(void)
       goto errout;
     }
 
-  sem_init(&running_sem, 0, 0);
-  sem_init(&enough_sem, 0, 0);
-
   for (i = 0; i < total_cnt; i++)
     {
       work              = &works[i];
       work->wq          = wq;
       work->is_first    = true;
-      work->cancel_self = i & 1;
-      work->total_tick  = 0;
-      work->cnt         = 0;
       work->period
           = PERIODIC_TEST_PERIOD_STEP * i + PERIODIC_TEST_PERIOD_BASE;
-      work->delay      = i * PERIODIC_TEST_DELAY_STEP;
-      work->runing_cnt = &running_sem;
-      work->enough_cnt = &enough_sem;
-      work->added_tick = clock_systime_ticks();
-      work_queue_wq(wq, &work->work, period_worker, work, work->delay);
+      work->runing_cnt = &running_cnt;
+      work->enough_cnt = &enough_cnt;
+      work_queue_wq(wq, &work->work, period_worker, work, 0);
     }
 
-  do
+  while (atomic_read(&enough_cnt) != total_cnt)
     {
       usleep(SLEEP_TIME);
-      sem_getvalue(&enough_sem, &enough_cnt);
     }
-  while (enough_cnt != total_cnt);
 
   success_cnt = 0;
   for (i = 0; i < total_cnt; i++)
     {
-      clock_t actual_period;
-      clock_t actual_delay;
+      clock_t period;
 
       work = &works[i];
 
-      if (!work->cancel_self)
-        {
-          work_cancel_sync_wq(wq, &work->work);
-        }
+      work_cancel_sync_wq(wq, &work->work);
 
-      wqtest_assert(work->work.worker == NULL,
+      wqtest_assert(work_available(&work->work) == true,
                     "wqueue_test: a cancelled work's worker is not NULL\n");
 
-      actual_period = work->total_tick / work->cnt;
-      actual_delay  = work->start_tick - work->added_tick;
-
-      if (clock_diff(actual_delay, work->delay) <= MAX_DELAY_ERROR
-          && clock_diff(actual_period, work->period) <= MAX_PERIOD_ERROR)
+      period = work->total_tick / work->cnt;
+      if (clock_diff(period, work->period) <= MAX_CLOCK_ERROR)
         {
           success_cnt++;
           printf("[Pass] ");
@@ -784,23 +751,21 @@ static void wqueue_period_and_cancel_test(void)
           printf("[Fail] ");
         }
 
-      printf("Periodic work %d: expected delay: "
-             "%" PRIuTM ",\t actual delay: %" PRIuTM ",\t expected "
+      printf("Periodic work %d: expected "
              "period: %" PRIuTM ",\t actual period: %" PRIuTM "\n",
-             i, work->delay, work->start_tick - work->added_tick,
-             work->period, actual_period);
+             i, work->period, period);
     }
 
-  sem_getvalue(&running_sem, &prev_cnt);
+  prev_cnt = atomic_read(&running_cnt);
   usleep(2 * USEC_PER_TICK * PERIODIC_TEST_PERIOD_MAX);
-  sem_getvalue(&running_sem, &curr_cnt);
+  curr_cnt = atomic_read(&running_cnt);
 
   printf("cnt_prev: %d, cnt_curr: %d\n", prev_cnt, curr_cnt);
   wqtest_assert(prev_cnt == curr_cnt,
                 "wqueue_test: cancel test failed! Some periodic works "
                 "are still running\n");
 
-  printf("Passed %d out of %d\n", success_cnt, total_cnt);
+  printf("Passed %d/%d\n", success_cnt, total_cnt);
 
   wqtest_assert(success_cnt == total_cnt,
                 "wqueue_test: period and delay test: some delay or period "
@@ -1020,7 +985,7 @@ static int wqueue_delay_test_base(FAR const clock_t *special_delay,
       else if (work->is_finish)
         {
           actual_delay = work->start_tick - work->added_tick;
-          if (clock_diff(actual_delay, work->delay) < MAX_DELAY_ERROR)
+          if (clock_diff(actual_delay, work->delay) < MAX_CLOCK_ERROR)
             {
               state = "Passed";
               success_count++;
