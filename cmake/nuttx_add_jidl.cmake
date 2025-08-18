@@ -45,6 +45,11 @@ include(nuttx_parse_function_args)
 set(QUICKAPP_FEATURES_OUT_DIR ${CMAKE_BINARY_DIR}/jidl_generated)
 set(JIDL_TOOL ${NUTTX_APPS_DIR}/../prebuilts/tools/rust/bin/jidl/jidl_gen_cpp)
 
+if(NOT TARGET remove_jidl_generated)
+  file(REMOVE_RECURSE ${QUICKAPP_FEATURES_OUT_DIR})
+  add_custom_target(remove_jidl_generated)
+endif()
+
 if(NOT EXISTS {QUICKAPP_FEATURES_OUT_DIR})
   file(MAKE_DIRECTORY ${QUICKAPP_FEATURES_OUT_DIR})
 endif()
@@ -55,6 +60,10 @@ endif()
 
 if(NOT EXISTS ${QUICKAPP_FEATURES_OUT_DIR}/cfeatures_registry_list.h)
   file(WRITE ${QUICKAPP_FEATURES_OUT_DIR}/cfeatures_registry_list.h "")
+endif()
+
+if(NOT EXISTS ${QUICKAPP_FEATURES_OUT_DIR}/features_registry_table.h)
+  file(WRITE ${QUICKAPP_FEATURES_OUT_DIR}/features_registry_table.h "")
 endif()
 
 function(nuttx_add_jidl)
