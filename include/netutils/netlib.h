@@ -62,6 +62,10 @@
 #include <nuttx/net/netdev.h>
 #include <nuttx/net/netconfig.h>
 
+#ifdef CONFIG_NET_IPTABLES
+#  include <nuttx/net/netfilter/ip_tables.h>
+#endif
+
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -400,12 +404,6 @@ int netlib_obtain_ipv6addr(FAR const char *ifname);
 
 #ifdef CONFIG_NET_IPTABLES
 /* iptables interface support */
-
-struct ipt_replace;  /* Forward reference */
-struct ipt_entry;    /* Forward reference */
-struct ip6t_replace; /* Forward reference */
-struct ip6t_entry;   /* Forward reference */
-enum nf_inet_hooks;  /* Forward reference */
 
 #  ifdef CONFIG_NET_IPv4
 FAR struct ipt_replace *netlib_ipt_prepare(FAR const char *table);
