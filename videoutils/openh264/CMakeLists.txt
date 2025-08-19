@@ -106,6 +106,11 @@ if(CONFIG_VIDEOUTILS_OPENH264)
   set(INCDIR ${INCLUDES} ${DECODER_INCLUDES} ${PROCESSING_INCLUDES})
   set(PUB_INCDIR ${SRC_PATH}/codec/api)
 
+  set_property(
+    TARGET nuttx
+    APPEND
+    PROPERTY NUTTX_INCLUDE_DIRECTORIES ${SRC_PATH}/codec/api)
+
   # ############################################################################
   # Flags
   # ############################################################################

@@ -20,6 +20,11 @@ if(CONFIG_VIDEOUTILS_LIBX264)
   # Configuration
   # ############################################################################
 
+  set_property(
+    TARGET nuttx
+    APPEND
+    PROPERTY NUTTX_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}/x264)
+
   # call origin build system to generate libx264
   nuttx_call_apps_makefile(TARGET x264 TARGET_BIN libx264.a)
 
