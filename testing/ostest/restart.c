@@ -62,7 +62,7 @@ static const char g_varname[] = "VarName";
 static const char g_varvalue[] = "VarValue";
 #endif
 
-static uint8_t g_restartstep;
+static int g_restartstep;
 
 static sem_t g_sem;
 
@@ -132,12 +132,12 @@ static int restart_main(int argc, char *argv[])
 
   /* Don't call printf here, to avoid recover sem failed during restart */
 
-  for (; ; )
+  while (g_restartstep != -1)
     {
       sleep(1);
     }
 
-  return 0; /* Won't get here unless we were restarted */
+  return 0;
 }
 
 /****************************************************************************
@@ -215,6 +215,10 @@ void restart_test(void)
       sem_wait(&g_sem);
       ASSERT(g_restartstep == 3);
     }
+
+  /* Now we can exit the child task */
+
+  g_restartstep = -1;
 
   sem_destroy(&g_sem);
 
