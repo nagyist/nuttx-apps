@@ -77,8 +77,6 @@ static struct memory_region_s g_memory_region[] =
  * dumpfile_iterate
  ****************************************************************************/
 
-#ifdef CONFIG_SYSTEM_COREDUMP_RESTORE
-
 static bool dumpfile_is_valid(FAR const char *name)
 {
   FAR const char *suffix;
@@ -213,7 +211,7 @@ static int dumpfile_get_info(int fd, FAR struct coredump_info_s *info)
  * coredump_restore
  ****************************************************************************/
 
-static void coredump_restore(FAR char *savepath, size_t maxfile)
+static void coredump_restore(FAR char *file, FAR char *savepath, size_t maxfile)
 {
   struct coredump_info_s info;
   char dumppath[PATH_MAX];
@@ -231,7 +229,7 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
       0
     };
 
-  blkfd = open(CONFIG_SYSTEM_COREDUMP_DEVPATH, O_RDWR);
+  blkfd = open(file, O_RDWR);
   if (blkfd < 0)
     {
       return;
@@ -240,7 +238,7 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
   ret = dumpfile_get_info(blkfd, &info);
   if (ret < 0)
     {
-      printf("No core data in %s\n", CONFIG_SYSTEM_COREDUMP_DEVPATH);
+      printf("No core data in %s\n", file);
       goto blkfd_err;
     }
 
@@ -300,7 +298,7 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
       readsize = read(blkfd, swap, readsize);
       if (readsize < 0)
         {
-          printf("Read %s fail\n", CONFIG_SYSTEM_COREDUMP_DEVPATH);
+          printf("Read %s fail\n", file);
           break;
         }
       else if (readsize == 0)
@@ -334,14 +332,14 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
   off  = lseek(blkfd, off, SEEK_SET);
   if (off < 0)
     {
-      printf("Seek %s fail\n", CONFIG_SYSTEM_COREDUMP_DEVPATH);
+      printf("Seek %s fail\n", file);
       goto swap_err;
     }
 
   writesize = write(blkfd, &nhdr, sizeof(nhdr));
   if (writesize != sizeof(nhdr))
     {
-      printf("Write %s fail\n", CONFIG_SYSTEM_COREDUMP_DEVPATH);
+      printf("Write %s fail\n", file);
     }
 
   /* Erase the core file header too */
@@ -349,14 +347,14 @@ static void coredump_restore(FAR char *savepath, size_t maxfile)
   off = lseek(blkfd, 0, SEEK_SET);
   if (off < 0)
     {
-      printf("Seek %s fail\n", CONFIG_SYSTEM_COREDUMP_DEVPATH);
+      printf("Seek %s fail\n", file);
       goto swap_err;
     }
 
   writesize = write(blkfd, "\0\0\0\0", EI_MAGIC_SIZE);
   if (writesize != EI_MAGIC_SIZE)
     {
-      printf("Write %s fail\n", CONFIG_SYSTEM_COREDUMP_DEVPATH);
+      printf("Write %s fail\n", file);
     }
 
 swap_err:
@@ -367,13 +365,11 @@ blkfd_err:
   close(blkfd);
 }
 
-#endif
-
 /****************************************************************************
  * coredump_now
  ****************************************************************************/
 
-static int coredump_now(int pid, FAR char *filename)
+static int coredump_now(int pid, FAR char *filename, bool hex)
 {
   FAR struct lib_stdoutstream_s *outstream;
   FAR struct lib_hexdumpstream_s *hstream;
@@ -427,7 +423,7 @@ static int coredump_now(int pid, FAR char *filename)
   /* Initialize hex output stream */
 
   lib_stdoutstream(outstream, file);
-  if (file == stdout)
+  if (file == stdout || hex)
     {
       lib_hexdumpstream(hstream, (FAR void *)outstream);
       stream = hstream;
@@ -480,15 +476,11 @@ static void usage(FAR const char *progname, int exitcode)
   fprintf(stderr, "Default usage, will coredump directly\n");
   fprintf(stderr, "\t -p, --pid <pid>, Default, all thread\n");
   fprintf(stderr, "\t -f, --filename <filename>, Default stdout\n");
-
-#ifdef CONFIG_SYSTEM_COREDUMP_RESTORE
   fprintf(stderr, "Second usage, will restore coredump"
-                  "from %s to savepath\n",
-                   CONFIG_SYSTEM_COREDUMP_DEVPATH);
+                  "from devpath to savepath\n");
   fprintf(stderr, "\t -s, --savepath <savepath>\n");
   fprintf(stderr, "\t -m, --maxfile <maxfile>,"
                   "Maximum number of coredump files, Default 1\n");
-#endif
   exit(exitcode);
 }
 
@@ -502,26 +494,26 @@ static void usage(FAR const char *progname, int exitcode)
 
 int main(int argc, FAR char *argv[])
 {
-#ifdef CONFIG_SYSTEM_COREDUMP_RESTORE
   FAR char *savepath = NULL;
+  FAR char *devpath = NULL;
   size_t maxfile = 1;
-#endif
   char *name = NULL;
   int pid = INVALID_PROCESS_ID;
+  bool hex = false;
   int ret;
 
   struct option options[] =
     {
       {"pid", 1, NULL, 'p'},
+      {"devpath", 1, NULL, 'd'},
       {"filename", 1, NULL, 'f'},
-#ifdef CONFIG_SYSTEM_COREDUMP_RESTORE
       {"savepath", 1, NULL, 's'},
       {"maxfile", 1, NULL, 'm'},
-#endif
+      {"hex", 1, NULL, 'h'},
       {"help", 0, NULL, 'h'}
     };
 
-  while ((ret = getopt_long(argc, argv, "p:f:s:m:h", options, NULL))
+  while ((ret = getopt_long(argc, argv, "p:d:f:s:m:h:x", options, NULL))
          != ERROR)
     {
       switch (ret)
@@ -529,17 +521,21 @@ int main(int argc, FAR char *argv[])
           case 'p':
             pid = atoi(optarg);
             break;
+          case 'd':
+            devpath = optarg;
+            break;
           case 'f':
             name = optarg;
             break;
-#ifdef CONFIG_SYSTEM_COREDUMP_RESTORE
           case 's':
             savepath = optarg;
             break;
           case 'm':
             maxfile = atoi(optarg);
             break;
-#endif
+          case 'x':
+            hex = true;
+            break;
           case 'h':
           default:
             usage(argv[0], EXIT_SUCCESS);
@@ -547,15 +543,13 @@ int main(int argc, FAR char *argv[])
         }
     }
 
-#ifdef CONFIG_SYSTEM_COREDUMP_RESTORE
   if (savepath != NULL)
     {
-      coredump_restore(savepath, maxfile);
+      coredump_restore(devpath, savepath, maxfile);
     }
   else
-#endif
     {
-      coredump_now(pid, name);
+      coredump_now(pid, name, hex);
     }
 
   return 0;

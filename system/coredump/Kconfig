@@ -28,17 +28,4 @@ config SYSTEM_COREDUMP_SWAPBUFFER_SIZE
 	---help---
 		The coredump read/write swap buffer size in bytes.
 
-config SYSTEM_COREDUMP_RESTORE
-	bool "coredump restore from block/mtd device to filesystem"
-	default BOARD_COREDUMP_BLKDEV || BOARD_COREDUMP_MTDDEV
-	---help---
-		Userspace restore from block/mtd device to specific filesystem path.
-
-config SYSTEM_COREDUMP_DEVPATH
-	string "coredump block device path to restore"
-	depends on SYSTEM_COREDUMP_RESTORE
-	default BOARD_COREDUMP_DEVPATH if BOARD_COREDUMP_BLKDEV || BOARD_COREDUMP_MTDDEV
-	---help---
-		This is the block device path to restore.
-
 endif # SYSTEM_COREDUMP
