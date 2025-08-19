@@ -170,7 +170,6 @@ static FAR void *waiter_main(FAR void *arg)
 
   /* Take the semaphore */
 
-  sem_post(&sem2);
   printf("waiter_main: Waiting on semaphore\n");
   FFLUSH();
 
@@ -297,10 +296,18 @@ void sighand_test(void)
       printf("sighand_test: Started waiter_main pid=%d\n", waiterpid);
     }
 
-  /* Wait a bit */
+  /* Wait the child thread enter sem_wait() */
 
-  FFLUSH();
-  sem_wait(&sem2);
+  while (1)
+    {
+      usleep(1000);
+
+      sem_getvalue(&sem1, &status);
+      if (status < 0)
+        {
+          break;
+        }
+    }
 
   /* Then signal the waiter thread. */
 
