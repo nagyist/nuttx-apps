@@ -45,12 +45,6 @@
     } \
   while(0)
 
-#ifdef CONFIG_NET_TCP
-#  define IPT_SOCK_TYPE (SOCK_STREAM | SOCK_CLOEXEC)
-#else
-#  define IPT_SOCK_TYPE (SOCK_DGRAM | SOCK_CLOEXEC)
-#endif
-
 /****************************************************************************
  * Private Types
  ****************************************************************************/
@@ -273,7 +267,7 @@ FAR struct ipt_replace *netlib_ipt_prepare(FAR const char *table)
       return NULL;
     }
 
-  sockfd = socket(PF_INET, IPT_SOCK_TYPE, 0);
+  sockfd = socket(NET_SOCK_FAMILY, NET_SOCK_TYPE, NET_SOCK_PROTOCOL);
   if (sockfd < 0)
     {
       fprintf(stderr, "Failed to create socket %d!\n", errno);
@@ -352,7 +346,7 @@ int netlib_ipt_commit(FAR const struct ipt_replace *repl)
       return -EINVAL;
     }
 
-  sockfd = socket(PF_INET, IPT_SOCK_TYPE, 0);
+  sockfd = socket(NET_SOCK_FAMILY, NET_SOCK_TYPE, NET_SOCK_PROTOCOL);
   if (sockfd < 0)
     {
       fprintf(stderr, "Failed to create socket %d!\n", errno);
