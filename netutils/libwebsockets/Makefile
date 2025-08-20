@@ -41,6 +41,7 @@ CFLAGS += \
 	-I$(LIBWEBSOCKETS_UNPACK)/lib/core \
 	-I$(LIBWEBSOCKETS_UNPACK)/lib/plat/unix \
 	-I$(LIBWEBSOCKETS_UNPACK)/lib/event-libs \
+	-I$(LIBWEBSOCKETS_UNPACK)/lib/event-libs/libuv \
 	-I$(LIBWEBSOCKETS_UNPACK)/lib/system/smd \
 	-I$(LIBWEBSOCKETS_UNPACK)/lib/system/metrics \
 	-I$(LIBWEBSOCKETS_UNPACK)/lib/core-net \
@@ -119,7 +120,8 @@ CSRCS += \
 	$(LIBWEBSOCKETS_UNPACK)/lib/roles/raw-skt/ops-raw-skt.c \
 	$(LIBWEBSOCKETS_UNPACK)/lib/roles/raw-file/ops-raw-file.c \
 	$(LIBWEBSOCKETS_UNPACK)/lib/roles/http/client/client-http.c \
-	$(LIBWEBSOCKETS_UNPACK)/lib/event-libs/poll/poll.c
+	$(LIBWEBSOCKETS_UNPACK)/lib/event-libs/poll/poll.c \
+	$(LIBWEBSOCKETS_UNPACK)/lib/event-libs/libuv/libuv.c
 
 CSRCS += \
 	$(LIBWEBSOCKETS_UNPACK)/lib/tls/tls.c \

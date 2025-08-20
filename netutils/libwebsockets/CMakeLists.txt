@@ -70,6 +70,7 @@ if(CONFIG_NETUTILS_LIBWEBSOCKETS)
       ${LIBWEBSOCKETS_DIR}/lib/core
       ${LIBWEBSOCKETS_DIR}/lib/plat/unix
       ${LIBWEBSOCKETS_DIR}/lib/event-libs
+      ${LIBWEBSOCKETS_DIR}/lib/event-libs/libuv
       ${LIBWEBSOCKETS_DIR}/lib/system/smd
       ${LIBWEBSOCKETS_DIR}/lib/system/metrics
       ${LIBWEBSOCKETS_DIR}/lib/core-net
@@ -149,6 +150,7 @@ if(CONFIG_NETUTILS_LIBWEBSOCKETS)
       ${LIBWEBSOCKETS_DIR}/lib/roles/raw-file/ops-raw-file.c
       ${LIBWEBSOCKETS_DIR}/lib/roles/http/client/client-http.c
       ${LIBWEBSOCKETS_DIR}/lib/event-libs/poll/poll.c
+      ${LIBWEBSOCKETS_DIR}/lib/event-libs/libuv/libuv.c
       ${LIBWEBSOCKETS_DIR}/lib/tls/tls.c
       ${LIBWEBSOCKETS_DIR}/lib/tls/tls-network.c
       ${LIBWEBSOCKETS_DIR}/lib/tls/tls-sessions.c

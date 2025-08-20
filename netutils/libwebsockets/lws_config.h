@@ -273,9 +273,10 @@
 /* #undef LWS_WITH_LIBEV */
 
 /* #undef LWS_WITH_LIBEVENT */
-
-/* #undef LWS_WITH_LIBUV */
-
+#ifdef CONFIG_LIBUV
+#define LWS_WITH_EVENT_LIBS
+#define LWS_WITH_LIBUV
+#endif
 /* #undef LWS_WITH_SDEVENT */
 #define LWS_WITH_LWSAC
 #define LWS_LOGS_TIMESTAMP
@@ -368,8 +369,6 @@
 /* #undef USE_OLD_CYASSL */
 
 /* #undef USE_WOLFSSL */
-
-/* #undef LWS_WITH_EVENT_LIBS */
 
 /* #undef LWS_WITH_EVLIB_PLUGINS */
 
