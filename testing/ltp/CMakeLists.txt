@@ -375,6 +375,8 @@ if(CONFIG_TESTING_LTP)
         SCHED_PRIORITY_DEFAULT
         STACKSIZE
         ${CONFIG_TESTING_LTP_STACKSIZE}
+        MODULE
+        ${CONFIG_TESTING_LTP}
         SRCS
         ${SOURCE_FILES})
     endforeach()
@@ -591,13 +593,16 @@ if(CONFIG_TESTING_LTP)
     add_compile_options(
       -DHAVE_FCHOWNAT
       -DMAXPATHLEN=256
-      -DUNIT_TEST
       -DHAVE_MKDIRAT
       -DHAVE_OPENAT
       -DTEST_CLEANUP
       -DBLKGETSIZE64=BLKGETSIZE
       -D__linux__
       -DLINUX)
+
+    if(NOT CONFIG_TESTING_LTP STREQUAL "m")
+      add_compile_options(-DUNIT_TEST)
+    endif()
 
     add_compile_options(
       -DHAVE_ASPRINTF
@@ -811,18 +816,34 @@ if(CONFIG_TESTING_LTP)
     list(LENGTH LTP_LINUX_MAINCSRCS SOURCE_FILES_COUNT)
     math(EXPR LAST_INDEX "${SOURCE_FILES_COUNT} - 1")
 
+    if(${CONFIG_TESTING_LTP} STREQUAL "m")
+      list(APPEND ELF_MOD_FILTER "ltp_fs_doio_dataascii")
+      list(APPEND ELF_MOD_FILTER "ltp_fs_doio_databin")
+      list(APPEND ELF_MOD_FILTER "ltp_fs_doio_datapid")
+      list(APPEND ELF_MOD_FILTER "random_range_test")
+      list(APPEND ELF_MOD_FILTER "parse_opts_test")
+      list(APPEND ELF_MOD_FILTER "doio_openflags_test")
+    endif()
+
     foreach(INDEX RANGE 0 ${LAST_INDEX})
       list(GET LTP_LINUX_MAINCSRCS ${INDEX} SOURCE_FILES)
       list(GET PROGNAME ${INDEX} EXECUTABLE_NAMES)
-      nuttx_add_application(
-        NAME
-        ${EXECUTABLE_NAMES}
-        PRIORITY
-        SCHED_PRIORITY_DEFAULT
-        STACKSIZE
-        ${CONFIG_TESTING_LTP_STACKSIZE}
-        SRCS
-        ${SOURCE_FILES})
+      list(FIND ELF_MOD_FILTER ${EXECUTABLE_NAMES} FOUND_INDEX)
+      if(${FOUND_INDEX} GREATER_EQUAL 0)
+        list(APPEND LTP_CSRCS ${SOURCE_FILES})
+      else()
+        nuttx_add_application(
+          NAME
+          ${EXECUTABLE_NAMES}
+          PRIORITY
+          SCHED_PRIORITY_DEFAULT
+          STACKSIZE
+          ${CONFIG_TESTING_LTP_STACKSIZE}
+          MODULE
+          ${CONFIG_TESTING_LTP}
+          SRCS
+          ${SOURCE_FILES})
+      endif()
     endforeach()
   endif()
 
