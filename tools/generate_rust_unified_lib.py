@@ -82,11 +82,15 @@ edition = "2021"
 [lib]
 crate-type = ["staticlib"]
 
+[profile.dev]
+panic = "abort"
+
 [profile.release]
 lto = true
 codegen-units = 1
 opt-level = "z"
 debug = true
+panic = "abort"
 
 [dependencies]
 """
