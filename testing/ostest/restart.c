@@ -24,6 +24,7 @@
 
 #include <nuttx/config.h>
 
+#include <sys/wait.h>
 #include <assert.h>
 #include <errno.h>
 #include <sched.h>
@@ -134,7 +135,7 @@ static int restart_main(int argc, char *argv[])
 
   while (g_restartstep != -1)
     {
-      sleep(1);
+      usleep(10 * 1000);
     }
 
   return 0;
@@ -147,6 +148,8 @@ static int restart_main(int argc, char *argv[])
 void restart_test(void)
 {
   int ret;
+  pid_t pid;
+  int stat_loc;
 
   g_restartstep = 0;
 
@@ -176,7 +179,7 @@ void restart_test(void)
     }
   else
     {
-      pid_t pid = ret;
+      pid = ret;
 
       printf("restart_main: Started restart_main at PID=%d\n", pid);
 
@@ -219,6 +222,7 @@ void restart_test(void)
   /* Now we can exit the child task */
 
   g_restartstep = -1;
+  waitpid(pid, &stat_loc, 0);
 
   sem_destroy(&g_sem);
 
