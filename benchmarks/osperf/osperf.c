@@ -24,6 +24,8 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <fcntl.h>
+#include <mqueue.h>
 #include <pthread.h>
 #include <sched.h>
 #include <semaphore.h>
@@ -35,6 +37,7 @@
 #include <string.h>
 #include <sys/param.h>
 #include <sys/poll.h>
+#include <unistd.h>
 
 #include <nuttx/sched.h>
 #include <nuttx/wqueue.h>
@@ -72,6 +75,7 @@ static size_t context_switch_performance(void);
 static size_t hpwork_performance(void);
 #endif
 static size_t poll_performance(void);
+static size_t mqueue_performance(void);
 static size_t semwait_performance(void);
 static size_t sempost_performance(void);
 static size_t nullop_performance(void);
@@ -89,6 +93,7 @@ static const struct performance_entry_s g_entry_list[] =
   {"hpwork", hpwork_performance},
 #endif
   {"poll-write", poll_performance},
+  {"mqueue-send", mqueue_performance},
   {"semwait", semwait_performance},
   {"sempost", sempost_performance},
   {"null-op", nullop_performance},
@@ -292,6 +297,56 @@ static size_t poll_performance(void)
   pthread_join(ret, NULL);
   close(pipefd[0]);
   close(pipefd[1]);
+  return performance_gettime(&result);
+}
+
+/****************************************************************************
+ * mqueue-send performance
+ ****************************************************************************/
+
+static FAR void *mqueue_task(FAR void *arg)
+{
+  FAR void **argv = arg;
+  FAR struct performance_time_s *time = argv[0];
+  mqd_t mqdes = (mqd_t)(uintptr_t)argv[1];
+  char buffer[32];
+
+  mq_receive(mqdes, buffer, sizeof(buffer), NULL);
+  performance_end(time);
+  return NULL;
+}
+
+static size_t mqueue_performance(void)
+{
+  struct performance_time_s result;
+  const char mqname[] = "/osperf_mq";
+  const char msg[] = "test";
+  struct mq_attr attr;
+  FAR void *argv[2];
+  mqd_t mqdes;
+  int ret;
+
+  attr.mq_maxmsg = 10;
+  attr.mq_msgsize = 32;
+  attr.mq_flags = 0;
+  attr.mq_curmsgs = 0;
+
+  mqdes = mq_open(mqname, O_CREAT | O_RDWR, 0666, &attr);
+  DEBUGASSERT(mqdes != (mqd_t)-1);
+
+  argv[0] = (FAR char *)&result;
+  argv[1] = (FAR char *)(uintptr_t)mqdes;
+
+  ret = performance_thread_create(mqueue_task, argv,
+                                  CONFIG_BENCHMARK_OSPERF_PRIORITY + 1);
+
+  performance_start(&result);
+  mq_send(mqdes, msg, sizeof(msg), 0);
+
+  pthread_join(ret, NULL);
+  mq_close(mqdes);
+  mq_unlink(mqname);
+
   return performance_gettime(&result);
 }
 
