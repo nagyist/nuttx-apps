@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/crypto/dhm.c
+ * apps/testing/crypto/driver/dhm.c
  * Copyright (C) 2023 Xiaomi Corporation
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more

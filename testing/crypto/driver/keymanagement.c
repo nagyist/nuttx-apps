@@ -1,6 +1,5 @@
 /****************************************************************************
- * apps/testing/crypto/keymanagement.c
- * Copyright (c) 2008 Damien Bergamini <damien.bergamini@free.fr>
+ * apps/testing/crypto/driver/keymanagement.c
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

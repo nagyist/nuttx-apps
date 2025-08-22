@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/crypto/Makefile
+# apps/testing/crypto/driver/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,6 @@
 #
 ############################################################################
 
-MENUDESC = "crypto"
-
-include $(APPDIR)/Directory.mk
+ifneq ($(CONFIG_TESTING_CRYPTO),)
+CONFIGURED_APPS += $(APPDIR)/testing/crypto/driver
+endif

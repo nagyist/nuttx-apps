@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/crypto/hmac.c
+ * apps/testing/crypto/driver/hmac.c
  * Copyright (c) 2008 Damien Bergamini <damien.bergamini@free.fr>
  *
  * Permission to use, copy, modify, and distribute this software for any

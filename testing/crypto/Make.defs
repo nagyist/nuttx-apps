@@ -18,6 +18,4 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_CRYPTO),)
-CONFIGURED_APPS += $(APPDIR)/testing/crypto
-endif
+include $(wildcard $(APPDIR)/testing/crypto/*/Make.defs)
