@@ -132,7 +132,7 @@ static size_t performance_gettime(FAR struct performance_time_s *result)
 }
 
 /****************************************************************************
- * Pthread swtich performance
+ * Pthread switch performance
  ****************************************************************************/
 
 static FAR void *pthread_switch_task(FAR void *arg)
@@ -194,7 +194,7 @@ static size_t pthread_create_performance(void)
  * Contxt create performance
  ****************************************************************************/
 
-static FAR void *context_swtich_task(FAR void *arg)
+static FAR void *context_switch_task(FAR void *arg)
 {
   FAR struct performance_time_s *time = arg;
   sched_yield();
@@ -207,7 +207,7 @@ static size_t context_switch_performance(void)
   struct performance_time_s time;
   int tid;
 
-  tid = performance_thread_create(context_swtich_task, &time,
+  tid = performance_thread_create(context_switch_task, &time,
                                   CONFIG_INIT_PRIORITY);
   sched_yield();
   performance_start(&time);
@@ -378,9 +378,7 @@ static void performance_run(const FAR struct performance_entry_s *item,
 #ifdef CONFIG_BUILD_FLAT
       irqstate_t flags = up_irq_save();
 #endif
-      sched_lock();
       size_t time = item->entry();
-      sched_unlock();
 #ifdef CONFIG_BUILD_FLAT
       up_irq_restore(flags);
 #endif
