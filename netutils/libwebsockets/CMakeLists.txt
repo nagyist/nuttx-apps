@@ -180,7 +180,8 @@ if(CONFIG_NETUTILS_LIBWEBSOCKETS)
   set_property(
     TARGET nuttx
     APPEND
-    PROPERTY NUTTX_INCLUDE_DIRECTORIES ${LIBWEBSOCKETS_DIR}/include)
+    PROPERTY NUTTX_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_LIST_DIR}
+             ${LIBWEBSOCKETS_DIR}/include)
 
   nuttx_add_library(libwebsockets STATIC)
   target_sources(libwebsockets PRIVATE ${CSRCS})
