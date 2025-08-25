@@ -224,6 +224,9 @@ void restart_test(void)
   /* Now we can exit the child task */
 
   g_restartstep = -1;
+
+  UNUSED(stat_loc);
+
 #ifdef CONFIG_SCHED_WAITPID
   waitpid(pid, &stat_loc, 0);
 #endif
