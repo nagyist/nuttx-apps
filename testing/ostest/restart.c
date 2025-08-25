@@ -149,7 +149,9 @@ void restart_test(void)
 {
   int ret;
   pid_t pid;
+#ifdef CONFIG_SCHED_WAITPID
   int stat_loc;
+#endif
 
   g_restartstep = 0;
 
@@ -222,7 +224,9 @@ void restart_test(void)
   /* Now we can exit the child task */
 
   g_restartstep = -1;
+#ifdef CONFIG_SCHED_WAITPID
   waitpid(pid, &stat_loc, 0);
+#endif
 
   sem_destroy(&g_sem);
 
