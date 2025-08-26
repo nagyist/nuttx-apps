@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
+#include <semaphore.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -38,6 +39,8 @@
  ****************************************************************************/
 
 static pthread_mutex_t g_robust_mutex;
+static sem_t g_robust_sem;
+static sem_t g_robust_sem1;
 
 /****************************************************************************
  * Private Functions
@@ -57,19 +60,14 @@ static FAR void *robust_waiter(FAR void *parameter)
                status);
        ASSERT(false);
     }
-
-  if (status != 0)
-    {
-       printf("robust_waiter: ERROR: pthread_mutex_lock failed, status=%d\n",
-               status);
-       ASSERT(false);
-    }
   else
     {
-      printf("robust_waiter: Exiting with mutex\n");
+      printf("robust_waiter: Wake parent start wait mutex\n");
+      ASSERT(sem_post(&g_robust_sem) == 0);
+      ASSERT(sem_wait(&g_robust_sem1) == 0);
+      printf("robust_waiter: Exiting with mutex locked\n");
     }
 
-  usleep(20 * 1000);
   return NULL;
 }
 
@@ -109,6 +107,9 @@ void robust_test(void)
       ASSERT(false);
       nerrors++;
     }
+
+  ASSERT(sem_init(&g_robust_sem, 0, 0) == 0);
+  ASSERT(sem_init(&g_robust_sem1, 0, 0) == 0);
 
   status = pthread_mutex_init(&g_robust_mutex, &mattr);
   if (status != 0)
@@ -157,12 +158,22 @@ void robust_test(void)
       return;
     }
 
-  /* Wait one second.. the robust waiter should still be waiting */
+  /* Wait until child waiter already locked */
 
-  sleep(1);
+  status = sem_wait(&g_robust_sem);
+  if (status != 0)
+    {
+      printf("robust_test: ERROR: "
+             "wait failed, status=%d\n", status);
+      ASSERT(false);
+    }
+
+  /* Post to make child waiter able to exit */
+
+  ASSERT(sem_post(&g_robust_sem1) == 0);
 
   /* Now try to take the mutex held by the robust waiter.  This should wait
-   * one second there fail with EOWNERDEAD.
+   * and sched to waiter thread, then fail with EOWNERDEAD.
    */
 
   status = pthread_mutex_lock(&g_robust_mutex);
@@ -275,6 +286,9 @@ void robust_test(void)
       ASSERT(false);
       nerrors++;
     }
+
+  ASSERT(sem_destroy(&g_robust_sem) == 0);
+  ASSERT(sem_destroy(&g_robust_sem1) == 0);
 
   printf("robust_test: Test complete with nerrors=%d\n", nerrors);
 }
