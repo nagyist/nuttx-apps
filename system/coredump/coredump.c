@@ -55,7 +55,8 @@
  * Private Types
  ****************************************************************************/
 
-typedef CODE void (*dumpfile_cb_t)(FAR char *path, FAR const char *filename,
+typedef CODE void (*dumpfile_cb_t)(FAR const char *path,
+                                   FAR const char *filename,
                                    FAR void *arg);
 
 /****************************************************************************
@@ -74,7 +75,7 @@ static struct memory_region_s g_memory_region[] =
  ****************************************************************************/
 
 /****************************************************************************
- * dumpfile_iterate
+ * dumpfile_is_valid
  ****************************************************************************/
 
 static bool dumpfile_is_valid(FAR const char *name)
@@ -92,7 +93,12 @@ static bool dumpfile_is_valid(FAR const char *name)
   return !memcmp(suffix, COREDUMP_FILE_SUFFIX, COREDUMP_FILE_SUFFIX_LEN);
 }
 
-static int dumpfile_iterate(FAR char *path, dumpfile_cb_t cb, FAR void *arg)
+/****************************************************************************
+ * dumpfile_iterate
+ ****************************************************************************/
+
+static int dumpfile_iterate(FAR const char *path,
+                            dumpfile_cb_t cb, FAR void *arg)
 {
   FAR struct dirent *entry;
   FAR DIR *dir;
@@ -125,7 +131,7 @@ static int dumpfile_iterate(FAR char *path, dumpfile_cb_t cb, FAR void *arg)
  * dumpfile_count
  ****************************************************************************/
 
-static void dumpfile_count(FAR char *path, FAR const char *filename,
+static void dumpfile_count(FAR const char *path, FAR const char *filename,
                            FAR void *arg)
 {
   FAR size_t *max = (FAR size_t *)arg;
@@ -137,7 +143,7 @@ static void dumpfile_count(FAR char *path, FAR const char *filename,
  * dumpfile_delete
  ****************************************************************************/
 
-static void dumpfile_delete(FAR char *path, FAR const char *filename,
+static void dumpfile_delete(FAR const char *path, FAR const char *filename,
                             FAR void *arg)
 {
   FAR char *dumppath = arg;
@@ -153,10 +159,10 @@ static void dumpfile_delete(FAR char *path, FAR const char *filename,
 }
 
 /****************************************************************************
- * dumpfile_get_info
+ * coredump_get_info
  ****************************************************************************/
 
-static int dumpfile_get_info(int fd, FAR struct coredump_info_s *info)
+static int coredump_get_info(int fd, FAR struct coredump_info_s *info)
 {
   Elf_Ehdr ehdr;
   Elf_Phdr phdr;
@@ -208,75 +214,57 @@ static int dumpfile_get_info(int fd, FAR struct coredump_info_s *info)
 }
 
 /****************************************************************************
- * coredump_restore
+ * coredump_clear_info
  ****************************************************************************/
 
-static void coredump_restore(FAR char *file, FAR char *savepath, size_t maxfile)
+static int coredump_clear_info(int fd,
+                               FAR const struct coredump_info_s *info)
 {
-  struct coredump_info_s info;
-  char dumppath[PATH_MAX];
-  unsigned char *swap;
-  ssize_t writesize;
-  ssize_t readsize;
-  size_t offset = 0;
-  size_t max = 0;
-  int dumpfd;
-  int blkfd;
-  off_t off;
+  off_t off = info->size - sizeof(info);
   int ret;
   Elf_Nhdr nhdr =
     {
       0
     };
 
-  blkfd = open(file, O_RDWR);
-  if (blkfd < 0)
-    {
-      return;
-    }
-
-  ret = dumpfile_get_info(blkfd, &info);
+  off -= COREDUMP_INFONAME_SIZE;
+  off -= sizeof(Elf_Nhdr);
+  ret = pwrite(fd, &nhdr, sizeof(nhdr), off);
   if (ret < 0)
     {
-      printf("No core data in %s\n", file);
-      goto blkfd_err;
+      return -errno;
     }
 
-  ret = dumpfile_iterate(savepath, dumpfile_count, &max);
+  /* Erase the core file header too */
+
+  ret = pwrite(fd, "\0\0\0\0", EI_MAGIC_SIZE, 0);
   if (ret < 0)
     {
-      goto blkfd_err;
+      return -errno;
     }
 
-  if (max >= maxfile)
-    {
-      ret = dumpfile_iterate(savepath, dumpfile_delete, dumppath);
-      if (ret < 0)
-        {
-          goto blkfd_err;
-        }
-    }
+  return 0;
+}
 
-  /* 'date -d @$(printf "%d" 0x6720C67E)' restore utc to date */
+/****************************************************************************
+ * coredump_restore_to_file
+ ****************************************************************************/
 
-  ret = snprintf(dumppath, sizeof(dumppath),
-                 "%s/%.16s-%llx"COREDUMP_FILE_SUFFIX,
-                 savepath, info.name.version,
-                 (unsigned long long)info.time.tv_sec);
+static int coredump_restore_to_file(int fd, FAR const char *file,
+                                    FAR const struct coredump_info_s *info)
+{
+  FAR unsigned char *swap;
+  size_t offset = 0;
+  ssize_t writesize;
+  ssize_t readsize;
+  int ret = 0;
+  int dumpfd;
 
-  while (ret--)
-    {
-      if (dumppath[ret] == ' ' || dumppath[ret] == ':')
-        {
-          dumppath[ret] = '-';
-        }
-    }
-
-  dumpfd = open(dumppath, O_CREAT | O_WRONLY | O_TRUNC, 0777);
+  dumpfd = open(file, O_CREAT | O_WRONLY | O_TRUNC | O_CLOEXEC, 0777);
   if (dumpfd < 0)
     {
-      printf("Open %s fail\n", dumppath);
-      goto blkfd_err;
+      printf("Open %s fail\n", file);
+      return -errno;
     }
 
   swap = malloc(CONFIG_SYSTEM_COREDUMP_SWAPBUFFER_SIZE);
@@ -286,16 +274,16 @@ static void coredump_restore(FAR char *file, FAR char *savepath, size_t maxfile)
       goto fd_err;
     }
 
-  lseek(blkfd, 0, SEEK_SET);
-  while (offset < info.size)
+  lseek(fd, 0, SEEK_SET);
+  while (offset < info->size)
     {
-      readsize = info.size - offset;
+      readsize = info->size - offset;
       if (readsize > CONFIG_SYSTEM_COREDUMP_SWAPBUFFER_SIZE)
         {
           readsize = CONFIG_SYSTEM_COREDUMP_SWAPBUFFER_SIZE;
         }
 
-      readsize = read(blkfd, swap, readsize);
+      readsize = read(fd, swap, readsize);
       if (readsize < 0)
         {
           printf("Read %s fail\n", file);
@@ -309,60 +297,118 @@ static void coredump_restore(FAR char *file, FAR char *savepath, size_t maxfile)
       writesize = write(dumpfd, swap, readsize);
       if (writesize != readsize)
         {
-          printf("Write %s fail\n", dumppath);
+          printf("Write %s fail\n", file);
           break;
         }
 
       offset += writesize;
     }
 
-  if (offset < info.size)
+  if (offset < info->size)
     {
       printf("Coredump error [%s] need [%zu], but just get %zu\n",
-             dumppath, info.size, offset);
-    }
-  else
-    {
-      printf("Coredump finish [%s][%zu]\n", dumppath, info.size);
-    }
-
-  off  = info.size - sizeof(info);
-  off -= COREDUMP_INFONAME_SIZE;
-  off -= sizeof(Elf_Nhdr);
-  off  = lseek(blkfd, off, SEEK_SET);
-  if (off < 0)
-    {
-      printf("Seek %s fail\n", file);
+            file, info->size, offset);
+      ret = -EINVAL;
       goto swap_err;
     }
 
-  writesize = write(blkfd, &nhdr, sizeof(nhdr));
-  if (writesize != sizeof(nhdr))
-    {
-      printf("Write %s fail\n", file);
-    }
-
-  /* Erase the core file header too */
-
-  off = lseek(blkfd, 0, SEEK_SET);
-  if (off < 0)
-    {
-      printf("Seek %s fail\n", file);
-      goto swap_err;
-    }
-
-  writesize = write(blkfd, "\0\0\0\0", EI_MAGIC_SIZE);
-  if (writesize != EI_MAGIC_SIZE)
-    {
-      printf("Write %s fail\n", file);
-    }
+  printf("Coredump finish [%s][%zu]\n", file, info->size);
 
 swap_err:
   free(swap);
 fd_err:
   close(dumpfd);
-blkfd_err:
-  close(blkfd);
+  return ret;
+}
+
+/****************************************************************************
+ * coredump_restore_to_path
+ ****************************************************************************/
+
+static int coredump_restore_to_path(int fd, FAR const char *path, size_t max,
+                                    FAR const struct coredump_info_s *info)
+{
+  char dumppath[PATH_MAX];
+  size_t nums = 0;
+  int ret;
+
+  ret = dumpfile_iterate(path, dumpfile_count, &nums);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
+  if (nums >= max)
+    {
+      ret = dumpfile_iterate(path, dumpfile_delete, dumppath);
+      if (ret < 0)
+        {
+          return ret;
+        }
+    }
+
+  /* 'date -d @$(printf "%d" 0x6720C67E)' restore utc to date */
+
+  ret = snprintf(dumppath, sizeof(dumppath),
+                 "%s/%.16s-%llx"COREDUMP_FILE_SUFFIX,
+                 path, info->name.version,
+                 (unsigned long long)info->time.tv_sec);
+
+  while (ret--)
+    {
+      if (dumppath[ret] == ' ' || dumppath[ret] == ':')
+        {
+          dumppath[ret] = '-';
+        }
+    }
+
+  return coredump_restore_to_file(fd, dumppath, info);
+}
+
+/****************************************************************************
+ * coredump_restore
+ ****************************************************************************/
+
+static int coredump_restore(FAR const char *file,
+                            FAR const char *path, size_t max)
+{
+  struct coredump_info_s info;
+  struct stat st;
+  int ret;
+  int fd;
+
+  fd = open(file, O_RDWR | O_CLOEXEC);
+  if (fd < 0)
+    {
+      return -errno;
+    }
+
+  ret = coredump_get_info(fd, &info);
+  if (ret < 0)
+    {
+      printf("No core data in %s\n", file);
+      goto err;
+    }
+
+  if (stat(path, &st) >= 0 && S_ISDIR(st.st_mode))
+    {
+      ret = coredump_restore_to_path(fd, path, max, &info);
+    }
+  else
+    {
+      ret = coredump_restore_to_file(fd, path, &info);
+    }
+
+  /* Clear the original coredump after dumping */
+
+  if (ret >= 0)
+    {
+      ret = coredump_clear_info(fd, &info);
+    }
+
+err:
+  close(fd);
+  return ret;
 }
 
 /****************************************************************************
@@ -379,6 +425,7 @@ static int coredump_now(int pid, FAR char *filename, bool hex)
   FAR void *stream;
   FAR FILE *file;
   int logmask;
+  int ret;
 
   if (filename != NULL)
     {
@@ -402,12 +449,8 @@ static int coredump_now(int pid, FAR char *filename, bool hex)
 
   if (hstream == NULL)
     {
-      if (filename != NULL)
-        {
-          fclose(file);
-        }
-
-      return -ENOMEM;
+      ret = -ENOMEM;
+      goto err;
     }
 
 #ifdef CONFIG_BOARD_COREDUMP_COMPRESSION
@@ -445,9 +488,9 @@ static int coredump_now(int pid, FAR char *filename, bool hex)
   /* Do core dump */
 
 #ifdef CONFIG_BOARD_MEMORY_RANGE
-  coredump(g_memory_region, stream, pid, NULL);
+  ret = coredump(g_memory_region, stream, pid, NULL);
 #else
-  coredump(NULL, stream, pid, NULL);
+  ret = coredump(NULL, stream, pid, NULL);
 #endif
 
   setlogmask(logmask);
@@ -458,12 +501,14 @@ static int coredump_now(int pid, FAR char *filename, bool hex)
 #  endif
 
   free(hstream);
+
+err:
   if (filename != NULL)
     {
       fclose(file);
     }
 
-  return 0;
+  return ret;
 }
 
 /****************************************************************************
@@ -475,10 +520,10 @@ static void usage(FAR const char *progname, int exitcode)
   fprintf(stderr, "%s [option]:\n", progname);
   fprintf(stderr, "Default usage, will coredump directly\n");
   fprintf(stderr, "\t -p, --pid <pid>, Default, all thread\n");
-  fprintf(stderr, "\t -f, --filename <filename>, Default stdout\n");
+  fprintf(stderr, "\t -s, --savepath <savepath>\n");
+  fprintf(stderr, "\t -d, --devpath <devpath>, Default NULL\n");
   fprintf(stderr, "Second usage, will restore coredump"
                   "from devpath to savepath\n");
-  fprintf(stderr, "\t -s, --savepath <savepath>\n");
   fprintf(stderr, "\t -m, --maxfile <maxfile>,"
                   "Maximum number of coredump files, Default 1\n");
   exit(exitcode);
@@ -497,7 +542,6 @@ int main(int argc, FAR char *argv[])
   FAR char *savepath = NULL;
   FAR char *devpath = NULL;
   size_t maxfile = 1;
-  char *name = NULL;
   int pid = INVALID_PROCESS_ID;
   bool hex = false;
   int ret;
@@ -506,7 +550,6 @@ int main(int argc, FAR char *argv[])
     {
       {"pid", 1, NULL, 'p'},
       {"devpath", 1, NULL, 'd'},
-      {"filename", 1, NULL, 'f'},
       {"savepath", 1, NULL, 's'},
       {"maxfile", 1, NULL, 'm'},
       {"hex", 1, NULL, 'h'},
@@ -524,9 +567,6 @@ int main(int argc, FAR char *argv[])
           case 'd':
             devpath = optarg;
             break;
-          case 'f':
-            name = optarg;
-            break;
           case 's':
             savepath = optarg;
             break;
@@ -543,13 +583,13 @@ int main(int argc, FAR char *argv[])
         }
     }
 
-  if (savepath != NULL)
+  if (devpath != NULL)
     {
       coredump_restore(devpath, savepath, maxfile);
     }
   else
     {
-      coredump_now(pid, name, hex);
+      coredump_now(pid, savepath, hex);
     }
 
   return 0;
