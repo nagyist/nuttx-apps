@@ -78,7 +78,7 @@ void test_nuttx_clock_test_timer03(FAR void **state)
   sev.sigev_signo = SIG;
   sev.sigev_value.sival_ptr = &timerid;
   ret = timer_create(CLOCKID, &sev, &timerid);
-  syslog(LOG_INFO, "timer_create %p: %d", timerid, ret);
+  syslog(LOG_INFO, "timer_create 0x%"PRIxPTR": %d", timerid, ret);
   assert_int_equal(ret, 0);
 
   struct timespec testcases[] =

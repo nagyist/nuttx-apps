@@ -33,6 +33,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <syslog.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -116,7 +117,7 @@ void test_nuttx_clock_test_timer04(FAR void **state)
   sev.sigev_signo = SIG;
   sev.sigev_value.sival_ptr = &timerid;
   ret = timer_create(CLOCKID, &sev, &timerid);
-  syslog(LOG_INFO, "timer_create %p: %d", timerid, ret);
+  syslog(LOG_INFO, "timer_create 0x%"PRIxPTR": %d", timerid, ret);
   assert_int_equal(ret, 0);
 
   /* Start the timer */
@@ -127,7 +128,7 @@ void test_nuttx_clock_test_timer04(FAR void **state)
   its.it_interval.tv_nsec = its.it_value.tv_nsec;
 
   ret = timer_settime(timerid, 0, &its, NULL);
-  syslog(LOG_INFO, "timer_create %p: %d", timerid, ret);
+  syslog(LOG_INFO, "timer_create 0x%"PRIxPTR": %d", timerid, ret);
   assert_int_equal(ret, 0);
 
   /* Sleep for a while */
@@ -138,7 +139,7 @@ void test_nuttx_clock_test_timer04(FAR void **state)
   /* Get the timer's time */
 
   ret = timer_gettime(timerid, &its);
-  syslog(LOG_INFO, "timer_gettime %p: %d", timerid, ret);
+  syslog(LOG_INFO, "timer_gettime 0x%"PRIxPTR": %d", timerid, ret);
   assert_int_equal(ret, 0);
 
   /* Unlock the timer signal */
@@ -153,7 +154,7 @@ void test_nuttx_clock_test_timer04(FAR void **state)
          test_timer04_g_handlerflag);
 
   ret = timer_delete(timerid);
-  syslog(LOG_INFO, "timer_delete %p %d", timerid, ret);
+  syslog(LOG_INFO, "timer_delete 0x%"PRIxPTR": %d", timerid, ret);
   assert_int_equal(ret, 0);
 
   assert_int_not_equal(test_timer04_g_handlerflag, 0);

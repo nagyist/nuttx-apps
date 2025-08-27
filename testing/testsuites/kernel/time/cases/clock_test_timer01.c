@@ -33,6 +33,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <syslog.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <stdlib.h>
 #include "TimeTest.h"
@@ -105,7 +106,7 @@ void test_nuttx_clock_test_timer01(FAR void **state)
   sev.sigev_signo = SIG;
   sev.sigev_value.sival_ptr = &timerid01;
   ret = timer_create(CLOCKID, &sev, &timerid01);
-  syslog(LOG_INFO, "timer_create %p: %d", timerid01, ret);
+  syslog(LOG_INFO, "timer_create 0x%"PRIxPTR": %d", timerid01, ret);
   assert_int_equal(ret, 0);
 
   /* Start the timer */
@@ -116,13 +117,13 @@ void test_nuttx_clock_test_timer01(FAR void **state)
   its.it_interval.tv_nsec = its.it_value.tv_nsec;
 
   ret = timer_settime(timerid01, 0, &its, NULL);
-  syslog(LOG_INFO, "timer_settime %p: %d", timerid01, ret);
+  syslog(LOG_INFO, "timer_settime 0x%"PRIxPTR": %d", timerid01, ret);
   assert_int_equal(ret, 0);
 
   /* Test of evp is NULL */
 
   ret = timer_create(CLOCKID, NULL, &timerid02);
-  syslog(LOG_INFO, "timer_settime %p: %d", timerid02, ret);
+  syslog(LOG_INFO, "timer_settime 0x%"PRIxPTR": %d", timerid02, ret);
   assert_int_equal(ret, 0);
 
   its.it_value.tv_sec = 1;
@@ -131,7 +132,7 @@ void test_nuttx_clock_test_timer01(FAR void **state)
   its.it_interval.tv_nsec = its.it_value.tv_nsec;
 
   ret = timer_settime(timerid02, 0, &its, NULL);
-  syslog(LOG_INFO, "timer_settime %p: %d", timerid02, ret);
+  syslog(LOG_INFO, "timer_settime 0x%"PRIxPTR": %d", timerid02, ret);
   assert_int_equal(ret, 0);
 
   sleep(6);
@@ -149,7 +150,7 @@ void test_nuttx_clock_test_timer01(FAR void **state)
   /* Get the timer's time */
 
   ret = timer_gettime(timerid01, &its);
-  syslog(LOG_INFO, "timer_gettime %p: %d", timerid01, ret);
+  syslog(LOG_INFO, "timer_gettime 0x%"PRIxPTR": %d", timerid01, ret);
   assert_int_equal(ret, 0); /* get time success */
 
   syslog(LOG_INFO, "unblock signal %d", SIG);
@@ -172,11 +173,11 @@ void test_nuttx_clock_test_timer01(FAR void **state)
          test_timer01_g_sighdlcnt);
 
   ret = timer_delete(timerid01);
-  syslog(LOG_INFO, "timer_delete %p %d", timerid01, ret);
+  syslog(LOG_INFO, "timer_delete 0x%"PRIxPTR": %d", timerid01, ret);
   assert_int_equal(ret, 0);
 
   ret = timer_delete(timerid02);
-  syslog(LOG_INFO, "timer_delete %p %d", timerid02, ret);
+  syslog(LOG_INFO, "timer_delete 0x%"PRIxPTR": %d", timerid02, ret);
   assert_int_equal(ret, 0);
 
   assert_int_not_equal(test_timer01_g_sighdlcnt, 0);

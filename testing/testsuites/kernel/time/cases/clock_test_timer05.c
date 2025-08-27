@@ -33,6 +33,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <syslog.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -115,11 +116,11 @@ void test_nuttx_clock_test_timer05(FAR void **state)
   its.it_interval.tv_sec = its.it_value.tv_sec;
   its.it_interval.tv_nsec = its.it_value.tv_nsec;
   ret = timer_create(CLOCK_REALTIME, &sev, &timerid01);
-  syslog(LOG_INFO, "timer_settime %p: %d", timerid01, ret);
+  syslog(LOG_INFO, "timer_settime 0x%"PRIxPTR": %d", timerid01, ret);
   assert_int_equal(ret, 0);
 
   ret = timer_settime(timerid01, 0, &its, NULL);
-  syslog(LOG_INFO, "timer_create %p: %d", timerid01, ret);
+  syslog(LOG_INFO, "timer_create 0x%"PRIxPTR": %d", timerid01, ret);
   assert_int_equal(ret, 0);
 
   its.it_value.tv_sec = 0;
@@ -129,23 +130,24 @@ void test_nuttx_clock_test_timer05(FAR void **state)
 
   sev.sigev_value.sival_ptr = (void *)tempsighandler02;
   ret = timer_create(CLOCK_REALTIME, &sev, &timerid02);
-  syslog(LOG_INFO, "timer_settime %p: %d", timerid02, ret);
+  syslog(LOG_INFO, "timer_settime 0x%"PRIxPTR": %d", timerid02, ret);
   assert_int_equal(ret, 0);
 
   ret = timer_settime(timerid02, 0, &its, NULL);
-  syslog(LOG_INFO, "timer_settime %p: %d", timerid02, ret);
+  syslog(LOG_INFO, "timer_settime 0x%"PRIxPTR": %d", timerid02, ret);
   assert_int_equal(ret, 0);
 
   sleep(3);
   ret = timer_delete(timerid01);
-  syslog(LOG_INFO, "timer_delete %p %d", timerid01, ret);
+  syslog(LOG_INFO, "timer_delete 0x%"PRIxPTR": %d", timerid01, ret);
   assert_int_equal(ret, 0);
 
   ret = timer_delete(timerid02);
-  syslog(LOG_INFO, "timer_delete %p %d", timerid02, ret);
+  syslog(LOG_INFO, "timer_delete 0x%"PRIxPTR": %d", timerid02, ret);
   assert_int_equal(ret, 0);
 
-  syslog(LOG_INFO, "cnt %d %d\n", test_timer05_g_sighdlcnt01, test_timer05_g_sighdlcnt02);
+  syslog(LOG_INFO, "cnt %d %d\n", test_timer05_g_sighdlcnt01,
+                                                test_timer05_g_sighdlcnt02);
   assert_int_not_equal(test_timer05_g_sighdlcnt01, 0);
   assert_int_not_equal(test_timer05_g_sighdlcnt02, 0);
 }
