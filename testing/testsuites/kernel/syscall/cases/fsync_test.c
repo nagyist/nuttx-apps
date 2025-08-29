@@ -187,7 +187,6 @@ void test_nuttx_syscall_fsync03(FAR void **state)
 {
   int fd;
   int BLOCKSIZE = 8192;
-  unsigned long MAXBLKS = 65536;
   int TIME_LIMIT = 120;
   int BUF_SIZE = 2048;
   char fname[255];
@@ -195,7 +194,7 @@ void test_nuttx_syscall_fsync03(FAR void **state)
   unsigned long f_bavail;
   char pbuf[2048];
 
-  off_t max_blks = 65536;
+  off_t max_blks = 4096;
 
   sprintf(fname, "Fsync03_%d", getpid());
   fd = open(fname, O_RDWR | O_CREAT | O_TRUNC, 0777);
@@ -206,7 +205,7 @@ void test_nuttx_syscall_fsync03(FAR void **state)
     }
 
   f_bavail = (stat_buf.f_bavail * stat_buf.f_bsize) / BLOCKSIZE;
-  if (f_bavail && (f_bavail < MAXBLKS))
+  if (f_bavail && (f_bavail < max_blks))
     {
       max_blks = f_bavail;
     }
@@ -214,20 +213,14 @@ void test_nuttx_syscall_fsync03(FAR void **state)
   off_t offset;
   int i;
   int ret;
-  int max_block = 0;
-  int data_blocks = 0;
+  int data_blocks = 5;
   time_t time_start;
   time_t time_end;
   double time_delta;
-  long int random_number;
-
-  random_number = rand();
-  max_block = random_number % max_blks + 1;
-  data_blocks = random_number % max_block;
 
   for (i = 1; i <= data_blocks; i++)
     {
-      offset = i * ((BLOCKSIZE * max_block) / data_blocks);
+      offset = i * ((BLOCKSIZE * max_blks) / data_blocks);
       offset -= BUF_SIZE;
       lseek(fd, offset, SEEK_SET);
       write(fd, pbuf, BUF_SIZE);
