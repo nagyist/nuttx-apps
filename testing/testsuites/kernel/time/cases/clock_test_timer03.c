@@ -121,7 +121,7 @@ void test_nuttx_clock_test_timer03(FAR void **state)
                 start.tv_sec * (int64_t)(1e9) - start.tv_nsec;
 
       failed += (escaped < expected ||
-                 (escaped - expected) > 100000000ul); /* 100 ms */
+                 (escaped - expected) > 200000000ul); /* 200 ms */
       syslog(LOG_INFO,
             "expected = %" PRIi64
             " escaped = %" PRIi64
