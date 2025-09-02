@@ -518,6 +518,7 @@ static int snd_pcm_hw_hw_params(FAR snd_pcm_t *pcm,
   caps_desc.caps.ac_controls.hw[0] = rate;
   caps_desc.caps.ac_controls.b[3] = rate >> 16;
   caps_desc.caps.ac_controls.b[2] = snd_pcm_format_physical_width(format);
+  caps_desc.caps.ac_format.b[0] = format;
   caps_desc.caps.ac_subtype = AUDIO_FMT_PCM;
 
   ret = ioctl(hw->fd, AUDIOIOC_CONFIGURE, &caps_desc);
