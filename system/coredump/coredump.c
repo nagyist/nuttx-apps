@@ -24,6 +24,7 @@
 
 #include <nuttx/config.h>
 #include <sys/types.h>
+#include <sys/endian.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <stdlib.h>
@@ -164,53 +165,89 @@ static void dumpfile_delete(FAR const char *path, FAR const char *filename,
 
 static int coredump_get_info(int fd, FAR struct coredump_info_s *info)
 {
+  struct lib_rawsistream_s rawstream;
+  FAR struct lib_sistream_s *stream;
+  char name[COREDUMP_INFONAME_SIZE];
   Elf_Ehdr ehdr;
   Elf_Phdr phdr;
   Elf_Nhdr nhdr;
-  char name[COREDUMP_INFONAME_SIZE];
+  int ret;
 
-  if (read(fd, &ehdr, sizeof(ehdr)) != sizeof(ehdr) ||
-      memcmp(ehdr.e_ident, ELFMAG, EI_MAGIC_SIZE) != 0)
+  lib_rawsistream(&rawstream, fd);
+  stream = (FAR struct lib_sistream_s *)&rawstream;
+
+#ifdef CONFIG_BOARD_COREDUMP_COMPRESSION
+  struct lib_lzfsistream_s lzfstream;
+  lib_lzfsistream(&lzfstream, stream);
+  stream = (FAR struct lib_sistream_s *)&lzfstream;
+#endif
+
+  ret = lib_stream_gets(stream, &ehdr, sizeof(ehdr));
+  if (ret != sizeof(ehdr))
+    {
+      return ret < 0 ? ret : -EIO;
+    }
+
+  if (memcmp(ehdr.e_ident, ELFMAG, EI_MAGIC_SIZE) != 0)
     {
       return -EINVAL;
     }
 
   /* The last program header is for NuttX core info note. */
 
-  if (lseek(fd, ehdr.e_phoff + ehdr.e_phentsize * (ehdr.e_phnum - 1),
-            SEEK_SET) < 0)
+  ret = lib_stream_seek(stream,
+                        ehdr.e_phoff + ehdr.e_phentsize * (ehdr.e_phnum - 1),
+                        SEEK_SET);
+  if (ret < 0)
     {
-      return -errno;
+      return ret;
     }
 
-  if (read(fd, &phdr, sizeof(phdr)) != sizeof(phdr) ||
-      lseek(fd, phdr.p_offset, SEEK_SET) < 0)
+  ret = lib_stream_gets(stream, &phdr, sizeof(phdr));
+  if (ret != sizeof(phdr))
     {
-      return -errno;
+      return ret < 0 ? ret : -EIO;
+    }
+
+  ret = lib_stream_seek(stream, phdr.p_offset, SEEK_SET);
+  if (ret < 0)
+    {
+      return ret;
     }
 
   /* The note header must be exactly match. */
 
-  if (read(fd, &nhdr, sizeof(nhdr)) != sizeof(nhdr) ||
-      nhdr.n_type != COREDUMP_MAGIC ||
+  ret = lib_stream_gets(stream, &nhdr, sizeof(nhdr));
+  if (ret != sizeof(nhdr))
+    {
+      return ret < 0 ? ret : -EIO;
+    }
+
+  if (nhdr.n_type != COREDUMP_MAGIC ||
       nhdr.n_namesz != COREDUMP_INFONAME_SIZE ||
       nhdr.n_descsz != sizeof(struct coredump_info_s))
     {
       return -EINVAL;
     }
 
-  if (read(fd, name, nhdr.n_namesz) != nhdr.n_namesz ||
-      strncmp(name, "NuttX", 6) != 0)
+  ret = lib_stream_gets(stream, name, nhdr.n_namesz);
+  if (ret != nhdr.n_namesz)
+    {
+      return ret < 0 ? ret : -EIO;
+    }
+
+  if (strncmp(name, "NuttX", 6) != 0)
     {
       return -EINVAL;
     }
 
-  if (read(fd, info, sizeof(*info)) != sizeof(*info))
+  ret = lib_stream_gets(stream, info, sizeof(*info));
+  if (ret != sizeof(*info))
     {
-      return -errno;
+      return ret < 0 ? ret : -EIO;
     }
 
-  return 0;
+  return ret;
 }
 
 /****************************************************************************
@@ -307,7 +344,7 @@ static int coredump_restore_to_file(int fd, FAR const char *file,
   if (offset < info->size)
     {
       printf("Coredump error [%s] need [%zu], but just get %zu\n",
-            file, info->size, offset);
+             file, info->size, offset);
       ret = -EINVAL;
       goto swap_err;
     }
