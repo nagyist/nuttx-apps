@@ -25,6 +25,7 @@
 #include <nuttx/config.h>
 #include <nuttx/arch.h>
 #include <nuttx/wdog.h>
+#include <nuttx/spinlock.h>
 
 #include <assert.h>
 #include <pthread.h>
@@ -39,6 +40,7 @@
 #define WDOGTEST_RAND_ITER           1024
 #define WDOGTEST_THREAD_NR           (CONFIG_SMP_NCPUS * 4)
 #define WDOGTEST_TOLERENT_TICK       10
+#define WDOGTEST_DRITICAL_SECTION    1000
 
 #define wdtest_assert(x)             _ASSERT(x, __FILE__, __LINE__)
 
@@ -56,6 +58,8 @@ typedef struct wdtest_param_s
   sclock_t           interval;
   uint64_t           callback_cnt;
   clock_t            triggered_tick;
+  uint8_t            current_cpu;
+  uint8_t            state;
 } wdtest_param_t;
 
 /****************************************************************************
@@ -253,6 +257,81 @@ static void wdtest_recursive(FAR struct wdog_s *wdog,
                 (long long)(param->triggered_tick - wdset_tick));
 }
 
+#ifdef CONFIG_SMP
+static void wdtest_callback_crita(wdparm_t param)
+{
+  FAR wdtest_param_t *wdtest_param = (FAR wdtest_param_t *)param;
+  irqstate_t flags = enter_critical_section();
+
+  /* change status */
+
+  if (wdtest_param->current_cpu != this_cpu())
+    {
+      wdtest_param->current_cpu = this_cpu();
+      wdtest_param->triggered_tick++;
+    }
+
+  /* check whether parameter be changed by another critical section */
+
+  wdtest_assert(wdtest_param->state == 0);
+  wdtest_param->state = !wdtest_param->state;
+  leave_critical_section(flags);
+}
+
+static void wdtest_callback_critb(wdparm_t param)
+{
+  FAR wdtest_param_t *wdtest_param = (FAR wdtest_param_t *)param;
+
+  /* change status */
+
+  irqstate_t flags = enter_critical_section();
+  if (wdtest_param->current_cpu != this_cpu())
+    {
+      wdtest_param->current_cpu = this_cpu();
+      wdtest_param->triggered_tick++;
+    }
+
+  /* check whether parameter be changed by another critical section */
+
+  wdtest_assert(wdtest_param->state == 1);
+  wdtest_param->state = !wdtest_param->state;
+  leave_critical_section(flags);
+}
+
+static void wdog_test_critical_section(FAR struct wdog_s *test_wdog,
+                                       FAR wdtest_param_t *param)
+{
+  int cnt = 0;
+  while (cnt < WDOGTEST_DRITICAL_SECTION)
+    {
+      /* set param statue and start wdog */
+
+      irqstate_t flags = enter_critical_section();
+      param->state = 0;
+      param->current_cpu = this_cpu();
+      wd_cancel(test_wdog);
+      wd_start(test_wdog, 0, wdtest_callback_crita, (wdparm_t)param);
+      leave_critical_section(flags);
+
+      /* set param statue and start wdog */
+
+      enter_critical_section();
+      param->state = 1;
+      param->current_cpu = this_cpu();
+      wd_cancel(test_wdog);
+      wd_start(test_wdog, 0, wdtest_callback_critb, (wdparm_t)param);
+      leave_critical_section(flags);
+
+      wdtest_delay(NSEC_PER_TICK);
+
+      if (++cnt % 100 == 0)
+        {
+          printf("wdog critical section test %d times.\n", cnt);
+        }
+    }
+}
+#endif
+
 static void wdog_test_run(FAR wdtest_param_t *param)
 {
   uint64_t             cnt;
@@ -295,6 +374,14 @@ static void wdog_test_run(FAR wdtest_param_t *param)
 
   wdtest_once(&test_wdog, param, 100000);
   wdtest_once(&test_wdog, param, 1000000);
+
+#ifdef CONFIG_SMP
+
+  /* Test wdog critical section */
+
+  wdog_test_critical_section(&test_wdog, param);
+
+#endif
 
   /* Delay > 0, maximum */
 
