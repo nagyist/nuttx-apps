@@ -29,6 +29,7 @@
 #include <sys/param.h>
 #include <sys/select.h>
 #include <sys/socket.h>
+#include <poll.h>
 
 #include "utils.h"
 
@@ -95,6 +96,7 @@ static inline bool nettest_incomingdata(FAR struct nettest_listener_s *nls,
   FAR char *ptr;
   int nbytes;
   int ret;
+  bool exiting = false;
 
   /* Read data from the socket */
 
@@ -105,17 +107,30 @@ static inline bool nettest_incomingdata(FAR struct nettest_listener_s *nls,
         {
           if (ret < 0 && errno == EAGAIN)
             {
-              return false;
+              struct pollfd pfd;
+
+              if (!exiting)
+                {
+                  return false;
+                }
+
+              memset(&pfd, 0, sizeof(pfd));
+              pfd.fd = sd;
+              pfd.events = POLLIN;
+
+              poll(&pfd, 1, -1);
+              continue;
             }
 
           nettest_closeclient(nls, sd);
-          return false;
+          return exiting;
         }
 
       nls->buffer[ret] = '\0';
       if (is_exit_message(nls->buffer))
         {
-          return true;
+          exiting = true;
+          continue;
         }
 
       /* Echo the data back to the client */
@@ -418,8 +433,8 @@ int nettest_destroy_tcp_lo_server(pthread_t server_tid)
           goto err_destory;
         }
 
-      pthread_join(server_tid, NULL);
       close(sockfd);
+      pthread_join(server_tid, NULL);
     }
 
   return 0;
