@@ -74,10 +74,12 @@ int main(int argc, char *argv[])
        * test_nuttx_syscall_test_group_teardown),
        */
 
+#ifdef CONFIG_PREALLOC_TIMERS
       cmocka_unit_test_setup_teardown(
           test_nuttx_syscall_getitimer01,
           test_nuttx_syscall_test_group_setup,
           test_nuttx_syscall_test_group_teardown),
+#endif
       cmocka_unit_test_setup_teardown(
           test_nuttx_syscall_clockgettime01,
           test_nuttx_syscall_test_group_setup,
@@ -217,10 +219,12 @@ int main(int argc, char *argv[])
           test_nuttx_syscall_gethostname01,
           test_nuttx_syscall_test_group_setup,
           test_nuttx_syscall_test_group_teardown),
+#ifdef CONFIG_PREALLOC_TIMERS
       cmocka_unit_test_setup_teardown(
           test_nuttx_syscall_gettimeofday01,
           test_nuttx_syscall_test_group_setup,
           test_nuttx_syscall_test_group_teardown),
+#endif
       cmocka_unit_test_setup_teardown(
           test_nuttx_syscall_lseek01,
           test_nuttx_syscall_test_group_setup,
@@ -367,10 +371,12 @@ int main(int argc, char *argv[])
           test_nuttx_syscall_timerdelete01,
           test_nuttx_syscall_test_group_setup,
           test_nuttx_syscall_test_group_teardown),
+#ifdef CONFIG_PREALLOC_TIMERS
       cmocka_unit_test_setup_teardown(
           test_nuttx_syscall_timergettime01,
           test_nuttx_syscall_test_group_setup,
           test_nuttx_syscall_test_group_teardown),
+#endif
       cmocka_unit_test_setup_teardown(
           test_nuttx_syscall_mkdir01,
           test_nuttx_syscall_test_group_setup,
