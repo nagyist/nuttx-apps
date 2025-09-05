@@ -251,6 +251,56 @@ static int coredump_get_info(int fd, FAR struct coredump_info_s *info)
 }
 
 /****************************************************************************
+ * coredump_restore_path
+ ****************************************************************************/
+
+static FAR char *coredump_restore_path(FAR char *paths)
+{
+  FAR char *saveptr;
+  FAR char *path = strtok_r(paths, ",", &saveptr);
+  FAR char *oldpath = NULL;
+  struct timespec old =
+    {
+      .tv_sec = LONG_MAX,
+      .tv_nsec = LONG_MAX
+    };
+
+  while (path != NULL)
+    {
+      struct coredump_info_s info;
+      int fd = open(path, O_RDONLY | O_CLOEXEC);
+      if (fd < 0)
+        {
+          if (errno == EISDIR)
+            {
+              return path;
+            }
+
+          continue;
+        }
+
+      if (coredump_get_info(fd, &info) < 0)
+        {
+          close(fd);
+          return path;
+        }
+
+      if (info.time.tv_sec < old.tv_sec ||
+          (info.time.tv_sec == old.tv_sec &&
+           info.time.tv_nsec < old.tv_nsec))
+        {
+          old = info.time;
+          oldpath = path;
+        }
+
+      path = strtok_r(NULL, ",", &saveptr);
+      close(fd);
+    }
+
+  return oldpath;
+}
+
+/****************************************************************************
  * coredump_clear_info
  ****************************************************************************/
 
@@ -409,6 +459,7 @@ static int coredump_restore_to_path(int fd, FAR const char *path, size_t max,
 static int coredump_restore(FAR const char *file,
                             FAR const char *path, size_t max)
 {
+  char paths[] = CONFIG_SYSTEM_COREDUMP_RESTORE_PATHS;
   struct coredump_info_s info;
   struct stat st;
   int ret;
@@ -425,6 +476,11 @@ static int coredump_restore(FAR const char *file,
     {
       printf("No core data in %s\n", file);
       goto err;
+    }
+
+  if (path == NULL)
+    {
+      path = coredump_restore_path(paths);
     }
 
   if (stat(path, &st) >= 0 && S_ISDIR(st.st_mode))

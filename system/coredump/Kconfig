@@ -28,4 +28,15 @@ config SYSTEM_COREDUMP_SWAPBUFFER_SIZE
 	---help---
 		The coredump read/write swap buffer size in bytes.
 
+config SYSTEM_COREDUMP_RESTORE_PATHS
+	string "Default paths for coredump restore"
+	default ""
+	---help---
+		This default path can be a file or a directory.
+		When there are multiple files,
+		it will overwrite the oldest file in a loop to save the file.
+		When it is a path,
+		it will extract the time when the coredump was generated
+		and use it as the file name to generate a file.
+
 endif # SYSTEM_COREDUMP
