@@ -1492,10 +1492,12 @@ static inline int dhcpd_openlistener(FAR const char *interface)
  * Name: dhcpd_task_run
  ****************************************************************************/
 
+#ifndef CONFIG_BUILD_KERNEL
 static int dhcpd_task_run(int argc, char **argv)
 {
   return dhcpd_run(argv[1]);
 }
+#endif
 
 /****************************************************************************
  * Name: dhcpd_get_pid
@@ -1707,6 +1709,7 @@ int dhcpd_run(FAR const char *interface)
  *
  ****************************************************************************/
 
+#ifndef CONFIG_BUILD_KERNEL
 int dhcpd_start(FAR const char *interface)
 {
   FAR char *argv[2];
@@ -1738,6 +1741,7 @@ int dhcpd_start(FAR const char *interface)
 
   return OK;
 }
+#endif
 
 /****************************************************************************
  * Name: dhcpd_stop

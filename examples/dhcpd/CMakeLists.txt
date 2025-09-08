@@ -28,14 +28,16 @@ if(CONFIG_EXAMPLES_DHCPD)
     STACKSIZE
     ${CONFIG_DEFAULT_TASK_STACKSIZE})
 
-  nuttx_add_application(
-    NAME
-    dhcpd_start
-    SRCS
-    dhcpd_start.c
-    dhcpd_daemon.c
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE})
+  if(NOT CONFIG_BUILD_KERNEL)
+    nuttx_add_application(
+      NAME
+      dhcpd_start
+      SRCS
+      dhcpd_start.c
+      dhcpd_daemon.c
+      STACKSIZE
+      ${CONFIG_DEFAULT_TASK_STACKSIZE})
+  endif()
 
   nuttx_add_application(
     NAME

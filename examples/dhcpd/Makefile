@@ -24,13 +24,18 @@ include $(APPDIR)/Make.defs
 
 CSRCS = dhcpd_daemon.c
 
-MAINSRC = dhcpd_start.c dhcpd_stop.c target.c
+MAINSRC = dhcpd_stop.c target.c
 
 # DHCPD built-in application info
 
-PROGNAME = dhcpd_start dhcpd_stop dhcpd
+PROGNAME = dhcpd_stop dhcpd
 PRIORITY = SCHED_PRIORITY_DEFAULT
 STACKSIZE = $(CONFIG_DEFAULT_TASK_STACKSIZE)
 MODULE = $(CONFIG_EXAMPLES_DHCPD)
+
+ifneq ($(CONFIG_BUILD_KERNEL),y)
+MAINSRC += dhcpd_start.c
+PROGNAME += dhcpd_start
+endif
 
 include $(APPDIR)/Application.mk
