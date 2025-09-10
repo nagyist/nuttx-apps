@@ -23,7 +23,6 @@
  * Included Files
  ****************************************************************************/
 
-#include <sound/asound.h>
 #include <sound/compress_params.h>
 
 #ifdef __cplusplus

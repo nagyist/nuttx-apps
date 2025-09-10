@@ -16,8 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <sound/asound.h>
-
+#include <sound/compress_params.h>
 #include <tinycompress/tinywave.h>
 
 /****************************************************************************
@@ -104,13 +103,13 @@ int parse_wave_header(FAR struct wave_header *header,
   switch (header->fmt.samplebits)
     {
     case 8:
-      *format = SNDRV_PCM_FORMAT_U8;
+      *format = SND_AUDIOMODE_PCM_U8;
       break;
     case 16:
-      *format = SNDRV_PCM_FORMAT_S16_LE;
+      *format = SND_AUDIOMODE_PCM_S16_LE;
       break;
     case 32:
-      *format = SNDRV_PCM_FORMAT_S32_LE;
+      *format = SND_AUDIOMODE_PCM_S32_LE;
       break;
     default:
       fprintf(stderr, "Unsupported sample bits %d\n",

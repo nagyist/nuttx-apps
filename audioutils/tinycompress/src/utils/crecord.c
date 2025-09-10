@@ -78,7 +78,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <sound/asound.h>
 #include <sound/compress_params.h>
 #include <tinycompress/tinycompress.h>
 #include <tinycompress/tinywave.h>
@@ -87,7 +86,7 @@
  * Pre-processor Prototypes
  ****************************************************************************/
 
-#define DEFAULT_FORMAT SNDRV_PCM_FORMAT_S16_LE
+#define DEFAULT_FORMAT SND_AUDIOMODE_PCM_S16_LE
 #define DEFAULT_CODEC_ID SND_AUDIOCODEC_PCM
 #define DEFAULT_CHANNELS 1
 #define DEFAULT_RATE 8000
@@ -297,7 +296,7 @@ static void capture_samples(FAR char *name, unsigned int card,
 
   switch (format)
     {
-    case SNDRV_PCM_FORMAT_S32_LE:
+    case SND_AUDIOMODE_PCM_S32_LE:
       samplebits = 32;
       break;
     default:
@@ -356,7 +355,7 @@ static void capture_samples(FAR char *name, unsigned int card,
       goto file_exit;
     }
 
-  codec.format = format;
+  codec.pcm_format = format;
   if ((buffer_size != 0) && (frag != 0))
     {
       config.fragment_size = buffer_size / frag;
@@ -560,11 +559,11 @@ int main(int argc, FAR char **argv)
         case 'F':
           if (strcmp(optarg, "S16_LE") == 0)
             {
-              format = SNDRV_PCM_FORMAT_S16_LE;
+              format = SND_AUDIOMODE_PCM_S16_LE;
             }
           else if (strcmp(optarg, "S32_LE") == 0)
             {
-              format = SNDRV_PCM_FORMAT_S32_LE;
+              format = SND_AUDIOMODE_PCM_S32_LE;
             }
           else
             {

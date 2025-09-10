@@ -329,41 +329,18 @@ static int compress_hw_get_bps(int format)
 {
   switch (format)
     {
-    case SNDRV_PCM_FORMAT_S16_LE:
-    case SNDRV_PCM_FORMAT_S16_BE:
-    case SNDRV_PCM_FORMAT_U16_LE:
-    case SNDRV_PCM_FORMAT_U16_BE:
-      return 16;
-    case SNDRV_PCM_FORMAT_S32_LE:
-    case SNDRV_PCM_FORMAT_S32_BE:
-    case SNDRV_PCM_FORMAT_U32_LE:
-    case SNDRV_PCM_FORMAT_U32_BE:
-      return 32;
-    default:
-      return 8;
-    }
-}
-
-static int compress_hw_get_subtype(int id)
-{
-  switch (id)
-    {
-    case SND_AUDIOCODEC_MP3:
-      return AUDIO_FMT_MP3;
-    case SND_AUDIOCODEC_AMR:
-      return AUDIO_FMT_AMR;
-    case SND_AUDIOCODEC_AAC:
-      return AUDIO_FMT_AAC;
-    case SND_AUDIOCODEC_WMA:
-      return AUDIO_FMT_WMA;
-    case SND_AUDIOCODEC_VORBIS:
-      return AUDIO_FMT_OGG_VORBIS;
-    case SND_AUDIOCODEC_FLAC:
-      return AUDIO_FMT_FLAC;
-    case SND_AUDIOCODEC_OPUS:
-      return AUDIO_FMT_OPUS;
-    default:
-      return AUDIO_FMT_PCM;
+      case SND_AUDIOMODE_PCM_S16_LE:
+      case SND_AUDIOMODE_PCM_S16_BE:
+      case SND_AUDIOMODE_PCM_U16_LE:
+      case SND_AUDIOMODE_PCM_U16_BE:
+        return 16;
+      case SND_AUDIOMODE_PCM_S32_LE:
+      case SND_AUDIOMODE_PCM_S32_BE:
+      case SND_AUDIOMODE_PCM_U32_LE:
+      case SND_AUDIOMODE_PCM_U32_BE:
+        return 32;
+      default:
+        return 8;
     }
 }
 
@@ -395,7 +372,7 @@ static int compress_hw_configure(FAR struct compress_hw_data *compress,
   caps_desc.caps.ac_controls.hw[0] = codec->sample_rate;
   caps_desc.caps.ac_controls.b[3] = codec->sample_rate >> 16;
   caps_desc.caps.ac_controls.b[2] = bps;
-  caps_desc.caps.ac_subtype = compress_hw_get_subtype(codec->id);
+  caps_desc.caps.ac_subtype = codec->id;
 
   ret = ioctl(compress->fd, AUDIOIOC_CONFIGURE, &caps_desc);
   audinfo("configure, codec:%d, bit_rate:%d, ch:%d, rate:%d, ret:%d\n",
