@@ -44,6 +44,7 @@
 static pthread_mutex_t mutex;
 static pthread_cond_t  cond;
 static sem_t sem_thread_started;
+static sem_t sem_cancel_finished;
 
 /****************************************************************************
  * Private Functions
@@ -289,7 +290,9 @@ static FAR void *asynch_waiter(FAR void *parameter)
    * the cancellation should pend because we are non-cancellable.
    */
 
-  usleep(250 * 1000);
+  sem_post(&sem_thread_started);
+
+  sem_wait(&sem_cancel_finished);
 
   /* We should be canceled when restore the cancelable state. */
 
@@ -432,6 +435,7 @@ void cancel_test(void)
   int status;
 
   sem_init(&sem_thread_started, 0, 0);
+  sem_init(&sem_cancel_finished, 0, 0);
 
   /* Test 1: Normal Cancel **************************************************/
 
@@ -511,10 +515,13 @@ void cancel_test(void)
    * bit to make sure.
    */
 
-  usleep(100 * 1000);
+  sem_wait(&sem_thread_started);
 
   printf("cancel_test: Canceling thread\n");
   status = pthread_cancel(waiter);
+
+  sem_post(&sem_cancel_finished);
+
   if (status != 0)
     {
       printf("cancel_test: ERROR pthread_cancel failed, status=%d\n",
@@ -717,6 +724,7 @@ void cancel_test(void)
   printf("cancel_test: Test 6: Cancel message queue wait\n");
   printf("cancel_test: Starting thread (cancelable)\n");
   sem_destroy(&sem_thread_started);
+  sem_destroy(&sem_cancel_finished);
 
 #if !defined(CONFIG_DISABLE_MQUEUE) && defined(CONFIG_CANCELLATION_POINTS)
   /* Create the message queue */
