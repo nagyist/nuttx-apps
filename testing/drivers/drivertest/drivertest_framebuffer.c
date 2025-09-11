@@ -88,7 +88,6 @@ struct fb_info_s
 struct fb_state_s
 {
   char devpath[PATH_MAX];
-  int test_case_id;
   int fb_device;
   struct fb_info_s fb_info;
 };
@@ -112,17 +111,19 @@ struct fb_state_s
 static void fb_help(FAR const char *progname,
                     FAR struct fb_state_s *fb_state, int exitcode)
 {
-  printf("Usage: %s"
-         " -p <devpath> -t <testcase>\n",
-         progname);
+  printf("Usage: cmocka -s %s -t <testcase>\n"
+         "or %s -p <devpath> to run alltestcase",
+         progname, progname);
   printf("  [-p devpath] selects the framebuffer device.  "
          "Default: %s Current: %s\n", FB_DEFAULT_DEVPATH,
          fb_state->devpath);
   printf("  [-t testcase] selects the testcase to show framebuffer.\n"
-         "  Case 0: show black color on FB\n"
-         "  Case 1: show white color on FB\n"
-         "  Case 2: show black|red|green|blue|white rectangle on FB\n"
-         "  Case 3: show grayscale rectangle on FB\n"
+         "  Case drivertest_framebuffer_black: show black color on FB\n"
+         "  Case drivertest_framebuffer_white: show white color on FB\n"
+         "  Case drivertest_framebuffer_cross: show black|red|green|blue|"
+         "white rectangle on FB\n"
+         "  Case drivertest_framebuffer_vertical: show grayscale rectangle"
+         " on FB\n"
          );
 
   printf("  [-h] shows this message and exits\n");
@@ -138,25 +139,14 @@ static void parse_commandline(FAR struct fb_state_s *fb_state, int argc,
                               FAR char **argv)
 {
   int ch;
-  int converted;
 
-  while ((ch = getopt(argc, argv, "p:d:n:f:t:h")) != ERROR)
+  while ((ch = getopt(argc, argv, "p:d:n:h")) != ERROR)
     {
       switch (ch)
         {
           case 'p':
             snprintf(fb_state->devpath, sizeof(fb_state->devpath), "%s",
                       optarg);
-            break;
-          case 't':
-            OPTARG_TO_VALUE(converted, uint8_t, 10);
-            if (converted < 0 || converted >= FB_TEST_CASE_NUM)
-              {
-                printf("Testcase out of range: %d\n", converted);
-                fb_help(argv[0], fb_state, EXIT_FAILURE);
-              }
-
-            fb_state->test_case_id = converted;
             break;
           case 'h':
             fb_help(argv[0], fb_state, EXIT_FAILURE);
@@ -168,10 +158,7 @@ static void parse_commandline(FAR struct fb_state_s *fb_state, int argc,
         }
     }
 
-  printf("devname = %s\n"
-         "testcase = %d\n",
-         fb_state->devpath,
-         fb_state->test_case_id);
+  printf("devname = %s\n", fb_state->devpath);
 }
 
 /****************************************************************************
@@ -531,7 +518,6 @@ int main(int argc, FAR char *argv[])
   /* Initialize the state data */
 
   struct fb_state_s fb_state;
-  void (*drivertest_fb_cb)(FAR void **state) = NULL;
 
   memset(&fb_state, 0, sizeof(struct fb_state_s));
   snprintf(fb_state.devpath, sizeof(fb_state.devpath), "%s",
@@ -539,27 +525,18 @@ int main(int argc, FAR char *argv[])
 
   parse_commandline(&fb_state, argc, argv);
 
-  switch (fb_state.test_case_id)
-  {
-    case 0:
-      drivertest_fb_cb = drivertest_framebuffer_black;
-      break;
-    case 1:
-      drivertest_fb_cb = drivertest_framebuffer_white;
-      break;
-    case 2:
-      drivertest_fb_cb = drivertest_framebuffer_cross;
-      break;
-    case 3:
-      drivertest_fb_cb = drivertest_framebuffer_vertical;
-      break;
-    default:
-      break;
-  }
-
   const struct CMUnitTest tests[] =
   {
-    cmocka_unit_test_prestate_setup_teardown(drivertest_fb_cb,
+    cmocka_unit_test_prestate_setup_teardown(drivertest_framebuffer_black,
+                                             fb_setup, fb_teardown,
+                                             &fb_state),
+    cmocka_unit_test_prestate_setup_teardown(drivertest_framebuffer_white,
+                                             fb_setup, fb_teardown,
+                                             &fb_state),
+    cmocka_unit_test_prestate_setup_teardown(drivertest_framebuffer_cross,
+                                             fb_setup, fb_teardown,
+                                             &fb_state),
+    cmocka_unit_test_prestate_setup_teardown(drivertest_framebuffer_vertical,
                                              fb_setup, fb_teardown,
                                              &fb_state),
   };
