@@ -632,8 +632,13 @@ static void usage(FAR const char *progname, int exitcode)
 
 int main(int argc, FAR char *argv[])
 {
-  FAR char *savepath = NULL;
+#ifdef CONFIG_BOARD_COREDUMP_DEVPATH
+  FAR char *devpath = CONFIG_BOARD_COREDUMP_DEVPATH;
+#else
   FAR char *devpath = NULL;
+#endif
+
+  FAR char *savepath = NULL;
   size_t maxfile = 1;
   int pid = INVALID_PROCESS_ID;
   bool hex = false;
