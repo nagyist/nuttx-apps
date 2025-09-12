@@ -51,7 +51,7 @@ config SYSTEM_INIT_ACTION_CMD_ARGS_MAX
 		Maximum number of command arguments.
 		Form:
 		```
-		on <trigger>
+		on <event> [&& <event>]*
 		   <command>
 		   <command>
 		   <command>
@@ -65,16 +65,18 @@ config SYSTEM_INIT_ACTION_WARN_SLOW
 	---help---
 		Warning if command took more than `SYSTEM_INIT_ACTION_WARN_SLOW` ms.
 
-config SYSTEM_INIT_ACTION_MANAGER_EVENT_MAX
-	int "Max number of action manager events"
-	default 32
+config SYSTEM_INIT_ACTION_EVENTS_MAX
+	int "Max number of events"
+	default 1
+	range 1 64
 	---help---
-		Maximum number of action manager events.
+		Maximum number of event and action events.
+		See action.h:
 		```
-		struct action_manager_s
+		struct action_s
 		{
 		  ...
-		  FAR char *events[CONFIG_SYSTEM_INIT_ACTION_MANAGER_EVENT_MAX];
+		  struct action_event_s events[CONFIG_SYSTEM_INIT_ACTION_EVENTS_MAX];
 		  ...
 		};
 		```
