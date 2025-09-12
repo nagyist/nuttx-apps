@@ -649,6 +649,12 @@ int snd_pcm_hw_params_get_buffer_time(FAR const snd_pcm_hw_params_t *params,
   return snd_pcm_hw_params_get(params, SNDRV_PCM_HW_PARAM_BUFFER_TIME, us);
 }
 
+int snd_pcm_hw_params_get_access(FAR const snd_pcm_hw_params_t *params,
+                                 FAR snd_pcm_access_t *access)
+{
+  return snd_pcm_hw_params_get(params, SNDRV_PCM_HW_PARAM_ACCESS, access);
+}
+
 int snd_pcm_hw_params_set_access(FAR snd_pcm_t *pcm,
                                  FAR snd_pcm_hw_params_t *params,
                                  snd_pcm_access_t access)
@@ -1008,7 +1014,7 @@ int snd_pcm_format_cpu_endian(snd_pcm_format_t format)
 #endif
 }
 
-int snd_pcm_format_physical_width(snd_pcm_format_t format)
+int snd_pcm_format_width(snd_pcm_format_t format)
 {
   switch (format)
     {
@@ -1033,6 +1039,65 @@ int snd_pcm_format_physical_width(snd_pcm_format_t format)
     default:
       return -EINVAL;
     }
+}
+
+int snd_pcm_format_physical_width(snd_pcm_format_t format)
+{
+  switch (format)
+    {
+    case SND_PCM_FORMAT_S8:
+    case SND_PCM_FORMAT_U8:
+      return 8;
+    case SND_PCM_FORMAT_S16_LE:
+    case SND_PCM_FORMAT_S16_BE:
+    case SND_PCM_FORMAT_U16_LE:
+    case SND_PCM_FORMAT_U16_BE:
+      return 16;
+    case SND_PCM_FORMAT_S24_LE:
+    case SND_PCM_FORMAT_S24_BE:
+    case SND_PCM_FORMAT_U24_LE:
+    case SND_PCM_FORMAT_U24_BE:
+    case SND_PCM_FORMAT_S32_LE:
+    case SND_PCM_FORMAT_S32_BE:
+    case SND_PCM_FORMAT_U32_LE:
+    case SND_PCM_FORMAT_U32_BE:
+      return 32;
+    default:
+      return -EINVAL;
+    }
+}
+
+snd_pcm_format_t snd_pcm_build_linear_format(int width, int pwidth,
+                                             int unsignd,
+                                             int big_endian)
+{
+  if (pwidth == 8 && width == 8)
+    {
+      return unsignd ? SND_PCM_FORMAT_U8 : SND_PCM_FORMAT_S8;
+    }
+
+  if (pwidth == 16 && width == 16)
+    {
+      return unsignd
+        ? (big_endian ? SND_PCM_FORMAT_U16_BE : SND_PCM_FORMAT_U16_LE)
+        : (big_endian ? SND_PCM_FORMAT_S16_BE : SND_PCM_FORMAT_S16_LE);
+    }
+
+  if (pwidth == 32 && width == 24)
+    {
+      return unsignd
+        ? (big_endian ? SND_PCM_FORMAT_U24_BE : SND_PCM_FORMAT_U24_LE)
+        : (big_endian ? SND_PCM_FORMAT_S24_BE : SND_PCM_FORMAT_S24_LE);
+    }
+
+  if (pwidth == 32 && width == 32)
+    {
+      return unsignd
+        ? (big_endian ? SND_PCM_FORMAT_U32_BE : SND_PCM_FORMAT_U32_LE)
+        : (big_endian ? SND_PCM_FORMAT_S32_BE : SND_PCM_FORMAT_S32_LE);
+    }
+
+  return SND_PCM_FORMAT_UNKNOWN;
 }
 
 ssize_t snd_pcm_format_size(snd_pcm_format_t format, size_t samples)

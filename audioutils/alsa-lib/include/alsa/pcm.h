@@ -323,6 +323,9 @@ void snd_pcm_format_mask_set(FAR snd_pcm_format_mask_t *mask,
 int snd_pcm_hw_params_any(FAR snd_pcm_t *pcm,
                           FAR snd_pcm_hw_params_t *params);
 
+int snd_pcm_hw_params_get_access(FAR const snd_pcm_hw_params_t *params,
+                                 FAR snd_pcm_access_t *access);
+
 int snd_pcm_hw_params_set_access(FAR snd_pcm_t *pcm,
                                  FAR snd_pcm_hw_params_t *params,
                                  snd_pcm_access_t access);
@@ -469,7 +472,11 @@ FAR const char *snd_pcm_state_name(const snd_pcm_state_t state);
 int snd_pcm_format_little_endian(snd_pcm_format_t format);
 int snd_pcm_format_big_endian(snd_pcm_format_t format);
 int snd_pcm_format_cpu_endian(snd_pcm_format_t format);
+int snd_pcm_format_width(snd_pcm_format_t format);
 int snd_pcm_format_physical_width(snd_pcm_format_t format);
+snd_pcm_format_t snd_pcm_build_linear_format(int width, int pwidth,
+                                             int unsignd,
+                                             int big_endian);
 ssize_t snd_pcm_format_size(snd_pcm_format_t format, size_t samples);
 
 #ifdef __cplusplus
