@@ -114,11 +114,9 @@ endfunction()
 
 # Build flags for rust_unified_lib, this file will be included only once in the
 # NuttX build system, so it's safe to set these variables globally
-set(RUST_UNIFIED_CARGO_BUILD_FLAGS "-Zbuild-std=std,panic_abort")
+set(RUST_UNIFIED_CARGO_BUILD_FLAGS "")
 if(NOT CONFIG_DEBUG_NOOPT)
   list(APPEND RUST_UNIFIED_CARGO_BUILD_FLAGS "--release")
-  list(APPEND RUST_UNIFIED_CARGO_BUILD_FLAGS
-       "-Zbuild-std-features=panic_immediate_abort")
   set(RUST_UNIFIED_CARGO_PROFILE "release")
 else()
   set(RUST_UNIFIED_CARGO_PROFILE "debug")
