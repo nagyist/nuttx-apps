@@ -49,8 +49,8 @@
 #define WQUEUE_MAX_DELAY   WDOG_MAX_DELAY
 
 #define PERIODIC_TEST_WORK_NUM    (5)
-#define PERIODIC_TEST_PERIOD_BASE (200)
-#define PERIODIC_TEST_PERIOD_STEP (20)
+#define PERIODIC_TEST_PERIOD_BASE MSEC2TICK(20)
+#define PERIODIC_TEST_PERIOD_STEP MSEC2TICK(2)
 #define PERIODIC_TEST_MIN_LOOP    (5)
 
 #define PERIODIC_TEST_PERIOD_MAX                                             \
@@ -694,7 +694,8 @@ static void wqueue_period_and_cancel_test(void)
   printf("\nwqueue_test: periodic work and cancel test start...\n");
   printf("Testing %d periodic work\n", total_cnt);
 
-  COMPILE_TIME_ASSERT(PERIODIC_TEST_PERIOD_MAX <= WQUEUE_MAX_DELAY);
+  wqtest_assert(PERIODIC_TEST_PERIOD_MAX <= WQUEUE_MAX_DELAY,
+                "wqueue_test period exceeds WDOG_MAX_DELAY\n");
 
   wq = work_queue_create("test", 255, NULL, WQUEUE_DEFAULT_STACK_SIZE,
                          WQUEUE_DEFAULT_THREAD_NUM);
