@@ -1510,6 +1510,7 @@ static int dhcpd_task_run(int argc, char **argv)
  *
  ****************************************************************************/
 
+#if !defined(CONFIG_BUILD_KERNEL) || defined(CONFIG_SCHED_WAITPID)
 static pid_t dhcpd_get_pid(void)
 {
   pid_t pid = -1;
@@ -1536,6 +1537,7 @@ static pid_t dhcpd_get_pid(void)
 
   return pid;
 }
+#endif
 
 /****************************************************************************
  * Name: dhcpd_signal_handler
@@ -1755,6 +1757,7 @@ int dhcpd_start(FAR const char *interface)
  *
  ****************************************************************************/
 
+#ifdef CONFIG_SCHED_WAITPID
 int dhcpd_stop(void)
 {
   pid_t pid;
@@ -1783,6 +1786,7 @@ int dhcpd_stop(void)
 
   return OK;
 }
+#endif
 
 /****************************************************************************
  * Name: dhcpd_set_startip

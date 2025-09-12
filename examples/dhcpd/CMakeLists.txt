@@ -39,14 +39,16 @@ if(CONFIG_EXAMPLES_DHCPD)
       ${CONFIG_DEFAULT_TASK_STACKSIZE})
   endif()
 
-  nuttx_add_application(
-    NAME
-    dhcpd_stop
-    SRCS
-    dhcpd_stop.c
-    dhcpd_daemon.c
-    STACKSIZE
-    ${CONFIG_DEFAULT_TASK_STACKSIZE})
+  if(CONFIG_SCHED_WAITPID)
+    nuttx_add_application(
+      NAME
+      dhcpd_stop
+      SRCS
+      dhcpd_stop.c
+      dhcpd_daemon.c
+      STACKSIZE
+      ${CONFIG_DEFAULT_TASK_STACKSIZE})
+  endif()
 
   add_definitions(-DCONFIG_NETUTILS_DHCPD_HOST=1 -DHAVE_SO_REUSEADDR=1
                   -DHAVE_SO_BROADCAST=1)
