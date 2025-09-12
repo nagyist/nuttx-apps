@@ -96,7 +96,7 @@ int main(int argc, FAR char *argv[])
   FAR char *endptr;
   FAR char *buffer;
   int option_index;
-  int fd;
+  int fd = -1;
   int opt;
   int ret = EXIT_FAILURE;
 

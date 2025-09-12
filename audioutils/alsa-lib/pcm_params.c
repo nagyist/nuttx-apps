@@ -342,7 +342,7 @@ static int snd_pcm_hw_params_choose(snd_pcm_hw_params_t *params)
 static int snd_pcm_hw_params_internal(FAR snd_pcm_t *pcm,
                                       FAR snd_pcm_hw_params_t *params)
 {
-  unsigned int val;
+  unsigned int val = 0;
   int ret;
 
   assert(pcm && params);
@@ -650,9 +650,18 @@ int snd_pcm_hw_params_get_buffer_time(FAR const snd_pcm_hw_params_t *params,
 }
 
 int snd_pcm_hw_params_get_access(FAR const snd_pcm_hw_params_t *params,
-                                 FAR snd_pcm_access_t *access)
+                                 FAR snd_pcm_access_t *val)
 {
-  return snd_pcm_hw_params_get(params, SNDRV_PCM_HW_PARAM_ACCESS, access);
+  unsigned int access;
+  int ret;
+
+  ret = snd_pcm_hw_params_get(params, SNDRV_PCM_HW_PARAM_ACCESS, &access);
+  if (ret >= 0)
+    {
+      *val = (snd_pcm_access_t)access;
+    }
+
+  return ret;
 }
 
 int snd_pcm_hw_params_set_access(FAR snd_pcm_t *pcm,
