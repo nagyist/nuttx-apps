@@ -25,6 +25,7 @@
 #include <debug.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <mqueue.h>
 #include <poll.h>
 #include <stdbool.h>
@@ -98,8 +99,6 @@ static int compress_hw_query_supported_codecs(int fd,
   int ac_subtype;
   int format;
   int ret;
-  int i;
-  int j;
   int k;
 
   ret = compress_hw_get_capabilities(fd, AUDIO_TYPE_QUERY, AUDIO_TYPE_QUERY,
@@ -111,7 +110,7 @@ static int compress_hw_query_supported_codecs(int fd,
 
   format = caps.ac_format.hw;
 
-  for (i = 0; format; i++)
+  for (; format; )
     {
       ac_subtype = AUDIO_FMT_UNDEF;
       if (format & (1 << (AUDIO_FMT_PCM - 1)))
@@ -174,7 +173,7 @@ static int compress_hw_query_supported_codecs(int fd,
 
       if (ac_subtype == AUDIO_FMT_OTHER)
         {
-          for (j = 0; caps.ac_controls.w; j++)
+          for (; caps.ac_controls.w; )
             {
               ac_subtype = AUDIO_FMT_UNDEF;
 
@@ -359,8 +358,10 @@ static int compress_hw_set_codec_params(FAR void *compress_data,
     sizeof(codec->options));
 
   ret = ioctl(compress->fd, AUDIOIOC_CONFIGURE, &caps_desc);
-  audinfo("configure, codec:%d, bit_rate:%d, ch:%d, rate:%d, ret:%d\n",
-    codec->id, codec->bit_rate, codec->ch_in, codec->sample_rate, ret);
+  audinfo("configure, codec:%" PRIu32 ", bit_rate:%" PRIu32 ", ch:%" PRIu32
+          ", rate:%" PRIu32 ", ret:%d\n",
+          codec->id, codec->bit_rate, codec->ch_in,
+          codec->sample_rate, ret);
   if (ret < 0)
     {
       return -errno;

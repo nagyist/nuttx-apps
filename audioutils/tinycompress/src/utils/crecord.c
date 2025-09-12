@@ -399,8 +399,10 @@ static void capture_samples(FAR char *name, unsigned int card,
       g_finfo,
       "Recording g_file %s On Card %u device %u, with buffer of %u bytes\n",
       name, card, device, size);
-  fprintf(g_finfo, "Codec %u Format %u Channels %u, %u Hz\n", codec.id,
-          codec.format, codec.ch_out, rate);
+  fprintf(g_finfo,
+          "Codec %" PRIu32 " Format %" PRIu32 " Channels %" PRIu32
+          ", %u Hz\n",
+          codec.id, codec.format, codec.ch_out, rate);
 
   compress_start(compress);
 

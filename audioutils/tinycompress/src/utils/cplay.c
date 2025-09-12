@@ -62,6 +62,7 @@
  ****************************************************************************/
 
 #include <fcntl.h>
+#include <inttypes.h>
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -983,8 +984,9 @@ static void play_samples(FAR char *name, unsigned int card,
 
   printf("Playing file %s On Card %u device %u, with buffer of %d bytes\n",
          name, card, device, size);
-  printf("Format %u Channels %u, %u Hz, Bit Rate %d\n", codec.id,
-         codec.ch_in, codec.sample_rate, codec.bit_rate);
+  printf("Format %" PRIu32 " Channels %" PRIu32 ", %" PRIu32 " Hz, "
+         "Bit Rate %" PRIu32 "\n",
+         codec.id, codec.ch_in, codec.sample_rate, codec.bit_rate);
 
   compress_start(compress);
 
