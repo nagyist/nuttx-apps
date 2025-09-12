@@ -698,7 +698,8 @@ static void wqueue_period_and_cancel_test(void)
   wqtest_assert(PERIODIC_TEST_PERIOD_MAX <= WQUEUE_MAX_DELAY,
                 "wqueue_test period exceeds WDOG_MAX_DELAY\n");
 
-  wq = work_queue_create("test", 255, NULL, WQUEUE_DEFAULT_STACK_SIZE,
+  wq = work_queue_create("test", WQUEUE_DEFAULT_PRIORITY - 1, NULL,
+                         WQUEUE_DEFAULT_STACK_SIZE,
                          WQUEUE_DEFAULT_THREAD_NUM);
   if (wq == NULL)
     {
