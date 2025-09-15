@@ -223,7 +223,8 @@ static int dd_verify(FAR const char *infile, FAR const char *outfile,
       if (ret != dd->nbytes)
         {
           nsh_error(vtbl, g_fmtcmdfailed, g_dd, "outfd read",
-                    ret < 0 ? NSH_ERRNO : ret);
+                    NSH_ERRNO_OF(ret < 0 ? errno : EIO));
+
           break;
         }
 
