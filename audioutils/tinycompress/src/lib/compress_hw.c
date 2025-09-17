@@ -382,6 +382,7 @@ static int compress_hw_get_codec_params(FAR void *compress_data,
       return -EINVAL;
     }
 
+  memset(codec, 0, sizeof(*codec));
   ret = ioctl(compress->fd, AUDIOIOC_GETAUDIOINFO, &info);
   if (ret < 0)
     {
@@ -568,11 +569,36 @@ static int compress_hw_enqueue_buffer(FAR struct compress_hw_data *compress,
   return 0;
 }
 
+static int compress_hw_get_current_config(FAR void *compress_data,
+                                          FAR struct compr_config *config)
+{
+  FAR struct compress_hw_data *compress = compress_data;
+  struct ap_buffer_info_s buf_info;
+  int ret;
+
+  if (!config)
+    {
+      return -EINVAL;
+    }
+
+  ret = ioctl(compress->fd, AUDIOIOC_GETBUFFERINFO, &buf_info);
+  if (ret < 0)
+    {
+      return -errno;
+    }
+
+  config->fragments = buf_info.nbuffers;
+  config->fragment_size = buf_info.buffer_size;
+  return compress_hw_get_codec_params(compress, config->codec);
+}
+
 static void *compress_hw_open_by_name(FAR const char *name,
                                       unsigned int flags,
                                       FAR struct compr_config *config)
 {
   FAR struct compress_hw_data *compress;
+  struct compr_config tconfig;
+  struct snd_codec codec;
   int ret;
 
   if (!((flags & COMPRESS_OUT) || (flags & COMPRESS_IN)))
@@ -598,17 +624,25 @@ static void *compress_hw_open_by_name(FAR const char *name,
 
   if (!config)
     {
-      return compress;
+      memset(&tconfig, 0, sizeof(tconfig));
+      tconfig.codec = &codec;
+      ret = compress_hw_get_current_config(compress, &tconfig);
+      if (ret < 0)
+        {
+          compress_hw_deinit(compress);
+          goto fail;
+        }
     }
 
-  ret = compress_hw_configure(compress, config);
+  ret = compress_hw_configure(compress, config ? config : &tconfig);
   if (ret < 0)
     {
       compress_hw_deinit(compress);
       goto fail;
     }
 
-  memcpy(&compress->config, config, sizeof(compress->config));
+  memcpy(&compress->config, config ? config : &tconfig,
+    sizeof(compress->config));
   return compress;
 
 fail:
@@ -1026,29 +1060,6 @@ static int compress_hw_set_params(FAR void *compress_data,
     }
 
   return 0;
-}
-
-static int compress_hw_get_current_config(FAR void *compress_data,
-                                          FAR struct compr_config *config)
-{
-  FAR struct compress_hw_data *compress = compress_data;
-  struct ap_buffer_info_s buf_info;
-  int ret;
-
-  if (!config)
-    {
-      return -EINVAL;
-    }
-
-  ret = ioctl(compress->fd, AUDIOIOC_GETBUFFERINFO, &buf_info);
-  if (ret < 0)
-    {
-      return -errno;
-    }
-
-  config->fragments = buf_info.nbuffers;
-  config->fragment_size = buf_info.buffer_size;
-  return compress_hw_get_codec_params(compress, config->codec);
 }
 
 static int compress_hw_set_event_callback(FAR void *compress_data,
