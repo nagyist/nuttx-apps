@@ -64,6 +64,7 @@
 
 #ifdef CONFIG_NET_IPTABLES
 #  include <nuttx/net/netfilter/ip_tables.h>
+#  include <nuttx/net/netfilter/ip6_tables.h>
 #endif
 
 /****************************************************************************
