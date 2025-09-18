@@ -84,6 +84,7 @@ int mbedtls_aes_set128key_enc_keyid(FAR mbedtls_aes_context *ctx,
   memcpy(ctx->key, key, keybits / 8);
   ctx->dev.session.key = (caddr_t)ctx->key;
   ctx->dev.session.keylen = keybits / 8;
+  ctx->dev.session.flags |= SOP_F_KEYID;
   ctx->mode = CRYPTO_AES_CBC;
   return 0;
 }
@@ -95,6 +96,7 @@ int mbedtls_aes_set192key_enc_keyid(FAR mbedtls_aes_context *ctx,
   memcpy(ctx->key, key, keybits / 8);
   ctx->dev.session.key = (caddr_t)ctx->key;
   ctx->dev.session.keylen = keybits / 8;
+  ctx->dev.session.flags |= SOP_F_KEYID;
   ctx->mode = CRYPTO_AES_192_CBC;
   return 0;
 }
@@ -106,6 +108,7 @@ int mbedtls_aes_set256key_enc_keyid(FAR mbedtls_aes_context *ctx,
   memcpy(ctx->key, key, keybits / 8);
   ctx->dev.session.key = (caddr_t)ctx->key;
   ctx->dev.session.keylen = keybits / 8;
+  ctx->dev.session.flags |= SOP_F_KEYID;
   ctx->mode = CRYPTO_AES_256_CBC;
   return 0;
 }

@@ -39,6 +39,7 @@ int mbedtls_cipher_cmac_starts(FAR mbedtls_cipher_context_t *ctx,
   FAR mbedtls_cmac_context_t *cmac_ctx;
   uint32_t cipher_type;
   uint32_t mac_type;
+  int flags = 0;
   int retval;
 
   if (ctx == NULL || ctx->cipher_info == NULL || key == NULL)
@@ -51,6 +52,11 @@ int mbedtls_cipher_cmac_starts(FAR mbedtls_cipher_context_t *ctx,
       case MBEDTLS_CIPHER_AES_128_ECB:
           cipher_type = CRYPTO_AES_CMAC;
           mac_type = CRYPTO_AES_128_CMAC;
+          break;
+      case MBEDTLS_CIPHER_AES_128_ECB_KEYID:
+          cipher_type = CRYPTO_AES_CMAC;
+          mac_type = CRYPTO_AES_128_CMAC;
+          flags |= SOP_F_KEYID;
           break;
       default:
           return MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
@@ -79,6 +85,7 @@ int mbedtls_cipher_cmac_starts(FAR mbedtls_cipher_context_t *ctx,
   cmac_ctx->dev.session.mac = mac_type;
   cmac_ctx->dev.session.mackey = (caddr_t)cmac_ctx->key;
   cmac_ctx->dev.session.mackeylen = keybits / 8;
+  cmac_ctx->dev.session.flags = flags;
 
   retval = cryptodev_get_session(&cmac_ctx->dev);
   if (retval != 0)
@@ -130,6 +137,7 @@ int mbedtls_cipher_cmac_finish(FAR mbedtls_cipher_context_t *ctx,
   switch (ctx->cipher_info->type)
     {
       case MBEDTLS_CIPHER_AES_128_ECB:
+      case MBEDTLS_CIPHER_AES_128_ECB_KEYID:
           ctx->cmac_ctx->dev.crypt.olen = 16;
           break;
       default:
