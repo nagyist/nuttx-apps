@@ -152,6 +152,22 @@ def create_config_file(crate_dir):
         )
         config_content = "# Minimal config.toml file for Rust unified library\n"
 
+    # Add source configuration for vendored dependencies
+    script_dir = Path(__file__).parent
+    registry_dir = script_dir.parent.parent / "external" / "rust" / "registry"
+
+    config_content = f"""{config_content}
+
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "{registry_dir}"
+
+[net]
+offline = true
+"""
+
     with open(config_path, "w") as f:
         f.write(config_content)
 
