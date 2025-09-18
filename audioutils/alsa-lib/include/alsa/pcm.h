@@ -62,6 +62,21 @@ typedef enum
   SND_PCM_TYPE_LAST = SND_PCM_TYPE_HW
 } snd_pcm_type_t;
 
+typedef struct
+{
+  /** base address of channel samples */
+
+  FAR void *addr;
+
+  /** offset to first sample in bits */
+
+  unsigned int first;
+
+  /** samples distance in bits */
+
+  unsigned int step;
+} snd_pcm_channel_area_t;
+
 /* PCM handle */
 
 typedef struct snd_pcm_s snd_pcm_t;
@@ -468,6 +483,21 @@ FAR const char *snd_pcm_format_name(const snd_pcm_format_t format);
 snd_pcm_format_t snd_pcm_format_value(FAR const char *name);
 FAR const char *snd_pcm_format_description(const snd_pcm_format_t format);
 FAR const char *snd_pcm_state_name(const snd_pcm_state_t state);
+
+int snd_pcm_mmap(FAR snd_pcm_t *pcm);
+int snd_pcm_munmap(FAR snd_pcm_t *pcm);
+int snd_pcm_mmap_begin(FAR snd_pcm_t *pcm,
+                       FAR const snd_pcm_channel_area_t **areas,
+                       FAR snd_pcm_uframes_t *offset,
+                       FAR snd_pcm_uframes_t *frames);
+snd_pcm_sframes_t snd_pcm_mmap_commit(FAR snd_pcm_t *pcm,
+                                      snd_pcm_uframes_t offset,
+                                      snd_pcm_uframes_t frames);
+snd_pcm_sframes_t snd_pcm_mmap_writei(FAR snd_pcm_t *pcm,
+                                      FAR const void *buffer,
+                                      snd_pcm_uframes_t size);
+snd_pcm_sframes_t snd_pcm_mmap_readi(FAR snd_pcm_t *pcm, FAR void *buffer,
+                                     snd_pcm_uframes_t size);
 
 int snd_pcm_format_little_endian(snd_pcm_format_t format);
 int snd_pcm_format_big_endian(snd_pcm_format_t format);

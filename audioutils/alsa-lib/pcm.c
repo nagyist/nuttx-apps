@@ -67,6 +67,7 @@ int snd_pcm_close(FAR snd_pcm_t *pcm)
   int ret;
 
   assert(pcm);
+  snd_pcm_munmap(pcm);
   ret = pcm->ops->close(pcm->ops_arg);
 
   snd_pcm_free(pcm);
@@ -258,14 +259,24 @@ snd_pcm_sframes_t snd_pcm_writei(FAR snd_pcm_t *pcm, FAR const void *buffer,
                                  snd_pcm_uframes_t size)
 {
   SND_PCM_CHECK_SETUP(pcm);
-  return pcm->ops->writei(pcm->ops_arg, buffer, size);
+  if (pcm->ops->writei)
+    {
+      return pcm->ops->writei(pcm->ops_arg, buffer, size);
+    }
+
+  return snd_pcm_mmap_writei(pcm->ops_arg, buffer, size);
 }
 
 snd_pcm_sframes_t snd_pcm_readi(FAR snd_pcm_t *pcm, FAR void *buffer,
                                  snd_pcm_uframes_t size)
 {
   SND_PCM_CHECK_SETUP(pcm);
-  return pcm->ops->readi(pcm->ops_arg, buffer, size);
+  if (pcm->ops->readi)
+    {
+      return pcm->ops->readi(pcm->ops_arg, buffer, size);
+    }
+
+  return snd_pcm_mmap_readi(pcm->ops_arg, buffer, size);
 }
 
 snd_pcm_sframes_t snd_pcm_writen(FAR snd_pcm_t *pcm, FAR void **bufs,
@@ -377,25 +388,41 @@ int snd_pcm_get_params(FAR snd_pcm_t *pcm,
 
 snd_pcm_sframes_t snd_pcm_bytes_to_frames(FAR snd_pcm_t *pcm, ssize_t bytes)
 {
-  SND_PCM_CHECK_SETUP(pcm);
+  if (!pcm->frame_bits)
+    {
+      return -EINVAL;
+    }
+
   return bytes / (pcm->frame_bits / 8);
 }
 
 ssize_t snd_pcm_frames_to_bytes(FAR snd_pcm_t *pcm, snd_pcm_sframes_t frames)
 {
-  SND_PCM_CHECK_SETUP(pcm);
+  if (!pcm->frame_bits)
+    {
+      return -EINVAL;
+    }
+
   return frames * (pcm->frame_bits / 8);
 }
 
 long snd_pcm_bytes_to_samples(FAR snd_pcm_t *pcm, ssize_t bytes)
 {
-  SND_PCM_CHECK_SETUP(pcm);
+  if (!pcm->sample_bits)
+    {
+      return -EINVAL;
+    }
+
   return bytes / (pcm->sample_bits / 8);
 }
 
 ssize_t snd_pcm_samples_to_bytes(FAR snd_pcm_t *pcm, long samples)
 {
-  SND_PCM_CHECK_SETUP(pcm);
+  if (!pcm->sample_bits)
+    {
+      return -EINVAL;
+    }
+
   return samples * (pcm->sample_bits / 8);
 }
 
@@ -493,6 +520,182 @@ FAR const char *snd_pcm_state_name(snd_pcm_state_t state)
     default:
       return NULL;
     }
+}
+
+int snd_pcm_mmap(FAR snd_pcm_t *pcm)
+{
+  SND_PCM_CHECK_SETUP(pcm);
+  return pcm->ops->mmap(pcm->ops_arg);
+}
+
+int snd_pcm_munmap(FAR snd_pcm_t *pcm)
+{
+  SND_PCM_CHECK_SETUP(pcm);
+  return pcm->ops->munmap(pcm->ops_arg);
+}
+
+int snd_pcm_mmap_begin(FAR snd_pcm_t *pcm,
+                       FAR const snd_pcm_channel_area_t **areas,
+                       FAR snd_pcm_uframes_t *offset,
+                       FAR snd_pcm_uframes_t *frames)
+{
+  assert(pcm && areas && offset && frames);
+  SND_PCM_CHECK_SETUP(pcm);
+  return pcm->ops->mmap_begin(pcm->ops_arg, areas, offset, frames);
+}
+
+snd_pcm_sframes_t snd_pcm_mmap_commit(FAR snd_pcm_t *pcm,
+                                      snd_pcm_uframes_t offset,
+                                      snd_pcm_uframes_t frames)
+{
+  SND_PCM_CHECK_SETUP(pcm);
+  return pcm->ops->mmap_commit(pcm->ops_arg, offset, frames);
+}
+
+snd_pcm_sframes_t snd_pcm_mmap_writei(FAR snd_pcm_t *pcm,
+                                      FAR const void *buffer,
+                                      snd_pcm_uframes_t size)
+{
+  FAR const snd_pcm_channel_area_t *areas;
+  FAR const uint8_t *in = buffer;
+  snd_pcm_uframes_t xfer = 0;
+  snd_pcm_uframes_t offset;
+  snd_pcm_uframes_t frames;
+  FAR uint8_t *out;
+  int ret = 0;
+  size_t len;
+
+  while (size > 0)
+    {
+      frames = size;
+      ret = snd_pcm_mmap_begin(pcm, &areas, &offset, &frames);
+      if (ret < 0)
+        {
+          break;
+        }
+
+      if (frames == 0)
+        {
+          if (pcm->mode & SND_PCM_NONBLOCK)
+            {
+              ret = -EAGAIN;
+              break;
+            }
+
+          ret = snd_pcm_wait(pcm, -1);
+          if (ret < 0)
+            {
+              break;
+            }
+
+          continue;
+        }
+
+      len = snd_pcm_frames_to_bytes(pcm, frames);
+      out = (FAR uint8_t *)areas->addr +
+            snd_pcm_frames_to_bytes(pcm, offset);
+
+      memcpy(out, in, len);
+      in += len;
+      size -= frames;
+      xfer += frames;
+
+      if (pcm->volume != 1.0)
+        {
+          snd_pcm_softvol_scale(pcm->format, pcm->volume, out,
+                                snd_pcm_bytes_to_samples(pcm, len));
+        }
+
+      ret = snd_pcm_mmap_commit(pcm, offset, frames);
+      if (ret < 0)
+        {
+          break;
+        }
+
+      if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED &&
+          pcm->period_size * pcm->appl >= pcm->start_threshold)
+        {
+          ret = snd_pcm_start(pcm);
+          if (ret < 0)
+            {
+              break;
+            }
+        }
+    }
+
+  return xfer > 0 ? xfer : ret;
+}
+
+snd_pcm_sframes_t snd_pcm_mmap_readi(FAR snd_pcm_t *pcm, FAR void *buffer,
+                                     snd_pcm_uframes_t size)
+{
+  FAR const snd_pcm_channel_area_t *areas;
+  snd_pcm_uframes_t xfer = 0;
+  FAR uint8_t *out = buffer;
+  snd_pcm_uframes_t offset;
+  snd_pcm_uframes_t frames;
+  FAR uint8_t *in;
+  int ret = 0;
+  size_t len;
+
+  if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED)
+    {
+      ret = snd_pcm_start(pcm);
+      if (ret < 0)
+        {
+          return ret;
+        }
+    }
+
+  while (size > 0)
+    {
+      frames = size;
+      ret = snd_pcm_mmap_begin(pcm, &areas, &offset, &frames);
+      if (ret < 0)
+        {
+          break;
+        }
+
+      if (frames == 0)
+        {
+          if (pcm->mode & SND_PCM_NONBLOCK)
+            {
+              ret = -EAGAIN;
+              break;
+            }
+
+          ret = snd_pcm_wait(pcm, -1);
+          if (ret < 0)
+            {
+              break;
+            }
+
+          continue;
+        }
+
+      len = snd_pcm_frames_to_bytes(pcm, frames);
+      in = (FAR uint8_t *)areas->addr +
+           snd_pcm_frames_to_bytes(pcm, offset);
+
+      memcpy(out, in, len);
+      out += len;
+      size -= frames;
+      xfer += frames;
+
+      if (pcm->volume != 1.0)
+        {
+          snd_pcm_softvol_scale(pcm->format, pcm->volume, out,
+                                snd_pcm_bytes_to_samples(pcm, len));
+        }
+
+      ret = snd_pcm_mmap_commit(pcm, offset, frames);
+      if (ret < 0)
+        {
+          break;
+        }
+    }
+
+  return xfer > 0 ? xfer : ret;
 }
 
 int snd_pcm_new(FAR snd_pcm_t **pcmp, snd_pcm_type_t type,

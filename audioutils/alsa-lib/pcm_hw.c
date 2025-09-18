@@ -24,6 +24,7 @@
 
 #include <fcntl.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/param.h>
 #include <unistd.h>
 
@@ -36,139 +37,26 @@
 typedef struct
 {
   int fd;
-  mqd_t mq;
   bool setup;
   bool xrun;
-  dq_queue_t bufferq;
+  snd_pcm_uframes_t offset;
+  FAR struct audio_status_s *status;
+  FAR snd_pcm_channel_area_t **areas;
 } snd_pcm_hw_t;
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
 
-static int snd_pcm_hw_poll_available(FAR snd_pcm_t *pcm)
-{
-  FAR snd_pcm_hw_t *hw = pcm->private_data;
-  bool nonblocking = pcm->mode & SND_PCM_NONBLOCK;
-  FAR struct ap_buffer_s *buffer;
-  struct audio_msg_s msg;
-  bool received = false;
-  struct timespec ts0 =
-    {
-      0,
-      0
-    };
-
-  for (; ; )
-    {
-      if (mq_timedreceive(hw->mq, (FAR char *)&msg, sizeof(msg), NULL,
-                          nonblocking ? &ts0 : NULL) < 0)
-        {
-          if (errno != ETIMEDOUT)
-            {
-              return -errno;
-            }
-
-          return received ? 0 : -EAGAIN;
-        }
-
-      if (msg.msg_id == AUDIO_MSG_DEQUEUE)
-        {
-          buffer = msg.u.ptr;
-          buffer->curbyte = 0;
-          dq_addlast(&buffer->dq_entry, &hw->bufferq);
-        }
-      else if (msg.msg_id == AUDIO_MSG_UNDERRUN)
-        {
-          hw->xrun = true;
-          return -EPIPE;
-        }
-      else
-        {
-          SNDINFO("Unhandled msg %d!\n", msg.msg_id);
-        }
-
-      received = true;
-      nonblocking = true;
-    }
-}
-
-static int snd_pcm_hw_peek_buffer(FAR snd_pcm_t *pcm,
-                                  FAR struct ap_buffer_s **buffer)
-{
-  FAR snd_pcm_hw_t *hw = pcm->private_data;
-  int ret;
-
-  *buffer = (FAR struct ap_buffer_s *)dq_peek(&hw->bufferq);
-  if (*buffer)
-    {
-      return 0;
-    }
-
-  ret = snd_pcm_hw_poll_available(pcm);
-  if (ret < 0)
-    {
-      return ret;
-    }
-
-  *buffer = (FAR struct ap_buffer_s *)dq_peek(&hw->bufferq);
-  if (!*buffer)
-    {
-      return -EAGAIN;
-    }
-
-  return 0;
-}
-
-static int snd_pcm_hw_enqueue_buffer(FAR snd_pcm_t *pcm,
-                                     FAR struct ap_buffer_s *buffer,
-                                     bool final)
-{
-  FAR snd_pcm_hw_t *hw = pcm->private_data;
-  struct audio_buf_desc_s desc;
-  int ret;
-
-  if (final)
-    {
-      buffer->flags |= AUDIO_APB_FINAL;
-      SNDINFO("pcm_hw device %s enqueue apb final.\n", pcm->name);
-    }
-  else
-    {
-      buffer->flags &= ~AUDIO_APB_FINAL;
-    }
-
-  buffer->nbytes = buffer->curbyte;
-  buffer->curbyte = 0;
-  desc.u.buffer = buffer;
-
-  ret = ioctl(hw->fd, AUDIOIOC_ENQUEUEBUFFER, &desc);
-  if (ret < 0)
-    {
-      return -errno;
-    }
-
-  return 0;
-}
-
 static void snd_pcm_hw_deinit(FAR snd_pcm_t *pcm)
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
-  char path[64];
 
-  if (hw->mq >= 0)
-    {
-      ioctl(hw->fd, AUDIOIOC_UNREGISTERMQ, 0);
-
-      mq_close(hw->mq);
-      hw->mq = -1;
-
-      snprintf(path, sizeof(path), "/tmp/%p", pcm->name);
-      mq_unlink(path);
-    }
-
+  munmap(hw->status, sizeof(struct audio_status_s));
   ioctl(hw->fd, AUDIOIOC_RELEASE, 0);
   close(hw->fd);
+
+  hw->status = MAP_FAILED;
   hw->fd = -1;
 }
 
@@ -177,12 +65,6 @@ static int snd_pcm_hw_init(FAR snd_pcm_t *pcm)
   FAR snd_pcm_hw_t *hw = pcm->private_data;
   char path[64];
   int ret;
-
-  struct mq_attr attr =
-    {
-      .mq_maxmsg = 16,
-      .mq_msgsize = sizeof(struct audio_msg_s),
-    };
 
   /* Open device */
 
@@ -203,59 +85,53 @@ static int snd_pcm_hw_init(FAR snd_pcm_t *pcm)
       goto out;
     }
 
-  /* Create message queue */
-
-  snprintf(path, sizeof(path), "/tmp/%p", pcm->name);
-  hw->mq = mq_open(path, O_RDWR | O_CREAT | O_CLOEXEC, 0644, &attr);
-  if (hw->mq < 0)
+  hw->status = mmap(0, sizeof(struct audio_status_s),
+                    PROT_READ, MAP_SHARED, hw->fd, 0);
+  if (hw->status == MAP_FAILED)
     {
       ret = -errno;
-      goto out;
-    }
-
-  ret = ioctl(hw->fd, AUDIOIOC_REGISTERMQ, hw->mq);
-  if (ret < 0)
-    {
-      ret = -errno;
+      goto out_release;
     }
 
   return 0;
 
+out_release:
+  ioctl(hw->fd, AUDIOIOC_RELEASE, 0);
 out:
-  snd_pcm_hw_deinit(pcm);
+  close(hw->fd);
   return ret;
 }
 
 static snd_pcm_state_t snd_pcm_hw_state(FAR snd_pcm_t *pcm)
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
-  struct audio_status_s status;
-  int ret;
 
-  ret = ioctl(hw->fd, AUDIOIOC_GETSTATUS, &status);
-  if (ret < 0)
-    {
-      return -errno;
-    }
-
-  if (hw->setup && status.state == AUDIO_STATE_OPEN)
-    {
-      return SND_PCM_STATE_SETUP;
-    }
-  else if (hw->xrun)
+  if (hw->xrun)
     {
       return SND_PCM_STATE_XRUN;
     }
+  else if (hw->setup && hw->status->state == AUDIO_STATE_OPEN)
+    {
+      return SND_PCM_STATE_SETUP;
+    }
+  else if (pcm->appl < hw->status->head ||
+           (hw->status->state == AUDIO_STATE_RUNNING &&
+            pcm->appl <= hw->status->tail))
+    {
+      hw->xrun = true;
+      return SND_PCM_STATE_XRUN;
+    }
 
-  return status.state;
+  return hw->status->state;
 }
 
 static int snd_pcm_hw_close(FAR snd_pcm_t *pcm)
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
   struct audio_buf_desc_s buf_desc;
+  unsigned int i;
 
-  switch (snd_pcm_hw_state(pcm))
+  switch (hw->status->state)
     {
     case SND_PCM_STATE_RUNNING:
       ioctl(hw->fd, AUDIOIOC_STOP, 0);
@@ -263,21 +139,24 @@ static int snd_pcm_hw_close(FAR snd_pcm_t *pcm)
       break;
     }
 
-  pcm->mode &= ~SND_PCM_NONBLOCK;
-  while (dq_count(&hw->bufferq) < pcm->periods)
+  while (pcm->appl > hw->status->tail)
     {
-      snd_pcm_hw_poll_available(pcm);
+      snd_pcm_wait(pcm, -1);
     }
 
-  while (!dq_empty(&hw->bufferq))
+  if (hw->status->state == AUDIO_STATE_DRAINING ||
+      hw->status->state == AUDIO_STATE_OPEN)
     {
-      buf_desc.u.buffer =
-          (FAR struct ap_buffer_s *)dq_remfirst(&hw->bufferq);
-      ioctl(hw->fd, AUDIOIOC_FREEBUFFER, &buf_desc);
+      buf_desc.u.buffer = NULL;
+      for (i = 0; i < pcm->periods; i++)
+        {
+          ioctl(hw->fd, AUDIOIOC_FREEBUFFER, &buf_desc);
+        }
     }
 
   snd_pcm_hw_deinit(pcm);
   free(hw);
+
   return 0;
 }
 
@@ -494,7 +373,6 @@ static int snd_pcm_hw_hw_params(FAR snd_pcm_t *pcm,
   struct audio_caps_desc_s caps_desc;
   struct audio_buf_desc_s buf_desc;
   struct ap_buffer_info_s buf_info;
-  FAR struct ap_buffer_s *buffer;
   snd_pcm_uframes_t period_size;
   unsigned int period_bytes;
   unsigned int period_time;
@@ -553,11 +431,11 @@ static int snd_pcm_hw_hw_params(FAR snd_pcm_t *pcm,
   SNDINFO("config buffer info. n:%u, size:%u", buf_info.nbuffers,
           buf_info.buffer_size);
 
-  dq_init(&hw->bufferq);
   for (i = 0; i < buf_info.nbuffers; i++)
     {
       buf_desc.numbytes = buf_info.buffer_size;
-      buf_desc.u.pbuffer = &buffer;
+      buf_desc.u.pbuffer = NULL;
+
       ret = ioctl(hw->fd, AUDIOIOC_ALLOCBUFFER, &buf_desc);
       if (ret < 0)
         {
@@ -566,15 +444,13 @@ static int snd_pcm_hw_hw_params(FAR snd_pcm_t *pcm,
 
       if (pcm->stream == SND_PCM_STREAM_CAPTURE)
         {
-          ret = snd_pcm_hw_enqueue_buffer(pcm, buffer, false);
+          ret = ioctl(hw->fd, AUDIOIOC_ENQUEUEBUFFER, &buf_desc);
           if (ret < 0)
             {
-              return ret;
+              return -errno;
             }
-        }
-      else
-        {
-          dq_addlast(&buffer->dq_entry, &hw->bufferq);
+
+          pcm->appl++;
         }
     }
 
@@ -583,19 +459,133 @@ static int snd_pcm_hw_hw_params(FAR snd_pcm_t *pcm,
   return 0;
 }
 
-static int snd_pcm_hw_prepare(FAR snd_pcm_t *pcm)
+static int snd_pcm_hw_munmap(FAR snd_pcm_t *pcm)
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
+  unsigned int i;
+  FAR void *addr;
+  size_t len;
 
-  hw->xrun = false;
-  hw->setup = false;
+  if (hw->areas == NULL)
+    {
+      return 0;
+    }
+
+  len = snd_pcm_frames_to_bytes(pcm, pcm->period_size);
+
+  for (i = 0; i < pcm->periods; i++)
+    {
+      addr = hw->areas[i][0].addr;
+      if (addr == NULL || addr == MAP_FAILED)
+        {
+          continue;
+        }
+
+      if (munmap(addr, len) < 0)
+        {
+          SNDERR("munmap failed addr: %p len: %zu\n", addr, len);
+        }
+    }
+
+  free(hw->areas);
+  hw->areas = NULL;
 
   return 0;
 }
 
+static int snd_pcm_hw_mmap(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  size_t areas_size;
+  size_t ptr_size;
+  unsigned int ch;
+  unsigned int i;
+  FAR void *addr;
+  size_t len;
+  int ret;
+
+  ptr_size = pcm->periods * sizeof(hw->areas[0]);
+  areas_size = pcm->channels * sizeof(hw->areas[0][0]);
+  len = snd_pcm_frames_to_bytes(pcm, pcm->period_size);
+
+  hw->areas = malloc(ptr_size + pcm->periods * areas_size);
+  if (!hw->areas)
+    {
+      return -ENOMEM;
+    }
+
+  for (i = 0; i < pcm->periods; i++)
+    {
+      hw->areas[i] =
+          (FAR snd_pcm_channel_area_t *)((FAR uint8_t *)hw->areas +
+                                         ptr_size + i * areas_size);
+
+      addr = mmap(0, len, PROT_READ | PROT_WRITE, MAP_SHARED, hw->fd,
+                  i * len);
+      if (addr == MAP_FAILED)
+        {
+          ret = -errno;
+          snd_pcm_hw_munmap(pcm);
+
+          return ret;
+        }
+
+      for (ch = 0; ch < pcm->channels; ch++)
+        {
+          hw->areas[i][ch].addr = addr;
+          hw->areas[i][ch].first = ch * pcm->sample_bits;
+          hw->areas[i][ch].step = pcm->frame_bits;
+        }
+    }
+
+  return 0;
+}
+
+static int snd_pcm_hw_prepare(FAR snd_pcm_t *pcm)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  int ret = 0;
+
+  if (hw->xrun)
+    {
+      ret = snd_pcm_reset(pcm);
+      hw->xrun = false;
+    }
+
+  return ret;
+}
+
 static int snd_pcm_hw_reset(FAR snd_pcm_t *pcm)
 {
-  return -ENOTSUP;
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  struct audio_buf_desc_s buf_desc;
+  unsigned int i;
+  int ret;
+
+  if (ioctl(hw->fd, AUDIOIOC_RESETSTATUS, 0) < 0)
+    {
+      SNDERR("reset error:%d\n", -errno);
+      return -errno;
+    }
+
+  hw->setup = false;
+  pcm->appl = hw->status->head;
+
+  for (i = 0; i < pcm->periods - 1; i++)
+    {
+      buf_desc.numbytes = snd_pcm_frames_to_bytes(pcm, pcm->period_size);
+      buf_desc.u.pbuffer = NULL;
+
+      ret = ioctl(hw->fd, AUDIOIOC_ENQUEUEBUFFER, &buf_desc);
+      if (ret < 0)
+        {
+          return -errno;
+        }
+
+      pcm->appl++;
+    }
+
+  return 0;
 }
 
 static int snd_pcm_hw_start(FAR snd_pcm_t *pcm)
@@ -621,19 +611,8 @@ static int snd_pcm_hw_drop(FAR snd_pcm_t *pcm)
 static int snd_pcm_hw_drain(FAR snd_pcm_t *pcm)
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
-  FAR struct ap_buffer_s *buffer;
-  int ret;
 
   hw->setup = true;
-  if (pcm->stream == SND_PCM_STREAM_PLAYBACK)
-    {
-      buffer = (FAR struct ap_buffer_s *)dq_peek(&hw->bufferq);
-      if (buffer && buffer->curbyte)
-        {
-          dq_remfirst(&hw->bufferq);
-          snd_pcm_hw_enqueue_buffer(pcm, buffer, true);
-        }
-    }
 
   switch (snd_pcm_hw_state(pcm))
     {
@@ -646,14 +625,21 @@ static int snd_pcm_hw_drain(FAR snd_pcm_t *pcm)
       break;
     }
 
-  ioctl(hw->fd, AUDIOIOC_STOP, 0);
-  while (snd_pcm_hw_state(pcm) != SND_PCM_STATE_SETUP)
+  if (pcm->stream == SND_PCM_STREAM_PLAYBACK && hw->offset)
     {
-      ret = snd_pcm_hw_poll_available(pcm);
-      if (ret < 0)
+      snd_pcm_mmap_commit(pcm, hw->offset, pcm->period_size - hw->offset);
+    }
+
+  ioctl(hw->fd, AUDIOIOC_STOP, 0);
+
+  while (snd_pcm_hw_state(pcm) == SND_PCM_STATE_DRAINING)
+    {
+      if (pcm->mode & SND_PCM_NONBLOCK)
         {
-          return ret;
+          return snd_pcm_hw_state(pcm) == SND_PCM_STATE_SETUP ? 0 : -EAGAIN;
         }
+
+      snd_pcm_wait(pcm, -1);
     }
 
   return 0;
@@ -678,9 +664,7 @@ static int snd_pcm_hw_delay(FAR snd_pcm_t *pcm,
                             FAR snd_pcm_sframes_t *delayp)
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
-  FAR struct ap_buffer_s *buffer;
-  FAR struct dq_entry_s *cur;
-  ssize_t avail = 0;
+  snd_pcm_sframes_t avail;
   int ret;
 
   *delayp = 0;
@@ -690,90 +674,16 @@ static int snd_pcm_hw_delay(FAR snd_pcm_t *pcm,
       return -errno;
     }
 
-  for (cur = dq_peek(&hw->bufferq); cur; cur = dq_next(cur))
-    {
-      buffer = (FAR struct ap_buffer_s *)cur;
-      avail += buffer->curbyte;
-    }
-
-  *delayp += snd_pcm_bytes_to_frames(pcm, avail);
+  avail = (pcm->appl - hw->status->head) * pcm->period_size;
+  *delayp += avail > 0 ? avail : 0;
+  *delayp += hw->offset;
   return 0;
 }
 
 static int snd_pcm_hw_resume(FAR snd_pcm_t *pcm)
 {
-  FAR snd_pcm_hw_t *hw = pcm->private_data;
-
-  hw->xrun = false;
+  snd_pcm_hw_prepare(pcm);
   return 0;
-}
-
-static snd_pcm_sframes_t snd_pcm_hw_writei(FAR snd_pcm_t *pcm,
-                                           FAR const void *buffer,
-                                           snd_pcm_uframes_t size)
-{
-  FAR snd_pcm_hw_t *hw = pcm->private_data;
-  size_t left = snd_pcm_frames_to_bytes(pcm, size);
-  FAR const uint8_t *data = buffer;
-  FAR struct ap_buffer_s *apb;
-  snd_pcm_uframes_t xfer;
-  int ret = 0;
-
-  if (hw->xrun)
-    {
-      return -EPIPE;
-    }
-
-  while (left > 0)
-    {
-      size_t len;
-
-      ret = snd_pcm_hw_peek_buffer(pcm, &apb);
-      if (ret < 0)
-        {
-          break;
-        }
-
-      len = MIN(apb->nmaxbytes - apb->curbyte, left);
-      memcpy(apb->samp + apb->curbyte, data, len);
-
-      data += len;
-      left -= len;
-      apb->curbyte += len;
-      if (apb->curbyte >= apb->nmaxbytes)
-        {
-          if (pcm->volume != 1.0)
-            {
-              snd_pcm_softvol_scale(
-                  pcm->format, pcm->volume, apb->samp,
-                  snd_pcm_bytes_to_samples(pcm, apb->curbyte));
-            }
-
-          dq_remfirst(&hw->bufferq);
-          ret = snd_pcm_hw_enqueue_buffer(pcm, apb, false);
-          if (ret < 0)
-            {
-              break;
-            }
-
-          if (snd_pcm_hw_state(pcm) == SND_PCM_STATE_PREPARED)
-            {
-              xfer = pcm->period_size *
-                     (pcm->periods - dq_count(&hw->bufferq));
-              if (xfer >= pcm->start_threshold)
-                {
-                  ret = snd_pcm_hw_start(pcm);
-                  if (ret < 0)
-                    {
-                      break;
-                    }
-                }
-            }
-        }
-    }
-
-  xfer = size - snd_pcm_bytes_to_frames(pcm, left);
-  return xfer > 0 ? xfer : ret;
 }
 
 static snd_pcm_sframes_t snd_pcm_hw_writen(FAR snd_pcm_t *pcm,
@@ -783,94 +693,79 @@ static snd_pcm_sframes_t snd_pcm_hw_writen(FAR snd_pcm_t *pcm,
   return -ENOTSUP;
 }
 
-static snd_pcm_sframes_t snd_pcm_hw_readi(FAR snd_pcm_t *pcm,
-                                          FAR void *buffer,
-                                          snd_pcm_uframes_t size)
-{
-  FAR snd_pcm_hw_t *hw = pcm->private_data;
-  size_t left = snd_pcm_frames_to_bytes(pcm, size);
-  FAR struct ap_buffer_s *apb;
-  FAR uint8_t *data = buffer;
-  snd_pcm_uframes_t xfer;
-  int ret = 0;
-
-  if (hw->xrun)
-    {
-      return -EPIPE;
-    }
-
-  if (snd_pcm_hw_state(pcm) == SND_PCM_STATE_PREPARED)
-    {
-      ret = snd_pcm_hw_start(pcm);
-      if (ret < 0)
-        {
-          return ret;
-        }
-    }
-
-  while (left > 0)
-    {
-      size_t len;
-
-      ret = snd_pcm_hw_peek_buffer(pcm, &apb);
-      if (ret < 0)
-        {
-          break;
-        }
-
-      len = MIN(apb->nbytes - apb->curbyte, left);
-      memcpy(data, apb->samp + apb->curbyte, len);
-
-      if (pcm->volume != 1.0)
-        {
-          snd_pcm_softvol_scale(pcm->format, pcm->volume, data,
-                                snd_pcm_bytes_to_samples(pcm, len));
-        }
-
-      data += len;
-      left -= len;
-      apb->curbyte += len;
-      if (apb->curbyte >= apb->nbytes)
-        {
-          dq_remfirst(&hw->bufferq);
-          ret = snd_pcm_hw_enqueue_buffer(pcm, apb, false);
-          if (ret < 0)
-            {
-              break;
-            }
-        }
-    }
-
-  xfer = size - snd_pcm_bytes_to_frames(pcm, left);
-  return xfer > 0 ? xfer : ret;
-}
-
 static snd_pcm_sframes_t snd_pcm_hw_avail_update(FAR snd_pcm_t *pcm)
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
-  FAR struct ap_buffer_s *buffer;
-  FAR struct dq_entry_s *cur;
-  ssize_t avail = 0;
-  int ret;
+  unsigned long used;
 
-  if (hw->xrun)
+  if (snd_pcm_hw_state(pcm) == SND_PCM_STATE_XRUN)
     {
       return -EPIPE;
     }
 
-  ret = snd_pcm_hw_poll_available(pcm);
-  if (ret < 0 && ret != -EAGAIN)
+  used = pcm->appl - hw->status->tail;
+
+  return pcm->period_size * (pcm->periods - used) - hw->offset;
+}
+
+static int snd_pcm_hw_mmap_begin(FAR snd_pcm_t *pcm,
+                                 FAR const snd_pcm_channel_area_t **areas,
+                                 FAR snd_pcm_uframes_t *offset,
+                                 FAR snd_pcm_uframes_t *frames)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  snd_pcm_sframes_t avail;
+
+  avail = snd_pcm_hw_avail_update(pcm);
+  if (avail < 0)
     {
-      return ret;
+      return avail;
     }
 
-  for (cur = dq_peek(&hw->bufferq); cur; cur = dq_next(cur))
+  if (avail > pcm->period_size)
     {
-      buffer = (FAR struct ap_buffer_s *)cur;
-      avail += buffer->nbytes - buffer->curbyte;
+      avail = pcm->period_size;
+    }
+  else if (avail > hw->offset)
+    {
+      avail -= hw->offset;
+    }
+  else
+    {
+      avail = 0;
     }
 
-  return snd_pcm_bytes_to_frames(pcm, avail);
+  *areas = hw->areas[pcm->appl % pcm->periods];
+  *offset = hw->offset;
+  *frames = MIN(avail, *frames);
+
+  return 0;
+}
+
+static snd_pcm_sframes_t snd_pcm_hw_mmap_commit(FAR snd_pcm_t *pcm,
+                                                snd_pcm_uframes_t offset,
+                                                snd_pcm_uframes_t size)
+{
+  FAR snd_pcm_hw_t *hw = pcm->private_data;
+  struct audio_buf_desc_s desc;
+  int ret;
+
+  if (hw->offset + size >= pcm->period_size)
+    {
+      desc.numbytes = snd_pcm_frames_to_bytes(pcm, pcm->period_size);
+      desc.u.buffer = NULL;
+
+      ret = ioctl(hw->fd, AUDIOIOC_ENQUEUEBUFFER, &desc);
+      if (ret < 0)
+        {
+          return -errno;
+        }
+
+      hw->offset = 0;
+      pcm->appl++;
+    }
+
+  return 0;
 }
 
 static int snd_pcm_hw_poll_descriptors_count(FAR snd_pcm_t *pcm)
@@ -884,8 +779,8 @@ static int snd_pcm_hw_poll_descriptors(FAR snd_pcm_t *pcm,
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
 
-  pfds->fd = hw->mq;
-  pfds->events = POLLIN;
+  pfds->fd = hw->fd;
+  pfds->events = POLLIN | POLLOUT;
 
   return 1;
 }
@@ -905,10 +800,14 @@ static const snd_pcm_ops_t g_snd_pcm_hw_ops =
     .state = snd_pcm_hw_state,
     .delay = snd_pcm_hw_delay,
     .resume = snd_pcm_hw_resume,
-    .writei = snd_pcm_hw_writei,
+    .writei = snd_pcm_mmap_writei,
     .writen = snd_pcm_hw_writen,
-    .readi = snd_pcm_hw_readi,
+    .readi = snd_pcm_mmap_readi,
     .avail_update = snd_pcm_hw_avail_update,
+    .mmap = snd_pcm_hw_mmap,
+    .munmap = snd_pcm_hw_munmap,
+    .mmap_begin = snd_pcm_hw_mmap_begin,
+    .mmap_commit = snd_pcm_hw_mmap_commit,
     .poll_descriptors_count = snd_pcm_hw_poll_descriptors_count,
     .poll_descriptors = snd_pcm_hw_poll_descriptors,
     .poll_revents = NULL,

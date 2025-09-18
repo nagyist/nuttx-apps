@@ -56,6 +56,15 @@ typedef struct
   snd_pcm_sframes_t (*readi)(FAR snd_pcm_t *pcm, FAR void *buffer,
                              snd_pcm_uframes_t size);
   snd_pcm_sframes_t (*avail_update)(FAR snd_pcm_t *pcm);
+  int (*mmap)(FAR snd_pcm_t *pcm);
+  int (*munmap)(FAR snd_pcm_t *pcm);
+  int (*mmap_begin)(FAR snd_pcm_t *pcm,
+                    FAR const snd_pcm_channel_area_t **areas,
+                    FAR snd_pcm_uframes_t *offset,
+                    FAR snd_pcm_uframes_t *frames);
+  snd_pcm_sframes_t (*mmap_commit)(FAR snd_pcm_t *pcm,
+                                   snd_pcm_uframes_t offset,
+                                   snd_pcm_uframes_t size);
   int (*poll_descriptors_count)(FAR snd_pcm_t *pcm);
   int (*poll_descriptors)(FAR snd_pcm_t *pcm, FAR struct pollfd *pfds,
                           unsigned int space);
@@ -79,6 +88,7 @@ struct snd_pcm_s
   snd_pcm_uframes_t start_threshold;
   unsigned int sample_bits;
   unsigned int frame_bits;
+  unsigned long appl;
   float volume;
   const FAR snd_pcm_ops_t *ops;
   FAR snd_pcm_t *ops_arg;

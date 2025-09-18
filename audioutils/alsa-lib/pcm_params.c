@@ -377,6 +377,12 @@ static int snd_pcm_hw_params_internal(FAR snd_pcm_t *pcm,
           pcm->format, pcm->channels, pcm->rate, pcm->periods,
           pcm->period_time);
 
+  ret = snd_pcm_mmap(pcm);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
   return 0;
 }
 
