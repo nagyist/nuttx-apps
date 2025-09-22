@@ -22,7 +22,9 @@ if(NOT TARGET nuttx_apps_mksymtab)
   add_custom_target(nuttx_apps_mksymtab)
 endif()
 
-if(NOT CONFIG_BUILD_KERNEL)
+if(CONFIG_EXECFUNCS_HAVE_SYMTAB
+   OR CONFIG_NSH_SYMTAB
+   OR CONFIG_MODLIB_HAVE_SYMTAB)
   set(SYMTAB_APPS_SOURCE ${CMAKE_BINARY_DIR}/symtab_apps.c)
 
   add_custom_command(
