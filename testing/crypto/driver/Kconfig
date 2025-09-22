@@ -39,6 +39,10 @@ config TESTING_CRYPTO_HASH_HUGE_BLOCK
 
 endif
 
+config TESTING_CRYPTO_CRC16
+	bool "crc16 crypto test"
+	default n
+
 config TESTING_CRYPTO_CRC32
 	bool "crc32 crypto test"
 	default n

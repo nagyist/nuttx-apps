@@ -51,6 +51,11 @@ PROGNAME += cmocka_hash
 MAINSRC +=  hash.c
 endif
 
+ifeq ($(CONFIG_TESTING_CRYPTO_CRC16),y)
+PROGNAME += cmocka_crc16
+MAINSRC +=  crc16.c
+endif
+
 ifeq ($(CONFIG_TESTING_CRYPTO_CRC32),y)
 PROGNAME += cmocka_crc32
 MAINSRC +=  crc32.c
