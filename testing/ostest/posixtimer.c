@@ -58,7 +58,9 @@ static void timer_expiration(int signo, siginfo_t *info, void *ucontext)
   sigset_t allsigs;
   int status;
 
-  printf("timer_expiration: Received signal %d\n" , signo);
+  /* Do not use printf in a signal handler, only async-signal-safe functions
+   * are permitted.
+   */
 
   g_nsigreceived++;
 
@@ -66,8 +68,6 @@ static void timer_expiration(int signo, siginfo_t *info, void *ucontext)
 
   if (signo != MY_TIMER_SIGNAL)
     {
-      printf("timer_expiration: ERROR expected signo=%d\n",
-             MY_TIMER_SIGNAL);
       ASSERT(false);
     }
 
@@ -75,36 +75,18 @@ static void timer_expiration(int signo, siginfo_t *info, void *ucontext)
 
   if (info->si_value.sival_int != SIGVALUE_INT)
     {
-      printf("timer_expiration: ERROR sival_int=%d expected %d\n",
-              info->si_value.sival_int, SIGVALUE_INT);
       ASSERT(false);
-    }
-  else
-    {
-      printf("timer_expiration: sival_int=%d\n" , info->si_value.sival_int);
     }
 
   if (info->si_signo != MY_TIMER_SIGNAL)
     {
-      printf("timer_expiration: ERROR expected si_signo=%d, got=%d\n",
-               MY_TIMER_SIGNAL, info->si_signo);
       ASSERT(false);
     }
 
-  if (info->si_code == SI_TIMER)
+  if (info->si_code != SI_TIMER)
     {
-      printf("timer_expiration: si_code=%d (SI_TIMER)\n" , info->si_code);
-    }
-  else
-    {
-      printf("timer_expiration: ERROR si_code=%d, expected SI_TIMER=%d\n",
-             info->si_code, SI_TIMER);
       ASSERT(false);
     }
-
-  /* Check ucontext_t */
-
-  printf("timer_expiration: ucontext=%p\n" , ucontext);
 
   /* Check sigprocmask */
 
@@ -112,16 +94,11 @@ static void timer_expiration(int signo, siginfo_t *info, void *ucontext)
   status = sigprocmask(SIG_SETMASK, NULL, &oldset);
   if (status != OK)
     {
-      printf("timer_expiration: ERROR sigprocmask failed, status=%d\n",
-              status);
       ASSERT(false);
     }
 
   if (!sigset_isequal(&oldset, &allsigs))
     {
-      printf("timer_expiration: ERROR sigprocmask=" SIGSET_FMT
-             " expected=" SIGSET_FMT "\n",
-             SIGSET_ELEM(&oldset), SIGSET_ELEM(&allsigs));
       ASSERT(false);
     }
 }
