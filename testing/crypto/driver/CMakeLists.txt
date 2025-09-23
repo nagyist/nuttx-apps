@@ -115,6 +115,22 @@ if(CONFIG_TESTING_CRYPTO)
       cmocka)
   endif()
 
+  if(CONFIG_TESTING_CRYPTO_CRC8)
+    nuttx_add_application(
+      NAME
+      cmocka_crc8
+      PRIORITY
+      ${CONFIG_TESTING_CRYPTO_PRIORITY}
+      STACKSIZE
+      ${CONFIG_TESTING_CRYPTO_STACKSIZE}
+      MODULE
+      ${CONFIG_TESTING_CRYPTO}
+      SRCS
+      crc8.c
+      DEPENDS
+      cmocka)
+  endif()
+
   if(CONFIG_TESTING_CRYPTO_CRC16)
     nuttx_add_application(
       NAME
