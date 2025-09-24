@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/param.h>
+#include <unistd.h>
 
 #include "pcm_local.h"
 
