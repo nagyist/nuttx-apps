@@ -44,6 +44,7 @@
 #include <sched.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <assert.h>
 
 #ifdef CONFIG_SIM_WALLTIME_SLEEP
 #  include <nuttx/arch.h>

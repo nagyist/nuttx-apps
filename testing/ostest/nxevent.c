@@ -25,6 +25,7 @@
 #include <nuttx/config.h>
 #include <nuttx/event.h>
 
+#include <assert.h>
 #include <stdio.h>
 #include <sched.h>
 #include <pthread.h>

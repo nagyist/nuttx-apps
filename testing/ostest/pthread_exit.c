@@ -30,6 +30,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
+#include <assert.h>
 
 #include "ostest.h"
 

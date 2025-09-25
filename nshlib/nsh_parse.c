@@ -32,6 +32,7 @@
 #include <debug.h>
 #include <sched.h>
 #include <unistd.h>
+#include <assert.h>
 
 #ifdef CONFIG_NSH_CMDPARMS
 #  include <sys/stat.h>

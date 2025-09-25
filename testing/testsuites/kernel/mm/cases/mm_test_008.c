@@ -22,6 +22,7 @@
  * Included Files
  ****************************************************************************/
 #include <nuttx/config.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <syslog.h>
 #include <inttypes.h>
