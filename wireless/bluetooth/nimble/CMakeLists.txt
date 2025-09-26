@@ -55,7 +55,7 @@ if(CONFIG_NIMBLE)
       mynewt-nimble/porting/nimble/src/nimble_port.c
       mynewt-nimble/porting/nimble/src/os_mbuf.c
       mynewt-nimble/porting/nimble/src/os_mempool.c
-      mynewt-nimble/porting/nimble/src/os_msys_init.c)
+      mynewt-nimble/porting/nimble/src/os_msys.c)
 
   set(SRCS_NPL
       mynewt-nimble/porting/npl/nuttx/src/os_atomic.c
