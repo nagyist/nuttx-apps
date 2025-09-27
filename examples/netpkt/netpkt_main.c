@@ -40,7 +40,7 @@
  * Name: psock_create
  ****************************************************************************/
 
-static int psock_create(const char *ifname)
+static int psock_create(FAR const char *ifname, unsigned short frame_type)
 {
   int sd;
   struct sockaddr_ll addr;
@@ -63,7 +63,7 @@ static int psock_create(const char *ifname)
 
   addr.sll_family = AF_PACKET;
   addr.sll_ifindex = ifindex;
-  addr.sll_protocol = htons(ETH_P_ALL);
+  addr.sll_protocol = htons(frame_type);
   if (bind(sd, (const struct sockaddr *)&addr, addrlen) < 0)
     {
       perror("ERROR: binding socket failed");
@@ -114,6 +114,7 @@ static void netpkt_usage(void)
   printf(" -t     transmit\n");
   printf(" -v     verbose\n");
   printf(" -i <IF> specify interface name (e.g. eth0)\n");
+  printf(" -f <frame_type> frame type, default 0x0003 (ETH_P_ALL) \n");
   printf("\n");
 }
 
@@ -150,6 +151,7 @@ int main(int argc, char *argv[])
   int do_tx = 0;
   int do_txtimes = 3;
   char ifname[IFNAMSIZ];
+  unsigned short frame_type = ETH_P_ALL;
 
   memset(ifname, 0, sizeof(ifname));
 
@@ -161,7 +163,7 @@ int main(int argc, char *argv[])
 
   /* Parse arguments */
 
-  while ((opt = getopt(argc, argv, "artvi:")) != -1)
+  while ((opt = getopt(argc, argv, "artvi:f:")) != -1)
     {
       switch (opt)
         {
@@ -186,13 +188,17 @@ int main(int argc, char *argv[])
             strlcpy(ifname, optarg, sizeof(ifname));
             break;
 
+          case 'f':
+            sscanf(optarg, "%hx", &frame_type);
+            break;
+
           default:
             netpkt_usage();
             return -1;
       }
   }
 
-  sd = psock_create(ifname);
+  sd = psock_create(ifname, frame_type);
 
   if (do_tx)
     {
