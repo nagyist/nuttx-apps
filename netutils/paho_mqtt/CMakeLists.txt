@@ -21,9 +21,10 @@
 if(CONFIG_LIB_MQTT5)
 
   configure_file(paho_mqtt/src/VersionInfo.h.in
-                 ${CMAKE_CURRENT_LIST_DIR}/paho_mqtt/src/VersionInfo.h @ONLY)
+                 ${CMAKE_CURRENT_BINARY_DIR}/VersionInfo.h @ONLY)
 
   set(MQTT5_INCDIR ${CMAKE_CURRENT_LIST_DIR}/paho_mqtt/src)
+  list(APPEND MQTT5_INCDIR ${CMAKE_CURRENT_BINARY_DIR})
 
   file(GLOB CSRCS paho_mqtt/src/*.c)
 
