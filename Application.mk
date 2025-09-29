@@ -136,6 +136,24 @@ ifneq ($(strip $(PROGNAME)),)
     $(eval HEAPSIZE_$(word $i,$(REGLIST)) := \
         $(if $(word $i,$(HEAPSIZE)),$(word $i,$(HEAPSIZE)),$(lastword $(HEAPSIZE)))) \
   )
+
+  PRIORITY = 0
+  ifneq ($(PRIORITY_$(REGLIST)), SCHED_PRIORITY_DEFAULT)
+     PRIORITY = $(PRIORITY_$(REGLIST))
+  endif
+
+  MODLDFLAGS += --defsym nx_stacksize=$(STACKSIZE_$(REGLIST)) --defsym nx_priority=$(PRIORITY)
+  ifeq ($(CONFIG_SCHED_USER_IDENTITY),y)
+    MODLDFLAGS += --defsym nx_uid=$(UID_$(REGLIST)) --defsym nx_gid=$(GID_$(REGLIST)) --defsym nx_mod=$(GID_$(REGLIST))
+  endif
+  ifeq ($(CONFIG_MM_TASK_HEAP),y)
+    HEAPSIZE = $(CONFIG_MM_TASK_HEAP_DEFAULT_SIZE)
+    ifneq ($(HEAPSIZE_$(REGLIST)),)
+       HEAPSIZE = $(PRIORITY_$(REGLIST))
+    endif
+
+    MODLDFLAGS += --defsym nx_heapsize=$(HEAPSIZE)
+  endif
 endif
 
 # Condition flags
@@ -150,7 +168,7 @@ ifeq ($(WASM_BUILD),y)
   DO_REGISTRATION = n
 endif
 
-ifeq ($(DYNLIB),y)
+ifeq ($(BUILD_MODULE),y)
   DO_REGISTRATION = n
 endif
 
