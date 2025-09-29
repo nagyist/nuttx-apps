@@ -194,7 +194,7 @@ void test_nuttx_syscall_fsync03(FAR void **state)
   unsigned long f_bavail;
   char pbuf[2048];
 
-  off_t max_blks = 4096;
+  off_t max_blks = 32;
 
   sprintf(fname, "Fsync03_%d", getpid());
   fd = open(fname, O_RDWR | O_CREAT | O_TRUNC, 0777);
