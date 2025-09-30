@@ -69,29 +69,29 @@ int main(int argc, FAR char *argv[])
 
   while (1)
     {
-      sched_note_printf(NOTE_TAG_ALWAYS,
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO,
                         "sched note test count = %d.", count++);
       sched_note_mark(NOTE_TAG_ALWAYS, str);
-      sched_note_printf(NOTE_TAG_ALWAYS, "%hhd", c);
-      sched_note_printf(NOTE_TAG_ALWAYS, "%hd", s);
-      sched_note_printf(NOTE_TAG_ALWAYS, "%d", i);
-      sched_note_printf(NOTE_TAG_ALWAYS, "%ld", l);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%hhd", c);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%hd", s);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%d", i);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%ld", l);
 #ifdef CONFIG_HAVE_LONG_LONG
-      sched_note_printf(NOTE_TAG_ALWAYS, "%lld", ll);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%lld", ll);
 #endif
-      sched_note_printf(NOTE_TAG_ALWAYS, "%jd", im);
-      sched_note_printf(NOTE_TAG_ALWAYS, "%zd", sz);
-      sched_note_printf(NOTE_TAG_ALWAYS, "%td", ptr);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%jd", im);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%zd", sz);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%td", ptr);
 #ifdef CONFIG_HAVE_FLOAT
-      sched_note_printf(NOTE_TAG_ALWAYS, "%e", f);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%e", f);
 #endif
 #ifdef CONFIG_HAVE_DOUBLE
-      sched_note_printf(NOTE_TAG_ALWAYS, "%le", d);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%le", d);
 #endif
 #ifdef CONFIG_HAVE_LONG_DOUBLE
-      sched_note_printf(NOTE_TAG_ALWAYS, "%Le", ld);
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO, "%Le", ld);
 #endif
-      sched_note_printf(NOTE_TAG_ALWAYS,
+      sched_note_printf(NOTE_TAG_ALWAYS, LOG_INFO,
                         "%hhd  %hd  %d  %ld  %lld  %jd  %zd  %td",
                         c,    s,   i,  l,    ll,  im,  sz,  ptr);
       usleep(10);
