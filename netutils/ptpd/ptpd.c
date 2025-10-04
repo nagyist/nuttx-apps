@@ -1523,6 +1523,7 @@ static int ptp_process_rx_packet(FAR struct ptp_state_s *state,
 
 /* Signal handler for status / stop requests */
 
+#ifndef CONFIG_DISABLE_SIGNALS
 static void ptp_signal_handler(int signo, FAR siginfo_t *siginfo,
                                FAR void *context)
 {
@@ -1551,6 +1552,7 @@ static void ptp_setup_sighandlers(FAR struct ptp_state_s *state)
   sigaction(SIGHUP, &act, NULL);
   sigaction(SIGUSR1, &act, NULL);
 }
+#endif
 
 /* Process status information request */
 
@@ -1677,7 +1679,9 @@ int ptpd_start(FAR const struct ptpd_config_s *config)
       timeout = CONFIG_NETUTILS_PTPD_SYNC_INTERVAL_MSEC;
     }
 
+#ifndef CONFIG_DISABLE_SIGNALS
   ptp_setup_sighandlers(state);
+#endif
 
   pollfds[0].events = POLLIN;
   pollfds[0].fd = state->event_socket;
