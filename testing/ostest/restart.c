@@ -225,8 +225,6 @@ void restart_test(void)
 
   g_restartstep = -1;
 
-  UNUSED(stat_loc);
-
 #ifdef CONFIG_SCHED_WAITPID
   waitpid(pid, &stat_loc, 0);
 #endif
