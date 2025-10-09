@@ -28,6 +28,7 @@
 #include <stdio.h>
 
 #include <nuttx/sched.h>
+#include <nuttx/semaphore.h>
 
 #if defined(CONFIG_SMP) && defined(CONFIG_BUILD_FLAT)
 

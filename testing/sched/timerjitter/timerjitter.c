@@ -22,6 +22,8 @@
  * Included Files
  ****************************************************************************/
 
+#include <nuttx/clock.h>
+
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>

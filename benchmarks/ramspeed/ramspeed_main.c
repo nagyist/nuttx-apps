@@ -24,6 +24,8 @@
 
 #include <nuttx/config.h>
 #include <nuttx/irq.h>
+#include <nuttx/clock.h>
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
