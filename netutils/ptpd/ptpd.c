@@ -563,6 +563,12 @@ static int ptp_initialize_state(FAR struct ptp_state_s *state)
         }
 
       state->event_socket = dup(state->tx_socket);
+      if (state->event_socket < 0)
+        {
+          ptperr("Failed to create event socket: %d\n", errno);
+          goto errout;
+        }
+
       state->info_socket = -1;
 
       addr.sll_family = AF_PACKET;
