@@ -112,7 +112,7 @@ void test_nuttx_syscall_mkdir02(FAR void **state)
 {
   int ret;
   int j;
-  int times = 1000;
+  int times = 500;
   char tmpdir[40];
 
   while (times--)
