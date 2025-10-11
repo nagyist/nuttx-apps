@@ -36,6 +36,7 @@
 #include <string.h>
 
 #include <nuttx/lib/builtin.h>
+#include <nuttx/sched.h>
 #include "builtin/builtin.h"
 
 #include "nsh.h"

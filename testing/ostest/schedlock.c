@@ -49,6 +49,7 @@
 #ifdef CONFIG_SIM_WALLTIME_SLEEP
 #  include <nuttx/arch.h>
 #endif
+#include <nuttx/sched.h>
 
 #include <sys/wait.h>
 

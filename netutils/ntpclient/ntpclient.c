@@ -49,6 +49,7 @@
 #endif
 
 #include <nuttx/clock.h>
+#include <nuttx/sched.h>
 
 #include "netutils/netlib.h"
 #include "netutils/ntpclient.h"

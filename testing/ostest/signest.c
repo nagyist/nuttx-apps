@@ -24,6 +24,8 @@
 
 #include <nuttx/config.h>
 
+#include <nuttx/sched.h>
+
 #include <assert.h>
 #include <errno.h>
 #include <pthread.h>
