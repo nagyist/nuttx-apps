@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <termios.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include <logging/nxscope/nxscope.h>
 

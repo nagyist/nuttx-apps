@@ -43,6 +43,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include <nuttx/net/mii.h>
 #include <sys/boardctl.h>
