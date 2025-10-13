@@ -224,11 +224,13 @@ extern "C"
 #define snd_enc_real                        audio_enc_real_s
 #define snd_enc_flac                        audio_enc_flac_s
 #define snd_enc_sbc                         audio_enc_sbc_s
+#define snd_enc_lc3                         audio_enc_lc3_s
 #define snd_enc_generic                     audio_enc_generic_s
 #define snd_dec_flac                        audio_dec_flac_s
 #define snd_dec_wma                         audio_dec_wma_s
 #define snd_dec_alac                        audio_dec_alac_s
 #define snd_dec_ape                         audio_dec_ape_s
+#define snd_dec_lc3                         audio_dec_lc3_s
 #define snd_codec_options                   audio_codec_options_u
 
 /****************************************************************************
