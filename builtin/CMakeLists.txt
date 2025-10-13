@@ -67,8 +67,7 @@ if(CONFIG_BUILTIN)
 
   set(CSRCS)
 
-  list(APPEND CSRCS builtin_list.c exec_builtin.c builtin_list.h
-       builtin_proto.h)
+  list(APPEND CSRCS builtin_list.c builtin_list.h builtin_proto.h)
 
   # target_sources(apps PRIVATE ${CSRCS})
   nuttx_add_library(apps_builtin ${CSRCS})

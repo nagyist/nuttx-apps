@@ -857,12 +857,9 @@ int nsh_telnetlogin(FAR struct console_stdio_s *pstate);
 
 int nsh_command(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char *argv[]);
 
-#ifdef CONFIG_NSH_BUILTIN_APPS
-int nsh_builtin(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
-                FAR char **argv, FAR const struct nsh_param_s *param);
-#endif
+#if defined(CONFIG_NSH_FILE_APPS) || \
+    (defined(CONFIG_NSH_BUILTIN_APPS) && !defined(CONFIG_NSH_BUILTIN_AS_COMMAND))
 
-#ifdef CONFIG_NSH_FILE_APPS
 int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
                 FAR char **argv, FAR const struct nsh_param_s *param);
 #endif

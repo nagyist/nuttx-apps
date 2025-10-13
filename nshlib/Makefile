@@ -33,14 +33,10 @@ endif
 
 CSRCS += nsh_fsutils.c
 
-ifeq ($(CONFIG_NSH_BUILTIN_APPS),y)
+ifneq ($(CONFIG_NSH_FILE_APPS)$(CONFIG_NSH_BUILTIN_APPS),)
 ifneq ($(CONFIG_NSH_BUILTIN_AS_COMMAND),y)
-CSRCS += nsh_builtin.c
-endif
-endif
-
-ifeq ($(CONFIG_NSH_FILE_APPS),y)
 CSRCS += nsh_fileapps.c
+endif
 endif
 
 ifeq ($(CONFIG_NSH_VARS),y)

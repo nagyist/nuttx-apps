@@ -529,43 +529,6 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
    * 4. If not, report that the command was not found.
    */
 
-  /* Does this command correspond to a built-in command?
-   * nsh_builtin() returns:
-   *
-   *   -1 (ERROR)  if the application task corresponding to 'argv[0]' could
-   *               not be started (possibly because it does not exist).
-   *    0 (OK)     if the application task corresponding to 'argv[0]' was
-   *               and successfully started.  If CONFIG_SCHED_WAITPID is
-   *               defined, this return value also indicates that the
-   *               application returned successful status (EXIT_SUCCESS)
-   *    1          If CONFIG_SCHED_WAITPID is defined, then this return value
-   *               indicates that the application task was spawned
-   *               successfully but returned failure exit status.
-   *
-   * Note the priority is not effected by nice-ness.
-   */
-
-#if defined(CONFIG_NSH_BUILTIN_APPS) && !defined(CONFIG_NSH_BUILTIN_AS_COMMAND)
-  ret = nsh_builtin(vtbl, argv[0], argv, param);
-  if (ret >= 0)
-    {
-      /* nsh_builtin() returned 0 or 1.  This means that the built-in
-       * command was successfully started (although it may not have ran
-       * successfully).  So certainly it is not an NSH command.
-       */
-
-      /* Save the result:  success if 0; failure if 1 */
-
-      return nsh_saveresult(vtbl, ret != OK);
-    }
-
-  /* No, not a built in command (or, at least, we were unable to start a
-   * built-in command of that name). Maybe it is a built-in application
-   * or an NSH command.
-   */
-
-#endif
-
   /* Does this command correspond to an application filename?
    * nsh_fileapp() returns:
    *
@@ -582,7 +545,9 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
    * Note the priority is not effected by nice-ness.
    */
 
-#ifdef CONFIG_NSH_FILE_APPS
+#if defined(CONFIG_NSH_FILE_APPS) || \
+    (defined(CONFIG_NSH_BUILTIN_APPS) && !defined(CONFIG_NSH_BUILTIN_AS_COMMAND))
+
   ret = nsh_fileapp(vtbl, argv[0], argv, param);
   if (ret >= 0)
     {

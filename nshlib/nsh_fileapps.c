@@ -42,8 +42,6 @@
 #include "nsh.h"
 #include "nsh_console.h"
 
-#ifdef CONFIG_NSH_FILE_APPS
-
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
@@ -74,7 +72,7 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
 {
   posix_spawn_file_actions_t file_actions;
   FAR posix_spawnattr_t *attr = NULL;
-#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+#if !defined(CONFIG_NSH_DISABLE_PRLIMIT) || defined(CONFIG_NSH_BUILTIN_APPS)
   posix_spawnattr_t tmp;
 #endif
   pid_t pid;
@@ -227,7 +225,80 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
    * failure.
    */
 
+#ifdef CONFIG_LIBC_EXECFUNCS
   ret = posix_spawnp(&pid, cmd, &file_actions, attr, argv, environ);
+#else
+  ret = -ENOSYS;
+#endif
+
+#ifdef CONFIG_NSH_BUILTIN_APPS
+  if (ret != OK)
+    {
+      FAR const struct builtin_s *builtin;
+      int index;
+
+      index = builtin_isavail(cmd);
+      if (index < 0)
+        {
+          ret = ENOENT;
+          goto errout_with_actions;
+        }
+
+      /* Get information about the builtin */
+
+      builtin = builtin_for_index(index);
+      if (builtin == NULL)
+        {
+          ret = ENOENT;
+          goto errout_with_actions;
+        }
+
+      if (attr == NULL)
+        {
+          struct sched_param sched;
+
+          ret = posix_spawnattr_init(&tmp);
+          if (ret != 0)
+            {
+              nsh_error(vtbl, g_fmtcmdfailed, cmd, "posix_spawnattr_init",
+                        NSH_ERRNO);
+              goto errout_with_actions;
+            }
+
+          attr = &tmp;
+          sched_getparam(0, &sched);
+          sched.sched_priority = builtin->priority;
+          ret = posix_spawnattr_setschedparam(&tmp, &sched);
+          if (ret != 0)
+            {
+              nsh_error(vtbl, g_fmtcmdfailed, cmd,
+                        "posix_spawnattr_setschedparam", NSH_ERRNO);
+              goto errout_with_attrs;
+            }
+
+          ret = posix_spawnattr_setstacksize(&tmp, builtin->stacksize);
+          if (ret != 0)
+            {
+              nsh_error(vtbl, g_fmtcmdfailed, cmd,
+                        "posix_spawnattr_setstacksize", NSH_ERRNO);
+              goto errout_with_attrs;
+            }
+
+          ret = posix_spawnattr_setheapsize(&tmp, builtin->heapsize);
+          if (ret != 0)
+            {
+              nsh_error(vtbl, g_fmtcmdfailed, cmd,
+                        "posix_spawnattr_setheapsize", NSH_ERRNO);
+              goto errout_with_attrs;
+            }
+        }
+
+      pid = task_spawn(builtin->name, builtin->main, &file_actions,
+                       attr, argv ? &argv[1] : NULL, NULL);
+      ret = pid < 0 ? -pid : 0;
+    }
+#endif
+
   if (ret == OK)
     {
       /* The application was successfully started with pre-emption disabled.
@@ -360,7 +431,7 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
    */
 
 errout_with_attrs:
-#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+#if !defined(CONFIG_NSH_DISABLE_PRLIMIT) || defined(CONFIG_NSH_BUILTIN_APPS)
   if (attr != NULL)
     {
       posix_spawnattr_destroy(attr);
@@ -400,5 +471,3 @@ errout:
 
   return ret;
 }
-
-#endif /* CONFIG_NSH_FILE_APPS */

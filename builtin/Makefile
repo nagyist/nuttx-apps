@@ -22,7 +22,7 @@ include $(APPDIR)/Make.defs
 
 # Source and object files
 
-CSRCS = builtin_list.c exec_builtin.c
+CSRCS = builtin_list.c
 
 # Registry entry lists
 
