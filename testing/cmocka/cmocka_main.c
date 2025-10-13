@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <syslog.h>
 #include <sys/wait.h>
-#include <builtin/builtin.h>
+#include <nuttx/lib/builtin.h>
 #include <regex.h>
 #include <cmocka.h>
 
@@ -102,6 +102,7 @@ int main(int argc, FAR char *argv[])
   FAR char *xml_path = NULL;
   FAR char *shuffle_seed = NULL;
   int num_bypass = 1;
+  pid_t pid;
   int ret;
   int i;
   int list_tests = 0;
@@ -116,7 +117,6 @@ int main(int argc, FAR char *argv[])
   char filepath[PATH_MAX];
   FAR char *spawn_argv[2];
   FAR char *path_env;
-  pid_t pid;
   int dir_len = 0;
   int status;
 #endif
@@ -215,10 +215,10 @@ int main(int argc, FAR char *argv[])
         }
 
       bypass[0] = (FAR char *)builtin->name;
-      ret = exec_builtin(builtin->name, bypass, NULL);
-      if (ret >= 0)
+      ret = posix_spawn(&pid, builtin->name, NULL, NULL, bypass, NULL);
+      if (ret == 0)
         {
-          waitpid(ret, &ret, WUNTRACED);
+          waitpid(pid, &ret, WUNTRACED);
         }
     }
 #else /* CONFIG_BUILD_KERNEL */
