@@ -2336,12 +2336,14 @@ static int nsh_prlimit(FAR struct nsh_vtbl_s *vtbl, FAR char **ppcmd,
                   return ERROR;
                 }
 
-              param->priority = (int)strtol(arg, &endptr, 0);
+              param->prlimit.priority = (int)strtol(arg, &endptr, 0);
               if (endptr == arg || *endptr != '\0')
                 {
                   nsh_error(vtbl, g_fmtarginvalid, "prlimit");
                   return ERROR;
                 }
+
+              param->prlimit.used = 1;
             }
           else if (strcmp(arg, "-s") == 0)
             {
@@ -2352,12 +2354,14 @@ static int nsh_prlimit(FAR struct nsh_vtbl_s *vtbl, FAR char **ppcmd,
                   return ERROR;
                 }
 
-              param->stacksize = (size_t)strtoul(arg, &endptr, 0);
+              param->prlimit.stacksize = (size_t)strtoul(arg, &endptr, 0);
               if (endptr == arg || *endptr != '\0')
                 {
                   nsh_error(vtbl, g_fmtarginvalid, "prlimit");
                   return ERROR;
                 }
+
+              param->prlimit.used = 1;
             }
           else if (strcmp(arg, "-h") == 0)
             {
@@ -2368,12 +2372,14 @@ static int nsh_prlimit(FAR struct nsh_vtbl_s *vtbl, FAR char **ppcmd,
                   return ERROR;
                 }
 
-              param->heapsize = (size_t)strtoul(arg, &endptr, 0);
+              param->prlimit.heapsize = (size_t)strtoul(arg, &endptr, 0);
               if (endptr == arg || *endptr != '\0')
                 {
                   nsh_error(vtbl, g_fmtarginvalid, "prlimit");
                   return ERROR;
                 }
+
+              param->prlimit.used = 1;
             }
           else
             {

@@ -58,9 +58,11 @@ int exec_builtin(FAR const char *appname, FAR char * const *argv,
                  FAR const struct nsh_param_s *param)
 {
   FAR const struct builtin_s *builtin;
-  posix_spawnattr_t attr;
+  FAR posix_spawnattr_t *attr = NULL;
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+  posix_spawnattr_t tmp;
+#endif
   posix_spawn_file_actions_t file_actions;
-  struct sched_param sched;
   pid_t pid;
   int index;
   int ret;
@@ -83,81 +85,59 @@ int exec_builtin(FAR const char *appname, FAR char * const *argv,
       goto errout_with_errno;
     }
 
-  /* Initialize attributes for task_spawn(). */
-
-  ret = posix_spawnattr_init(&attr);
-  if (ret != 0)
-    {
-      goto errout_with_errno;
-    }
-
   ret = posix_spawn_file_actions_init(&file_actions);
   if (ret != 0)
     {
       goto errout_with_attrs;
     }
 
-  /* Set the correct task size and priority */
-
-  sched.sched_priority =
-#ifndef CONFIG_NSH_DISABLE_PRLIMIT
-    param && param->priority ? param->priority :
-#endif
-    builtin->priority;
-  ret = posix_spawnattr_setschedparam(&attr, &sched);
-  if (ret != 0)
-    {
-      goto errout_with_actions;
-    }
-
-  ret = posix_spawnattr_setstacksize(&attr,
-#ifndef CONFIG_NSH_DISABLE_PRLIMIT
-         param && param->stacksize ? param->stacksize :
-#endif
-         builtin->stacksize
-        );
-  if (ret != 0)
-    {
-      goto errout_with_actions;
-    }
-
-  ret = posix_spawnattr_setheapsize(&attr,
-         param && param->heapsize ? param->heapsize : builtin->heapsize);
-  if (ret != 0)
-    {
-      goto errout_with_actions;
-    }
-
-  /* If robin robin scheduling is enabled, then set the scheduling policy
-   * of the new task to SCHED_RR before it has a chance to run.
-   */
-
-#if CONFIG_RR_INTERVAL > 0
-  ret = posix_spawnattr_setschedpolicy(&attr, SCHED_RR);
-  if (ret != 0)
-    {
-      goto errout_with_actions;
-    }
-
-  ret = posix_spawnattr_setflags(&attr,
-                                 POSIX_SPAWN_SETSCHEDPARAM |
-                                 POSIX_SPAWN_SETSCHEDULER);
-  if (ret != 0)
-    {
-      goto errout_with_actions;
-    }
-
-#else
-  ret = posix_spawnattr_setflags(&attr, POSIX_SPAWN_SETSCHEDPARAM);
-  if (ret != 0)
-    {
-      goto errout_with_actions;
-    }
-
-#endif
-
   if (param)
     {
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+      if (param->prlimit.used)
+        {
+          ret = posix_spawnattr_init(&tmp);
+          if (ret != 0)
+            {
+              goto errout_with_actions;
+            }
+
+          attr = &tmp;
+          if (param->prlimit.priority)
+            {
+              struct sched_param sched;
+
+              sched_getparam(0, &sched);
+              sched.sched_priority = param->prlimit.priority;
+              ret = posix_spawnattr_setschedparam(&tmp, &sched);
+              if (ret != 0)
+                {
+                  goto errout_with_attrs;
+                }
+            }
+
+          if (param->prlimit.stacksize)
+            {
+              ret = posix_spawnattr_setstacksize(&tmp,
+                                                 param->prlimit.stacksize);
+              if (ret != 0)
+                {
+                  goto errout_with_attrs;
+                }
+            }
+
+          if (param->prlimit.heapsize)
+            {
+              ret = posix_spawnattr_setheapsize(&tmp,
+                                                param->prlimit.heapsize);
+              if (ret != 0)
+                {
+                  goto errout_with_attrs;
+                }
+            }
+        }
+#endif
+
       /* Is input being redirected? */
 
       if (param->file_in)
@@ -171,7 +151,7 @@ int exec_builtin(FAR const char *appname, FAR char * const *argv,
             {
               serr("ERROR: posix_spawn_file_actions_addopen failed: %d\n",
                    ret);
-              goto errout_with_actions;
+              goto errout_with_attrs;
             }
         }
 #ifdef CONFIG_NSH_PIPELINE
@@ -183,7 +163,7 @@ int exec_builtin(FAR const char *appname, FAR char * const *argv,
             {
               serr("ERROR: posix_spawn_file_actions_adddup2 failed: %d\n",
                    ret);
-              goto errout_with_actions;
+              goto errout_with_attrs;
             }
         }
 #endif
@@ -201,7 +181,7 @@ int exec_builtin(FAR const char *appname, FAR char * const *argv,
             {
               serr("ERROR: posix_spawn_file_actions_addopen failed: %d\n",
                    ret);
-              goto errout_with_actions;
+              goto errout_with_attrs;
             }
         }
 #ifdef CONFIG_NSH_PIPELINE
@@ -213,7 +193,7 @@ int exec_builtin(FAR const char *appname, FAR char * const *argv,
             {
               serr("ERROR: posix_spawn_file_actions_adddup2 failed: %d\n",
                    ret);
-              goto errout_with_actions;
+              goto errout_with_attrs;
             }
         }
 #endif
@@ -222,21 +202,21 @@ int exec_builtin(FAR const char *appname, FAR char * const *argv,
 #ifdef CONFIG_LIBC_EXECFUNCS
   /* Load and execute the application. */
 
-  ret = posix_spawn(&pid, builtin->name, &file_actions, &attr, argv, NULL);
+  ret = posix_spawn(&pid, builtin->name, &file_actions, attr, argv, NULL);
   if (ret != 0 && builtin->main != NULL)
 #endif
     {
       /* Start the built-in */
 
       pid = task_spawn(builtin->name, builtin->main, &file_actions,
-                       &attr, argv ? &argv[1] : NULL, NULL);
+                       attr, argv ? &argv[1] : NULL, NULL);
       ret = pid < 0 ? -pid : 0;
     }
 
   if (ret != 0)
     {
       serr("ERROR: task_spawn failed: %d\n", ret);
-      goto errout_with_actions;
+      goto errout_with_attrs;
     }
 
   /* Free attributes and file actions.  Ignoring return values in the case
@@ -248,15 +228,27 @@ int exec_builtin(FAR const char *appname, FAR char * const *argv,
    * be set appropriately).
    */
 
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+  if (attr != NULL)
+    {
+      posix_spawnattr_destroy(attr);
+    }
+#endif
+
   posix_spawn_file_actions_destroy(&file_actions);
-  posix_spawnattr_destroy(&attr);
+
   return pid;
+
+errout_with_attrs:
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+  if (attr != NULL)
+    {
+      posix_spawnattr_destroy(attr);
+    }
+#endif
 
 errout_with_actions:
   posix_spawn_file_actions_destroy(&file_actions);
-
-errout_with_attrs:
-  posix_spawnattr_destroy(&attr);
 
 errout_with_errno:
   errno = ret;

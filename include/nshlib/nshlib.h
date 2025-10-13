@@ -65,6 +65,16 @@
 #  define SCHED_NSH SCHED_FIFO
 #endif
 
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+struct nsh_prlimit_s
+{
+  int used;
+  int priority;
+  size_t stacksize;
+  size_t heapsize;
+};
+#endif
+
 struct nsh_param_s
 {
   /* Redirect input/output through `fd` OR `path_name`
@@ -84,9 +94,7 @@ struct nsh_param_s
   FAR const char *file_out;
 
 #ifndef CONFIG_NSH_DISABLE_PRLIMIT
-  int priority;
-  size_t stacksize;
-  size_t heapsize;
+  struct nsh_prlimit_s prlimit;
 #endif
 };
 

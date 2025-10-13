@@ -73,14 +73,13 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
                 FAR char **argv, FAR const struct nsh_param_s *param)
 {
   posix_spawn_file_actions_t file_actions;
-  posix_spawnattr_t attr;
+  FAR posix_spawnattr_t *attr = NULL;
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+  posix_spawnattr_t tmp;
+#endif
   pid_t pid;
   int rc = 0;
   int ret;
-#ifdef CONFIG_BUILTIN
-  FAR char *appname;
-  int index;
-#endif
 
   /* Initialize the attributes file actions structure */
 
@@ -96,63 +95,61 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
       goto errout;
     }
 
-  ret = posix_spawnattr_init(&attr);
-  if (ret != 0)
-    {
-      /* posix_spawnattr_init returns a positive errno value on failure. */
-
-      nsh_error(vtbl, g_fmtcmdfailed, cmd, "posix_spawnattr_init",
-                NSH_ERRNO);
-      goto errout_with_actions;
-    }
-
-#ifdef CONFIG_ELF_STACKSIZE
-  ret = posix_spawnattr_setstacksize(&attr, CONFIG_ELF_STACKSIZE);
-  if (ret != 0)
-    {
-      nsh_error(vtbl, g_fmtcmdfailed, cmd,
-                "posix_spawnattr_setstacksize", NSH_ERRNO);
-      goto errout_with_actions;
-    }
-#endif
-
   if (param)
     {
 #ifndef CONFIG_NSH_DISABLE_PRLIMIT
-      if (param->priority)
+      if (param->prlimit.used)
         {
-          struct sched_param sched;
-
-          sched_getparam(0, &sched);
-          sched.sched_priority = param->priority;
-          ret = posix_spawnattr_setschedparam(&attr, &sched);
+          ret = posix_spawnattr_init(&tmp);
           if (ret != 0)
             {
-              nsh_error(vtbl, g_fmtcmdfailed, cmd,
-                        "posix_spawnattr_setschedparam", NSH_ERRNO);
+              /* posix_spawnattr_init returns a positive errno
+               * value on failure.
+               */
+
+              nsh_error(vtbl, g_fmtcmdfailed, cmd, "posix_spawnattr_init",
+                        NSH_ERRNO);
               goto errout_with_actions;
             }
-        }
 
-      if (param->stacksize)
-        {
-          ret = posix_spawnattr_setstacksize(&attr, param->stacksize);
-          if (ret != 0)
+          attr = &tmp;
+          if (param->prlimit.priority)
             {
-              nsh_error(vtbl, g_fmtcmdfailed, cmd,
-                        "posix_spawnattr_setstacksize", NSH_ERRNO);
-              goto errout_with_actions;
+              struct sched_param sched;
+
+              sched_getparam(0, &sched);
+              sched.sched_priority = param->prlimit.priority;
+              ret = posix_spawnattr_setschedparam(&tmp, &sched);
+              if (ret != 0)
+                {
+                  nsh_error(vtbl, g_fmtcmdfailed, cmd,
+                            "posix_spawnattr_setschedparam", NSH_ERRNO);
+                  goto errout_with_attrs;
+                }
             }
-        }
 
-      if (param->heapsize)
-        {
-          ret = posix_spawnattr_setheapsize(&attr, param->heapsize);
-          if (ret != 0)
+          if (param->prlimit.stacksize)
             {
-              nsh_error(vtbl, g_fmtcmdfailed, cmd,
-                        "posix_spawnattr_setheapsize", NSH_ERRNO);
-              goto errout_with_actions;
+              ret = posix_spawnattr_setstacksize(&tmp,
+                                                 param->prlimit.stacksize);
+              if (ret != 0)
+                {
+                  nsh_error(vtbl, g_fmtcmdfailed, cmd,
+                            "posix_spawnattr_setstacksize", NSH_ERRNO);
+                  goto errout_with_attrs;
+                }
+            }
+
+          if (param->prlimit.heapsize)
+            {
+              ret = posix_spawnattr_setheapsize(&tmp,
+                                                param->prlimit.heapsize);
+              if (ret != 0)
+                {
+                  nsh_error(vtbl, g_fmtcmdfailed, cmd,
+                            "posix_spawnattr_setheapsize", NSH_ERRNO);
+                  goto errout_with_attrs;
+                }
             }
         }
 #endif
@@ -172,7 +169,7 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
               nsh_error(vtbl, g_fmtcmdfailed, cmd,
                         "posix_spawn_file_actions_addopen",
                         NSH_ERRNO);
-              goto errout_with_actions;
+              goto errout_with_attrs;
             }
         }
 #ifdef CONFIG_NSH_PIPELINE
@@ -185,7 +182,7 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
               nsh_error(vtbl, g_fmtcmdfailed, cmd,
                         "posix_spawn_file_actions_adddup2",
                         NSH_ERRNO);
-              goto errout_with_actions;
+              goto errout_with_attrs;
             }
         }
 #endif
@@ -220,53 +217,17 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
               nsh_error(vtbl, g_fmtcmdfailed, cmd,
                         "posix_spawn_file_actions_adddup2",
                         NSH_ERRNO);
-              goto errout_with_actions;
+              goto errout_with_attrs;
             }
         }
 #endif
     }
 
-#ifdef CONFIG_BUILTIN
-  /* Check if a builtin application with this name exists */
-
-  appname = basename((FAR char *)cmd);
-  index = builtin_isavail(appname);
-  if (index >= 0)
-    {
-      FAR const struct builtin_s *builtin;
-      struct sched_param sched;
-
-      /* Get information about the builtin */
-
-      builtin = builtin_for_index(index);
-      if (builtin == NULL)
-        {
-          ret = ENOENT;
-          goto errout_with_actions;
-        }
-
-      /* Set the correct task size and priority */
-
-      sched.sched_priority = builtin->priority;
-      ret = posix_spawnattr_setschedparam(&attr, &sched);
-      if (ret != 0)
-        {
-          goto errout_with_actions;
-        }
-
-      ret = posix_spawnattr_setstacksize(&attr, builtin->stacksize);
-      if (ret != 0)
-        {
-          goto errout_with_actions;
-        }
-    }
-#endif
-
   /* Execute the program. posix_spawnp returns a positive errno value on
    * failure.
    */
 
-  ret = posix_spawnp(&pid, cmd, &file_actions, &attr, argv, environ);
+  ret = posix_spawnp(&pid, cmd, &file_actions, attr, argv, environ);
   if (ret == OK)
     {
       /* The application was successfully started with pre-emption disabled.
@@ -398,11 +359,16 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
    * of an error.
    */
 
+errout_with_attrs:
+#ifndef CONFIG_NSH_DISABLE_PRLIMIT
+  if (attr != NULL)
+    {
+      posix_spawnattr_destroy(attr);
+    }
+#endif
+
 errout_with_actions:
   posix_spawn_file_actions_destroy(&file_actions);
-
-errout_with_attrs:
-  posix_spawnattr_destroy(&attr);
 
 errout:
   /* Most posix_spawn interfaces return a positive errno value on failure
