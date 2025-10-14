@@ -52,27 +52,36 @@ function(nuttx_add_aidl)
     ONE_VALUE
     TARGET
     AIDL_BASE_DIR
-    AIDL_INCLUDE_DIR
     AIDL_HEADER_DIR
     AIDL_OUT_DIR
     MULTI_VALUE
     AIDLS
+    AIDL_INCLUDE_DIR
     AIDL_FLAGS
     REQUIRED
     TARGET
     AIDLS
-    AIDL_HEADER_DIR
-    AIDL_OUT_DIR
     AIDL_FLAGS
     ARGN
     ${ARGN})
 
   # concat aidl tool command
   string(JOIN " " AIDL_FLAGS_STR ${AIDL_FLAGS})
-  set(AIDL_CMD_STR
-      "aidl ${AIDL_FLAGS_STR} -h${AIDL_HEADER_DIR} -o${AIDL_OUT_DIR}")
+
+  set(AIDL_CMD_STR "aidl ${AIDL_FLAGS_STR}")
+
+  if(AIDL_HEADER_DIR)
+    string(APPEND AIDL_CMD_STR " -h${AIDL_HEADER_DIR}")
+  endif()
+
+  if(AIDL_OUT_DIR)
+    string(APPEND AIDL_CMD_STR " -o${AIDL_OUT_DIR}")
+  endif()
+
   if(AIDL_INCLUDE_DIR)
-    string(APPEND AIDL_CMD_STR " -I${AIDL_INCLUDE_DIR}")
+    foreach(_inc_dir ${AIDL_INCLUDE_DIR})
+      string(APPEND AIDL_CMD_STR " -I${_inc_dir}")
+    endforeach()
   endif()
 
   foreach(aidl_file ${AIDLS})
