@@ -166,8 +166,8 @@ if(NOT TARGET rust_unified_lib)
       ${CMAKE_COMMAND} -E env
       NUTTX_INCLUDE_DIR=${PROJECT_SOURCE_DIR}/include:${CMAKE_BINARY_DIR}/include:${CMAKE_BINARY_DIR}/include/arch
       CC=${CMAKE_C_COMPILER} AR=${CMAKE_AR} CFLAGS=${CFLAGS_STRING}
-      NUTTX_APPS_DIR=${NUTTX_APPS_DIR} cargo build
-      ${RUST_UNIFIED_CARGO_BUILD_FLAGS}
+      NUTTX_APPS_DIR=${NUTTX_APPS_DIR} NUTTX_BUILD_DIR=${CMAKE_BINARY_DIR} cargo
+      build ${RUST_UNIFIED_CARGO_BUILD_FLAGS}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/rust_unified_lib
     COMMENT "Building unified Rust static library"
     BYPRODUCTS ${CMAKE_BINARY_DIR}/rust_unified_lib/dummy_product

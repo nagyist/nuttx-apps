@@ -91,6 +91,7 @@ ifeq ($(CONFIG_DEBUG_FULLOPT),y)
 define RUST_CARGO_BUILD
 	NUTTX_INCLUDE_DIR=$(TOPDIR)/include:$(TOPDIR)/include/arch \
 	NUTTX_APPS_DIR=$(APPDIR) \
+	NUTTX_BUILD_DIR=$(TOPDIR) \
 		cargo build --release \
 		--manifest-path $(2)/$(1)/Cargo.toml \
 		--target $(call RUST_TARGET_TRIPLE)
@@ -100,6 +101,7 @@ define RUST_CARGO_BUILD
 	@echo "Building Rust code with cargo..."
 	NUTTX_INCLUDE_DIR=$(TOPDIR)/include:$(TOPDIR)/include/arch \
 	NUTTX_APPS_DIR=$(APPDIR) \
+	NUTTX_BUILD_DIR=$(TOPDIR) \
 		cargo build \
 		--manifest-path $(2)/$(1)/Cargo.toml \
 		--target $(call RUST_TARGET_TRIPLE)
