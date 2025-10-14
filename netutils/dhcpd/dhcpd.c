@@ -1539,6 +1539,7 @@ static pid_t dhcpd_get_pid(void)
 }
 #endif
 
+#ifndef CONFIG_DISABLE_SIGNALS
 /****************************************************************************
  * Name: dhcpd_signal_handler
  *
@@ -1560,6 +1561,7 @@ dhcpd_signal_handler(int signo, FAR siginfo_t *info, FAR void *ctx)
 
   g_dhcpd_daemon.ds_state = DHCPD_STOP_REQUESTED;
 }
+#endif
 
 /****************************************************************************
  * Public Functions
@@ -1571,7 +1573,9 @@ dhcpd_signal_handler(int signo, FAR siginfo_t *info, FAR void *ctx)
 
 int dhcpd_run(FAR const char *interface)
 {
+#ifndef CONFIG_DISABLE_SIGNALS
   struct sigaction act;
+#endif
   int sockfd = -1;
   int nbytes;
 
@@ -1600,10 +1604,12 @@ int dhcpd_run(FAR const char *interface)
 
   /* Install signal handler for CONFIG_NETUTILS_DHCPD_SIGWAKEUP */
 
+#ifndef CONFIG_DISABLE_SIGNALS
   memset(&act, 0, sizeof(act));
   act.sa_sigaction = dhcpd_signal_handler;
   act.sa_flags = SA_SIGINFO;
   sigaction(CONFIG_NETUTILS_DHCPD_SIGWAKEUP, &act, NULL);
+#endif
 
   /* Indicate that we have started */
 
