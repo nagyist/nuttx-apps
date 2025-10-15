@@ -156,12 +156,16 @@ if(NOT TARGET rust_unified_lib)
     VERBATIM)
 
   # Step 2: Build the Rust static library
+
+  # Convert NUTTX_EXTRA_FLAGS to a space-separated string
+  string(REPLACE ";" " " CFLAGS_STRING "${NUTTX_EXTRA_FLAGS}")
   add_custom_command(
     OUTPUT ${RUST_UNIFIED_LIBPATH}
     DEPENDS ${CMAKE_BINARY_DIR}/rust_unified_lib
     COMMAND
       ${CMAKE_COMMAND} -E env
       NUTTX_INCLUDE_DIR=${PROJECT_SOURCE_DIR}/include:${CMAKE_BINARY_DIR}/include:${CMAKE_BINARY_DIR}/include/arch
+      CC=${CMAKE_C_COMPILER} AR=${CMAKE_AR} CFLAGS=${CFLAGS_STRING}
       NUTTX_APPS_DIR=${NUTTX_APPS_DIR} cargo build
       ${RUST_UNIFIED_CARGO_BUILD_FLAGS}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/rust_unified_lib
