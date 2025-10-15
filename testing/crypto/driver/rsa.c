@@ -38,11 +38,11 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define MOD_LEN        128
-#define PRIVATE_KEYLEN 128
-#define PUBLIC_KEYLEN  5
-#define PLAIN_LEN      24
-#define PADDING_LEN    (MOD_LEN - PLAIN_LEN)
+#define MOD_2048_LEN             256
+#define PRIVATE_2048_KEYLEN      256
+#define PRIME_2048_LEN           128
+#define SHA256_PLAIN_LEN         32
+#define PADDING_2048_SHA256_LEN  (MOD_2048_LEN - PRIME_2048_LEN)
 
 /****************************************************************************
  * Private Types
@@ -50,9 +50,22 @@
 
 typedef struct rsa_data_s
 {
-  unsigned char e[PUBLIC_KEYLEN];
-  unsigned char d[PRIVATE_KEYLEN];
-  unsigned char n[MOD_LEN];
+  unsigned char *e;
+  unsigned char *d;
+  unsigned char *n;
+  unsigned char *p;
+  unsigned char *q;
+  unsigned char *dp;
+  unsigned char *dq;
+  unsigned char *qp;
+  size_t elen;
+  size_t dlen;
+  size_t nlen;
+  size_t plen;
+  size_t qlen;
+  size_t dplen;
+  size_t dqlen;
+  size_t qplen;
 }
 rsa_data_t;
 
@@ -67,33 +80,99 @@ crypto_context_t;
  * Private Data
  ****************************************************************************/
 
-/* Example RSA-1024 keypair, for test purposes */
+/* Example RSA-2048 keypair, for test purposes */
 
-static const unsigned char g_rsa_n[] =
-"9292758453063D803DD603D5E777D788"
-"8ED1D5BF35786190FA2F23EBC0848AEA"
-"DDA92CA6C3D80B32C4D109BE0F36D6AE"
-"7130B9CED7ACDF54CFC7555AC14EEBAB"
-"93A89813FBF3C4F8066D2D800F7C38A8"
-"1AE31942917403FF4946B0A83D3D3E05"
-"EE57C6F5F5606FB5D4BC6CD34EE0801A"
-"5E94BB77B07507233A0BC7BAC8F90F79";
+static const char g_rsa_n_2048[] =
+"B11CD52A2175035B3AE01EAD94670442"
+"65E521123F2E66ECE0458F4C21ACDA52"
+"CEFE57E1D5F03F85B6973C9385FF5309"
+"9EB35D760B3B321C8953B4C86B3525FD"
+"327464C0C4A7E60D5729FC2B7837D44F"
+"EC082DB712E77A7FFCAFED1ABD3F1D0C"
+"E1FD31EB57A082CA43D1AE182A705AE5"
+"F16E3C4BDF6D959B42F331020B5D0113"
+"2271A9468C2D87DA73FEB828053909CC"
+"355C1536D0131E7BE88FB3173CEBB402"
+"68A706D3F7CA17F38CE56402B304D775"
+"562779240BE2DBF07D91AB68A6D17A61"
+"DE9019630F3D9DA8A2438D21D0EEF282"
+"8D5BF379BCD5C70B3043C510140F0C48"
+"D6254F0F1A71BC1C43E1F75D7A55FC4B"
+"83D269E9336FE91E3F648153FDBD4CAF";
 
-static const unsigned char g_rsa_e[] = "10001";
+static const char g_rsa_e_2048[] = "010001";
 
-static const unsigned char g_rsa_d[] =
-"24BF6185468786FDD303083D25E64EFC"
-"66CA472BC44D253102F8B4A9D3BFA750"
-"91386C0077937FE33FA3252D28855837"
-"AE1B484A8A9A45F7EE8C0C634F99E8CD"
-"DF79C5CE07EE72C7F123142198164234"
-"CABB724CF78B8173B9F880FC86322407"
-"AF1FEDFDDE2BEB674CA15F3E81A1521E"
-"071513A1E85B5DFA031F21ECAE91A34D";
+static const char g_rsa_d_2048[] =
+"1572685DB1AF79B89268914E73AA05DA"
+"047CBA847B2223548BD3E086578D96E2"
+"702E5C75FC721B3F15DD3A78A2C1484C"
+"E1EAD66674F5B61BBE85645EE09C8EFD"
+"1A1EFE1459BBFB1FA26E731AD073F241"
+"BB534235E9141EC160D7ECDE500C5478"
+"3AE56E2611765E601FD6443EA8E4F21C"
+"E61F732DBCE0883D44DE2E11114F31D1"
+"EBB01624BF9C4D2C22F2239E9A475305"
+"17E2D870002872449D2680D9D729F1FE"
+"573D8FA6304FE503922193323367B012"
+"031CE97B1F0C103AB446543D23438BBF"
+"8F09C142AD9105FE1F55E984C4C79220"
+"6C5EDD7FF4CF9EEF4DA98A05C1258821"
+"AE9917C76F6343F2865125B18E1CC827"
+"C4DECC980B2DCCB405D68D869C8ED801";
 
-static const unsigned char g_message[] =
-"\xAA\xBB\xCC\x03\x02\x01\x00\xFF\xFF\xFF\xFF\xFF"
-"\x11\x22\x33\x0A\x0B\x0C\xCC\xDD\xDD\xDD\xDD\xDD";
+static const char g_rsa_p_2048[] =
+"E2202080A3A73D44F72E72FDFF6411EB"
+"C933DB799611817841E6DA580868949F"
+"10C64FB6406421100DD2FB88FDAB3217"
+"07B695463403EDE2DACDD8ACA53B2758"
+"9DAAB39115D32510494500693F0368DE"
+"63296164D5705B06E142B7B6522E09D6"
+"34DD53D060601B26121E0BEFE3C89BF1"
+"57A48F1FCA43CAD0FC10658FC25627F5";
+
+static const char g_rsa_q_2048[] =
+"C883060955E8F9CBAD62A397828B3FBB"
+"F10FF5008FED67F2A33444173463DC06"
+"2465A782E1022E00AF6C0AEF2C41CABB"
+"9F820840AA383E59E0AAC63C47C23A29"
+"6BF352D6A843A586A09B2AD3FACFF5C5"
+"3EDD9B68F55865DBA4E99415449C94CB"
+"B407C695348FF90871A598C2A0698FB0"
+"764A31CAB55EF5FC26158C5FC7190F93";
+
+static const char g_rsa_dp_2048[] =
+"4571144A2CF7C8EB0AF5AABEB1D56B63"
+"7B707F700153F2EC996069A12B43E290"
+"4EB877F64223FDBB4E638277795F3F8C"
+"AF03B527D0057CE273CB4F4505A0FADE"
+"4DDD043403FDC99E0CC231F42033CDDA"
+"AD9D2199B3AA436A037757AF97E12788"
+"2EC7E15B569D6CF8EE0B68230D52A801"
+"1FA71B84E9BA93E845E04B3030C00099";
+
+static const char g_rsa_dq_2048[] =
+"AC096F1677758B4DAC1823D08D1B38B5"
+"E261148F44EE26EFD203B82048BD1D3C"
+"CFE1C055D504EFBF7AC3B2A5FF4CFBCA"
+"FB52B00DFB7E8250CF28F72925508A62"
+"9BD28BD2CD502D2753898EB78E4CFBCC"
+"1EE238C3572E5F46933A2DEA09926740"
+"57D90C135CA3E2C1D1F0891F044F4E0F"
+"D38E592659737E8EB78669888BE4FEAD";
+
+static const char g_rsa_qp_2048[] =
+"E106721379123664B25749C811397BE6"
+"F5C08BA81F1BDA70F605AEC84D70A4B2"
+"73E5EBF9E8056F7FD875A66712D1D5EF"
+"D11577ADA1D3C8100C58314E5D8EE237"
+"B7EAD19FDA726E87B5A3E19722C15B5A"
+"5885A32D2FC4685507E7CA63CF0E7CE2"
+"ECB130EB3EC473E15504C53EFF5FB236"
+"8BF4FFE4D0E49AD75C915C2989AF2558";
+
+static const unsigned char g_message_sha256[] =
+"CDC76E5C9914FB9281A1C7E284D73E67"
+"F1809A48A497200E046D39CCC7112CD0";
 
 /****************************************************************************
  * Private Functions
@@ -148,7 +227,7 @@ static void mpi_get_digit(FAR uint8_t *d, char c)
 }
 
 static void mpi_from_string(FAR unsigned char *buf,
-                            FAR const unsigned char *s,
+                            FAR const char *s,
                             size_t slen)
 {
   int i;
@@ -162,15 +241,90 @@ static void mpi_from_string(FAR unsigned char *buf,
     }
 }
 
-static int rsa_data_init(FAR rsa_data_t *data,
-                         FAR const unsigned char *e, size_t elen,
-                         FAR const unsigned char *d, size_t dlen,
-                         FAR const unsigned char *n, size_t nlen)
+static void rsa_data_free(FAR rsa_data_t *data)
 {
-  memset(data, 0, sizeof(rsa_data_t));
-  mpi_from_string(data->e, e, elen);
-  mpi_from_string(data->d, d, dlen);
-  mpi_from_string(data->n, n, nlen);
+  if (data->e)
+    {
+      free(data->e);
+    }
+
+  if (data->d)
+    {
+      free(data->d);
+    }
+
+  if (data->n)
+    {
+      free(data->n);
+    }
+
+  if (data->p)
+    {
+      free(data->p);
+    }
+
+  if (data->q)
+    {
+      free(data->q);
+    }
+
+  if (data->dp)
+    {
+      free(data->dp);
+    }
+
+  if (data->dq)
+    {
+      free(data->dq);
+    }
+
+  if (data->qp)
+    {
+      free(data->qp);
+    }
+}
+
+static int rsa_data_init(FAR rsa_data_t *data,
+                         FAR const char *e, size_t elen,
+                         FAR const char *d, size_t dlen,
+                         FAR const char *n, size_t nlen,
+                         FAR const char *p, size_t plen,
+                         FAR const char *q, size_t qlen,
+                         FAR const char *dp, size_t dplen,
+                         FAR const char *dq, size_t dqlen,
+                         FAR const char *qp, size_t qplen)
+{
+  data->elen = elen;
+  data->dlen = dlen;
+  data->nlen = nlen;
+  data->plen = plen;
+  data->qlen = qlen;
+  data->dplen = dplen;
+  data->dqlen = dqlen;
+  data->qplen = qplen;
+  data->e = zalloc(elen);
+  data->d = zalloc(dlen);
+  data->n = zalloc(nlen);
+  data->p = zalloc(plen);
+  data->q = zalloc(qlen);
+  data->dp = zalloc(dplen);
+  data->dq = zalloc(dqlen);
+  data->qp = zalloc(qplen);
+  if (!data->e || !data->d || !data->n || !data->p ||
+      !data->q || !data->dp || !data->dq || !data->qp)
+    {
+      rsa_data_free(data);
+      return -1;
+    }
+
+  mpi_from_string(data->e, e, strlen(e));
+  mpi_from_string(data->d, d, strlen(d));
+  mpi_from_string(data->n, n, strlen(n));
+  mpi_from_string(data->p, p, strlen(p));
+  mpi_from_string(data->q, q, strlen(q));
+  mpi_from_string(data->dp, dp, strlen(dp));
+  mpi_from_string(data->dq, dq, strlen(dq));
+  mpi_from_string(data->qp, qp, strlen(qp));
   return 0;
 }
 
@@ -209,35 +363,103 @@ static int cryptodev_init(FAR crypto_context_t *ctx)
   return 0;
 }
 
-static int cryptodev_rsa_calc(FAR crypto_context_t *ctx,
-                              FAR rsa_data_t *data,
-                              FAR const unsigned char *input, size_t ilen,
-                              FAR const unsigned char *output, size_t olen,
-                              bool is_priv)
+static int
+cryptodev_rsa_calc_crt(FAR crypto_context_t *ctx, FAR rsa_data_t *data,
+                       FAR const unsigned char *input, size_t ilen,
+                       FAR const unsigned char *output, size_t olen,
+                       bool is_priv)
 {
   struct crypt_kop cryptk;
 
   memset(&cryptk, 0, sizeof(struct crypt_kop));
-  cryptk.crk_op = CRK_MOD_EXP;
-  cryptk.crk_iparams = 3;
+  cryptk.crk_op = CRK_MOD_EXP_CRT;
+  cryptk.crk_padding = CRYPTO_RSA_PKCS1_PADDING;
+  cryptk.crk_hash = CRYPTO_RSA_SHA256;
+  cryptk.crk_iparams = 9;
   cryptk.crk_oparams = 1;
+
   cryptk.crk_param[0].crp_p = (caddr_t)input;
   cryptk.crk_param[0].crp_nbits = ilen * 8;
   if (is_priv)
     {
-      cryptk.crk_param[1].crp_p = (caddr_t)data->d;
-      cryptk.crk_param[1].crp_nbits = sizeof(data->d) * 8;
+      cryptk.crk_param[1].crp_p = (caddr_t)data->n;
+      cryptk.crk_param[1].crp_nbits = data->nlen * 8;
+      cryptk.crk_param[2].crp_p = (caddr_t)data->e;
+      cryptk.crk_param[2].crp_nbits = data->elen * 8;
+      cryptk.crk_param[3].crp_p = (caddr_t)data->d;
+      cryptk.crk_param[3].crp_nbits = data->dlen * 8;
+      cryptk.crk_param[4].crp_p = (caddr_t)data->p;
+      cryptk.crk_param[4].crp_nbits = data->plen * 8;
+      cryptk.crk_param[5].crp_p = (caddr_t)data->q;
+      cryptk.crk_param[5].crp_nbits = data->qlen * 8;
+      cryptk.crk_param[6].crp_p = (caddr_t)data->dp;
+      cryptk.crk_param[6].crp_nbits = data->dplen * 8;
+      cryptk.crk_param[7].crp_p = (caddr_t)data->dq;
+      cryptk.crk_param[7].crp_nbits = data->dqlen * 8;
+      cryptk.crk_param[8].crp_p = (caddr_t)data->qp;
+      cryptk.crk_param[8].crp_nbits = data->qplen * 8;
+      cryptk.crk_keytype = CRYPTO_KEY_TYPE_PRIVATE;
+      cryptk.crk_optype = CRYPTO_OP_DECRYPT;
     }
   else
     {
-      cryptk.crk_param[1].crp_p = (caddr_t)data->e;
-      cryptk.crk_param[1].crp_nbits = sizeof(data->e) * 8;
+      cryptk.crk_param[1].crp_p = (caddr_t)data->n;
+      cryptk.crk_param[1].crp_nbits = data->nlen * 8;
+      cryptk.crk_param[2].crp_p = (caddr_t)data->e;
+      cryptk.crk_param[2].crp_nbits = data->elen * 8;
+      cryptk.crk_keytype = CRYPTO_KEY_TYPE_PUBLIC;
+      cryptk.crk_optype = CRYPTO_OP_ENCRYPT;
     }
 
-  cryptk.crk_param[2].crp_p = (caddr_t)data->n;
-  cryptk.crk_param[2].crp_nbits = sizeof(data->n) * 8;
-  cryptk.crk_param[3].crp_p = (caddr_t)output;
-  cryptk.crk_param[3].crp_nbits = olen * 8;
+  cryptk.crk_param[9].crp_p = (caddr_t)output;
+  cryptk.crk_param[9].crp_nbits = olen * 8;
+
+  if (ioctl(ctx->cryptodev_fd, CIOCKEY, &cryptk) == -1)
+    {
+      perror("rsa calculate failed");
+      return -1;
+    }
+
+  return cryptk.crk_status;
+}
+
+static int cryptodev_rsa_sign(
+            FAR crypto_context_t *ctx, FAR rsa_data_t *data,
+            FAR const unsigned char *sig, size_t sig_len,
+            FAR const unsigned char *hash, size_t hash_len,
+            FAR const unsigned char *padding, size_t pad_len)
+{
+  struct crypt_kop cryptk;
+
+  memset(&cryptk, 0, sizeof(struct crypt_kop));
+  cryptk.crk_op = CRK_RSA_PKCS15_SIGN;
+  cryptk.crk_padding = CRYPTO_RSA_PKCS1_PADDING;
+  cryptk.crk_hash = CRYPTO_RSA_SHA256;
+  cryptk.crk_iparams = 9;
+  cryptk.crk_oparams = 1;
+
+  cryptk.crk_param[0].crp_p = (caddr_t)hash;
+  cryptk.crk_param[0].crp_nbits = hash_len * 8;
+  cryptk.crk_param[1].crp_p = (caddr_t)data->n;
+  cryptk.crk_param[1].crp_nbits = data->nlen * 8;
+  cryptk.crk_param[2].crp_p = (caddr_t)data->e;
+  cryptk.crk_param[2].crp_nbits = data->elen * 8;
+  cryptk.crk_param[3].crp_p = (caddr_t)data->d;
+  cryptk.crk_param[3].crp_nbits = data->dlen * 8;
+  cryptk.crk_param[4].crp_p = (caddr_t)data->p;
+  cryptk.crk_param[4].crp_nbits = data->plen * 8;
+  cryptk.crk_param[5].crp_p = (caddr_t)data->q;
+  cryptk.crk_param[5].crp_nbits = data->qlen * 8;
+  cryptk.crk_param[6].crp_p = (caddr_t)data->dp;
+  cryptk.crk_param[6].crp_nbits = data->dplen * 8;
+  cryptk.crk_param[7].crp_p = (caddr_t)data->dq;
+  cryptk.crk_param[7].crp_nbits = data->dqlen * 8;
+  cryptk.crk_param[8].crp_p = (caddr_t)data->qp;
+  cryptk.crk_param[8].crp_nbits = data->qplen * 8;
+  cryptk.crk_param[9].crp_p = (caddr_t)sig;
+  cryptk.crk_param[9].crp_nbits = sig_len * 8;
+  cryptk.crk_keytype = CRYPTO_KEY_TYPE_PRIVATE;
+  cryptk.crk_optype = CRYPTO_OP_SIGN;
 
   if (ioctl(ctx->cryptodev_fd, CIOCKEY, &cryptk) == -1)
     {
@@ -258,19 +480,23 @@ static int cryptodev_rsa_verify(
 
   memset(&cryptk, 0, sizeof(struct crypt_kop));
   cryptk.crk_op = CRK_RSA_PKCS15_VERIFY;
+  cryptk.crk_padding = CRYPTO_RSA_PKCS1_PADDING;
+  cryptk.crk_hash = CRYPTO_RSA_SHA256;
   cryptk.crk_iparams = 5;
   cryptk.crk_oparams = 0;
 
-  cryptk.crk_param[0].crp_p = (caddr_t)data->e;
-  cryptk.crk_param[0].crp_nbits = sizeof(data->e) * 8;
+  cryptk.crk_param[0].crp_p = (caddr_t)sig;
+  cryptk.crk_param[0].crp_nbits = sig_len * 8;
   cryptk.crk_param[1].crp_p = (caddr_t)data->n;
-  cryptk.crk_param[1].crp_nbits = sizeof(data->n) * 8;
-  cryptk.crk_param[2].crp_p = (caddr_t)sig;
-  cryptk.crk_param[2].crp_nbits = sig_len * 8;
-  cryptk.crk_param[3].crp_p = (caddr_t)hash;
-  cryptk.crk_param[3].crp_nbits = hash_len * 8;
-  cryptk.crk_param[4].crp_p = (caddr_t)padding;
-  cryptk.crk_param[4].crp_nbits = pad_len * 8;
+  cryptk.crk_param[1].crp_nbits = data->nlen * 8;
+  cryptk.crk_param[2].crp_p = (caddr_t)data->e;
+  cryptk.crk_param[2].crp_nbits = data->elen * 8;
+  cryptk.crk_param[3].crp_p = (caddr_t)padding;
+  cryptk.crk_param[3].crp_nbits = pad_len * 8;
+  cryptk.crk_param[4].crp_p = (caddr_t)hash;
+  cryptk.crk_param[4].crp_nbits = hash_len * 8;
+  cryptk.crk_keytype = CRYPTO_KEY_TYPE_PUBLIC;
+  cryptk.crk_optype = CRYPTO_OP_VERIFY;
 
   if (ioctl(ctx->cryptodev_fd, CIOCKEY, &cryptk) == -1)
     {
@@ -281,69 +507,83 @@ static int cryptodev_rsa_verify(
   return cryptk.crk_status;
 }
 
-static void test_rsa(void **state)
+static void test_rsa_2048_sha256(void **state)
 {
   crypto_context_t ctx;
   rsa_data_t rsa_data;
-  unsigned char cipher[MOD_LEN];
-  unsigned char plain[PLAIN_LEN];
-  unsigned char data[MOD_LEN];
-  unsigned char padding[PADDING_LEN];
-  unsigned char sig[MOD_LEN];
-  unsigned char data_he[MOD_LEN];
-  unsigned char pad_he[PADDING_LEN];
-  unsigned char hash_he[MOD_LEN];
+  unsigned char cipher[MOD_2048_LEN];
+  unsigned char plain[SHA256_PLAIN_LEN];
+  unsigned char data[MOD_2048_LEN];
+  unsigned char padding[PADDING_2048_SHA256_LEN];
+  unsigned char sig[MOD_2048_LEN];
+  unsigned char data_he[MOD_2048_LEN];
+  unsigned char pad_he[PADDING_2048_SHA256_LEN];
+  unsigned char hash_he[SHA256_PLAIN_LEN];
 
   assert_int_equal(cryptodev_init(&ctx), 0);
 
-  assert_int_equal(rsa_data_init(&rsa_data, g_rsa_e, sizeof(g_rsa_e) - 1,
-                                 g_rsa_d, sizeof(g_rsa_d) - 1,
-                                 g_rsa_n, sizeof(g_rsa_n) - 1), 0);
+  assert_int_equal(rsa_data_init(&rsa_data,
+                                 g_rsa_e_2048, strlen(g_rsa_e_2048),
+                                 g_rsa_d_2048, MOD_2048_LEN,
+                                 g_rsa_n_2048, MOD_2048_LEN,
+                                 g_rsa_p_2048, PRIME_2048_LEN,
+                                 g_rsa_q_2048, PRIME_2048_LEN,
+                                 g_rsa_dp_2048, PRIME_2048_LEN,
+                                 g_rsa_dq_2048, PRIME_2048_LEN,
+                                 g_rsa_qp_2048, PRIME_2048_LEN), 0);
 
   /* test 1: encrypt with private key and decrypt with public key */
 
-  memset(cipher, 0, MOD_LEN);
-  memset(plain, 0, PLAIN_LEN);
+  memset(cipher, 0, sizeof(cipher));
+  memset(plain, 0, sizeof(plain));
 
-  /* encrypt with private key: g_message ^ ctx.data.d % n = cipher */
+  /* encrypt with public key: g_message ^ ctx.data.e % n = cipher */
 
-  assert_int_equal(cryptodev_rsa_calc(&ctx, &rsa_data, g_message, PLAIN_LEN,
-                                      cipher, MOD_LEN, TRUE), 0);
+  assert_int_equal(cryptodev_rsa_calc_crt(&ctx, &rsa_data, g_message_sha256,
+                                          SHA256_PLAIN_LEN, cipher,
+                                          MOD_2048_LEN, FALSE), 0);
 
-  /* dencrypt with public key: cipher ^ ctx.data.e % n = plain */
+  /* dencrypt with private key: cipher ^ ctx.data.e % n = plain */
 
-  assert_int_equal(cryptodev_rsa_calc(&ctx, &rsa_data, cipher, MOD_LEN,
-                                      plain, PLAIN_LEN, FALSE), 0);
+  assert_int_equal(cryptodev_rsa_calc_crt(&ctx, &rsa_data, cipher,
+                                          MOD_2048_LEN, plain,
+                                          SHA256_PLAIN_LEN, TRUE), 0);
 
-  assert_int_equal(memcmp(g_message, plain, PLAIN_LEN), 0);
+  assert_int_equal(memcmp(g_message_sha256, plain, SHA256_PLAIN_LEN), 0);
+
+  printf("test_rsa_2048_sha256 encrypt/decrypt success\n");
 
   /* test 2: rsa sign and verify */
 
-  memset(data, 0, MOD_LEN);
-  memset(padding, 0, PADDING_LEN);
-  memset(sig, 0, MOD_LEN);
+  memset(data, 0, sizeof(data));
+  memset(padding, 0, sizeof(padding));
+  memset(sig, 0, sizeof(sig));
 
   /* pkcs15 v1 padding for sign: 0x00 0x02 (... random) 0x00 */
 
-  pkcs1_v15_padding(padding, PADDING_LEN);
-  memcpy(data, padding, PADDING_LEN);
-  memcpy(data + PADDING_LEN, g_message, PLAIN_LEN);
+  pkcs1_v15_padding(padding, PADDING_2048_SHA256_LEN);
+  memcpy(data, padding, PADDING_2048_SHA256_LEN);
+  memcpy(data + PADDING_2048_SHA256_LEN, g_message_sha256, SHA256_PLAIN_LEN);
 
-  rsa_be32toh(data_he, MOD_LEN, data);
-  rsa_be32toh(pad_he, PADDING_LEN, padding);
-  rsa_be32toh(hash_he, PLAIN_LEN, g_message);
+  rsa_be32toh(data_he, MOD_2048_LEN, data);
+  rsa_be32toh(pad_he, PADDING_2048_SHA256_LEN, padding);
+  rsa_be32toh(hash_he, SHA256_PLAIN_LEN, g_message_sha256);
 
   /* sign with private key: (hash + padding) ^ d % n = sig */
 
-  assert_int_equal(cryptodev_rsa_calc(&ctx, &rsa_data, data_he, MOD_LEN, sig,
-                                      MOD_LEN, TRUE), 0);
+  assert_int_equal(cryptodev_rsa_sign(&ctx, &rsa_data, sig, sizeof(sig),
+                                      hash_he, sizeof(hash_he),
+                                      pad_he, sizeof(pad_he)), 0);
 
   /* verify with public key: sig ^ e % n = (hash + padding) */
 
-  assert_int_equal(cryptodev_rsa_verify(&ctx, &rsa_data, sig, MOD_LEN,
-                                        hash_he, PLAIN_LEN,
-                                        pad_he, PADDING_LEN), 0);
+  assert_int_equal(cryptodev_rsa_verify(&ctx, &rsa_data, sig, sizeof(sig),
+                                        hash_he, sizeof(hash_he),
+                                        pad_he, sizeof(pad_he)), 0);
 
+  printf("test_rsa_2048_sha256 sign/verify success\n");
+
+  rsa_data_free(&rsa_data);
   cryptodev_free(&ctx);
 }
 
@@ -353,9 +593,10 @@ static void test_rsa(void **state)
 
 int main(int argc, FAR char *argv[])
 {
-  const struct CMUnitTest rsa_tests[] = {
-      cmocka_unit_test(test_rsa),
-  };
+  const struct CMUnitTest rsa_tests[] =
+    {
+      cmocka_unit_test(test_rsa_2048_sha256),
+    };
 
   return cmocka_run_group_tests(rsa_tests, NULL, NULL);
 }
