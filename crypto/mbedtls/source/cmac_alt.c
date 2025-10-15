@@ -96,7 +96,7 @@ int mbedtls_cipher_cmac_update(FAR mbedtls_cipher_context_t *ctx,
                                FAR const unsigned char *input,
                                size_t ilen)
 {
-  if (ctx == NULL || ctx->cmac_ctx == NULL || input == NULL || ilen < 0)
+  if (ctx == NULL || ctx->cmac_ctx == NULL || input == NULL)
     {
       return MBEDTLS_ERR_CIPHER_BAD_INPUT_DATA;
     }
