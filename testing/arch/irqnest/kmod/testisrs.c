@@ -33,7 +33,7 @@
 #include <nuttx/irq.h>
 
 #include <nuttx/module.h>
-#include <nuttx/lib/modlib.h>
+#include <nuttx/lib/elf.h>
 
 #ifdef CONFIG_TESTING_IRQNEST
 
