@@ -159,12 +159,19 @@ if(NOT TARGET rust_unified_lib)
 
   # Convert NUTTX_EXTRA_FLAGS to a space-separated string
   string(REPLACE ";" " " CFLAGS_STRING "${NUTTX_EXTRA_FLAGS}")
+
+  # Get include directory for toolchain headers
+  execute_process(
+    COMMAND ${CMAKE_C_COMPILER} -print-file-name=include
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE TOOLCHAIN_INCLUDE_DIR)
+
   add_custom_command(
     OUTPUT ${RUST_UNIFIED_LIBPATH}
     DEPENDS ${CMAKE_BINARY_DIR}/rust_unified_lib
     COMMAND
       ${CMAKE_COMMAND} -E env
-      NUTTX_INCLUDE_DIR=${PROJECT_SOURCE_DIR}/include:${CMAKE_BINARY_DIR}/include:${CMAKE_BINARY_DIR}/include/arch
+      NUTTX_INCLUDE_DIR=${TOOLCHAIN_INCLUDE_DIR}:${PROJECT_SOURCE_DIR}/include:${CMAKE_BINARY_DIR}/include:${CMAKE_BINARY_DIR}/include/arch
       CC=${CMAKE_C_COMPILER} AR=${CMAKE_AR} CFLAGS=${CFLAGS_STRING}
       NUTTX_APPS_DIR=${NUTTX_APPS_DIR} NUTTX_BUILD_DIR=${CMAKE_BINARY_DIR} cargo
       build ${RUST_UNIFIED_CARGO_BUILD_FLAGS}
