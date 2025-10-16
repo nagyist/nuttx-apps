@@ -197,7 +197,7 @@ static int fb_init_mem2(FAR struct fb_state_s *state)
   FAR void * phy_mem1;
   FAR void * phy_mem2;
   bool is_consecutive;
-  uintptr_t offset;
+  off_t offset;
   uint32_t fblen;
   int ret;
 
@@ -225,7 +225,7 @@ static int fb_init_mem2(FAR struct fb_state_s *state)
 
   phy_mem2 = pinfo.fbmem;
 
-  offset = (uintptr_t)phy_mem2 - (uintptr_t)phy_mem1;
+  offset = (off_t)((uintptr_t)phy_mem2 - (uintptr_t)phy_mem1);
   is_consecutive = offset == 0;
 
   /* Check bpp */
@@ -242,10 +242,10 @@ static int fb_init_mem2(FAR struct fb_state_s *state)
 
   if ((offset % state->pinfo.stride) != 0)
     {
-      fprintf(stderr, "ERROR: It is detected that buf_offset(%" PRIuPTR ") "
+      fprintf(stderr, "ERROR: It is detected that buf_offset(%lld) "
               "and stride(%d) are not divisible, please ensure "
               "that the driver handles the address offset by itself.\n",
-              offset, state->pinfo.stride);
+              (long long)offset, state->pinfo.stride);
     }
 
   /* Calculate the address and yoffset of fbmem2 */
@@ -253,7 +253,7 @@ static int fb_init_mem2(FAR struct fb_state_s *state)
   if (is_consecutive)
     {
       state->mem2_yoffset = state->vinfo.yres;
-      offset = state->vinfo.yres * pinfo.stride;
+      offset = (off_t)state->vinfo.yres * pinfo.stride;
     }
   else
     {
@@ -268,13 +268,13 @@ static int fb_init_mem2(FAR struct fb_state_s *state)
 
   if (mem2 == MAP_FAILED)
     {
-      fprintf(stderr, "ERROR: mmap failed: %d, offset: %" PRIuPTR,
-            errno, offset);
+      fprintf(stderr, "ERROR: mmap failed: %d, offset: %lld\n",
+            errno, (long long)offset);
       return -errno;
     }
 
   state->fbmem2 = mem2;
-  fprintf(stderr, "Use of %sconsecutive mem2 = %p, yoffset = %" PRIu32,
+  fprintf(stderr, "Use of %sconsecutive mem2 = %p, yoffset = %" PRIu32 "\n",
           is_consecutive ? "" : "non-", state->fbmem2,
           state->mem2_yoffset);
 
