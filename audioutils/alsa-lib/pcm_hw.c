@@ -226,7 +226,7 @@ static int snd_pcm_hw_query_channel(int fd, snd_pcm_stream_t stream,
   return 2;
 }
 
-static int snd_pcm_hw_query_rete(int fd, snd_pcm_stream_t stream,
+static int snd_pcm_hw_query_rate(int fd, snd_pcm_stream_t stream,
                                  FAR unsigned int *values, size_t num)
 {
   struct audio_caps_s caps;
@@ -354,7 +354,7 @@ static int snd_pcm_hw_hw_refine(FAR snd_pcm_t *pcm,
   snd_pcm_hw_params_set_channels_min(pcm, params, &value[0]);
   snd_pcm_hw_params_set_channels_max(pcm, params, &value[1]);
 
-  ret = snd_pcm_hw_query_rete(hw->fd, pcm->stream, value, 32);
+  ret = snd_pcm_hw_query_rate(hw->fd, pcm->stream, value, 32);
   if (ret < 0)
     {
       return ret;
