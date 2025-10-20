@@ -147,8 +147,8 @@ typedef struct delay_work_s
 typedef struct workthread_work_s
 {
   sem_t finish_sem;
-  atomic64_t total_ticks __attribute__((aligned(8))); /* total time consumed
-                                                       *  by all works */
+  atomic64_t total_ticks aligned_data(8); /* total time consumed
+                                           *  by all works */
   FAR struct kwork_wqueue_s *wq;
   FAR struct work_s *works;
   atomic_t pending_cnt;
