@@ -51,25 +51,13 @@
 #define TIMER_DEFAULT_SIGNO 31
 #define TIMER_DEFAULT_RANGE 1000
 
-#define OPTARG_TO_VALUE(value, type, base)                            \
-  do                                                                  \
-    {                                                                 \
-      FAR char *ptr;                                                  \
-      value = (type)strtoul(optarg, &ptr, base);                      \
-      if (*ptr != '\0')                                               \
-        {                                                             \
-          printf("Parameter error: -%c %s\n", ch, optarg);            \
-          show_usage(argv[0], timer_state, EXIT_FAILURE);             \
-        }                                                             \
-    } while (0)
-
 /****************************************************************************
  * Private Types
  ****************************************************************************/
 
 struct timer_state_s
 {
-  char devpath[PATH_MAX];
+  FAR const char *devpath;
   uint32_t interval;
   uint32_t nsamples;
   uint32_t signo;
@@ -128,6 +116,26 @@ static void show_usage(FAR const char *progname,
 }
 
 /****************************************************************************
+ * Name: optarg_to_value
+ ****************************************************************************/
+
+static uint32_t optarg_to_value(char ch, FAR const char *progname,
+                                FAR struct timer_state_s *timer_state)
+{
+  FAR char *ptr;
+  uint32_t value;
+
+  value = (uint32_t)strtoul(optarg, &ptr, 10);
+  if (*ptr != '\0' || value == 0)
+    {
+      printf("Parameter error: -%c %s\n", ch, optarg);
+      show_usage(progname, timer_state, EXIT_FAILURE);
+    }
+
+  return value;
+}
+
+/****************************************************************************
  * Name: parse_commandline
  ****************************************************************************/
 
@@ -135,59 +143,31 @@ static void parse_commandline(FAR struct timer_state_s *timer_state,
                               int argc, FAR char **argv)
 {
   int ch;
-  int converted;
 
   while ((ch = getopt(argc, argv, "d:i:n:r:s:h")) != ERROR)
     {
       switch (ch)
         {
           case 'd':
-            strlcpy(timer_state->devpath, optarg,
-                    sizeof(timer_state->devpath));
+            timer_state->devpath = optarg;
             break;
 
           case 'i':
-            OPTARG_TO_VALUE(converted, uint32_t, 10);
-            if (converted < 1 || converted > INT_MAX)
-              {
-                printf("signal out of range: %d\n", converted);
-                show_usage(argv[0], timer_state, EXIT_FAILURE);
-              }
-
-            timer_state->interval = (uint32_t)converted;
+            timer_state->interval =
+              optarg_to_value(ch, argv[0], timer_state);
             break;
 
           case 'n':
-            OPTARG_TO_VALUE(converted, uint32_t, 10);
-            if (converted < 1 || converted > INT_MAX)
-              {
-                printf("signal out of range: %d\n", converted);
-                show_usage(argv[0], timer_state, EXIT_FAILURE);
-              }
-
-            timer_state->nsamples = (uint32_t)converted;
+            timer_state->nsamples =
+              optarg_to_value(ch, argv[0], timer_state);
             break;
 
           case 'r':
-            OPTARG_TO_VALUE(converted, uint32_t, 10);
-            if (converted < 1 || converted > INT_MAX)
-              {
-                printf("signal out of range: %d\n", converted);
-                show_usage(argv[0], timer_state, EXIT_FAILURE);
-              }
-
-            timer_state->range = (uint32_t)converted;
+            timer_state->range = optarg_to_value(ch, argv[0], timer_state);
             break;
 
           case 's':
-            OPTARG_TO_VALUE(converted, uint32_t, 10);
-            if (converted < 1 || converted > INT_MAX)
-              {
-                printf("signal out of range: %d\n", converted);
-                show_usage(argv[0], timer_state, EXIT_FAILURE);
-              }
-
-            timer_state->signo = (uint32_t)converted;
+            timer_state->signo = optarg_to_value(ch, argv[0], timer_state);
             break;
 
           case '?':
