@@ -814,7 +814,7 @@ static FAR char *nsh_filecat(FAR struct nsh_vtbl_s *vtbl, FAR char *s1,
 
       do
         {
-          nbytesread = read(fd, &argument[index], IOBUFFERSIZE);
+          nbytesread = read(fd, &argument[index], allocsize - index);
           if (nbytesread == 0)
             {
               /* Unexpected end of file -- Break out of the loop */
