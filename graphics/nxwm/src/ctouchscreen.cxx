@@ -35,6 +35,7 @@
 #include <debug.h>
 #include <unistd.h>
 
+#include <nuttx/sched.h>
 #include <nuttx/nx/nxglib.h>
 
 #include "graphics/nxwidgets/nxconfig.hxx"

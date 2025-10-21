@@ -51,6 +51,7 @@
 #include <nuttx/crc16.h>
 #include <nuttx/crc32.h>
 #include <nuttx/ascii.h>
+#include <nuttx/sched.h>
 
 #include "zm.h"
 

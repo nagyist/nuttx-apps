@@ -37,6 +37,8 @@
 #include <syslog.h>
 #include <errno.h>
 
+#include <nuttx/sched.h>
+
 #ifdef CONFIG_SYSTEM_STACKMONITOR
 
 /****************************************************************************

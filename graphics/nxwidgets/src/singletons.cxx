@@ -64,6 +64,8 @@
 #include <sched.h>
 #include <debug.h>
 
+#include <nuttx/sched.h>
+
 #include "graphics/nxwidgets/nxconfig.hxx"
 #include "graphics/nxwidgets/cnxserver.hxx"
 #include "graphics/nxwidgets/cnxstring.hxx"

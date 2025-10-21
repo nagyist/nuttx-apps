@@ -45,6 +45,7 @@
 #include <unistd.h>
 #include <assert.h>
 
+#include <nuttx/sched.h>
 #include <nuttx/net/mii.h>
 #include <sys/boardctl.h>
 

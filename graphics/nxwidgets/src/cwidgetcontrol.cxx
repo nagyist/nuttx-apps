@@ -32,6 +32,8 @@
 #include <debug.h>
 #include <sched.h>
 
+#include <nuttx/sched.h>
+
 #include "graphics/nxwidgets/nxconfig.hxx"
 #include "graphics/nxwidgets/cnxserver.hxx"
 #include "graphics/nxwidgets/cnxwidget.hxx"

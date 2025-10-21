@@ -29,6 +29,8 @@
 #include <sched.h>
 #include <cassert>
 
+#include <nuttx/sched.h>
+
 #include "graphics/nxwidgets/cwidgetcontrol.hxx"
 #include "graphics/nxwidgets/cnxtkwindow.hxx"
 #include "graphics/nxwidgets/cnxtoolbar.hxx"

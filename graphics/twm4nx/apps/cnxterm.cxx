@@ -35,6 +35,8 @@
 #include <debug.h>
 #include <unistd.h>
 
+#include <nuttx/sched.h>
+
 #include "nshlib/nshlib.h"
 
 #include "graphics/nxwidgets/cwidgetcontrol.hxx"

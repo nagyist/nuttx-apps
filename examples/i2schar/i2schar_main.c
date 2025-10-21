@@ -33,6 +33,8 @@
 #include <errno.h>
 #include <debug.h>
 
+#include <nuttx/sched.h>
+
 #include "i2schar.h"
 
 /****************************************************************************
