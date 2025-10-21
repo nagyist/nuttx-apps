@@ -278,7 +278,7 @@ static FAR void *rpsock_thread_latency(FAR void *pvarg)
   while (1)
     {
       FAR char *tmp;
-      int snd;
+      ssize_t snd;
 
       ret = recv(args->fd, buf, sizeof(buf), 0);
       if (ret == 0 || (ret < 0 && errno == ECONNRESET))
