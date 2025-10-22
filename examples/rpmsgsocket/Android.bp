@@ -7,7 +7,8 @@ cc_binary {
     ],
     shared_libs: ["libcutils"],
     header_libs: [
-        "nuttx_libc_headers"
+        "nuttx_libc_headers",
+        "kernel_modules_headers",
     ],
 }
 cc_binary {
@@ -18,6 +19,7 @@ cc_binary {
     ],
     shared_libs: ["libcutils"],
     header_libs: [
-        "nuttx_libc_headers"
+        "nuttx_libc_headers",
+        "kernel_modules_headers",
     ],
 }
