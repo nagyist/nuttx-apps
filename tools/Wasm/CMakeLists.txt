@@ -37,6 +37,14 @@ cmake_policy(SET CMP0079 NEW)
 # the configuration.
 include(${TOPDIR}/cmake/nuttx_kconfig.cmake)
 
+# Add custom module path if exists
+if(CUSTOM_MODULE_PATH AND EXISTS
+                          ${CUSTOM_MODULE_PATH}/nuttx_custom_module.cmake)
+  set(NUTTX_HAVE_CUSTOM_CMAKE_MODULE ON)
+  list(APPEND CMAKE_MODULE_PATH ${CUSTOM_MODULE_PATH})
+  include(nuttx_custom_module)
+endif()
+
 # Parse the input KCONFIG_FILE_PATH to get the configuration.
 nuttx_export_kconfig(${KCONFIG_FILE_PATH})
 
