@@ -1689,6 +1689,13 @@ int cmd_mkdir(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
     {
       FAR char *slash = parent ? fullpath : "";
 
+      /* Do not mkdir a root directory, as it must exist.  */
+
+      while (*slash == '/')
+        {
+          slash++;
+        }
+
       for (; ; )
         {
           slash = strchr(slash, '/');
