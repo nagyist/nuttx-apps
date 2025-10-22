@@ -28,7 +28,15 @@ if TFLITEMICRO
 	bool "Print tflite-micro's debug message"
 	default n
 
-config TFLITEMICRO_TOOL
+	config XTENSA_HIFI
+	bool "Enable Xtensa HiFi DSP optimized kernels"
+	default n
+	---help---
+		Enable Xtensa HiFi DSP optimized TFLM kernel implementations.
+		This will use hardware-accelerated operators from
+		tensorflow/lite/micro/kernels/xtensa/ directory.
+
+	config TFLITEMICRO_TOOL
 	bool "tflite-micro cmdline tool"
 	default n
 

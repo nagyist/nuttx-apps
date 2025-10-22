@@ -149,6 +149,49 @@ if(CONFIG_TFLITEMICRO)
   endif()
 
   # ############################################################################
+  # Xtensa hardware operator support
+  if(CONFIG_XTENSA_HIFI)
+    # Add XTENSA flag to enable Xtensa-specific kernel variants This prevents
+    # inline fallback implementations in headers
+    list(APPEND COMMON_FLAGS -DXTENSA)
+
+    # Add HIFI4 flag to enable HiFi4 DSP optimized implementations This enables
+    # xa_nn_xxx function calls from nnlib-hifi4
+    list(APPEND COMMON_FLAGS -DHIFI4)
+
+    file(GLOB XTENSA_SRCS
+         ${TFLITE_MICRO_DIR}/tensorflow/lite/micro/kernels/xtensa/*.cc)
+
+    # Exclude hifimini subdirectory files
+    list(FILTER XTENSA_SRCS EXCLUDE REGEX ".*/hifimini/.*")
+
+    # Remove any existing operator files from generic kernels or CMSIS-NN paths
+    # that have Xtensa-optimized versions (to prevent symbol conflicts)
+    foreach(file ${XTENSA_SRCS})
+      get_filename_component(xtensa_filename ${file} NAME)
+      # Exclude from generic kernels directory
+      list(FILTER TFLITE_MICRO_SRCS EXCLUDE REGEX
+           ".*/tensorflow/lite/micro/kernels/${xtensa_filename}$")
+      # Exclude from CMSIS-NN directory (if present)
+      list(FILTER TFLITE_MICRO_SRCS EXCLUDE REGEX
+           ".*/tensorflow/lite/micro/kernels/cmsis_nn/${xtensa_filename}$")
+    endforeach()
+
+    # Add Xtensa optimized operator files
+    list(APPEND TFLITE_MICRO_SRCS ${XTENSA_SRCS})
+
+    # Add nnlib-hifi4 include directory for xa_nn_xxx function declarations
+    set(NNLIB_HIFI4_ROOT_DIR
+        ${CMAKE_CURRENT_LIST_DIR}/../nnlib-hifi4/nnlib-hifi4/xa_nnlib)
+    if(EXISTS ${NNLIB_HIFI4_ROOT_DIR})
+      list(APPEND TFLITE_MICRO_XTENSA_INCLUDE ${NNLIB_HIFI4_ROOT_DIR})
+      list(APPEND TFLITE_MICRO_XTENSA_INCLUDE ${NNLIB_HIFI4_ROOT_DIR}/include)
+      list(APPEND TFLITE_MICRO_XTENSA_INCLUDE
+           ${NNLIB_HIFI4_ROOT_DIR}/include/nnlib)
+    endif()
+  endif()
+
+  # ############################################################################
   # Beco hardware operator support
   if(CONFIG_BES_BECO_CONV)
     # When building the standalone tool, enable all third-party hardware
@@ -203,6 +246,11 @@ if(CONFIG_TFLITEMICRO)
   # Append BECO include directories if they were collected
   if(DEFINED BECO_INCLUDE_DIRS)
     list(APPEND INCDIR ${BECO_INCLUDE_DIRS})
+  endif()
+
+  # Append Xtensa nnlib-hifi4 include directory if defined
+  if(DEFINED TFLITE_MICRO_XTENSA_INCLUDE)
+    list(APPEND INCDIR ${TFLITE_MICRO_XTENSA_INCLUDE})
   endif()
 
   if(CONFIG_MLEARNING_CMSIS_NN)
