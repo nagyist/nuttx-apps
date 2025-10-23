@@ -2062,6 +2062,7 @@ int cmd_mv(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   UNUSED(argc);
 
+  struct stat newstat;
   FAR char *oldpath;
   FAR char *newpath;
   int ret;
@@ -2083,9 +2084,31 @@ int cmd_mv(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       goto errout_with_oldpath;
     }
 
-  /* Perform the mount */
+  /* If the new path is a directory, we need to move the old file or
+   * directory into that directory.
+   * For example, mv a b/ becomes mv a b/a
+   */
 
-  ret = rename(oldpath, newpath);
+  if (stat(newpath, &newstat) == 0 && S_ISDIR(newstat.st_mode))
+    {
+      FAR char *destpath;
+
+      destpath = nsh_getdirpath(vtbl, newpath, basename(oldpath));
+      if (destpath == NULL)
+        {
+          nsh_error(vtbl, g_fmtcmdoutofmemory, argv[0]);
+          ret = ERROR;
+          goto errout_with_newpath;
+        }
+
+      ret = rename(oldpath, destpath);
+      free(destpath);
+    }
+  else
+    {
+      ret = rename(oldpath, newpath);
+    }
+
   if (ret < 0)
     {
       nsh_error(vtbl, g_fmtcmdfailed, argv[0], "rename", NSH_ERRNO);
@@ -2093,6 +2116,7 @@ int cmd_mv(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 
   /* Free the file paths */
 
+errout_with_newpath:
   nsh_freefullpath(newpath);
 
 errout_with_oldpath:
