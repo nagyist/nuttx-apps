@@ -41,7 +41,8 @@ if(CONFIG_EXECFUNCS_HAVE_SYMTAB
 
   add_library(apps_symtab)
   add_dependencies(apps_symtab symtab_source_gen)
-  target_compile_options(apps_symtab PRIVATE ${NO_LTO} -fno-builtin)
+  target_compile_options(apps_symtab PRIVATE ${NO_LTO} -fno-builtin
+                                             -Wno-builtin-declaration-mismatch)
   target_sources(apps_symtab PRIVATE ${SYMTAB_APPS_SOURCE})
   nuttx_add_library_internal(apps_symtab)
   set_property(GLOBAL APPEND PROPERTY NUTTX_SYSTEM_LIBRARIES apps_symtab)
