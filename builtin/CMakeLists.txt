@@ -37,14 +37,26 @@ if(CONFIG_BUILTIN)
     get_target_property(APP_NAME ${module} APP_NAME)
     get_target_property(APP_PRIORITY ${module} APP_PRIORITY)
     get_target_property(APP_STACK ${module} APP_STACK)
-    if(CONFIG_MM_TASK_HEAP)
-      get_target_property(APP_HEAP ${module} APP_HEAP)
+    set(builtin_list_string
+        "${builtin_list_string}\{ \"${APP_NAME}\", ${APP_PRIORITY}, ${APP_STACK}, ${APP_MAIN}"
+    )
+
+    if(CONFIG_SCHED_USER_IDENTITY)
+      get_target_property(APP_UID ${module} APP_UID)
+      set(builtin_list_string "${builtin_list_string}, ${APP_UID}")
+      get_target_property(APP_GID ${module} APP_GID)
+      set(builtin_list_string "${builtin_list_string}, ${APP_GID}")
+      get_target_property(APP_MODE ${module} APP_MODE)
+      set(builtin_list_string "${builtin_list_string}, ${APP_MODE}")
     endif()
 
-    set(builtin_list_string
-        "${builtin_list_string}\{ \"${APP_NAME}\", ${APP_PRIORITY}, ${APP_STACK}, ${APP_MAIN} , ${APP_HEAP} \},  \n"
-    )
-    # builtin_proto.h Example: int hello_main(int argc, char *argv[]);
+    if(CONFIG_MM_TASK_HEAP)
+      get_target_property(APP_HEAP ${module} APP_HEAP)
+      set(builtin_list_string "${builtin_list_string}, ${APP_HEAP}")
+    endif()
+
+    set(builtin_list_string "${builtin_list_string} \},\n")
+
     set(builtin_proto_string
         "${builtin_proto_string}int ${APP_MAIN}(int argc, char *argv[]);\n")
 
