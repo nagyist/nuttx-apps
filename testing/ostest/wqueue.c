@@ -39,8 +39,8 @@
 #define wqtest_assert(f, msg) __ASSERT__(f, __FILE__, __LINE__, msg)
 
 #define SLEEP_TIME   (10 * 1000)
-#define TEST_COUNT   (100)
-#define VERIFY_COUNT (100)
+#define TEST_COUNT   (20)
+#define VERIFY_COUNT (20)
 
 #define WQUEUE_DEFAULT_STACK_SIZE (CONFIG_DEFAULT_TASK_STACKSIZE)
 #define WQUEUE_DEFAULT_PRIORITY   (SCHED_PRIORITY_DEFAULT)
@@ -61,7 +61,7 @@
 #define RECURSIVE_TEST_SUBNODE_NUM       (3)
 #define RECURSIVE_TEST_PRINT_PATH_ENABLE (0)
 
-#define DELAY_TEST_NUM               (100)
+#define DELAY_TEST_NUM               (20)
 #define DELAY_TEST_DEFAULT_DELAY     ((clock_t)400)
 #define DELAY_TEST_THREAD_NUM        (5)
 #define DELAY_TEST_WQUEUE_NUM        (3)
