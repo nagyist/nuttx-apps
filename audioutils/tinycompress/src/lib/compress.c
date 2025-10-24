@@ -204,6 +204,11 @@ int compress_drain(FAR struct compress *compress)
   return compress->ops->drain(compress->data);
 }
 
+int compress_reset(FAR struct compress *compress)
+{
+  return compress->ops->reset(compress->data);
+}
+
 int compress_next_track(FAR struct compress *compress)
 {
   return compress->ops->next_track(compress->data);

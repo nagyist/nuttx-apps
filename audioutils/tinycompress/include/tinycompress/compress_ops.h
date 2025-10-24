@@ -41,6 +41,7 @@ struct compress_ops
   int (*pause)(FAR void *compress_data);
   int (*resume)(FAR void *compress_data);
   int (*drain)(FAR void *compress_data);
+  int (*reset)(FAR void *compress_data);
   int (*partial_drain)(FAR void *compress_data);
   int (*next_track)(FAR void *compress_data);
   int (*set_gapless_metadata)(FAR void *compress_data,

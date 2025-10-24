@@ -247,6 +247,14 @@ int compress_resume(FAR struct compress *compress);
 
 int compress_drain(FAR struct compress *compress);
 
+/* compress_reset: reset the compress stream
+ * return 0 on success, negative on error
+ *
+ * @compress: compress stream to be reset
+ */
+
+int compress_reset(FAR struct compress *compress);
+
 /* compress_next_track: set the next track for stream
  *
  * return 0 on success, negative on error

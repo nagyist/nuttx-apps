@@ -939,6 +939,19 @@ static int compress_hw_drain(FAR void *compress_data)
   return 0;
 }
 
+static int compress_hw_reset(FAR void *compress_data)
+{
+  FAR struct compress_hw_data *compress = compress_data;
+
+  if (ioctl(compress->fd, AUDIOIOC_HWRESET, compress->session) < 0)
+    {
+      auderr("cannot reset the stream");
+      return -errno;
+    }
+
+  return 0;
+}
+
 static int compress_hw_partial_drain(FAR void *compress_data)
 {
   return -ENOTSUP;
@@ -1093,6 +1106,7 @@ const struct compress_ops g_compress_hw_ops =
   .pause = compress_hw_pause,
   .resume = compress_hw_resume,
   .drain = compress_hw_drain,
+  .reset = compress_hw_reset,
   .partial_drain = compress_hw_partial_drain,
   .next_track = compress_hw_next_track,
   .set_gapless_metadata = compress_hw_set_gapless_metadata,
