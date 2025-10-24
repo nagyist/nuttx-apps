@@ -137,22 +137,24 @@ ifneq ($(strip $(PROGNAME)),)
         $(if $(word $i,$(HEAPSIZE)),$(word $i,$(HEAPSIZE)),$(lastword $(HEAPSIZE)))) \
   )
 
-  PRIORITY = 0
   ifneq ($(PRIORITY_$(REGLIST)), SCHED_PRIORITY_DEFAULT)
-     PRIORITY = $(PRIORITY_$(REGLIST))
+    ifneq ($(PRIORITY_$(REGLIST)),)
+     MODLDFLAGS += --defsym nx_priority=$(PRIORITY_$(REGLIST))
+    endif
   endif
 
-  MODLDFLAGS += --defsym nx_stacksize=$(STACKSIZE_$(REGLIST)) --defsym nx_priority=$(PRIORITY)
+  ifneq ($(STACKSIZE_$(REGLIST)),)
+    MODLDFLAGS += --defsym nx_stacksize=$(STACKSIZE_$(REGLIST))
+  endif
+
   ifeq ($(CONFIG_SCHED_USER_IDENTITY),y)
     MODLDFLAGS += --defsym nx_uid=$(UID_$(REGLIST)) --defsym nx_gid=$(GID_$(REGLIST)) --defsym nx_mod=$(GID_$(REGLIST))
   endif
-  ifeq ($(CONFIG_MM_TASK_HEAP),y)
-    HEAPSIZE = $(CONFIG_MM_TASK_HEAP_DEFAULT_SIZE)
-    ifneq ($(HEAPSIZE_$(REGLIST)),)
-       HEAPSIZE = $(PRIORITY_$(REGLIST))
-    endif
 
-    MODLDFLAGS += --defsym nx_heapsize=$(HEAPSIZE)
+  ifeq ($(CONFIG_MM_TASK_HEAP),y)
+    ifneq ($(HEAPSIZE_$(REGLIST)),)
+      MODLDFLAGS += --defsym nx_heapsize=$(HEAPSIZE_$(REGLIST))
+    endif
   endif
 endif
 
