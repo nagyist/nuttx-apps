@@ -57,8 +57,9 @@ extern "C"
 #define SND_AUDIOCODEC_BESPOKE              AUDIO_FMT_UNDEF
 #define SND_AUDIOCODEC_ALAC                 AUDIO_FMT_ALAC
 #define SND_AUDIOCODEC_APE                  AUDIO_FMT_APE
+#define SND_AUDIOCODEC_SPEEX                AUDIO_FMT_SPEEX
 
-#define SND_AUDIOCODEC_MAX                  AUDIO_FMT_APE
+#define SND_AUDIOCODEC_MAX                  AUDIO_FMT_SPEEX
 #define SND_AUDIOPROFILE_PCM                AUDIO_PROFILE_PCM
 
 #define SND_AUDIOMODE_PCM_MP1               AUDIO_SUBFMT_PCM_MP1
@@ -225,6 +226,7 @@ extern "C"
 #define snd_enc_flac                        audio_enc_flac_s
 #define snd_enc_sbc                         audio_enc_sbc_s
 #define snd_enc_lc3                         audio_enc_lc3_s
+#define snd_enc_spx                         audio_enc_spx_s
 #define snd_enc_generic                     audio_enc_generic_s
 #define snd_dec_flac                        audio_dec_flac_s
 #define snd_dec_wma                         audio_dec_wma_s
