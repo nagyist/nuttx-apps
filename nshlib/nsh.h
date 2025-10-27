@@ -420,11 +420,12 @@
 
 #define NSH_HAVE_IOBUFFER 1
 
-/* The I/O buffer is needed for the ls, cp, and ps commands.  It is also
+/* The I/O buffer is needed for the ls, cp, mv, and ps commands.  It is also
  * needed if the platform supplied MOTD is configured.
  */
 
 #if defined(CONFIG_NSH_DISABLE_LS) && defined(CONFIG_NSH_DISABLE_CP) && \
+    (!defined(NSH_HAVE_DIROPTS) || defined(CONFIG_NSH_DISABLE_MV)) && \
     defined(CONFIG_NSH_DISABLE_PS) && !defined(CONFIG_NSH_PLATFORM_MOTD) && \
     defined(CONFIG_DISABLE_ENVIRON)
 #  undef NSH_HAVE_IOBUFFER
