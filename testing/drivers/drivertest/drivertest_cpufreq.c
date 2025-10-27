@@ -47,7 +47,7 @@
  ****************************************************************************/
 
 #ifdef TEST_CPUFREQ_FAKE_DRIVER
-static FAR const struct cpufreq_frequency_table *test_cpufreq_get_table(
+static FAR const uint32_t *test_cpufreq_get_table(
                             FAR struct cpufreq_policy *policy);
 static int test_cpufreq_target_index(FAR struct cpufreq_policy *policy,
                                      unsigned int index);
@@ -61,14 +61,9 @@ static int test_cpufreq_resume(FAR struct cpufreq_policy *policy);
 
 static int g_test_cpufreq_current;
 
-static const struct cpufreq_frequency_table g_test_cpufreq_table[] =
+static const uint32_t g_test_cpufreq_table[] =
 {
-    {100},
-    {300},
-    {500},
-    {700},
-    {900},
-    {CPUFREQ_TABLE_END},
+  100, 300, 500, 700, 900, CPUFREQ_TABLE_END,
 };
 
 static struct cpufreq_driver g_test_cpufreq_driver =
@@ -84,7 +79,7 @@ static struct cpufreq_driver g_test_cpufreq_driver =
  * Private Functions
  ****************************************************************************/
 
-static FAR const struct cpufreq_frequency_table *test_cpufreq_get_table(
+static FAR const uint32_t *test_cpufreq_get_table(
                             FAR struct cpufreq_policy *policy)
 {
   return g_test_cpufreq_table;
@@ -94,7 +89,7 @@ static int test_cpufreq_target_index(FAR struct cpufreq_policy *policy,
                                      unsigned int index)
 {
   DEBUGASSERT(index >= 0 && index < ARRAY_SIZE(g_test_cpufreq_table));
-  g_test_cpufreq_current = g_test_cpufreq_table[index].frequency;
+  g_test_cpufreq_current = g_test_cpufreq_table[index];
 
   return 0;
 }
@@ -132,7 +127,7 @@ static int notifier(FAR struct notifier_block *nb,
 static FAR void *test_cpufreq_thread(void *arg)
 {
   FAR struct cpufreq_policy *policy = cpufreq_policy_get();
-  FAR struct cpufreq_qos *qos;
+  FAR struct qos_request_s *qos;
   struct notifier_block nb;
   int n = 30;
 
@@ -155,11 +150,9 @@ static FAR void *test_cpufreq_thread(void *arg)
           int max = random() % 1000 + min;
 
           cpufreq_qos_update_request(qos, min, max);
-          usleep(1000);
         }
 
       cpufreq_qos_remove_request(qos);
-      usleep(1000);
     }
 
   cpufreq_unregister_notifier(policy, &nb);
@@ -176,14 +169,10 @@ static void drivertest_cpufreq(FAR void **state)
   pthread_attr_init(&attr);
 
   pthread_create(&thread0, &attr, test_cpufreq_thread, "thread0");
-  usleep(1000);
   pthread_create(&thread1, &attr, test_cpufreq_thread, "thread1");
-  usleep(1000);
   pthread_create(&thread2, &attr, test_cpufreq_thread, "thread1");
-  usleep(3000);
 
   cpufreq_suspend(policy);
-  usleep(3000);
   cpufreq_resume(policy);
 
   pthread_join(thread0, NULL);

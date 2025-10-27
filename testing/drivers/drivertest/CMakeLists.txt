@@ -341,7 +341,7 @@ if(CONFIG_TESTING_DRIVER_TEST)
       drivertest_audio.c)
   endif()
 
-  if(CONFIG_CPUFREQ)
+  if(CONFIG_DEVFREQ AND NOT CONFIG_CPUFREQ_DEFAULT_GOV_NULL)
     nuttx_add_application(
       NAME
       cmocka_driver_cpufreq

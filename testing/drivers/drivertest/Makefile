@@ -131,9 +131,11 @@ MAINSRC  += drivertest_audio.c
 PROGNAME += cmocka_driver_audio
 endif
 
-ifneq ($(CONFIG_CPUFREQ),)
+ifneq ($(CONFIG_DEVFREQ),)
+ifeq ($(CONFIG_CPUFREQ_DEFAULT_GOV_NULL),)
 MAINSRC  += drivertest_cpufreq.c
 PROGNAME += cmocka_driver_cpufreq
+endif
 endif
 
 ifneq ($(CONFIG_DEVFREQ),)
