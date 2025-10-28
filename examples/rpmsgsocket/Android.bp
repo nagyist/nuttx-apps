@@ -10,6 +10,8 @@ cc_binary {
         "nuttx_libc_headers",
         "kernel_modules_headers",
     ],
+
+    proprietary: true,
 }
 cc_binary {
     name: "rpsock_server",
@@ -22,4 +24,6 @@ cc_binary {
         "nuttx_libc_headers",
         "kernel_modules_headers",
     ],
+
+    proprietary: true
 }
