@@ -87,6 +87,7 @@
 #define LSFLAGS_RECURSIVE     4
 #define LSFLAGS_UID_GID       8
 #define LSFLAGS_HUMANREADBLE  16
+#define LSFLAGS_NLINKS        32
 
 #define KB                   (1UL << 10)
 #define MB                   (1UL << 20)
@@ -356,7 +357,8 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
   /* Check if any options will require that we stat the file */
 
-  if ((lsflags & (LSFLAGS_SIZE | LSFLAGS_LONG | LSFLAGS_UID_GID)) != 0)
+  if ((lsflags & (LSFLAGS_SIZE | LSFLAGS_LONG | LSFLAGS_UID_GID |
+                  LSFLAGS_NLINKS)) != 0)
     {
       struct stat buf;
 
@@ -505,6 +507,13 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
 
           nsh_output(vtbl, " %s", details);
         }
+
+#ifdef CONFIG_PSEUDOFS_SOFTLINKS
+      if ((lsflags & LSFLAGS_NLINKS) != 0)
+        {
+          nsh_output(vtbl, "%4d", buf.st_nlink);
+        }
+#endif
 
 #ifdef CONFIG_SCHED_USER_IDENTITY
       if ((lsflags & LSFLAGS_UID_GID) != 0)
@@ -1548,7 +1557,8 @@ int cmd_ls(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
       switch (option)
         {
           case 'l':
-            lsflags |= (LSFLAGS_SIZE | LSFLAGS_LONG | LSFLAGS_UID_GID);
+            lsflags |= (LSFLAGS_SIZE | LSFLAGS_LONG | LSFLAGS_UID_GID |
+                        LSFLAGS_NLINKS);
             break;
 
           case 'R':
