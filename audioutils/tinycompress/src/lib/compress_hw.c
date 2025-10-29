@@ -685,7 +685,8 @@ static void compress_hw_close(FAR void *compress_data)
   struct audio_status_s status;
 
   if (ioctl(compress->fd, AUDIOIOC_GETSTATUS, &status) >= 0 &&
-      status.state == AUDIO_STATE_RUNNING)
+      (status.state == AUDIO_STATE_RUNNING ||
+      status.state == AUDIO_STATE_PAUSED))
     {
       compress_hw_stop(compress);
     }
