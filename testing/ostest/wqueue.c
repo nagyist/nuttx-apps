@@ -149,8 +149,7 @@ typedef struct delay_work_s
 typedef struct workthread_work_s
 {
   sem_t finish_sem;
-  atomic64_t total_ticks aligned_data(8); /* total time consumed
-                                           *  by all works */
+  atomic_t total_ticks;
   FAR struct kwork_wqueue_s *wq;
   FAR struct work_s *works;
   atomic_t pending_cnt;
@@ -377,7 +376,7 @@ static void workthread_worker(FAR void *arg)
 
       exec_tick  = clock_systime_ticks() - start_tick;
       finish_cnt = atomic_fetch_add(&work->finish_cnt, 1);
-      atomic64_fetch_add(&work->total_ticks, exec_tick);
+      atomic_fetch_add(&work->total_ticks, exec_tick);
       if (finish_cnt + 1 == work->nworks)
         {
           sem_post(&work->finish_sem);
@@ -1186,10 +1185,10 @@ static void wqueue_workthread_test(int nthread)
   workthread_worker(&work);
   sem_wait(&work.finish_sem);
   exec_time  = clock_systime_ticks() - start_tick;
-  efficiency = work.total_ticks * 10000 / (exec_time * nthread);
+  efficiency = work.total_ticks * 10000ull / (exec_time * nthread);
   printf("Thread Num: %d;\
          Efficiency: %2d.%02d%%; \
-         Total time: %" PRIu64 " ticks, \
+         Total time: %" PRIu32 " ticks, \
          Execution: %" PRIu64 " ticks\n",
          nthread, efficiency / 100, efficiency % 100, work.total_ticks,
          exec_time);
