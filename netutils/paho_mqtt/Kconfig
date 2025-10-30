@@ -31,6 +31,10 @@ config LIB_MQTT5_THREAD_STACKSIZE
 	int "mqtt thread statcksize"
 	default 16384
 
+config LIB_MQTT5_STACKTRACE
+	bool "Enable mqtt5 stack trace function"
+	default n
+
 if LIB_MQTT5_TLS
 
 config LIB_MQTT5_OPENSSL_VERSION_NUMBER
