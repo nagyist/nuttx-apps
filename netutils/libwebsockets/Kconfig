@@ -6,7 +6,7 @@
 config NETUTILS_LIBWEBSOCKETS
 	bool "libwebsockets library (current version)"
 	default n
-	depends on NET && OPENSSL_MBEDTLS_WRAPPER
+	depends on NET_TCPPROTO_OPTIONS && OPENSSL_MBEDTLS_WRAPPER
 	---help---
 		Enables the libwebsockets library.
 
