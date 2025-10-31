@@ -134,7 +134,9 @@ const char *dirlist[] =
 {
   "errno",
   "hello",
+#ifndef CONFIG_DISABLE_SIGNALS
   "signal",
+#endif
   "struct",
 #ifdef CONFIG_HAVE_CXX
   "hello++1",
