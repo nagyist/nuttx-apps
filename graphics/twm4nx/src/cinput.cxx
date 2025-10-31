@@ -33,7 +33,6 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include <nuttx/semaphore.h>
 #include <nuttx/nx/nxglib.h>
 #include <nuttx/input/mouse.h>
 

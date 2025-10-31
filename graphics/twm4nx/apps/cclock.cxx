@@ -34,7 +34,6 @@
 #include <unistd.h>
 
 #include <nuttx/sched.h>
-#include <nuttx/semaphore.h>
 
 #include "nshlib/nshlib.h"
 

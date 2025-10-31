@@ -48,7 +48,6 @@
 #include <fcntl.h>
 #include <semaphore.h>
 
-#include <nuttx/semaphore.h>
 #include <nuttx/nx/nx.h>
 #include <nuttx/nx/nxglib.h>
 
