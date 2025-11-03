@@ -20,6 +20,28 @@
 
 include(nuttx_parse_function_args)
 
+# "nuttx_aidl_interface" is a source-less target that encapsulates all the AIDL
+# compiler options and include path needed by all AIDL.
+if(NOT TARGET nuttx_aidl_interface)
+  add_custom_target(nuttx_aidl_interface)
+endif()
+
+# the visible scope is all the AIDL include search path
+function(include_directories_for_all_aidl)
+  set_property(
+    TARGET nuttx_aidl_interface
+    APPEND
+    PROPERTY AIDL_INCLUDE_DIRECTORIES ${ARGN})
+endfunction()
+
+# all AIDL flags
+function(compile_flags_for_all_aidl)
+  set_property(
+    TARGET nuttx_aidl_interface
+    APPEND
+    PROPERTY AIDL_COMPILE_FLAGS ${ARGN})
+endfunction()
+
 # ~~~
 # nuttx_add_aidl
 #
@@ -64,6 +86,20 @@ function(nuttx_add_aidl)
     AIDL_FLAGS
     ARGN
     ${ARGN})
+
+  # process global aidl options
+  get_property(
+    aidl_include_path_gobal_scope
+    TARGET nuttx_aidl_interface
+    PROPERTY AIDL_INCLUDE_DIRECTORIES)
+  get_property(
+    aidl_flags_gobal_scope
+    TARGET nuttx_aidl_interface
+    PROPERTY AIDL_COMPILE_FLAGS)
+
+  # add flags in FRONT and add search path BEHIND
+  list(PREPEND AIDL_FLAGS ${aidl_flags_gobal_scope})
+  list(APPEND AIDL_INCLUDE_DIR ${aidl_include_path_gobal_scope})
 
   # concat aidl tool command
   string(JOIN " " AIDL_FLAGS_STR ${AIDL_FLAGS})
