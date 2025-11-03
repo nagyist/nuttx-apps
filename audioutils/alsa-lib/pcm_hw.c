@@ -214,7 +214,7 @@ static int snd_pcm_hw_query_channel(int fd, snd_pcm_stream_t stream,
 
   if ((caps.ac_channels & 0xf0) == 0)
     {
-      values[0] = caps.ac_channels;
+      values[0] = 1;
       values[1] = caps.ac_channels;
     }
   else
