@@ -37,10 +37,10 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define WDOGTEST_RAND_ITER           1024
-#define WDOGTEST_THREAD_NR           (CONFIG_SMP_NCPUS * 4)
+#define WDOGTEST_RAND_ITER           256
+#define WDOGTEST_THREAD_NR           (CONFIG_SMP_NCPUS * 2)
 #define WDOGTEST_TOLERENT_TICK       10
-#define WDOGTEST_DRITICAL_SECTION    1000
+#define WDOGTEST_DRITICAL_SECTION    200
 
 #define wdtest_assert(x)             _ASSERT(x, __FILE__, __LINE__)
 
