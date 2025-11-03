@@ -150,6 +150,10 @@ static int spicmd_help(FAR struct spitool_s *spitool, int argc,
                           "Default: %d Current: %" PRIu32 " Max: %d\n",
                  CONFIG_SPITOOL_DEFWORDS, spitool->count, MAX_XDATA);
 
+  spitool_printf(spitool, "  [-r trans_count] Trans to exchange  "
+                          "Default: %d Current: %d Max: %d\n",
+                 CONFIG_SPITOOL_DEFTRANS, spitool->trans_count, UINT8_MAX);
+
   spitool_printf(spitool, "\nNOTES:\n");
 #ifndef CONFIG_DISABLE_ENVIRON
   spitool_printf(spitool, "o An environment variable like $PATH may be used "
@@ -396,6 +400,11 @@ int main(int argc, FAR char *argv[])
   if (g_spitool.devtype == 0)
     {
       g_spitool.devtype = SPIDEVTYPE_USER;
+    }
+
+  if (g_spitool.trans_count == 0)
+    {
+      g_spitool.trans_count = CONFIG_SPITOOL_DEFTRANS;
     }
 
   /* Parse and process the command line */
