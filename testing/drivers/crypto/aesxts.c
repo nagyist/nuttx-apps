@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/crypto/driver/aesxts.c
+ * apps/testing/drivers/crypto/aesxts.c
  * $OpenBSD: aes_xts.c,v 1.2 2013/10/06 16:59:34 jsing Exp $
  *
  * Copyright (c) 2002 Markus Friedl.  All rights reserved.

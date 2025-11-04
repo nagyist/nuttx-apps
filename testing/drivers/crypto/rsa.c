@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/crypto/driver/rsa.c
+ * apps/testing/drivers/crypto/rsa.c
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above

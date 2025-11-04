@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/crypto/driver/3descbc.c
+ * apps/testing/drivers/crypto/3descbc.c
  * $OpenBSD: des3.c,v 1.8 2010/10/15 10:39:12 jsg Exp $
  *
  * Copyright (c) 2002 Markus Friedl.  All rights reserved.

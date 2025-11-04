@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/crypto/driver/aescbc.c
+ * apps/testing/drivers/crypto/aescbc.c
  * $OpenBSD: aesctr.c,v 1.1 2005/05/25 05:47:53 markus Exp $
  *
  * Copyright (c) 2005 Markus Friedl <markus@openbsd.org>

@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/crypto/driver/crc8.c
+ * apps/testing/drivers/crypto/crc16.c
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -51,7 +51,7 @@ typedef struct tb
 {
   FAR char *data;
   int datalen;
-  uint8_t result;
+  uint16_t result;
 }
 tb;
 
@@ -59,45 +59,45 @@ tb;
  * Private Data
  ****************************************************************************/
 
-static const tb g_h1d_testcase[] =
+static const tb g_h1021_testcase[] =
 {
     /* testcase 1-7: Individual testing */
 
     {
       "",
       0,
-      0,
+      0xffff,
     },
     {
       "a",
       1,
-      0xb2,
+      0x9d77,
     },
     {
       "abc",
       3,
-      0x9a,
+      0x514a,
     },
     {
       "message digest",
       14,
-      0x2d,
+      0x32cc,
     },
     {
       "abcdefghijklmnopqrstuvwxyz",
       26,
-      0xd2,
+      0x53e2,
     },
     {
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
       62,
-      0x1f,
+      0xb46b,
     },
     {
       "123456789012345678901234567890123456789"
       "01234567890123456789012345678901234567890",
       80,
-      0x92,
+      0xdadf,
     },
 
     /* testcase 8: test case 7 is divided into 8 parts */
@@ -105,11 +105,11 @@ static const tb g_h1d_testcase[] =
     {
       "1234567890",
       10,
-      0x92,
+      0xdadf,
     }
 };
 
-static const tb g_h2f_testcase[] =
+static const tb g_h8005_testcase[] =
 {
     /* testcase 1-7: Individual testing */
 
@@ -121,33 +121,33 @@ static const tb g_h2f_testcase[] =
     {
       "a",
       1,
-      0x07,
+      0xe8c1,
     },
     {
       "abc",
       3,
-      0x41,
+      0x9738,
     },
     {
       "message digest",
       14,
-      0xc1,
+      0x3b44,
     },
     {
       "abcdefghijklmnopqrstuvwxyz",
       26,
-      0xb4,
+      0x9c1d,
     },
     {
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
       62,
-      0x20,
+      0x57b4,
     },
     {
       "123456789012345678901234567890123456789"
       "01234567890123456789012345678901234567890",
       80,
-      0x0c,
+      0x5ec7,
     },
 
     /* testcase 8: test case 7 is divided into 8 parts */
@@ -155,7 +155,7 @@ static const tb g_h2f_testcase[] =
     {
       "1234567890",
       10,
-      0x0c,
+      0x5ec7,
     }
 };
 
@@ -163,7 +163,7 @@ static const tb g_h2f_testcase[] =
  * Private Functions
  ****************************************************************************/
 
-static void syscrc8_free(FAR crypto_context *ctx)
+static void syscrc16_free(FAR crypto_context *ctx)
 {
   if (ctx->crypto_fd != 0)
     {
@@ -178,35 +178,35 @@ static void syscrc8_free(FAR crypto_context *ctx)
     }
 }
 
-static int syscrc8_init(FAR crypto_context *ctx)
+static int syscrc16_init(FAR crypto_context *ctx)
 {
   memset(ctx, 0, sizeof(crypto_context));
   if ((ctx->fd = open("/dev/crypto", O_RDWR, 0)) < 0)
     {
       warn("CRIOGET");
-      syscrc8_free(ctx);
+      syscrc16_free(ctx);
       return 1;
     }
 
   if (ioctl(ctx->fd, CRIOGET, &ctx->crypto_fd) == -1)
     {
       warn("CRIOGET");
-      syscrc8_free(ctx);
+      syscrc16_free(ctx);
       return 1;
     }
 
   return 0;
 }
 
-static int syscrc8_start(FAR crypto_context *ctx, uint8_t *key)
+static int syscrc16_start(FAR crypto_context *ctx, uint16_t *key)
 {
-  ctx->session.mac = CRYPTO_CRC8;
+  ctx->session.mac = CRYPTO_CRC16;
   ctx->session.mackey = (caddr_t) key;
-  ctx->session.mackeylen = sizeof(uint8_t) * 3;
+  ctx->session.mackeylen = sizeof(uint16_t) * 3;
   if (ioctl(ctx->crypto_fd, CIOCGSESSION, &ctx->session) == -1)
     {
       warn("CIOCGSESSION");
-      syscrc8_free(ctx);
+      syscrc16_free(ctx);
       return 1;
     }
 
@@ -214,7 +214,7 @@ static int syscrc8_start(FAR crypto_context *ctx, uint8_t *key)
   return 0;
 }
 
-static int syscrc8_update(FAR crypto_context *ctx, FAR const char *s,
+static int syscrc16_update(FAR crypto_context *ctx, FAR const char *s,
                            size_t len)
 {
   ctx->cryp.op = COP_ENCRYPT;
@@ -230,7 +230,7 @@ static int syscrc8_update(FAR crypto_context *ctx, FAR const char *s,
   return 0;
 }
 
-static int syscrc8_finish(FAR crypto_context *ctx, FAR uint8_t *out)
+static int syscrc16_finish(FAR crypto_context *ctx, FAR uint16_t *out)
 {
   ctx->cryp.flags = 0;
   ctx->cryp.mac = (caddr_t) out;
@@ -250,14 +250,14 @@ static int syscrc8_finish(FAR crypto_context *ctx, FAR uint8_t *out)
   return 0;
 }
 
-static int match(const uint8_t a, const uint8_t b)
+static int match(const uint16_t a, const uint16_t b)
 {
   if (a == b)
     {
       return 0;
     }
 
-  warnx("crc8 mismatch");
+  warnx("crc16 mismatch");
 
   printf("%02x\n", a);
   printf("%02x\n", b);
@@ -266,84 +266,84 @@ static int match(const uint8_t a, const uint8_t b)
   return 1;
 }
 
-static void test_crc8_h1d(void **state)
+static void test_crc16_h1021(void **state)
 {
-  crypto_context crc8_ctx;
+  crypto_context crc16_ctx;
   int i;
-  uint8_t output;
-  uint8_t key[3] =
+  uint16_t output;
+  uint16_t key[3] =
     {
-      0x1d, 0, 0
+      0x1021, 0xffff, 0
     };
 
-  assert_int_equal(syscrc8_init(&crc8_ctx), 0);
+  assert_int_equal(syscrc16_init(&crc16_ctx), 0);
 
-  /* testcase 1-7: test crc8 vector */
+  /* testcase 1-7: test crc16 vector */
 
-  for (i = 0; i < sizeof(g_h1d_testcase) / sizeof(tb) - 1; i++)
+  for (i = 0; i < sizeof(g_h1021_testcase) / sizeof(tb) - 1; i++)
     {
-      assert_int_equal(syscrc8_start(&crc8_ctx, key), 0);
-      assert_int_equal(syscrc8_update(&crc8_ctx, g_h1d_testcase[i].data,
-                                      g_h1d_testcase[i].datalen), 0);
+      assert_int_equal(syscrc16_start(&crc16_ctx, key), 0);
+      assert_int_equal(syscrc16_update(&crc16_ctx, g_h1021_testcase[i].data,
+                                       g_h1021_testcase[i].datalen), 0);
 
-      assert_int_equal(syscrc8_finish(&crc8_ctx, &output), 0);
-      assert_int_equal(match(g_h1d_testcase[i].result, output), 0);
+      assert_int_equal(syscrc16_finish(&crc16_ctx, &output), 0);
+      assert_int_equal(match(g_h1021_testcase[i].result, output), 0);
     }
 
-  /* testcase 8: test segmented computing capabilities in crc8 mode */
+  /* testcase 8: test segmented computing capabilities in crc16 mode */
 
   for (i = 0; i < 8; i++)
     {
-      assert_int_equal(syscrc8_start(&crc8_ctx, key), 0);
+      assert_int_equal(syscrc16_start(&crc16_ctx, key), 0);
 
-      assert_int_equal(syscrc8_update(&crc8_ctx, g_h1d_testcase[7].data,
-                                      g_h1d_testcase[7].datalen), 0);
+      assert_int_equal(syscrc16_update(&crc16_ctx, g_h1021_testcase[7].data,
+                                       g_h1021_testcase[7].datalen), 0);
 
-      assert_int_equal(syscrc8_finish(&crc8_ctx, &key[1]), 0);
+      assert_int_equal(syscrc16_finish(&crc16_ctx, &key[1]), 0);
     }
 
-  assert_int_equal(match(g_h1d_testcase[7].result, key[1]), 0);
-  syscrc8_free(&crc8_ctx);
+  assert_int_equal(match(g_h1021_testcase[7].result, key[1]), 0);
+  syscrc16_free(&crc16_ctx);
 }
 
-static void test_crc8_h2f(void **state)
+static void test_crc16_h8005(void **state)
 {
-  crypto_context crc8_ctx;
+  crypto_context crc16_ctx;
   int i;
-  uint8_t output;
-  uint8_t key[3] =
+  uint16_t output;
+  uint16_t key[3] =
     {
-      0x2f, 0, 0
+      0x8005, 0, 0
     };
 
-  assert_int_equal(syscrc8_init(&crc8_ctx), 0);
+  assert_int_equal(syscrc16_init(&crc16_ctx), 0);
 
-  /* testcase 1-7: test crc8 vector */
+  /* testcase 1-7: test crc16 vector */
 
-  for (i = 0; i < sizeof(g_h2f_testcase) / sizeof(tb) - 1; i++)
+  for (i = 0; i < sizeof(g_h8005_testcase) / sizeof(tb) - 1; i++)
     {
-      assert_int_equal(syscrc8_start(&crc8_ctx, key), 0);
-      assert_int_equal(syscrc8_update(&crc8_ctx, g_h2f_testcase[i].data,
-                                       g_h2f_testcase[i].datalen), 0);
+      assert_int_equal(syscrc16_start(&crc16_ctx, key), 0);
+      assert_int_equal(syscrc16_update(&crc16_ctx, g_h8005_testcase[i].data,
+                                       g_h8005_testcase[i].datalen), 0);
 
-      assert_int_equal(syscrc8_finish(&crc8_ctx, &output), 0);
-      assert_int_equal(match(g_h2f_testcase[i].result, output), 0);
+      assert_int_equal(syscrc16_finish(&crc16_ctx, &output), 0);
+      assert_int_equal(match(g_h8005_testcase[i].result, output), 0);
     }
 
-  /* testcase 8: test segmented computing capabilities in crc8 mode */
+  /* testcase 8: test segmented computing capabilities in crc16 mode */
 
   for (i = 0; i < 8; i++)
     {
-      assert_int_equal(syscrc8_start(&crc8_ctx, key), 0);
+      assert_int_equal(syscrc16_start(&crc16_ctx, key), 0);
 
-      assert_int_equal(syscrc8_update(&crc8_ctx, g_h2f_testcase[7].data,
-                                       g_h2f_testcase[7].datalen), 0);
+      assert_int_equal(syscrc16_update(&crc16_ctx, g_h8005_testcase[7].data,
+                                       g_h8005_testcase[7].datalen), 0);
 
-      assert_int_equal(syscrc8_finish(&crc8_ctx, &key[1]), 0);
+      assert_int_equal(syscrc16_finish(&crc16_ctx, &key[1]), 0);
     }
 
-  assert_int_equal(match(g_h2f_testcase[7].result, key[1]), 0);
-  syscrc8_free(&crc8_ctx);
+  assert_int_equal(match(g_h8005_testcase[7].result, key[1]), 0);
+  syscrc16_free(&crc16_ctx);
 }
 
 /****************************************************************************
@@ -352,11 +352,11 @@ static void test_crc8_h2f(void **state)
 
 int main(int argc, FAR char *argv[])
 {
-  const struct CMUnitTest crc8_tests[] =
+  const struct CMUnitTest crc16_tests[] =
     {
-      cmocka_unit_test(test_crc8_h1d),
-      cmocka_unit_test(test_crc8_h2f),
+      cmocka_unit_test(test_crc16_h1021),
+      cmocka_unit_test(test_crc16_h8005),
     };
 
-  return cmocka_run_group_tests(crc8_tests, NULL, NULL);
+  return cmocka_run_group_tests(crc16_tests, NULL, NULL);
 }

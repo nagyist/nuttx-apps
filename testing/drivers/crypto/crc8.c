@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/crypto/driver/crc32.c
+ * apps/testing/drivers/crypto/crc8.c
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -51,7 +51,7 @@ typedef struct tb
 {
   FAR char *data;
   int datalen;
-  uint32_t result;
+  uint8_t result;
 }
 tb;
 
@@ -59,7 +59,7 @@ tb;
  * Private Data
  ****************************************************************************/
 
-static const tb g_h04c11db7_testcase[] =
+static const tb g_h1d_testcase[] =
 {
     /* testcase 1-7: Individual testing */
 
@@ -71,33 +71,33 @@ static const tb g_h04c11db7_testcase[] =
     {
       "a",
       1,
-      0xe8b7be43,
+      0xb2,
     },
     {
       "abc",
       3,
-      0x352441c2,
+      0x9a,
     },
     {
       "message digest",
       14,
-      0x20159d7f,
+      0x2d,
     },
     {
       "abcdefghijklmnopqrstuvwxyz",
       26,
-      0x4c2750bd,
+      0xd2,
     },
     {
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
       62,
-      0x1fc2e6d2,
+      0x1f,
     },
     {
       "123456789012345678901234567890123456789"
       "01234567890123456789012345678901234567890",
       80,
-      0x7ca94a72,
+      0x92,
     },
 
     /* testcase 8: test case 7 is divided into 8 parts */
@@ -105,11 +105,11 @@ static const tb g_h04c11db7_testcase[] =
     {
       "1234567890",
       10,
-      0x7ca94a72,
+      0x92,
     }
 };
 
-static const tb g_hf4acfb13_testcase[] =
+static const tb g_h2f_testcase[] =
 {
     /* testcase 1-7: Individual testing */
 
@@ -121,33 +121,33 @@ static const tb g_hf4acfb13_testcase[] =
     {
       "a",
       1,
-      0xaa7b2b08,
+      0x07,
     },
     {
       "abc",
       3,
-      0xebe963c8,
+      0x41,
     },
     {
       "message digest",
       14,
-      0x572300c2,
+      0xc1,
     },
     {
       "abcdefghijklmnopqrstuvwxyz",
       26,
-      0x9bed5706,
+      0xb4,
     },
     {
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
       62,
-      0xadd7278e,
+      0x20,
     },
     {
       "123456789012345678901234567890123456789"
       "01234567890123456789012345678901234567890",
       80,
-      0x226aba31,
+      0x0c,
     },
 
     /* testcase 8: test case 7 is divided into 8 parts */
@@ -155,7 +155,7 @@ static const tb g_hf4acfb13_testcase[] =
     {
       "1234567890",
       10,
-      0x226aba31,
+      0x0c,
     }
 };
 
@@ -163,7 +163,7 @@ static const tb g_hf4acfb13_testcase[] =
  * Private Functions
  ****************************************************************************/
 
-static void syscrc32_free(FAR crypto_context *ctx)
+static void syscrc8_free(FAR crypto_context *ctx)
 {
   if (ctx->crypto_fd != 0)
     {
@@ -178,35 +178,35 @@ static void syscrc32_free(FAR crypto_context *ctx)
     }
 }
 
-static int syscrc32_init(FAR crypto_context *ctx)
+static int syscrc8_init(FAR crypto_context *ctx)
 {
   memset(ctx, 0, sizeof(crypto_context));
   if ((ctx->fd = open("/dev/crypto", O_RDWR, 0)) < 0)
     {
       warn("CRIOGET");
-      syscrc32_free(ctx);
+      syscrc8_free(ctx);
       return 1;
     }
 
   if (ioctl(ctx->fd, CRIOGET, &ctx->crypto_fd) == -1)
     {
       warn("CRIOGET");
-      syscrc32_free(ctx);
+      syscrc8_free(ctx);
       return 1;
     }
 
   return 0;
 }
 
-static int syscrc32_start(FAR crypto_context *ctx, uint32_t *key)
+static int syscrc8_start(FAR crypto_context *ctx, uint8_t *key)
 {
-  ctx->session.mac = CRYPTO_CRC32;
+  ctx->session.mac = CRYPTO_CRC8;
   ctx->session.mackey = (caddr_t) key;
-  ctx->session.mackeylen = sizeof(uint32_t) * 3;
+  ctx->session.mackeylen = sizeof(uint8_t) * 3;
   if (ioctl(ctx->crypto_fd, CIOCGSESSION, &ctx->session) == -1)
     {
       warn("CIOCGSESSION");
-      syscrc32_free(ctx);
+      syscrc8_free(ctx);
       return 1;
     }
 
@@ -214,7 +214,7 @@ static int syscrc32_start(FAR crypto_context *ctx, uint32_t *key)
   return 0;
 }
 
-static int syscrc32_update(FAR crypto_context *ctx, FAR const char *s,
+static int syscrc8_update(FAR crypto_context *ctx, FAR const char *s,
                            size_t len)
 {
   ctx->cryp.op = COP_ENCRYPT;
@@ -230,7 +230,7 @@ static int syscrc32_update(FAR crypto_context *ctx, FAR const char *s,
   return 0;
 }
 
-static int syscrc32_finish(FAR crypto_context *ctx, FAR uint32_t *out)
+static int syscrc8_finish(FAR crypto_context *ctx, FAR uint8_t *out)
 {
   ctx->cryp.flags = 0;
   ctx->cryp.mac = (caddr_t) out;
@@ -250,14 +250,14 @@ static int syscrc32_finish(FAR crypto_context *ctx, FAR uint32_t *out)
   return 0;
 }
 
-static int match(const uint32_t a, const uint32_t b)
+static int match(const uint8_t a, const uint8_t b)
 {
   if (a == b)
     {
       return 0;
     }
 
-  warnx("crc32 mismatch");
+  warnx("crc8 mismatch");
 
   printf("%02x\n", a);
   printf("%02x\n", b);
@@ -266,88 +266,84 @@ static int match(const uint32_t a, const uint32_t b)
   return 1;
 }
 
-static void test_crc32_h04c11db7(void **state)
+static void test_crc8_h1d(void **state)
 {
-  crypto_context crc32_ctx;
+  crypto_context crc8_ctx;
   int i;
-  uint32_t output;
-  uint32_t key[3] =
+  uint8_t output;
+  uint8_t key[3] =
     {
-      0x04c11db7, 0, 0
+      0x1d, 0, 0
     };
 
-  assert_int_equal(syscrc32_init(&crc32_ctx), 0);
+  assert_int_equal(syscrc8_init(&crc8_ctx), 0);
 
-  /* testcase 1-7: test crc32 vector */
+  /* testcase 1-7: test crc8 vector */
 
-  for (i = 0; i < sizeof(g_h04c11db7_testcase) / sizeof(tb) - 1; i++)
+  for (i = 0; i < sizeof(g_h1d_testcase) / sizeof(tb) - 1; i++)
     {
-      assert_int_equal(syscrc32_start(&crc32_ctx, key), 0);
-      assert_int_equal(syscrc32_update(&crc32_ctx,
-                                       g_h04c11db7_testcase[i].data,
-                                       g_h04c11db7_testcase[i].datalen), 0);
+      assert_int_equal(syscrc8_start(&crc8_ctx, key), 0);
+      assert_int_equal(syscrc8_update(&crc8_ctx, g_h1d_testcase[i].data,
+                                      g_h1d_testcase[i].datalen), 0);
 
-      assert_int_equal(syscrc32_finish(&crc32_ctx, &output), 0);
-      assert_int_equal(match(g_h04c11db7_testcase[i].result, output), 0);
+      assert_int_equal(syscrc8_finish(&crc8_ctx, &output), 0);
+      assert_int_equal(match(g_h1d_testcase[i].result, output), 0);
     }
 
-  /* testcase 8: test segmented computing capabilities in crc32 mode */
+  /* testcase 8: test segmented computing capabilities in crc8 mode */
 
   for (i = 0; i < 8; i++)
     {
-      assert_int_equal(syscrc32_start(&crc32_ctx, key), 0);
+      assert_int_equal(syscrc8_start(&crc8_ctx, key), 0);
 
-      assert_int_equal(syscrc32_update(&crc32_ctx,
-                                       g_h04c11db7_testcase[7].data,
-                                       g_h04c11db7_testcase[7].datalen), 0);
+      assert_int_equal(syscrc8_update(&crc8_ctx, g_h1d_testcase[7].data,
+                                      g_h1d_testcase[7].datalen), 0);
 
-      assert_int_equal(syscrc32_finish(&crc32_ctx, &key[1]), 0);
+      assert_int_equal(syscrc8_finish(&crc8_ctx, &key[1]), 0);
     }
 
-  assert_int_equal(match(g_h04c11db7_testcase[7].result, key[1]), 0);
-  syscrc32_free(&crc32_ctx);
+  assert_int_equal(match(g_h1d_testcase[7].result, key[1]), 0);
+  syscrc8_free(&crc8_ctx);
 }
 
-static void test_crc32_hf4acfb13(void **state)
+static void test_crc8_h2f(void **state)
 {
-  crypto_context crc32_ctx;
+  crypto_context crc8_ctx;
   int i;
-  uint32_t output;
-  uint32_t key[3] =
+  uint8_t output;
+  uint8_t key[3] =
     {
-      0xf4acfb13, 0, 0
+      0x2f, 0, 0
     };
 
-  assert_int_equal(syscrc32_init(&crc32_ctx), 0);
+  assert_int_equal(syscrc8_init(&crc8_ctx), 0);
 
-  /* testcase 1-7: test crc32 vector */
+  /* testcase 1-7: test crc8 vector */
 
-  for (i = 0; i < sizeof(g_hf4acfb13_testcase) / sizeof(tb) - 1; i++)
+  for (i = 0; i < sizeof(g_h2f_testcase) / sizeof(tb) - 1; i++)
     {
-      assert_int_equal(syscrc32_start(&crc32_ctx, key), 0);
-      assert_int_equal(syscrc32_update(&crc32_ctx,
-                                       g_hf4acfb13_testcase[i].data,
-                                       g_hf4acfb13_testcase[i].datalen), 0);
+      assert_int_equal(syscrc8_start(&crc8_ctx, key), 0);
+      assert_int_equal(syscrc8_update(&crc8_ctx, g_h2f_testcase[i].data,
+                                       g_h2f_testcase[i].datalen), 0);
 
-      assert_int_equal(syscrc32_finish(&crc32_ctx, &output), 0);
-      assert_int_equal(match(g_hf4acfb13_testcase[i].result, output), 0);
+      assert_int_equal(syscrc8_finish(&crc8_ctx, &output), 0);
+      assert_int_equal(match(g_h2f_testcase[i].result, output), 0);
     }
 
-  /* testcase 8: test segmented computing capabilities in crc32 mode */
+  /* testcase 8: test segmented computing capabilities in crc8 mode */
 
   for (i = 0; i < 8; i++)
     {
-      assert_int_equal(syscrc32_start(&crc32_ctx, key), 0);
+      assert_int_equal(syscrc8_start(&crc8_ctx, key), 0);
 
-      assert_int_equal(syscrc32_update(&crc32_ctx,
-                                       g_hf4acfb13_testcase[7].data,
-                                       g_hf4acfb13_testcase[7].datalen), 0);
+      assert_int_equal(syscrc8_update(&crc8_ctx, g_h2f_testcase[7].data,
+                                       g_h2f_testcase[7].datalen), 0);
 
-      assert_int_equal(syscrc32_finish(&crc32_ctx, &key[1]), 0);
+      assert_int_equal(syscrc8_finish(&crc8_ctx, &key[1]), 0);
     }
 
-  assert_int_equal(match(g_hf4acfb13_testcase[7].result, key[1]), 0);
-  syscrc32_free(&crc32_ctx);
+  assert_int_equal(match(g_h2f_testcase[7].result, key[1]), 0);
+  syscrc8_free(&crc8_ctx);
 }
 
 /****************************************************************************
@@ -356,11 +352,11 @@ static void test_crc32_hf4acfb13(void **state)
 
 int main(int argc, FAR char *argv[])
 {
-  const struct CMUnitTest crc32_tests[] =
+  const struct CMUnitTest crc8_tests[] =
     {
-      cmocka_unit_test(test_crc32_h04c11db7),
-      cmocka_unit_test(test_crc32_hf4acfb13),
+      cmocka_unit_test(test_crc8_h1d),
+      cmocka_unit_test(test_crc8_h2f),
     };
 
-  return cmocka_run_group_tests(crc32_tests, NULL, NULL);
+  return cmocka_run_group_tests(crc8_tests, NULL, NULL);
 }
