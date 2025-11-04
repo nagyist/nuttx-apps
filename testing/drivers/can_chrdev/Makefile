@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/can_chrdev/Makefile
+# apps/testing/drivers/can_chrdev/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -20,11 +20,11 @@
 
 include $(APPDIR)/Make.defs
 
-CFLAGS += -I$(APPDIR)/testing/can_chrdev/util
-CSRCS  += $(wildcard $(APPDIR)/testing/can_chrdev/util/*.c)
+CFLAGS += -I$(APPDIR)/testing/drivers/can_chrdev/util
+CSRCS  += $(wildcard $(APPDIR)/testing/drivers/can_chrdev/util/*.c)
 
-CFLAGS += -I$(APPDIR)/testing/can_chrdev/include
-CSRCS  += $(wildcard $(APPDIR)/testing/can_chrdev/src/*.c)
+CFLAGS += -I$(APPDIR)/testing/drivers/can_chrdev/include
+CSRCS  += $(wildcard $(APPDIR)/testing/drivers/can_chrdev/src/*.c)
 
 PRIORITY  = $(CONFIG_TESTING_CHARCAN_PRIORITY)
 STACKSIZE = $(CONFIG_TESTING_CHARCAN_STACKSIZE)

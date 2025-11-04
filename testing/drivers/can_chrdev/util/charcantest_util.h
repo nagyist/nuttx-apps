@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/can_chrdev/src/test_char_can_poll.c
+ * apps/testing/drivers/can_chrdev/util/charcantest_util.h
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,63 +18,51 @@
  *
  ****************************************************************************/
 
+#ifndef _H_CM_CHARCANTEST_UTIL_H
+#define _H_CM_CHARCANTEST_UTIL_H
+
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <assert.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <sys/param.h>
-#include <poll.h>
-#include <unistd.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <setjmp.h>
+#include <cmocka.h>
 
-#include "charcantest.h"
-
-/****************************************************************************
- * Public Functions
- ****************************************************************************/
+#include <nuttx/config.h>
+#include <nuttx/can/can.h>
+#include <nuttx/can.h>
 
 /****************************************************************************
- * Name: test_char_can_poll
- * Description:
- *   This function perform poll logic and compare txmsg with rxmsg.
+ * Pre-processor Definitions
  ****************************************************************************/
 
-void test_char_can_poll(FAR void **state)
+#define CAN_MSG_NUMBER  8
+#define USER_DEV_NUMBER 2
+
+/****************************************************************************
+ * Public Types
+ ****************************************************************************/
+
+struct test_charcan_s
 {
-  FAR struct test_charcan_s *confs = (FAR struct test_charcan_s *)*state;
-  struct pollfd              fds;
-  uint8_t                    canmsg_databyte;
-  size_t                     msgsize;
-  ssize_t                    nbytes;
-  int                        ret;
+  /* dev_path[0]: sender dev path, dev_path[1]: receiver dev path */
 
-  struct can_msg_s rxmsg =
-    {
-      0
-    };
+  FAR const char  *dev_path[USER_DEV_NUMBER];
+  struct can_msg_s txmsg[CAN_MSG_NUMBER];
+  int              fd[USER_DEV_NUMBER];
+  int              can_id;
+};
 
-  /* initilize confs->txmsg */
+/****************************************************************************
+ * Public Function Prototypes
+ ****************************************************************************/
 
-  init_can_txmsg(&confs->txmsg[0]);
-  canmsg_databyte = cm_charcan_dlc2bytes(confs->txmsg[0].cm_hdr.ch_dlc);
-  msgsize         = CAN_MSGLEN(canmsg_databyte);
+void test_charcan_parse_args(int argc, FAR char **argv,
+                             FAR struct test_charcan_s *conf);
+int test_charcan_setup(FAR void **state);
+int test_charcan_teardown(FAR void **state);
 
-  /* initilize struct about poll */
-
-  fds.fd      = confs->fd[1];
-  fds.events  = POLLIN;
-
-  nbytes = write(confs->fd[0], &confs->txmsg[0], msgsize);
-  assert_int_equal(msgsize, nbytes);
-
-  ret = poll(&fds, 1, 1000);
-  assert_true(ret > 0);
-
-  if (fds.revents & POLLIN)
-    {
-      nbytes = read(confs->fd[1], &rxmsg, sizeof(struct can_msg_s));
-      assert_int_equal(memcmp(&confs->txmsg[0], &rxmsg, msgsize), 0);
-    }
-}
+#endif // _H_CM_CHARCANTEST_UTIL_H

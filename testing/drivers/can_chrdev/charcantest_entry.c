@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/can_chrdev/util/charcantest_util.h
+ * apps/testing/drivers/can_chrdev/charcantest_entry.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,51 +18,64 @@
  *
  ****************************************************************************/
 
-#ifndef _H_CM_CHARCANTEST_UTIL_H
-#define _H_CM_CHARCANTEST_UTIL_H
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <setjmp.h>
-#include <cmocka.h>
-
-#include <nuttx/config.h>
-#include <nuttx/can/can.h>
-#include <nuttx/can.h>
+#include "charcantest.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
-#define CAN_MSG_NUMBER  8
-#define USER_DEV_NUMBER 2
-
 /****************************************************************************
- * Public Types
+ * Private Functions
  ****************************************************************************/
 
-struct test_charcan_s
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
+
+/****************************************************************************
+ * Name: cmocka_test_main
+ ****************************************************************************/
+
+int main(int argc, FAR char * argv[])
 {
-  /* dev_path[0]: sender dev path, dev_path[1]: receiver dev path */
+  struct test_charcan_s confs =
+    {
+      .dev_path[0] = CONFIG_TESTING_CHARCAN_SENDER_DEVICE,
+      .dev_path[1] = CONFIG_TESTING_CHARCAN_RECEIVER_DEVICE,
+      .can_id      = CONFIG_TESTING_CHARCAN_CANMSG_ID,
+    };
 
-  FAR const char  *dev_path[USER_DEV_NUMBER];
-  struct can_msg_s txmsg[CAN_MSG_NUMBER];
-  int              fd[USER_DEV_NUMBER];
-  int              can_id;
-};
+  test_charcan_parse_args(argc, argv, &confs);
 
-/****************************************************************************
- * Public Function Prototypes
- ****************************************************************************/
+  /* Add Test Cases */
 
-void test_charcan_parse_args(int argc, FAR char **argv,
-                             FAR struct test_charcan_s *conf);
-int test_charcan_setup(FAR void **state);
-int test_charcan_teardown(FAR void **state);
+  const struct CMUnitTest charcantestsuite[] =
+    {
+      cmocka_unit_test_prestate_setup_teardown(
+      test_char_can_controller, test_charcan_setup,
+      test_charcan_teardown, &confs),
+      cmocka_unit_test_prestate_setup_teardown(
+      test_char_can_transceiver, test_charcan_setup,
+      test_charcan_teardown, &confs),
+      cmocka_unit_test_prestate_setup_teardown(
+      test_charcan_multi_echo, test_charcan_setup,
+      test_charcan_teardown, &confs),
+      cmocka_unit_test_prestate_setup_teardown(
+      test_charcan_nonblock_sent_overflow, test_charcan_setup,
+      test_charcan_teardown, &confs),
+      cmocka_unit_test_prestate_setup_teardown(
+      test_charcan_block_sent_overflow, test_charcan_setup,
+      test_charcan_teardown, &confs),
+      cmocka_unit_test_prestate_setup_teardown(
+      test_char_can_poll, test_charcan_setup,
+      test_charcan_teardown, &confs),
+    };
 
-#endif // _H_CM_CHARCANTEST_UTIL_H
+  /* Run Test cases */
+
+  return cmocka_run_group_tests(charcantestsuite, NULL, NULL);
+}

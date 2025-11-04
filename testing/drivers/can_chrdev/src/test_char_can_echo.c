@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/can_chrdev/src/test_char_can_echo.c
+ * apps/testing/drivers/can_chrdev/src/test_char_can_echo.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

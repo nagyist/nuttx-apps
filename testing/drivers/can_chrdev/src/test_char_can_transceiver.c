@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/can_chrdev/src/test_char_can_controller.c
+ * apps/testing/drivers/can_chrdev/src/test_char_can_transceiver.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -34,45 +34,46 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: test_char_can_controller
+ * Name: test_char_can_transceiver
  * Description:
  *   This function control charcan controller and acquire the result.
  ****************************************************************************/
 
-void test_char_can_controller(FAR void **state)
+void test_char_can_transceiver(FAR void **state)
 {
   FAR struct test_charcan_s *confs = (FAR struct test_charcan_s *)*state;
-  size_t controller_states_size;
   unsigned long mode;
   uint8_t i;
   uint8_t j;
   int ret;
 
-  /* Set controller mode */
+  /* Set transceiver mode */
 
-  unsigned long controller_states[] =
+  unsigned long transv_states[] =
     {
-      CAN_STATE_STOP,
-      CAN_STATE_START
+      CAN_TRANSVSTATE_SLEEP,
+      CAN_TRANSVSTATE_NORMAL
     };
 
-  controller_states_size = nitems(controller_states);
+  size_t transv_states_size = nitems(transv_states);
+
+  /* Set transceiver to specfic mode and verify it */
 
   for (i = 0; i < USER_DEV_NUMBER; i++)
     {
-      for (j = 0; j < controller_states_size; j++)
+      for (j = 0; j < transv_states_size; j++)
         {
           /* Set controller mode */
 
-          ret = ioctl(confs->fd[i], CANIOC_SET_STATE,
-                      controller_states[j]);
+          ret = ioctl(confs->fd[i], CANIOC_SET_TRANSVSTATE,
+                      transv_states[j]);
           assert_true(ret >= 0);
 
           /* Get controller mode */
 
-          ret = ioctl(confs->fd[i], CANIOC_GET_STATE,
+          ret = ioctl(confs->fd[i], CANIOC_GET_TRANSVSTATE,
                       (unsigned long)(&mode));
-          assert_true(ret >= 0 && mode == controller_states[j]);
+          assert_true(ret >= 0 && mode == transv_states[j]);
         }
     }
 }

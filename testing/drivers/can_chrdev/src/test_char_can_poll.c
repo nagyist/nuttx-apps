@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/can_chrdev/src/test_char_can_transceiver.c
+ * apps/testing/drivers/can_chrdev/src/test_char_can_poll.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -26,6 +26,8 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#include <poll.h>
+#include <unistd.h>
 
 #include "charcantest.h"
 
@@ -34,46 +36,45 @@
  ****************************************************************************/
 
 /****************************************************************************
- * Name: test_char_can_transceiver
+ * Name: test_char_can_poll
  * Description:
- *   This function control charcan controller and acquire the result.
+ *   This function perform poll logic and compare txmsg with rxmsg.
  ****************************************************************************/
 
-void test_char_can_transceiver(FAR void **state)
+void test_char_can_poll(FAR void **state)
 {
   FAR struct test_charcan_s *confs = (FAR struct test_charcan_s *)*state;
-  unsigned long mode;
-  uint8_t i;
-  uint8_t j;
-  int ret;
+  struct pollfd              fds;
+  uint8_t                    canmsg_databyte;
+  size_t                     msgsize;
+  ssize_t                    nbytes;
+  int                        ret;
 
-  /* Set transceiver mode */
-
-  unsigned long transv_states[] =
+  struct can_msg_s rxmsg =
     {
-      CAN_TRANSVSTATE_SLEEP,
-      CAN_TRANSVSTATE_NORMAL
+      0
     };
 
-  size_t transv_states_size = nitems(transv_states);
+  /* initilize confs->txmsg */
 
-  /* Set transceiver to specfic mode and verify it */
+  init_can_txmsg(&confs->txmsg[0]);
+  canmsg_databyte = cm_charcan_dlc2bytes(confs->txmsg[0].cm_hdr.ch_dlc);
+  msgsize         = CAN_MSGLEN(canmsg_databyte);
 
-  for (i = 0; i < USER_DEV_NUMBER; i++)
+  /* initilize struct about poll */
+
+  fds.fd      = confs->fd[1];
+  fds.events  = POLLIN;
+
+  nbytes = write(confs->fd[0], &confs->txmsg[0], msgsize);
+  assert_int_equal(msgsize, nbytes);
+
+  ret = poll(&fds, 1, 1000);
+  assert_true(ret > 0);
+
+  if (fds.revents & POLLIN)
     {
-      for (j = 0; j < transv_states_size; j++)
-        {
-          /* Set controller mode */
-
-          ret = ioctl(confs->fd[i], CANIOC_SET_TRANSVSTATE,
-                      transv_states[j]);
-          assert_true(ret >= 0);
-
-          /* Get controller mode */
-
-          ret = ioctl(confs->fd[i], CANIOC_GET_TRANSVSTATE,
-                      (unsigned long)(&mode));
-          assert_true(ret >= 0 && mode == transv_states[j]);
-        }
+      nbytes = read(confs->fd[1], &rxmsg, sizeof(struct can_msg_s));
+      assert_int_equal(memcmp(&confs->txmsg[0], &rxmsg, msgsize), 0);
     }
 }

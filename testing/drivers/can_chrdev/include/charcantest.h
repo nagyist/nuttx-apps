@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/can_chrdev/include/charcantest.h
+ * apps/testing/drivers/can_chrdev/include/charcantest.h
  *
  * Copyright (C) 2024 Xiaomi Corporation
  *
