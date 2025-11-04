@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/enet/include/enettest.h
+ * apps/testing/drivers/enet/enet_entry.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -18,25 +18,41 @@
  *
  ****************************************************************************/
 
-#ifndef _H_ENET_TEST_H_
-#define  H_ENET_TEST_H_
-
 /****************************************************************************
  * Included Files
  ****************************************************************************/
 
-#include "enet_util.h"
+#include "enettest.h"
 
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
 
 /****************************************************************************
- * Public Function Prototypes
+ * Private Functions
  ****************************************************************************/
 
-/* TEST CASES FUNCTIONS */
+/****************************************************************************
+ * Public Functions
+ ****************************************************************************/
 
-void test_enet_loopwr_datacheck(void **state);
+/****************************************************************************
+ * Name: cmocka_test_main
+ ****************************************************************************/
 
-#endif //_H_ENET_TEST_H_
+int main(int argc, char * argv[])
+{
+  /* Add Test Cases */
+
+  const struct CMUnitTest enettestsuite[] =
+  {
+    cmocka_unit_test_setup_teardown(test_enet_loopwr_datacheck,
+                                    enet_test_setup,
+                                    enet_test_teardown),
+  };
+
+  /* Run Test cases */
+
+  cmocka_run_group_tests(enettestsuite, NULL, NULL);
+  return 0;
+}

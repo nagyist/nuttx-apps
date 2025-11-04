@@ -1,5 +1,5 @@
 ############################################################################
-# testing/enet/Make.defs
+# testing/drivers/enet/Makefile
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +18,19 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_ENET_TEST),)
-CONFIGURED_APPS += $(APPDIR)/testing/enet
-endif
+include $(APPDIR)/Make.defs
+
+CFLAGS += -I$(APPDIR)/testing/drivers/enet/util
+CSRCS  += $(wildcard $(APPDIR)/testing/drivers/enet/util/*.c)
+
+CFLAGS += -I$(APPDIR)/testing/drivers/enet/include
+CSRCS  += $(wildcard $(APPDIR)/testing/drivers/enet/src/*.c)
+
+PRIORITY  = $(CONFIG_ENET_TEST_PRIORITY)
+STACKSIZE = $(CONFIG_ENET_TEST_STACKSIZE)
+MODULE    = $(CONFIG_ENET_TEST)
+
+PROGNAME += CONFIG_ENET_TEST_PROGNAME
+MAINSRC  += $(CURDIR)/enet_entry.c
+
+include $(APPDIR)/Application.mk

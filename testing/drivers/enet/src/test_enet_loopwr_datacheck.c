@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/enet/src/test_enet_loopwr_datacheck.c
+ * apps/testing/drivers/enet/src/test_enet_loopwr_datacheck.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
