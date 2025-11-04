@@ -34,7 +34,6 @@
 #include <sched.h>
 #include <unistd.h>
 
-#include <nuttx/semaphore.h>
 #include <nuttx/nx/nxbe.h>
 
 #ifdef CONFIG_TWM4NX_TOUCHSCREEN_CONFIGDATA
