@@ -1,5 +1,5 @@
 ############################################################################
-# apps/testing/events/Makefile
+# apps/testing/sched/events/Make.defs
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,13 +18,6 @@
 #
 ############################################################################
 
-include $(APPDIR)/Make.defs
-
-PROGNAME  = perf_test
-PRIORITY  = $(CONFIG_TESTING_PERF_PRIORITY)
-STACKSIZE = $(CONFIG_TESTING_PERF_STACKSIZE)
-MODULE    = $(CONFIG_TESTING_PERF)
-
-MAINSRC = perf_test.c
-
-include $(APPDIR)/Application.mk
+ifneq ($(CONFIG_TESTING_PERF),)
+CONFIGURED_APPS += $(APPDIR)/testing/events
+endif
