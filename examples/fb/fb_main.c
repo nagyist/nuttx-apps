@@ -705,7 +705,7 @@ int main(int argc, FAR char *argv[])
         }
     }
 
-  printf("Test finished\n");
+  printf("FB test finished\n");
   ret = EXIT_SUCCESS;
 
   munmap(state.fbmem, state.pinfo.fblen);
