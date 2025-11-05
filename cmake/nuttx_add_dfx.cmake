@@ -24,6 +24,12 @@ if(NOT EXISTS {DFX_DIR})
   file(MAKE_DIRECTORY ${DFX_DIR})
 endif()
 
+# "nuttx_dfx_interface" is a source-less target that encapsulates all the DFX
+# compiler options and include path needed by all DFX.
+if(NOT TARGET nuttx_dfx_interface)
+  add_custom_target(nuttx_dfx_interface)
+endif()
+
 include(nuttx_parse_function_args)
 
 # ~~~
@@ -55,7 +61,11 @@ function(nuttx_add_dfx_event)
     ARGN
     ${ARGN})
 
-  set_property(GLOBAL PROPERTY GLOBAL_EVENT_XML_DIR ${DFX_DIR})
+  set_property(
+    TARGET nuttx_dfx_interface
+    APPEND
+    PROPERTY DFX_EVENT_XML_DIR ${DFX_DIR})
+
   foreach(xmlfile ${XML_PATHS})
     get_filename_component(MOD_NAME ${xmlfile} NAME_WE)
     set(TARGET_XML ${DFX_DIR}/${MOD_NAME}.xml)
