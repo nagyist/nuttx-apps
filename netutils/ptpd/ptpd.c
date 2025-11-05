@@ -53,6 +53,7 @@
 #include <sys/poll.h>
 #include <nuttx/clock.h>
 #include <nuttx/net/netconfig.h>
+#include <nuttx/timers/ptp_clock.h>
 #include <netutils/ptpd.h>
 
 #include "netutils/netlib.h"
@@ -167,11 +168,32 @@ struct ptp_state_s
   struct ptp_sync_s twostep_packet;
   struct timespec twostep_rxtime;
   FAR const struct ptpd_config_s *config;
+
+  /* Statistics info */
+
+  struct ptp_statistics_s stats;
 };
 
 /****************************************************************************
  * Private Functions
  ****************************************************************************/
+
+static void ptp_record_stats(FAR void *buffer, FAR const void *data,
+                             size_t esize)
+{
+  /* Shift all existing elements one position backward (from index 0 to 8)
+   * This makes space at index 0 for the new element
+   */
+
+  memmove((FAR char *)buffer + esize, buffer, (PTP_STATS_NUM - 1) * esize);
+  memcpy(buffer, data, esize);
+}
+
+static void ptp_set_stats(FAR struct ptp_state_s *state)
+{
+  ioctl(state->clockid >> CLOCK_SHIFT, PTP_CLOCK_SETSTATS,
+        (unsigned long)&state->stats);
+}
 
 /* Convert from timespec to PTP format */
 
@@ -1210,6 +1232,12 @@ static int ptp_update_local_clock(FAR struct ptp_state_s *state,
           ptp_adjphase(state, delta_ns);
         }
 
+      ptp_record_stats(&state->stats.delta_ns, &delta_ns, sizeof(delta_ns));
+      ptp_record_stats(&state->stats.adjustment_ns, &adjustment_ns,
+                       sizeof(adjustment_ns));
+      ptp_record_stats(&state->stats.drift_ppb, &state->drift_ppb,
+                       sizeof(state->drift_ppb));
+
       ret = ptp_adjtime(state, adjustment_ns, state->drift_ppb);
 
       if (ret != OK)
@@ -1242,6 +1270,7 @@ static int ptp_process_sync(FAR struct ptp_state_s *state,
     {
       /* This packet wasn't from the currently selected source */
 
+      state->stats.sync_error++;
       return OK;
     }
 
@@ -1306,6 +1335,7 @@ static int ptp_process_followup(FAR struct ptp_state_s *state,
   if (ptp_get_sequence(&msg->header)
       != ptp_get_sequence(&state->twostep_packet.header))
     {
+      state->stats.follow_up_error++;
       ptpwarn("PTP follow-up packet sequence %ld does not match initial "
               "sync packet sequence %ld, ignoring\n",
               (long)ptp_get_sequence(&msg->header),
@@ -1319,9 +1349,15 @@ static int ptp_process_followup(FAR struct ptp_state_s *state,
 
   ptp_format_to_timespec(msg->origintimestamp, &remote_time);
 
+  ptp_record_stats(&state->stats.origin_time, &remote_time,
+                   sizeof(remote_time));
+
   /* add correction time */
 
   ptp_add_correction_time(msg->header.correction, &remote_time);
+
+  ptp_record_stats(&state->stats.correction_time, &remote_time,
+                   sizeof(remote_time));
 
   /* done */
 
@@ -1490,31 +1526,37 @@ static int ptp_process_rx_packet(FAR struct ptp_state_s *state,
   switch (state->rxbuf.header.messagetype & PTP_MSGTYPE_MASK)
     {
     case PTP_MSGTYPE_ANNOUNCE:
+      state->stats.announce++;
       ptpinfo("Got announce packet, seq %ld\n",
               (long)ptp_get_sequence(&state->rxbuf.header));
       return ptp_process_announce(state, &state->rxbuf.announce);
 
     case PTP_MSGTYPE_SYNC:
+      state->stats.sync++;
       ptpinfo("Got sync packet, seq %ld\n",
               (long)ptp_get_sequence(&state->rxbuf.header));
       return ptp_process_sync(state, &state->rxbuf.sync);
 
     case PTP_MSGTYPE_FOLLOW_UP:
+      state->stats.follow_up++;
       ptpinfo("Got follow-up packet, seq %ld\n",
               (long)ptp_get_sequence(&state->rxbuf.header));
       return ptp_process_followup(state, &state->rxbuf.follow_up);
 
     case PTP_MSGTYPE_DELAY_RESP:
+      state->stats.delay_resp++;
       ptpinfo("Got delay-resp, seq %ld\n",
               (long)ptp_get_sequence(&state->rxbuf.header));
       return ptp_process_delay_resp(state, &state->rxbuf.delay_resp);
 
     case PTP_MSGTYPE_DELAY_REQ:
+      state->stats.delay_req++;
       ptpinfo("Got delay req, seq %ld\n",
               (long)ptp_get_sequence(&state->rxbuf.header));
       return ptp_process_delay_req(state, &state->rxbuf.delay_req);
 
     default:
+      state->stats.unknown++;
       ptpinfo("Ignoring unknown PTP packet type: 0x%02x\n",
               state->rxbuf.header.messagetype);
       return OK;
@@ -1747,6 +1789,8 @@ int ptpd_start(FAR const struct ptpd_config_s *config)
 
       state->selected_source_valid = is_selected_source_valid(state);
       ptp_process_statusreq(state);
+
+      ptp_set_stats(state);
     }
 
 errout:
