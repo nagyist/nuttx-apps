@@ -79,7 +79,7 @@ endif
 
 config UTILS_LIBARCHIVE_CPIO
 	bool "Enable cpio"
-	depends on PSEUDOFS_SOFTLINKS
+	depends on FS_LINKS
 	depends on PIPES
 	depends on DEV_FIFO_SIZE > 0
 	depends on LIBC_EXECFUNCS

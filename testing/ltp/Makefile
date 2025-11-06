@@ -400,7 +400,7 @@ BLACKWORDS  += setresgid
 BLACKWORDS  += getsid
 BLACKWORDS  += getresuid
 BLACKWORDS  += getresgid
-ifeq ($(CONFIG_PSEUDOFS_SOFTLINKS),)
+ifeq ($(CONFIG_FS_LINKS),)
 BLACKWORDS  += symlink
 BLACKWORDS  += link
 endif

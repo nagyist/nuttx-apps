@@ -617,7 +617,7 @@ int syscall(int syscall_nr, ...)
       break;
     }
 
-#if defined(CONFIG_PSEUDOFS_SOFTLINKS)
+#if defined(CONFIG_FS_LINKS)
     case __NR_link:
     {
       const char *old_path = va_arg(ap, const char *);
@@ -966,7 +966,7 @@ int syscall(int syscall_nr, ...)
       break;
     }
 
-#if defined(CONFIG_PSEUDOFS_SOFTLINKS)
+#if defined(CONFIG_FS_LINKS)
     case __NR_readlink:
     {
       const char *path = va_arg(ap, const char *);
@@ -1442,7 +1442,7 @@ int syscall(int syscall_nr, ...)
       break;
     }
 
-#if defined(CONFIG_PSEUDOFS_SOFTLINKS)
+#if defined(CONFIG_FS_LINKS)
     case __NR_symlink:
     {
       const char *target = va_arg(ap, const char *);

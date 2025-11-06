@@ -522,7 +522,7 @@ if(CONFIG_TESTING_LTP)
       "getresuid"
       "getresgid")
 
-    if(NOT CONFIG_PSEUDOFS_SOFTLINKS)
+    if(NOT CONFIG_FS_LINKS)
       list(APPEND BLACKWORDS "symlink" "link")
     endif()
 

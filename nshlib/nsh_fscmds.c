@@ -350,7 +350,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
                       FAR struct dirent *entryp, FAR void *pvarg)
 {
   unsigned int lsflags = (unsigned int)((uintptr_t)pvarg);
-#ifdef CONFIG_PSEUDOFS_SOFTLINKS
+#ifdef CONFIG_FS_LINKS
   bool isdir = false;
 #endif
   int ret;
@@ -389,7 +389,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
         {
           char details[] = "----------";
 
-#ifdef CONFIG_PSEUDOFS_SOFTLINKS
+#ifdef CONFIG_FS_LINKS
           if (S_ISLNK(buf.st_mode))
             {
               details[0] = 'l';  /* Takes precedence over type of the target */
@@ -508,7 +508,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
           nsh_output(vtbl, " %s", details);
         }
 
-#ifdef CONFIG_PSEUDOFS_SOFTLINKS
+#ifdef CONFIG_FS_LINKS
       if ((lsflags & LSFLAGS_NLINKS) != 0)
         {
           nsh_output(vtbl, "%4d", buf.st_nlink);
@@ -555,7 +555,7 @@ static int ls_handler(FAR struct nsh_vtbl_s *vtbl, FAR const char *dirpath,
     {
       nsh_output(vtbl, " %s", entryp->d_name);
 
-#ifdef CONFIG_PSEUDOFS_SOFTLINKS
+#ifdef CONFIG_FS_LINKS
       if (DIRENT_ISLINK(entryp->d_type))
         {
           FAR char *fullpath;
@@ -1466,7 +1466,7 @@ errout_with_paths:
  * Name: cmd_ln
  ****************************************************************************/
 
-#if !defined(CONFIG_NSH_DISABLE_LN) && defined(CONFIG_PSEUDOFS_SOFTLINKS)
+#if !defined(CONFIG_NSH_DISABLE_LN) && defined(CONFIG_FS_LINKS)
 int cmd_ln(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   FAR char *linkpath;
@@ -2139,7 +2139,7 @@ errout_with_oldpath:
  * Name: cmd_readlink
  ****************************************************************************/
 
-#if !defined(CONFIG_NSH_DISABLE_READLINK) && defined(CONFIG_PSEUDOFS_SOFTLINKS)
+#if !defined(CONFIG_NSH_DISABLE_READLINK) && defined(CONFIG_FS_LINKS)
 int cmd_readlink(FAR struct nsh_vtbl_s *vtbl, int argc, FAR char **argv)
 {
   UNUSED(argc);
