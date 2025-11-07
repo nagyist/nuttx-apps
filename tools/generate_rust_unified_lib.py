@@ -121,8 +121,10 @@ def create_lib_rs(crate_dir, crate_info):
     # Add use statements and re-exports for each crate
     for crate in crate_info:
         crate_name = crate["name"]
-        lib_content += f"// Re-exporting {crate_name}\n"
-        lib_content += f"pub use {crate_name};\n\n"
+        # Convert hyphens to underscores for module re-export
+        module_name = crate_name.replace("-", "_")
+        lib_content += f"// Re-exporting {crate_name} as {module_name}\n"
+        lib_content += f"pub use {module_name};\n\n"
 
     with open(lib_rs_path, "w") as f:
         f.write(lib_content)
