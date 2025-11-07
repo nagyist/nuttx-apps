@@ -61,10 +61,7 @@ function(nuttx_add_dfx_event)
     ARGN
     ${ARGN})
 
-  set_property(
-    TARGET nuttx_dfx_interface
-    APPEND
-    PROPERTY DFX_EVENT_XML_DIR ${DFX_DIR})
+  set_property(TARGET nuttx_dfx_interface PROPERTY DFX_EVENT_XML_DIR ${DFX_DIR})
 
   foreach(xmlfile ${XML_PATHS})
     get_filename_component(MOD_NAME ${xmlfile} NAME_WE)
