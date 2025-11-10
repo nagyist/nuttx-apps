@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/clocktest/clock_test.c
+ * apps/testing/libc/clocktest/gethrtime_test.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -37,24 +37,19 @@
 
 #include "clock_test.h"
 
-#define TEST(name) test_##name \
-
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-int main(int argc, FAR char *argv[])
+DECLARE_TEST(gethrtime)
 {
-  const struct CMUnitTest cmocka_clock_tests[] =
-    {
-      cmocka_unit_test(TEST(timespec_get)),
-      cmocka_unit_test(TEST(gethrtime)),
-      cmocka_unit_test(TEST(strptime_valid_para)),
-      cmocka_unit_test(TEST(strptime_invalid_para)),
-      cmocka_unit_test(TEST(timegm_valid_para_01)),
-      cmocka_unit_test(TEST(timegm_valid_para_02)),
-      cmocka_unit_test(TEST(timegm_invalid_para)),
-    };
+  clock_t time_before;
+  clock_t time_after;
 
-  return cmocka_run_group_tests(cmocka_clock_tests, NULL, NULL);
+  time_before = gethrtime();
+  assert_true(time_before > 0);
+
+  time_after = gethrtime();
+
+  assert_true(time_after >= time_before);
 }

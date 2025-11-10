@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/clocktest/strptime_test.c
+ * apps/testing/libc/clocktest/strptime_test.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with

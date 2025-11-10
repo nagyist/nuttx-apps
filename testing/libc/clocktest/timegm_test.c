@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/clocktest/gethrtime_test.c
+ * apps/testing/libc/clocktest/timegm_test.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -38,18 +38,62 @@
 #include "clock_test.h"
 
 /****************************************************************************
+ * Pre-processor Definitions
+ ****************************************************************************/
+
+#define UNIX_TSTAMP 1698566400
+
+/****************************************************************************
  * Public Functions
  ****************************************************************************/
 
-DECLARE_TEST(gethrtime)
+DECLARE_TEST(timegm_valid_para_01)
 {
-  clock_t time_before;
-  clock_t time_after;
+  struct tm time;
+  time_t result;
 
-  time_before = gethrtime();
-  assert_true(time_before > 0);
+  time.tm_year = 2023 - 1900;
+  time.tm_mon = 10 - 1;
+  time.tm_mday = 29;
+  time.tm_hour = 8;
+  time.tm_min = 0;
+  time.tm_sec = 0;
+  time.tm_isdst = -1;
 
-  time_after = gethrtime();
+  result = timegm(&time);
+  assert_int_equal(result, UNIX_TSTAMP);
+}
 
-  assert_true(time_after >= time_before);
+DECLARE_TEST(timegm_valid_para_02)
+{
+  struct tm time;
+  time_t result;
+
+  time.tm_year = 1970 - 1900;
+  time.tm_mon = 0;
+  time.tm_mday = 1;
+  time.tm_hour = 0;
+  time.tm_min = 0;
+  time.tm_sec = 0;
+  time.tm_isdst = -1;
+
+  result = timegm(&time);
+  assert_int_equal(result, 0);
+}
+
+DECLARE_TEST(timegm_invalid_para)
+{
+  struct tm time;
+  time_t result;
+
+  time.tm_year = 2023 - 1900;
+  time.tm_mon = 2;
+  time.tm_mday = 29;
+  time.tm_hour = 12;
+  time.tm_min = 0;
+  time.tm_sec = 0;
+  time.tm_isdst = -1;
+
+  result = timegm(&time);
+  assert_int_not_equal(result, -1);
 }
