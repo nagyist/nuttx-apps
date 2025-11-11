@@ -94,7 +94,7 @@ int netlib_getifstatistics(FAR const char *ifname,
   stream = fopen(path, "r");
   if (stream == NULL)
     {
-      fprintf(stderr, "ERROR: Failed to open path:%s \n", path);
+      nerr("ERROR: Failed to open path:%s \n", path);
       return -ENOTDIR;
     }
 
