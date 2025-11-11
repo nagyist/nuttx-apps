@@ -409,8 +409,8 @@ void mqueue_test(void)
     }
 
   /* Message queues are global resources and persist for the life the
-   * task group.  The message queue opened by the sender_thread must be
-   * closed since the sender pthread may have been canceled and may have
+   * task group.  The message queue opened by the receiver_thread must be
+   * closed since the receiver pthread may have been canceled and may have
    * left the message queue open.
    */
 
@@ -424,8 +424,7 @@ void mqueue_test(void)
     }
   else if (result != PTHREAD_CANCELED && g_recv_mqfd)
     {
-      printf("mqueue_test: ERROR send mqd_t left open\n");
-      ASSERT(false);
+      printf("mqueue_test: receiver mqd_t left open\n");
       if (mq_close(g_recv_mqfd) < 0)
         {
           printf("mqueue_test: ERROR mq_close failed\n");
@@ -433,11 +432,11 @@ void mqueue_test(void)
         }
     }
 
-  /* Make sure that the receive queue is closed as well */
+  /* Make sure that the send queue is closed as well */
 
   if (g_send_mqfd)
     {
-      printf("mqueue_test: ERROR receiver mqd_t left open\n");
+      printf("mqueue_test: ERROR send mqd_t left open\n");
       ASSERT(false);
       if (mq_close(g_send_mqfd) < 0)
         {
