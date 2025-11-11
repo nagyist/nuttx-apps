@@ -164,9 +164,6 @@ void sem_test(void)
   pthread_addr_t result;
 #endif
   struct sched_param sparam;
-  int prio_min;
-  int prio_max;
-  int prio_mid;
   pthread_attr_t attr;
   int status;
 
@@ -182,11 +179,7 @@ void sem_test(void)
       printf("sem_test: pthread_attr_init failed, status=%d\n",  status);
     }
 
-  prio_min = sched_get_priority_min(SCHED_FIFO);
-  prio_max = sched_get_priority_max(SCHED_FIFO);
-  prio_mid = (prio_min + prio_max) / 2;
-
-  sparam.sched_priority = (prio_mid + prio_max) / 2;
+  sparam.sched_priority = PRIORITY + 10;
   status = pthread_attr_setschedparam(&attr, &sparam);
   if (status != OK)
     {
@@ -218,7 +211,7 @@ void sem_test(void)
       ASSERT(false);
     }
 
-  sparam.sched_priority = prio_mid;
+  sparam.sched_priority = PRIORITY;
   status = pthread_attr_setschedparam(&attr, &sparam);
   if (status != OK)
     {
@@ -258,7 +251,7 @@ void sem_test(void)
       ASSERT(false);
     }
 
-  sparam.sched_priority = (prio_min + prio_mid) / 2;
+  sparam.sched_priority = PRIORITY - 10;
   status = pthread_attr_setschedparam(&attr, &sparam);
   if (status != OK)
     {

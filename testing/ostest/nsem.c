@@ -108,9 +108,6 @@ void nsem_test(void)
   FAR sem_t *sem1;
   FAR sem_t *sem2;
   struct sched_param sparam;
-  int prio_min;
-  int prio_max;
-  int prio_mid;
   pthread_attr_t attr;
   int status;
 
@@ -135,11 +132,7 @@ void nsem_test(void)
       printf("nsem_test: pthread_attr_init failed, status=%d\n",  status);
     }
 
-  prio_min = sched_get_priority_min(SCHED_FIFO);
-  prio_max = sched_get_priority_max(SCHED_FIFO);
-  prio_mid = (prio_min + prio_max) / 2;
-
-  sparam.sched_priority = (prio_mid + prio_max) / 2;
+  sparam.sched_priority = PRIORITY + 10;
   status = pthread_attr_setschedparam(&attr, &sparam);
   if (status != OK)
     {
