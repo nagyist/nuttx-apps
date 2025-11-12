@@ -95,7 +95,8 @@ static void ostest_gettime(struct timespec *tp)
 
 void semtimed_test(void)
 {
-  pthread_t poster_thread = (pthread_t)0;
+  pthread_t poster_thread_high = (pthread_t)0;
+  pthread_t poster_thread_low = (pthread_t)0;
 #ifdef SDCC
   pthread_addr_t result;
 #endif
@@ -183,38 +184,38 @@ void semtimed_test(void)
               sparam.sched_priority);
     }
 
-  printf("semtimed_test: Starting poster thread 3\n");
-  status = pthread_attr_init(&attr);
+  status = pthread_create(&poster_thread_high, &attr,
+                           poster_func, NULL);
   if (status != 0)
     {
-      printf("semtimed_test: ERROR: pthread_attr_init failed, status=%d\n",
+      printf("semtimed_test: ERROR "
+             "poster high priority thread failed, status=%d\n",
               status);
       ASSERT(false);
     }
 
+  printf("semtimed_test: Starting poster thread 3\n");
   sparam.sched_priority = PRIORITY - 10;
   status = pthread_attr_setschedparam(&attr, &sparam);
   if (status != OK)
     {
-      printf("semtimed_test: "
-             "ERROR pthread_attr_setschedparam failed, status=%d\n",
-              status);
+      printf("semtimed_test: ERROR: "
+             "pthread_attr_setschedparam failed (low), status=%d\n", status);
       ASSERT(false);
     }
   else
     {
-      printf("semtimed_test: Set thread 3 priority to %d\n",
+      printf("semtimed_test: Set low priority thread to %d\n",
               sparam.sched_priority);
     }
 
-  status = pthread_create(&poster_thread, &attr, poster_func, NULL);
+  status = pthread_create(&poster_thread_low, &attr, poster_func, NULL);
   if (status != 0)
     {
-      printf("semtimed_test: ERROR: Poster thread creation failed: %d\n",
+      printf("semtimed_test: ERROR "
+             "poster Low priority thread failed, status=%d\n",
               status);
       ASSERT(false);
-      sem_destroy(&sem);
-      return;
     }
 
   /* Up to two seconds for the semaphore to be posted */
@@ -248,17 +249,24 @@ void semtimed_test(void)
 
   /* Clean up detritus left by the pthread */
 
+  if (poster_thread_high != (pthread_t)0)
+    {
 #ifdef SDCC
-  if (poster_thread != (pthread_t)0)
-    {
-      pthread_join(poster_thread, &result);
-    }
+      pthread_join(poster_thread_high, &result);
 #else
-  if (poster_thread != (pthread_t)0)
-    {
-      pthread_join(poster_thread, NULL);
-    }
+      pthread_join(poster_thread_high, NULL);
 #endif
+    }
 
+  if (poster_thread_low != (pthread_t)0)
+    {
+#ifdef SDCC
+    pthread_join(poster_thread_low, &result);
+#else
+    pthread_join(poster_thread_low, NULL);
+#endif
+    }
+
+  pthread_attr_destroy(&attr);
   sem_destroy(&sem);
 }
