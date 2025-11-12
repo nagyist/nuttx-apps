@@ -58,6 +58,18 @@ if(CONFIG_AUDIOUTILS_ALSA_LIB)
       SCHED_PRIORITY_DEFAULT)
   endif()
 
+  if(CONFIG_AUDIOUTILS_ALSA_LIB_ALSACTL)
+    nuttx_add_application(
+      NAME
+      alsactl
+      SRCS
+      alsactl.c
+      STACKSIZE
+      ${CONFIG_DEFAULT_TASK_STACKSIZE}
+      PRIORITY
+      SCHED_PRIORITY_DEFAULT)
+  endif()
+
   set_property(
     TARGET nuttx
     APPEND

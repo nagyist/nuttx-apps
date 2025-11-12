@@ -63,4 +63,8 @@ config AUDIOUTILS_ALSA_LIB_ARECORD
 	bool "alsa arecord"
 	default n
 
+config AUDIOUTILS_ALSA_LIB_ALSACTL
+	bool "alsactl"
+	default n
+
 endif # AUDIOUTILS_ALSA_LIB
