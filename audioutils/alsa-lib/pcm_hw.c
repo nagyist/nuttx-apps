@@ -133,6 +133,7 @@ static int snd_pcm_hw_close(FAR snd_pcm_t *pcm)
 
   switch (hw->status->state)
     {
+    case SND_PCM_STATE_PAUSED:
     case SND_PCM_STATE_RUNNING:
       ioctl(hw->fd, AUDIOIOC_STOP, 0);
     default:
