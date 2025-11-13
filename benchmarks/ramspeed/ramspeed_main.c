@@ -42,10 +42,10 @@
 
 #if defined(UINTPTR_MAX) && UINTPTR_MAX > 0xFFFFFFFF
 #  define MEM_UNIT         uint64_t
-#  define ALIGN_MASK       0x7
+#  define MEM_ALIGN_MASK   0x7
 #else
 #  define MEM_UNIT         uint32_t
-#  define ALIGN_MASK       0x3
+#  define MEM_ALIGN_MASK   0x3
 #endif
 
 #define COPY32 *d32 = *s32; d32++; s32++;
@@ -155,7 +155,7 @@ static void parse_commandline(int argc, FAR char **argv,
             break;
           case 'r':
             OPTARG_TO_VALUE(info->src, const void *, 16);
-            if (((uintptr_t)info->src & ALIGN_MASK) != 0)
+            if (((uintptr_t)info->src & MEM_ALIGN_MASK) != 0)
               {
                 printf(RAMSPEED_PREFIX "<read-adress> must align %p\n",
                        info->src);
@@ -165,7 +165,7 @@ static void parse_commandline(int argc, FAR char **argv,
             break;
           case 'w':
             OPTARG_TO_VALUE(info->dest, void *, 16);
-            if (((uintptr_t)info->dest & ALIGN_MASK) != 0)
+            if (((uintptr_t)info->dest & MEM_ALIGN_MASK) != 0)
               {
                 printf(RAMSPEED_PREFIX "<write-adress> must align %p\n",
                        info->dest);
@@ -306,8 +306,8 @@ static void *internal_memcpy(FAR void *dst, FAR const void *src, size_t len)
   FAR uint8_t *d8 = dst;
   FAR const uint8_t *s8 = src;
 
-  uintptr_t d_align = (uintptr_t)d8 & ALIGN_MASK;
-  uintptr_t s_align = (uintptr_t)s8 & ALIGN_MASK;
+  uintptr_t d_align = (uintptr_t)d8 & MEM_ALIGN_MASK;
+  uintptr_t s_align = (uintptr_t)s8 & MEM_ALIGN_MASK;
   FAR uint32_t *d32;
   FAR const uint32_t *s32;
 
@@ -337,7 +337,7 @@ static void *internal_memcpy(FAR void *dst, FAR const void *src, size_t len)
 
   if (d_align)
     {
-      d_align = ALIGN_MASK + 1 - d_align;
+      d_align = MEM_ALIGN_MASK + 1 - d_align;
       while (d_align && len)
         {
           COPY8;
@@ -378,7 +378,7 @@ static void *internal_memcpy(FAR void *dst, FAR const void *src, size_t len)
 static void internal_memset(FAR void *dst, uint8_t v, size_t len)
 {
   FAR uint8_t *d8 = (FAR uint8_t *)dst;
-  uintptr_t d_align = (uintptr_t) d8 & ALIGN_MASK;
+  uintptr_t d_align = (uintptr_t) d8 & MEM_ALIGN_MASK;
   FAR uint32_t v32;
   FAR uint32_t *d32;
 
@@ -386,7 +386,7 @@ static void internal_memset(FAR void *dst, uint8_t v, size_t len)
 
   if (d_align)
     {
-      d_align = ALIGN_MASK + 1 - d_align;
+      d_align = MEM_ALIGN_MASK + 1 - d_align;
       while (d_align && len)
         {
           SET8(v);
