@@ -279,7 +279,7 @@ void nxevent_test(void)
 
   /* Lower priority */
 
-  sparam.sched_priority = PTHREAD_DEFAULT_PRIORITY;
+  sparam.sched_priority = PRIORITY;
   pthread_attr_setschedparam(&attr, &sparam);
 
   /* Create thread */
@@ -302,7 +302,7 @@ void nxevent_test(void)
 
   /* Lower priority */
 
-  sparam.sched_priority = PTHREAD_DEFAULT_PRIORITY;
+  sparam.sched_priority = PRIORITY;
   pthread_attr_setschedparam(&attr, &sparam);
 
   /* Create thread */

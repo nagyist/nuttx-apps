@@ -80,7 +80,7 @@ void suspend_test(void)
     {
       printf("suspend_test: ERROR sched_getparam() failed\n");
       ASSERT(false);
-      param.sched_priority = PTHREAD_DEFAULT_PRIORITY;
+      param.sched_priority = PRIORITY;
     }
 
   sem_init(&sem, 0, 0);

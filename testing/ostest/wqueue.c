@@ -30,6 +30,8 @@
 #include <semaphore.h>
 #include <stdio.h>
 
+#include "ostest.h"
+
 #ifdef CONFIG_SCHED_WORKQUEUE
 
 /****************************************************************************
@@ -43,7 +45,7 @@
 #define VERIFY_COUNT (20)
 
 #define WQUEUE_DEFAULT_STACK_SIZE (CONFIG_DEFAULT_TASK_STACKSIZE)
-#define WQUEUE_DEFAULT_PRIORITY   (SCHED_PRIORITY_DEFAULT)
+#define WQUEUE_DEFAULT_PRIORITY    PRIORITY
 #define WQUEUE_DEFAULT_THREAD_NUM (2)
 
 #define WQUEUE_MAX_DELAY   WDOG_MAX_DELAY
