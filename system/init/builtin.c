@@ -37,6 +37,7 @@
 
 #include "builtin.h"
 #include "init.h"
+#include "property.h"
 #include "service.h"
 
 /****************************************************************************
@@ -63,6 +64,10 @@ static int cmd_start(FAR struct action_manager_s *am,
                      int argc, FAR char **argv);
 static int cmd_stop(FAR struct action_manager_s *am,
                     int argc, FAR char **argv);
+#if CONFIG_SYSTEM_INIT_ACTION_EVENTS_MAX > 1
+static int cmd_setprop(FAR struct action_manager_s *am,
+                       int argc, FAR char **argv);
+#endif
 static int cmd_exec(FAR struct action_manager_s *am,
                     int argc, FAR char **argv);
 static int cmd_class_start(FAR struct action_manager_s *am,
@@ -105,6 +110,9 @@ static const struct cmd_map_s g_builtin[] =
   {"class_stop", 2, 2, cmd_class_stop},
   {"exec", 3, 99, cmd_exec},
   {"exec_start", 2, 2, cmd_exec_start},
+#if CONFIG_SYSTEM_INIT_ACTION_EVENTS_MAX > 1
+  {"setprop", 3, 3, cmd_setprop},
+#endif
   {"start", 2, 2, cmd_start},
   {"stop", 2, 2, cmd_stop},
   {"trigger", 2, 2, cmd_trigger},
@@ -213,6 +221,14 @@ static int cmd_stop(FAR struct action_manager_s *am,
 
   return init_service_stop(service);
 }
+
+#if CONFIG_SYSTEM_INIT_ACTION_EVENTS_MAX > 1
+static int cmd_setprop(FAR struct action_manager_s *am, int argc,
+                       FAR char **argv)
+{
+  return init_property_set(am->prop, argv[1], argv[2]);
+}
+#endif
 
 static int cmd_trigger(FAR struct action_manager_s *am,
                        int argc, FAR char **argv)
