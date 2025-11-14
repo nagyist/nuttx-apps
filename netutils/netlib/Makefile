@@ -99,6 +99,10 @@ ifeq ($(CONFIG_NETDEV_STATISTICS),y)
 CSRCS += netlib_getifstatistics.c
 endif
 
+ifeq ($(CONFIG_NETDEV_ETHTOOL_IOCTL),y)
+CSRCS += netlib_ethtool.c
+endif
+
 # Netfilter connection support
 
 ifeq ($(CONFIG_NETLINK_NETFILTER),y)

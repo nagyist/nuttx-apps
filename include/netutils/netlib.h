@@ -253,6 +253,14 @@ ssize_t netlib_get_devices(FAR struct netlib_device_s *devlist,
                            unsigned int nentries, sa_family_t family);
 #endif
 
+#ifdef CONFIG_NETDEV_ETHTOOL_IOCTL
+int netlib_ethtool_ioctl(FAR const char *ifname, FAR void *data);
+int netlib_ethtool_getchannel(FAR const char *ifname,
+                              FAR uint32_t *combined_chns_map);
+int netlib_ethtool_setchannel(FAR const char *ifname,
+                              uint32_t combined_chns_map);
+#endif
+
 /**
  * @brief
  *   Convert a textual representation of an IP address to a numerical

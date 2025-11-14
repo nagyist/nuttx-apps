@@ -98,6 +98,10 @@ if(CONFIG_NETUTILS_NETLIB)
     list(APPEND SRCS netlib_getifstatistics.c)
   endif()
 
+  if(CONFIG_NETDEV_ETHTOOL_IOCTL)
+    list(APPEND SRCS netlib_ethtool.c)
+  endif()
+
   # Netfilter connection support
 
   if(CONFIG_NETLINK_NETFILTER)
