@@ -38,11 +38,15 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+#define SHA256_PLAIN_LEN         32
+#define MOD_512_LEN              64
+#define PRIVATE_512_KEYLEN       64
+#define PRIME_512_LEN            32
+#define PADDING_512_SHA256_LEN   (MOD_512_LEN - SHA256_PLAIN_LEN)
 #define MOD_2048_LEN             256
 #define PRIVATE_2048_KEYLEN      256
 #define PRIME_2048_LEN           128
-#define SHA256_PLAIN_LEN         32
-#define PADDING_2048_SHA256_LEN  (MOD_2048_LEN - PRIME_2048_LEN)
+#define PADDING_2048_SHA256_LEN  (MOD_2048_LEN - SHA256_PLAIN_LEN)
 
 /****************************************************************************
  * Private Types
@@ -79,6 +83,42 @@ crypto_context_t;
 /****************************************************************************
  * Private Data
  ****************************************************************************/
+
+/* Example RSA-512 keypair, for test purposes */
+
+static const char g_rsa_n_512[] =
+"883E99178C6AE77BD396E6183A51DCDA"
+"E03BD5C3BBB8D6EE632350CAECC3E2E5"
+"93ECB808CFB25E087E8C7A675498F29D"
+"7D3BD30D2E46C99190276D40244EC58B";
+
+static const char g_rsa_e_512[] = "010001";
+
+static const char g_rsa_d_512[] =
+"03A9581A1B2F0DC4D1F8E8C0AE4C31A4"
+"8E09137229EBB8DC73F6B44782BF3EC3"
+"653A9F8203A5182C056C4CEE34116165"
+"846ECA0457812F55E5A7AE362047BED1";
+
+static const char g_rsa_p_512[] =
+"C010A09FD38DDD6FDC6B0EC03584319A"
+"7DEAD79E151E89153C4A87984F875CED";
+
+static const char g_rsa_q_512[] =
+"B599121C7EE6D24E31A9A0ABF89595C0"
+"88084B80A2DBD5A45394AA24AE51D557";
+
+static const char g_rsa_dp_512[] =
+"15CC4D4E96660D71BAA473E220B0C628"
+"708E0CB6A652F6DFF01DCD51DE04D0E9";
+
+static const char g_rsa_dq_512[] =
+"4046EEF7311FC85EAF0B6878966373FF"
+"12E744BA426AE782E3A6A2569B7111BF";
+
+static const char g_rsa_qp_512[] =
+"01495732FA39FFAECB82EBADF4DA1B1C"
+"A441E0D4588CB45CA1F7A3CEDDE7C987";
 
 /* Example RSA-2048 keypair, for test purposes */
 
@@ -367,21 +407,20 @@ static int
 cryptodev_rsa_calc_crt(FAR crypto_context_t *ctx, FAR rsa_data_t *data,
                        FAR const unsigned char *input, size_t ilen,
                        FAR const unsigned char *output, size_t olen,
-                       bool is_priv)
+                       bool decrypt)
 {
   struct crypt_kop cryptk;
 
   memset(&cryptk, 0, sizeof(struct crypt_kop));
-  cryptk.crk_op = CRK_MOD_EXP_CRT;
   cryptk.crk_padding = CRYPTO_RSA_PKCS1_PADDING;
   cryptk.crk_hash = CRYPTO_RSA_SHA256;
-  cryptk.crk_iparams = 9;
-  cryptk.crk_oparams = 1;
 
   cryptk.crk_param[0].crp_p = (caddr_t)input;
   cryptk.crk_param[0].crp_nbits = ilen * 8;
-  if (is_priv)
+  if (decrypt)
     {
+      cryptk.crk_iparams = 9;
+      cryptk.crk_oparams = 1;
       cryptk.crk_param[1].crp_p = (caddr_t)data->n;
       cryptk.crk_param[1].crp_nbits = data->nlen * 8;
       cryptk.crk_param[2].crp_p = (caddr_t)data->e;
@@ -398,21 +437,26 @@ cryptodev_rsa_calc_crt(FAR crypto_context_t *ctx, FAR rsa_data_t *data,
       cryptk.crk_param[7].crp_nbits = data->dqlen * 8;
       cryptk.crk_param[8].crp_p = (caddr_t)data->qp;
       cryptk.crk_param[8].crp_nbits = data->qplen * 8;
+      cryptk.crk_param[9].crp_p = (caddr_t)output;
+      cryptk.crk_param[9].crp_nbits = olen * 8;
+      cryptk.crk_op = CRK_MOD_EXP_CRT;
       cryptk.crk_keytype = CRYPTO_KEY_TYPE_PRIVATE;
       cryptk.crk_optype = CRYPTO_OP_DECRYPT;
     }
   else
     {
+      cryptk.crk_iparams = 3;
+      cryptk.crk_oparams = 1;
       cryptk.crk_param[1].crp_p = (caddr_t)data->n;
       cryptk.crk_param[1].crp_nbits = data->nlen * 8;
       cryptk.crk_param[2].crp_p = (caddr_t)data->e;
       cryptk.crk_param[2].crp_nbits = data->elen * 8;
+      cryptk.crk_param[3].crp_p = (caddr_t)output;
+      cryptk.crk_param[3].crp_nbits = olen * 8;
+      cryptk.crk_op = CRK_MOD_EXP;
       cryptk.crk_keytype = CRYPTO_KEY_TYPE_PUBLIC;
       cryptk.crk_optype = CRYPTO_OP_ENCRYPT;
     }
-
-  cryptk.crk_param[9].crp_p = (caddr_t)output;
-  cryptk.crk_param[9].crp_nbits = olen * 8;
 
   if (ioctl(ctx->cryptodev_fd, CIOCKEY, &cryptk) == -1)
     {
@@ -507,6 +551,86 @@ static int cryptodev_rsa_verify(
   return cryptk.crk_status;
 }
 
+static void test_rsa_512_sha256(void **state)
+{
+  crypto_context_t ctx;
+  rsa_data_t rsa_data;
+  unsigned char cipher[MOD_512_LEN];
+  unsigned char plain[SHA256_PLAIN_LEN];
+  unsigned char data[MOD_512_LEN];
+  unsigned char padding[PADDING_512_SHA256_LEN];
+  unsigned char sig[MOD_512_LEN];
+  unsigned char data_he[MOD_512_LEN];
+  unsigned char pad_he[PADDING_512_SHA256_LEN];
+  unsigned char hash_he[SHA256_PLAIN_LEN];
+
+  assert_int_equal(cryptodev_init(&ctx), 0);
+
+  assert_int_equal(rsa_data_init(&rsa_data,
+                                 g_rsa_e_512, strlen(g_rsa_e_512),
+                                 g_rsa_d_512, MOD_512_LEN,
+                                 g_rsa_n_512, MOD_512_LEN,
+                                 g_rsa_p_512, PRIME_512_LEN,
+                                 g_rsa_q_512, PRIME_512_LEN,
+                                 g_rsa_dp_512, PRIME_512_LEN,
+                                 g_rsa_dq_512, PRIME_512_LEN,
+                                 g_rsa_qp_512, PRIME_512_LEN), 0);
+
+  /* test 1: encrypt with private key and decrypt with public key */
+
+  memset(cipher, 0, sizeof(cipher));
+  memset(plain, 0, sizeof(plain));
+
+  /* encrypt with public key: g_message ^ ctx.data.e % n = cipher */
+
+  assert_int_equal(cryptodev_rsa_calc_crt(&ctx, &rsa_data, g_message_sha256,
+                                          SHA256_PLAIN_LEN, cipher,
+                                          MOD_512_LEN, FALSE), 0);
+
+  /* dencrypt with private key: cipher ^ ctx.data.e % n = plain */
+
+  assert_int_equal(cryptodev_rsa_calc_crt(&ctx, &rsa_data, cipher,
+                                          MOD_512_LEN, plain,
+                                          SHA256_PLAIN_LEN, TRUE), 0);
+
+  assert_int_equal(memcmp(g_message_sha256, plain, SHA256_PLAIN_LEN), 0);
+
+  printf("test_rsa_512_sha256 encrypt/decrypt success\n");
+
+  /* test 2: rsa sign and verify */
+
+  memset(data, 0, sizeof(data));
+  memset(padding, 0, sizeof(padding));
+  memset(sig, 0, sizeof(sig));
+
+  /* pkcs15 v1 padding for sign: 0x00 0x02 (... random) 0x00 */
+
+  pkcs1_v15_padding(padding, PADDING_512_SHA256_LEN);
+  memcpy(data, padding, PADDING_512_SHA256_LEN);
+  memcpy(data + PADDING_512_SHA256_LEN, g_message_sha256, SHA256_PLAIN_LEN);
+
+  rsa_be32toh(data_he, MOD_512_LEN, data);
+  rsa_be32toh(pad_he, PADDING_512_SHA256_LEN, padding);
+  rsa_be32toh(hash_he, SHA256_PLAIN_LEN, g_message_sha256);
+
+  /* sign with private key: (hash + padding) ^ d % n = sig */
+
+  assert_int_equal(cryptodev_rsa_sign(&ctx, &rsa_data, sig, sizeof(sig),
+                                      hash_he, sizeof(hash_he),
+                                      pad_he, sizeof(pad_he)), 0);
+
+  /* verify with public key: sig ^ e % n = (hash + padding) */
+
+  assert_int_equal(cryptodev_rsa_verify(&ctx, &rsa_data, sig, sizeof(sig),
+                                        hash_he, sizeof(hash_he),
+                                        pad_he, sizeof(pad_he)), 0);
+
+  printf("test_rsa_512_sha256 sign/verify success\n");
+
+  rsa_data_free(&rsa_data);
+  cryptodev_free(&ctx);
+}
+
 static void test_rsa_2048_sha256(void **state)
 {
   crypto_context_t ctx;
@@ -595,6 +719,7 @@ int main(int argc, FAR char *argv[])
 {
   const struct CMUnitTest rsa_tests[] =
     {
+      cmocka_unit_test(test_rsa_512_sha256),
       cmocka_unit_test(test_rsa_2048_sha256),
     };
 
