@@ -79,7 +79,9 @@ static size_t context_switch_performance(void);
 static size_t hpwork_performance(void);
 #endif
 static size_t poll_performance(void);
+#ifndef CONFIG_DISABLE_MQUEUE
 static size_t mqueue_performance(void);
+#endif
 static size_t semwait_performance(void);
 static size_t sempost_performance(void);
 static size_t nullop_performance(void);
@@ -99,7 +101,9 @@ static const struct performance_entry_s g_entry_list[] =
   {"hpwork", hpwork_performance},
 #endif
   {"poll-write", poll_performance},
+#ifndef CONFIG_DISABLE_MQUEUE
   {"mqueue-send", mqueue_performance},
+#endif
   {"semwait", semwait_performance},
   {"sempost", sempost_performance},
   {"null-op", nullop_performance},
@@ -370,6 +374,7 @@ static FAR void *mqueue_task(FAR void *arg)
   return NULL;
 }
 
+#ifndef CONFIG_DISABLE_MQUEUE
 static size_t mqueue_performance(void)
 {
   struct performance_time_s result;
@@ -403,6 +408,7 @@ static size_t mqueue_performance(void)
 
   return performance_gettime(&result);
 }
+#endif
 
 /****************************************************************************
  * semwait_performance
