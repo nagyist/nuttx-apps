@@ -52,7 +52,6 @@ __attribute__((unused)) static void *threadfunc(void *args)
   for (int i = 0; i < 5; i++)
     {
       read(fd, &eventfd01_buffer, sizeof(eventfd_t));
-      usleep(1000);
     }
 
   return 0;
