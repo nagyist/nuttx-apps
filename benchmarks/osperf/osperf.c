@@ -55,6 +55,8 @@ struct performance_time_s
 struct performance_thread_s
 {
   sem_t sem;
+  pthread_mutex_t lock;
+  pthread_cond_t cond;
   struct performance_time_s time;
 };
 
@@ -70,6 +72,8 @@ struct performance_entry_s
 
 static size_t pthread_create_performance(void);
 static size_t pthread_switch_performance(void);
+static size_t pthread_cond_signal_performance(void);
+static size_t pthread_cond_signal_switch_performance(void);
 static size_t context_switch_performance(void);
 #ifdef CONFIG_BUILD_FLAT
 static size_t hpwork_performance(void);
@@ -88,6 +92,8 @@ static const struct performance_entry_s g_entry_list[] =
 {
   {"pthread-create", pthread_create_performance},
   {"pthread-switch", pthread_switch_performance},
+  {"pthread-cond-signal", pthread_cond_signal_performance},
+  {"pthread-cond-signal-switch", pthread_cond_signal_switch_performance},
   {"context-switch", context_switch_performance},
 #ifdef CONFIG_BUILD_FLAT
   {"hpwork", hpwork_performance},
@@ -148,6 +154,17 @@ static FAR void *pthread_switch_task(FAR void *arg)
   return NULL;
 }
 
+static FAR void *pthread_cond_task(FAR void *arg)
+{
+  FAR struct performance_thread_s *perf = arg;
+
+  pthread_mutex_lock(&perf->lock);
+  pthread_cond_wait(&perf->cond, &perf->lock);
+  pthread_mutex_unlock(&perf->lock);
+  performance_end(&perf->time);
+  return NULL;
+}
+
 static size_t pthread_switch_performance(void)
 {
   struct performance_thread_s perf;
@@ -159,6 +176,42 @@ static size_t pthread_switch_performance(void)
 
   performance_start(&perf.time);
   sem_post(&perf.sem);
+  pthread_join(tid, NULL);
+
+  return performance_gettime(&perf.time);
+}
+
+static size_t pthread_cond_signal_performance(void)
+{
+  struct performance_thread_s perf;
+
+  pthread_mutex_init(&perf.lock, NULL);
+  pthread_cond_init(&perf.cond, NULL);
+
+  performance_start(&perf.time);
+  pthread_mutex_lock(&perf.lock);
+  pthread_cond_signal(&perf.cond);
+  pthread_mutex_unlock(&perf.lock);
+  performance_end(&perf.time);
+
+  return performance_gettime(&perf.time);
+}
+
+static size_t pthread_cond_signal_switch_performance(void)
+{
+  struct performance_thread_s perf;
+  pthread_t tid;
+
+  pthread_mutex_init(&perf.lock, NULL);
+  pthread_cond_init(&perf.cond, NULL);
+
+  tid = performance_thread_create(pthread_cond_task, &perf,
+                                  CONFIG_BENCHMARK_OSPERF_PRIORITY + 1);
+
+  performance_start(&perf.time);
+  pthread_mutex_lock(&perf.lock);
+  pthread_cond_signal(&perf.cond);
+  pthread_mutex_unlock(&perf.lock);
   pthread_join(tid, NULL);
 
   return performance_gettime(&perf.time);
