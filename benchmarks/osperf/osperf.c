@@ -213,7 +213,7 @@ static size_t context_switch_performance(void)
   int tid;
 
   tid = performance_thread_create(context_switch_task, &time,
-                                  CONFIG_INIT_PRIORITY);
+                                  CONFIG_BENCHMARK_OSPERF_PRIORITY);
   sched_yield();
   performance_start(&time);
   sched_yield();
@@ -289,7 +289,8 @@ static size_t poll_performance(void)
   argv[0] = (FAR char *)&result;
   argv[1] = (FAR char *)(uintptr_t)pipefd[1];
 
-  ret = performance_thread_create(poll_task, argv, CONFIG_INIT_PRIORITY);
+  ret = performance_thread_create(poll_task, argv,
+                                  CONFIG_BENCHMARK_OSPERF_PRIORITY);
 
   poll(&fds, 1, -1);
   performance_end(&result);
