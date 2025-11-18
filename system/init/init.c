@@ -80,13 +80,7 @@ static void reap_process(FAR struct service_manager_s *sm,
 
   for (; ; )
     {
-      pid = waitpid(-1,
-#ifdef CONFIG_SYSTEM_INIT_DEBUG
-                    &wstatus,
-#else
-                    NULL,
-#endif
-                    WNOHANG);
+      pid = waitpid(-1, &wstatus, WNOHANG);
       if (pid <= 0)
         {
           break;
@@ -96,7 +90,7 @@ static void reap_process(FAR struct service_manager_s *sm,
           status = "status";
           ret = WEXITSTATUS(wstatus);
         }
-      else if (WIFSIGNALED(wtatus))
+      else if (WIFSIGNALED(wstatus))
         {
           status = "signal";
           ret = WTERMSIG(wstatus);
