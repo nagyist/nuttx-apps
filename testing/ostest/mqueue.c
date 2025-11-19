@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "ostest.h"
 
@@ -67,6 +68,14 @@ static mqd_t g_recv_mqfd;
 /****************************************************************************
  * Public Functions
  ****************************************************************************/
+
+#ifndef CONFIG_DISABLE_SIGNALS
+static void sig_handler(int sig)
+{
+  printf("mqueue_test: sig_handler\n");
+  pthread_exit(NULL);
+}
+#endif
 
 static void *sender_thread(void *arg)
 {
@@ -270,11 +279,28 @@ void mqueue_test(void)
   struct sched_param sparam;
   FAR void *expected;
   int status;
+#ifndef CONFIG_DISABLE_SIGNALS
+  sigset_t set;
+  struct sigaction act;
+  struct sigaction oact;
+#endif
 
   /* Reset globals for the beginning of the test */
 
   g_send_mqfd = 0;
   g_recv_mqfd = 0;
+
+#ifndef CONFIG_DISABLE_SIGNALS
+  sigemptyset(&set);
+  act.sa_handler = sig_handler;
+  act.sa_mask = set;
+  act.sa_flags = 0;
+  if (sigaction(SIGUSR1, &act, &oact))
+    {
+      printf("mqueue_test: add SIGUSR1 action fail\n");
+      ASSERT(false);
+    }
+#endif
 
   /* Start the sending thread at higher priority */
 
@@ -444,6 +470,14 @@ void mqueue_test(void)
           ASSERT(false);
         }
     }
+
+#ifndef CONFIG_DISABLE_SIGNALS
+  if (sigaction(SIGUSR1, &oact, NULL))
+    {
+      printf("mqueue_test: restore SIGUSR1 action fail\n");
+      ASSERT(false);
+    }
+#endif
 
   /* Destroy the message queue */
 
