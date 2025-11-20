@@ -39,6 +39,8 @@
 #include <sys/poll.h>
 #include <unistd.h>
 
+#include <nuttx/atomic.h>
+#include <nuttx/mutex.h>
 #include <nuttx/sched.h>
 #include <nuttx/wqueue.h>
 #include <nuttx/mutex.h>
@@ -87,7 +89,11 @@ static size_t mqueue_performance(void);
 #endif
 static size_t semwait_performance(void);
 static size_t sempost_performance(void);
+static size_t mutex_lock_performance(void);
+static size_t mutex_unlock_performance(void);
 static size_t nullop_performance(void);
+static size_t atomic_performance(void);
+static size_t function_call_performance(void);
 
 /****************************************************************************
  * Private Data
@@ -110,7 +116,11 @@ static const struct performance_entry_s g_entry_list[] =
 #endif
   {"semwait", semwait_performance},
   {"sempost", sempost_performance},
+  {"mutex-lock", mutex_lock_performance},
+  {"mutex-unlock", mutex_unlock_performance},
   {"null-op", nullop_performance},
+  {"atomic-calculate", atomic_performance},
+  {"function-call", function_call_performance}
 };
 
 /****************************************************************************
@@ -467,6 +477,44 @@ static size_t sempost_performance(void)
 }
 
 /****************************************************************************
+ * mutex_lock_performance
+ ****************************************************************************/
+
+static size_t mutex_lock_performance(void)
+{
+  struct performance_time_s result;
+  mutex_t mutex;
+
+  nxmutex_init(&mutex);
+
+  performance_start(&result);
+  nxmutex_lock(&mutex);
+  performance_end(&result);
+
+  nxmutex_destroy(&mutex);
+  return performance_gettime(&result);
+}
+
+/****************************************************************************
+ * mutex_unlock_performance
+ ****************************************************************************/
+
+static size_t mutex_unlock_performance(void)
+{
+  struct performance_time_s result;
+  mutex_t mutex;
+
+  nxmutex_init(&mutex);
+
+  performance_start(&result);
+  nxmutex_unlock(&mutex);
+  performance_end(&result);
+
+  nxmutex_destroy(&mutex);
+  return performance_gettime(&result);
+}
+
+/****************************************************************************
  * null_performance
  ****************************************************************************/
 
@@ -475,6 +523,52 @@ static size_t nullop_performance(void)
   struct performance_time_s result;
 
   performance_start(&result);
+  performance_end(&result);
+
+  return performance_gettime(&result);
+}
+
+/****************************************************************************
+ * function_call_performance
+ ****************************************************************************/
+
+static void call_test_handler(void)
+{
+}
+
+/* Use global function pointers to prevent compiler optimizations. */
+
+static void (*volatile call_test_func)(void) = call_test_handler;
+
+static size_t function_call_performance(void)
+{
+  struct performance_time_s result;
+
+  performance_start(&result);
+  call_test_func();
+  performance_end(&result);
+
+  return performance_gettime(&result);
+}
+
+/****************************************************************************
+ * atomic_performance
+ ****************************************************************************/
+
+static size_t atomic_performance(void)
+{
+  struct performance_time_s result;
+  atomic_t val;
+
+  performance_start(&result);
+  atomic_set(&val, 1234);
+  atomic_read(&val);
+  atomic_fetch_add_relaxed(&val, 123);
+  atomic_fetch_sub_relaxed(&val, 123);
+  atomic_fetch_and_relaxed(&val, 123);
+  atomic_fetch_or_relaxed(&val, 123);
+  atomic_fetch_xor_relaxed(&val, 123);
+  atomic_cmpxchg(&val, &val, 123);
   performance_end(&result);
 
   return performance_gettime(&result);
