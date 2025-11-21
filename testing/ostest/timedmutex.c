@@ -176,6 +176,7 @@ void timedmutex_test(void)
    * or a timeout.
    */
 
+  printf("mutex_test: Re-locking\n");
   status = pthread_mutex_lock(&g_mutex);
   if (status != OK)
     {
