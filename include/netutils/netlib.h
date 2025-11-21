@@ -254,9 +254,57 @@ ssize_t netlib_get_devices(FAR struct netlib_device_s *devlist,
 #endif
 
 #ifdef CONFIG_NETDEV_ETHTOOL_IOCTL
+
+/**
+ * @brief
+ *   Perform ethtool-related IOCTL operations on network devices
+ *
+ * @param ifname    The name of the ethernet device
+ * @param data      Pointer to an ethtool-related data structure
+ *   (e.g., ethtool_cmd, ethtool_chns), used to store
+ *   input/output parameters (specific type determined by @cmd)
+ *
+ * @return
+ *   0 on success; -1 on failure
+ */
+
 int netlib_ethtool_ioctl(FAR const char *ifname, FAR void *data);
+
+/**
+ * @brief
+ *   Ethernet device hardware may have multiple channels, and users can turn
+ *   on/off the channels through the API. When the channel is open, data can
+ *   be sent and received through the channel. When the channel is closed, no
+ *   corresponding transmit/receive interrupt is found.
+ *
+ * @param ifname            The name of the ethernet device
+ * @param combined_chns_map The status of channel opening or closing.  For
+ *   example, 0x51 means that channel 0,4, and 6 will be turned
+ *   on, and other channels will be turned off.
+ *
+ * @return
+ *   0 on success; -1 on failure
+ */
+
 int netlib_ethtool_getchannel(FAR const char *ifname,
                               FAR uint32_t *combined_chns_map);
+
+/**
+ * @brief
+ *   Ethernet device hardware may have multiple channels, and users can turn
+ *   on/off the channels through the API. When the channel is open, data can
+ *   be sent and received through the channel. When the channel is closed, no
+ *   corresponding transmit/receive interrupt is found.
+ *
+ * @param ifname            The name of the ethernet device
+ * @param combined_chns_map The status of channel opening or closing is set
+ *   in the form of bitmap.  For example, 0x51 means that channel
+ *   0,4, and 6 will be turned on, and others will be turned off.
+ *
+ * @return
+ *   0 on success; -1 on failure
+ */
+
 int netlib_ethtool_setchannel(FAR const char *ifname,
                               uint32_t combined_chns_map);
 #endif
