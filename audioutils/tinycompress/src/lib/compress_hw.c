@@ -406,9 +406,10 @@ static int compress_hw_get_codec_params(FAR void *compress_data,
   return 0;
 }
 
-static int compress_hw_configure(FAR struct compress_hw_data *compress,
-                                 FAR struct compr_config *config)
+static int compress_hw_set_current_config(FAR void *compress_data,
+                                          FAR struct compr_config *config)
 {
+  FAR struct compress_hw_data *compress = compress_data;
   struct audio_buf_desc_s buf_desc;
   struct ap_buffer_info_s buf_info;
   int ret;
@@ -597,8 +598,6 @@ static void *compress_hw_open_by_name(FAR const char *name,
                                       FAR struct compr_config *config)
 {
   FAR struct compress_hw_data *compress;
-  struct compr_config tconfig;
-  struct snd_codec codec;
   int ret;
 
   if (!((flags & COMPRESS_OUT) || (flags & COMPRESS_IN)))
@@ -622,11 +621,9 @@ static void *compress_hw_open_by_name(FAR const char *name,
       goto fail;
     }
 
-  if (!config)
+  if (config)
     {
-      memset(&tconfig, 0, sizeof(tconfig));
-      tconfig.codec = &codec;
-      ret = compress_hw_get_current_config(compress, &tconfig);
+      ret = compress_hw_set_current_config(compress, config);
       if (ret < 0)
         {
           compress_hw_deinit(compress);
@@ -634,15 +631,6 @@ static void *compress_hw_open_by_name(FAR const char *name,
         }
     }
 
-  ret = compress_hw_configure(compress, config ? config : &tconfig);
-  if (ret < 0)
-    {
-      compress_hw_deinit(compress);
-      goto fail;
-    }
-
-  memcpy(&compress->config, config ? config : &tconfig,
-    sizeof(compress->config));
   return compress;
 
 fail:
@@ -668,19 +656,6 @@ static int compress_hw_is_compress_running(FAR void *compress_data)
 static int compress_hw_stop(FAR void *compress_data)
 {
   FAR struct compress_hw_data *compress = compress_data;
-
-  if (ioctl(compress->fd, AUDIOIOC_STOP, compress->session) < 0)
-    {
-      auderr("cannot stop the stream");
-      return -errno;
-    }
-
-  return 0;
-}
-
-static void compress_hw_close(FAR void *compress_data)
-{
-  FAR struct compress_hw_data *compress = compress_data;
   struct audio_buf_desc_s buf_desc;
   struct audio_status_s status;
 
@@ -688,7 +663,11 @@ static void compress_hw_close(FAR void *compress_data)
       (status.state == AUDIO_STATE_RUNNING ||
       status.state == AUDIO_STATE_PAUSED))
     {
-      compress_hw_stop(compress);
+      if (ioctl(compress->fd, AUDIOIOC_STOP, compress->session) < 0)
+        {
+          auderr("cannot stop the stream");
+          return -errno;
+        }
     }
 
   compress->nonblocking = false;
@@ -703,6 +682,15 @@ static void compress_hw_close(FAR void *compress_data)
           (FAR struct ap_buffer_s *)dq_remfirst(&compress->bufferq);
       ioctl(compress->fd, AUDIOIOC_FREEBUFFER, &buf_desc);
     }
+
+  return 0;
+}
+
+static void compress_hw_close(FAR void *compress_data)
+{
+  FAR struct compress_hw_data *compress = compress_data;
+
+  compress_hw_stop(compress);
 
   compress_hw_deinit(compress);
   free(compress);
@@ -1123,6 +1111,7 @@ const struct compress_ops g_compress_hw_ops =
   .set_volume = compress_hw_set_volume,
   .set_params = compress_hw_set_params,
   .set_event_callback = compress_hw_set_event_callback,
+  .set_current_config = compress_hw_set_current_config,
   .get_current_config = compress_hw_get_current_config,
   .get_file_descriptor = compress_hw_get_file_descriptor,
   .poll_available = compress_hw_poll_available,

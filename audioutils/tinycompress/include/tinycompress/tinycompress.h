@@ -403,6 +403,17 @@ int compress_set_event_callback(FAR struct compress *compress,
  * @config: pointer to current config
  */
 
+/* compress_set_current_config: set config info to driver
+ *
+ * return 0 on success, negative on error
+ *
+* @compress: compress stream for which metadata has to set
+ * @config: pointer to current config
+ */
+
+int compress_set_current_config(FAR struct compress *compress,
+                                FAR struct compr_config *config);
+
 int compress_get_current_config(FAR struct compress *compress,
                                 FAR struct compr_config *config);
 

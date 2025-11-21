@@ -314,6 +314,12 @@ int compress_set_event_callback(FAR struct compress *compress,
   return compress->ops->set_event_callback(compress->data, on_event, cookie);
 }
 
+int compress_set_current_config(FAR struct compress *compress,
+                                FAR struct compr_config *config)
+{
+  return compress->ops->set_current_config(compress->data, config);
+}
+
 int compress_get_current_config(FAR struct compress *compress,
                                 FAR struct compr_config *config)
 {
