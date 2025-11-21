@@ -36,6 +36,8 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
+#define MUTEX_PRIORITY (CONFIG_TESTING_OSTEST_PRIORITY - 1)
+
 /****************************************************************************
  * Private Data
  ****************************************************************************/
@@ -120,6 +122,8 @@ static void *thread_func(FAR void *parameter)
 
 void timedmutex_test(void)
 {
+  struct sched_param param;
+  pthread_attr_t attr;
   pthread_t thread;
 #ifdef SDCC
   pthread_addr_t result;
@@ -143,13 +147,12 @@ void timedmutex_test(void)
 
   /* Start a thread */
 
-  printf("mutex_test: Starting thread\n");
-#ifdef SDCC
   pthread_attr_init(&attr);
+  param.sched_priority = MUTEX_PRIORITY;
+  pthread_attr_setschedparam(&attr, &param);
+
+  printf("mutex_test: Starting thread\n");
   status = pthread_create(&thread, &attr, thread_func, (pthread_addr_t)0);
-#else
-  status = pthread_create(&thread, NULL, thread_func, (pthread_addr_t)0);
-#endif
   if (status != 0)
     {
       fprintf(stderr, "mutex_test: ERROR in thread creation: %d\n", status);
@@ -189,7 +192,7 @@ void timedmutex_test(void)
    * time, the pthread should no longer be running.
    */
 
-  sleep(4);
+  sleep(6);
 
   /* The pthread should no longer be running and it should have terminated
    * because of EAGAIN.
