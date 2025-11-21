@@ -64,12 +64,106 @@ extern "C"
 #define EXTERN extern
 #endif
 
+/**
+ * @brief
+ *   The core event loop and main logic of the DHCP server daemon.
+ *
+ *   This function is the heart of the DHCPD. It is a long-running, blocking
+ *   function that performs the following steps:
+ *   1. Initializes the daemon's state, including allocating memory and
+ *   setting up a signal handler to gracefully handle stop requests.
+ *   2. Enters an loop that is only broken when a stop is requested.
+ *   3. Inside the loop, it listens for incoming DHCP client packets on a
+ *   socket.
+ *   4. Upon receiving a packet, it parses the message and dispatches it to
+ *   the appropriate handler.
+ *   5. When the loop terminates, it performs cleanup by freeing allocated
+ *   resources.
+ *
+ * @param interface The name of the network interface to listen on
+ *   (e.g., "eth0").
+ *
+ * @return
+ *   OK (0) on successful shutdown, or a negated errno value if an
+ *   unrecoverable error occurred.
+ */
+
 int dhcpd_run(FAR const char *interface);
+
+/**
+ * @brief
+ *   Start the DHCPD daemon as a background task.
+ *
+ *   This function creates a new task that runs the main DHCPD logic.
+ *   It checks if the daemon is already running to prevent
+ *   multiple instances.
+ *
+ * @param interface The name of the network interface for the daemon to
+ *   listen on.
+ *
+ * @return
+ *   OK (0) on success. A negated errno value is returned on failure.
+ */
+
 int dhcpd_start(FAR const char *interface);
+
+/**
+ * @brief
+ *   Stop a running DHCPD daemon.
+ *
+ *   This function gracefully shuts down the DHCPD daemon by:
+ *   1. Finding the process ID (PID) of the running daemon.
+ *   2. Sending a specific signal (CONFIG_NETUTILS_DHCPD_SIGWAKEUP) to it.
+ *   3. Waiting for the daemon task to completely terminate and clean up.
+ *
+ * @return
+ *   OK (0) on success. A negated errno value is returned on failure.
+ */
+
 int dhcpd_stop(void);
+
+/**
+ * @brief
+ *   Set the starting IP address for the DHCPD's address lease pool.
+ *
+ * @param startip The first IP address in the range to be leased to clients.
+ *
+ * @return Always returns OK (0).
+ */
+
 int dhcpd_set_startip(in_addr_t startip);
+
+/**
+ * @brief
+ *   Set the router (gateway) IP address to be provided to clients.
+ *
+ * @param routerip The IP address of the default router.
+ *
+ * @return Always returns OK (0).
+ */
+
 int dhcpd_set_routerip(in_addr_t routerip);
+
+/**
+ * @brief
+ *   Set the subnet mask to be provided to clients.
+ *
+ * @param netmask The subnet mask.
+ *
+ * @return Always returns OK (0).
+ */
+
 int dhcpd_set_netmask(in_addr_t netmask);
+
+/**
+ * @brief
+ *   Set the primary DNS server IP address to be provided to clients.
+ *
+ * @param dnsip The IP address of the DNS server.
+ *
+ * @return Always returns OK (0).
+ */
+
 int dhcpd_set_dnsip(in_addr_t dnsip);
 
 #undef EXTERN

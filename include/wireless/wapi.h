@@ -63,7 +63,10 @@
  * Pre-processor Definitions
  ****************************************************************************/
 
-/* Maximum allowed ESSID size. */
+/**
+ * @cond
+ * Maximum allowed ESSID size.
+ */
 
 #define WAPI_ESSID_MAX_SIZE IW_ESSID_MAX_SIZE
 
@@ -357,89 +360,118 @@ EXTERN FAR const char *g_wapi_pta_prio_flags[];
  * Public Function Prototyppes
  ****************************************************************************/
 
-/****************************************************************************
- * Name: wapi_get_ifup
+/**
+ * @endcond
+ * @brief
+ *   Get the interface up status.
  *
- * Description:
- *   Gets the interface up status.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the network interface to query.
+ * @param  is_up  Set to 0, if up; 1, otherwise.
  *
- * Input Parameters:
- *   is_up Set to 0, if up; 1, otherwise.
- *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_get_ifup(int sock, FAR const char *ifname, FAR int *is_up);
 
-/****************************************************************************
- * Name: wapi_set_ifup
+/**
+ * @brief
+ *   Activate the interface.
  *
- * Description:
- *   Activates the interface.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the network interface to query.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_set_ifup(int sock, FAR const char *ifname);
 
-/****************************************************************************
- * Name: wapi_set_ifdown
+/**
+ * @brief
+ *   Shut down the interface.
  *
- * Description:
- *   Shuts down the interface.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the network interface to bring down.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_set_ifdown(int sock, FAR const char *ifname);
 
-/****************************************************************************
- * Name: wapi_get_ip
+/**
+ * @brief
+ *   Get IP address of the given network interface.
  *
- * Description:
- *   Gets IP address of the given network interface.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the network interface to query.
+ * @param  addr   An output pointer to be populated with the interface's
+ *                IP address on success.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_get_ip(int sock, FAR const char *ifname, struct in_addr *addr);
 
-/****************************************************************************
- * Name: wapi_set_ip
+/**
+ * @brief
+ *   Set IP address of the given network interface.
  *
- * Description:
- *   Sets IP address of the given network interface.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the network interface whose IP address is
+ *                to be set.
+ * @param  addr   A pointer to a struct containing the new IP address.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_set_ip(int sock, FAR const char *ifname,
                 FAR const struct in_addr *addr);
 
-/****************************************************************************
- * Name: wapi_get_netmask
+/**
+ * @brief
+ *   Get netmask of the given network interface.
  *
- * Description:
- *   Gets netmask of the given network interface.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the network interface to query.
+ * @param  addr   An output pointer to be populated with the interface's
+ *                netmask on success.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_get_netmask(int sock, FAR const char *ifname,
                      FAR struct in_addr *addr);
 
-/****************************************************************************
- * Name: wapi_set_netmask
+/**
+ * @brief
+ *   Set netmask of the given network interface.
  *
- * Description:
- *   Sets netmask of the given network interface.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the network interface to query.
+ * @param  addr   A pointer to a struct containing the new netmask.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_set_netmask(int sock, FAR const char *ifname,
                      FAR const struct in_addr *addr);
 
-/****************************************************************************
- * Name: wapi_add_route_gw
+/**
+ * @brief
+ *   Add gateway for the given target network.
  *
- * Description:
- *   Adds gateway for the given target network.
+ * @param  sock        A socket descriptor, required for the ioctl
+ *                     operation.
+ * @param  targettype  Specifies the type of the target.
+ * @param  target      A pointer to the destination IP address.
+ * @param  netmask     A pointer to the netmask for the destination target.
+ * @param  gw          A pointer to the gateway (router) IP address for
+ *                     this route.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ *
+ * @note ifdef CONFIG_NET_ROUTE
+ */
 
 #ifdef CONFIG_NET_ROUTE
 int wapi_add_route_gw(int sock, enum wapi_route_target_e targettype,
@@ -448,13 +480,23 @@ int wapi_add_route_gw(int sock, enum wapi_route_target_e targettype,
                       FAR const struct in_addr *gw);
 #endif
 
-/****************************************************************************
- * Name: wapi_del_route_gw
+/**
+ * @brief
+ *   Delete gateway for the given target network.
  *
- * Description:
- *   Deletes gateway for the given target network.
+ * @param  sock        A socket descriptor, required for the ioctl
+ *                     operation.
+ * @param  targettype  Specify the type of the target.
+ * @param  target      A pointer to the destination IP address of the route
+ *                     to be deleted.
+ * @param  netmask     A pointer to the netmask for the destination target.
+ * @param  gw          A pointer to the gateway (router) IP address for
+ *                     this route.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ *
+ * @note ifdef CONFIG_NET_ROUTE
+ */
 
 #ifdef CONFIG_NET_ROUTE
 int wapi_del_route_gw(int sock, enum wapi_route_target_e targettype,
@@ -463,556 +505,701 @@ int wapi_del_route_gw(int sock, enum wapi_route_target_e targettype,
                       FAR const struct in_addr *gw);
 #endif
 
-/****************************************************************************
- * Name: wapi_get_freq
+/**
+ * @brief
+ *   Get the operating frequency of the device.
  *
- * Description:
- *   Gets the operating frequency of the device.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the wireless network interface.
+ * @param  freq   An output pointer to a double where the retrieved
+ *                frequency (in Hz) will be stored.
+ * @param  flag   An output pointer to an enum where the frequency mode
+ *                will be stored.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_get_freq(int sock, FAR const char *ifname, FAR double *freq,
                   FAR enum wapi_freq_flag_e *flag);
 
-/****************************************************************************
- * Name: wapi_set_freq
+/**
+ * @brief
+ *   Set the operating frequency of the device.
  *
- * Description:
- *   Sets the operating frequency of the device.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the wireless network interface whose
+ *                frequency is to be configured.
+ * @param  freq   The desired operating frequency, specified as a double
+ *                (in Hz).
+ * @param  flag   The desired frequency mod.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_set_freq(int sock, FAR const char *ifname, double freq,
                   enum wapi_freq_flag_e flag);
 
-/****************************************************************************
- * Name: wapi_freq2chan
+/**
+ * @brief
+ *   Find corresponding channel for the supplied freq.
  *
- * Description:
- *   Finds corresponding channel for the supplied freq.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the wireless interface.
+ * @param  freq   The frequency, in Hz, to be converted to a channel number.
+ * @param  chan   An output pointer to an integer.
  *
- * Returned Value:
+ * @return
  *   0, on success; -2, if not found; otherwise, ioctl() return value.
- *
- ****************************************************************************/
+ */
 
 int wapi_freq2chan(int sock, FAR const char *ifname, double freq,
                    FAR int *chan);
 
-/****************************************************************************
- * Name: wapi_chan2freq
+/**
+ * @brief
+ *   Find corresponding frequency for the supplied chan.
  *
- * Description:
- *   Finds corresponding frequency for the supplied chan.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the wireless interface whose channel map
+ *                is to be used for the lookup.
+ * @param  chan   The channel number to be converted to a frequency.
+ * @param  freq   An output pointer to a double.
  *
- * Returned Value:
+ * @return
  *   0, on success; -2, if not found; otherwise, ioctl() return value.
- *
- ****************************************************************************/
+ */
 
 int wapi_chan2freq(int sock, FAR const char *ifname, int chan,
                    FAR double *freq);
 
-/****************************************************************************
- * Name: wapi_get_essid
+/**
+ * @brief
+ *   Get ESSID of the device.
  *
- * Description:
- *   Gets ESSID of the device.
+ * @param  sock   A socket descriptor, required for the ioctl operation
+ * @param  ifname The name of the wireless network interface to query.
+ * @param  essid  Used to store the ESSID of the device.
+ * @param  flag   An output pointer to a variable where the ESSID status
+ *                will be stored.
  *
- * Input Parameters:
- *   essid - Used to store the ESSID of the device. Buffer must have
- *           enough space to store WAPI_ESSID_MAX_SIZE+1 characters.
- *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_get_essid(int sock, FAR const char *ifname, FAR char *essid,
                    FAR enum wapi_essid_flag_e *flag);
 
-/****************************************************************************
- * Name: wapi_set_essid
- *
- * Description:
- *    Sets ESSID of the device.
+/**
+ * @brief
+ *    Set ESSID of the device.
  *
  *    essid At most WAPI_ESSID_MAX_SIZE characters are read.
  *
- ****************************************************************************/
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the wireless network interface to configure.
+ * @param  essid  A pointer to a null-terminated string containing the ESSID
+ *                to be set.
+ * @param  flag   A flag to control the ESSID state.
+ *
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_set_essid(int sock, FAR const char *ifname, FAR const char *essid,
                    enum wapi_essid_flag_e flag);
 
-/****************************************************************************
- * Name: wapi_get_mode
+/**
+ * @brief
+ *   Get the operating mode of the device.
  *
- * Description:
- *   Gets the operating mode of the device.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the wireless interface to query.
+ * @param  mode   An output pointer to a variable of type 'enum wapi_mode_e'
+ *                where the resulting operating mode will be stored.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_get_mode(int sock, FAR const char *ifname,
                   FAR enum wapi_mode_e *mode);
 
-/****************************************************************************
- * Name: wapi_set_mode
+/**
+ * @brief
+ *   Set the operating mode of the device.
  *
- * Description:
- *   Sets the operating mode of the device.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the wireless interface to query.
+ * @param  mode   An output pointer to a variable of type 'enum wapi_mode_e'
+ *                where the resulting operating mode will be stored.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_set_mode(int sock, FAR const char *ifname, enum wapi_mode_e mode);
 
-/****************************************************************************
- * Name: wapi_make_broad_ether
+/**
+ * @brief
+ *   Create an ethernet broadcast address.
  *
- * Description:
- *   Creates an ethernet broadcast address.
+ * @param  sa  An output pointer to a `struct ether_addr` structure that
+ *             will be filled with the broadcast address.
  *
- ****************************************************************************/
+ * @return Returns the result of the underlying wapi_make_ether() call,
+ *         typically OK (0).
+ */
 
 int wapi_make_broad_ether(FAR struct ether_addr *sa);
 
-/****************************************************************************
- * Name: wapi_make_null_ether
+/**
+ * @brief
+ *   Create an ethernet NULL address.
  *
- * Description:
- *   Creates an ethernet NULL address.
+ * @param  sa  An output pointer to a `struct ether_addr` structure that
+ *             will be filled with the NULL address.
  *
- ****************************************************************************/
+ * @return Returns the result of the underlying wapi_make_ether() call,
+ *         typically OK (0).
+ */
 
 int wapi_make_null_ether(FAR struct ether_addr *sa);
 
-/****************************************************************************
- * Name: wapi_get_ap
+/**
+ * @brief
+ *   Get access point address of the device.
  *
- * Description:
- *   Gets access point address of the device.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the wireless interface to query.
+ * @param  ap     Set the to MAC address of the device.
  *
- * Input Parameters:
- *   ap - Set the to MAC address of the device. (For "any", a broadcast
- *        ethernet address; for "off", a null ethernet address is used.)
- *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_get_ap(int sock, FAR const char *ifname, FAR struct ether_addr *ap);
 
-/****************************************************************************
- * Name: wapi_set_ap
+/**
+ * @brief
+ *   Set access point address of the device.
  *
- * Description:
- *   Sets access point address of the device.
+ * @param  sock   A socket descriptor, required for the ioctl operation.
+ * @param  ifname The name of the wireless interface to configure.
+ * @param  ap     The MAC address to set for the access point.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_set_ap(int sock, FAR const char *ifname,
                 FAR const struct ether_addr *ap);
 
-/****************************************************************************
- * Name: wapi_get_bitrate
+/**
+ * @brief
+ *   Get bitrate of the device.
  *
- * Description:
- *   Gets bitrate of the device.
+ * @param  sock    A socket descriptor, required for the ioctl operation.
+ * @param  ifname  The name of the wireless interface to query.
+ * @param  bitrate A pointer to a location to store the retrieved bitrate.
+ * @param  flag    A pointer to a location to store the bitrate flag.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_get_bitrate(int sock, FAR const char *ifname,
                      FAR int *bitrate, FAR enum wapi_bitrate_flag_e *flag);
 
-/****************************************************************************
- * Name: wapi_set_bitrate
+/**
+ * @brief
+ *   Set bitrate of the device.
  *
- * Description:
- *   Sets bitrate of the device.
+ * @param  sock    A socket descriptor, required for the ioctl operation.
+ * @param  ifname  The name of the wireless interface to configure.
+ * @param  bitrate The bitrate to set.
+ * @param  flag    The bitrate flag.
  *
- ****************************************************************************/
+ * @return OK (0) on success; a negative errno value on failure.
+ */
 
 int wapi_set_bitrate(int sock, FAR const char *ifname, int bitrate,
                      enum wapi_bitrate_flag_e flag);
 
-/****************************************************************************
- * Name: wapi_dbm2mwatt
+/**
+ * @brief
+ *   Convert a value in dBm to a value in milliWatt.
  *
- * Description:
- *   Converts a value in dBm to a value in milliWatt.
+ * @param  dbm The value in dBm to convert.
  *
- ****************************************************************************/
+ * @return The converted value in milliWatts.
+ */
 
 int wapi_dbm2mwatt(int dbm);
 
-/****************************************************************************
- * Name: wapi_mwatt2dbm
+/**
+ * @brief
+ *   Convert a value in milliWatt to a value in dBm.
  *
- * Description:
- *   Converts a value in milliWatt to a value in dBm.
+ * @param  mwatt The value in milliWatt to convert.
  *
- ****************************************************************************/
+ * @return The converted value in dBm.
+ */
 
 int wapi_mwatt2dbm(int mwatt);
 
-/****************************************************************************
- * Name: wapi_get_txpower
+/**
+ * @brief
+ *   Get txpower of the device.
  *
- * Description:
- *   Gets txpower of the device.
+ * @param  sock   The socket descriptor.
+ * @param  ifname The interface name.
+ * @param  power  A pointer to a variable to store the txpower value.
+ * @param  flag   A pointer to a variable to store the unit of the txpower.
  *
- ****************************************************************************/
+ * @return 0 on success, a negated errno value on failure.
+ */
 
 int wapi_get_txpower(int sock, FAR const char *ifname, FAR int *power,
                      FAR enum wapi_txpower_flag_e *flag);
 
-/****************************************************************************
- * Name: wapi_set_txpower
+/**
+ * @brief
+ *   Set txpower of the device.
  *
- * Description:
- *   Sets txpower of the device.
+ * @param  sock   The socket descriptor.
+ * @param  ifname The interface name.
+ * @param  power  The txpower value to set.
+ * @param  flag   The unit of the txpower.
  *
- ****************************************************************************/
+ * @return 0 on success, a negated errno value on failure
+ */
 
 int wapi_set_txpower(int sock, FAR const char *ifname, int power,
                      enum wapi_txpower_flag_e flag);
 
-/****************************************************************************
- * Name: wapi_make_socket
+/**
+ * @brief
+ *   Create an AF_INET socket to be used in ioctl() calls.
  *
- * Description:
- *   Creates an AF_INET socket to be used in ioctl() calls.
- *
- * Returned Value:
+ * @return
  *   Non-negative on success.
- *
- ****************************************************************************/
+ */
 
 int wapi_make_socket(void);
 
-/****************************************************************************
- * Name: wapi_scan_init
- *
- * Description:
- *   Starts a scan on the given interface. Root privileges are required to
+/**
+ * @brief
+ *   Start a scan on the given interface. Root privileges are required to
  *   start a scan.
  *
- ****************************************************************************/
+ * @param  sock   The socket descriptor.
+ * @param  ifname The interface name.
+ * @param  essid  The specific ESSID to scan for.
+ *
+ * @return 0 on success, a negated errno value on failure.
+ */
 
 int wapi_scan_init(int sock, FAR const char *ifname, FAR const char *essid);
 
-/****************************************************************************
- * Name: wapi_scan_channel_init
- *
- * Description:
- *   Starts a scan on the given interface. Root privileges are required to
+/**
+ * @brief
+ *   Start a scan on the given interface. Root privileges are required to
  *   start a scan with specified channels.
  *
- ****************************************************************************/
+ * @param  sock         The socket descriptor.
+ * @param  ifname       The interface name.
+ * @param  essid        The specific ESSID to scan for.
+ * @param  channels     Pointer to an array of channel numbers to scan.
+ * @param  num_channels The number of channels in the array.
+ *
+ * @return 0 on success, a negated errno value on failure.
+ */
 
 int wapi_scan_channel_init(int sock, FAR const char *ifname,
                            FAR const char *essid,
                            uint8_t *channels, int num_channels);
 
-/****************************************************************************
- * Name: wapi_escan_init
+/**
+ * @brief
+ *   Start a extended scan on the given interface, you can specify the
+ *   scan type. Root privileges are required to start a scan.
  *
- * Description:
- *   Starts a extended scan on the given interface, you can specify the scan
- *   type. Root privileges are required to start a scan.
+ * @param  sock      The socket descriptor.
+ * @param  ifname    The interface name.
+ * @param  scan_type The type of scan to perform.
+ * @param  essid     The specific ESSID to scan for.
  *
- ****************************************************************************/
+ * @return 0 on success, a negated errno value on failure.
+ */
 
 int wapi_escan_init(int sock, FAR const char *ifname,
                     uint8_t scan_type, FAR const char *essid);
 
-/****************************************************************************
- * Name: wapi_escan_channel_init
- *
- * Description:
- *   Starts a scan on the given interface. Root privileges are required to
+/**
+ * @brief
+ *   Start a scan on the given interface. Root privileges are required to
  *   start a scan with specified channels.
  *
- ****************************************************************************/
+ * @param  sock         The socket descriptor.
+ * @param  ifname       The interface name.
+ * @param  scan_type    The type of scan to perform.
+ * @param  essid        The specific ESSID to scan for.
+ * @param  channels     Pointer to an array of channel numbers to scan.
+ * @param  num_channels The number of channels in the array.
+ *
+ * @return 0 on success, a negated errno value on failure.
+ */
 
 int wapi_escan_channel_init(int sock, FAR const char *ifname,
                             uint8_t scan_type, FAR const char *essid,
                             uint8_t *channels, int num_channels);
 
-/****************************************************************************
- * Name: wapi_scan_stat
+/**
+ * @brief
+ *   Check the status of the scan process.
  *
- * Description:
- *   Checks the status of the scan process.
+ * @param  sock   The socket descriptor.
+ * @param  ifname The interface name.
  *
- * Returned Value:
+ * @return
  *   Zero, if data is ready; 1, if data is not ready; negative on failure.
- *
- ****************************************************************************/
+ */
 
 int wapi_scan_stat(int sock, FAR const char *ifname);
 
-/****************************************************************************
- * Name: wapi_scan_coll
+/**
+ * @brief
+ *   Collect the results of a scan process.
  *
- * Description:
- *   Collects the results of a scan process.
+ * @param  sock   The socket descriptor.
+ * @param  ifname The interface name.
+ * @param  aps    Pushes collected  struct wapi_scan_info_s into this list.
  *
- * Input Parameters:
- *   aps - Pushes collected  struct wapi_scan_info_s into this list.
- *
- ****************************************************************************/
+ * @return 0 on successful collection and parsing, a negated errno value on
+ *         failure.
+
+ */
 
 int wapi_scan_coll(int sock, FAR const char *ifname,
                    FAR struct wapi_list_s *aps);
 
-/****************************************************************************
- * Name: wapi_scan_coll_free
- *
- * Description:
+/**
+ * @brief
  *   Free the scan results.
  *
- * Input Parameters:
- *   aps - Release the collected struct wapi_scan_info_s.
+ * @param  aps   Release the collected struct wapi_scan_info_s.
  *
- ****************************************************************************/
+ * @return
+ *   void
+ */
 
 void wapi_scan_coll_free(FAR struct wapi_list_s *aps);
 
-/****************************************************************************
- * Name: wapi_set_country
+/**
+ * @brief
+ *    Set the country code.
  *
- * Description:
- *    Set the country code
+ * @param  sock    The socket descriptor.
+ * @param  ifname  The interface name.
+ * @param  country A pointer to a two-character string representing the
+ *                 country code.
  *
- ****************************************************************************/
+ * @return 0 on success, or a negated errno value on failure.
+ */
 
 int wapi_set_country(int sock, FAR const char *ifname,
                      FAR const char *country);
 
-/****************************************************************************
- * Name: wapi_get_country
+/**
+ * @brief
+ *    Get the country code.
  *
- * Description:
- *    Get the country code
+ * @param  sock    The socket descriptor.
+ * @param  ifname  The interface name.
+ * @param  country A pointer to a caller-provided buffer where the
+ *                 two-character country code string will be stored.
  *
- ****************************************************************************/
+ * @return 0 on success, or a negated errno value on failure.
+ */
 
 int wapi_get_country(int sock, FAR const char *ifname,
                      FAR char *country);
 
-/****************************************************************************
- * Name: wapi_get_sensitivity
+/**
+ * @brief
+ *    Get the wlan Sensitivity.
  *
- * Description:
- *    Get the wlan Sensitivity
+ * @param  sock   The socket descriptor.
+ * @param  ifname The interface name.
+ * @param  sense  A pointer to a caller-provided integer where the
+ *                sensitivity value (in dBm) will be stored.
  *
- ****************************************************************************/
+ * @return 0 on success, or a negated errno value on failure.
+ */
 
 int wapi_get_sensitivity(int sock, FAR const char *ifname,
                          FAR int *sense);
 
 #ifdef CONFIG_WIRELESS_WAPI_INITCONF
-/****************************************************************************
- * Name: wapi_load_config
+/**
+ * @brief
+ *   Load and parses wireless network configuration for a specific
+ *   interface.
  *
- * Description:
+ * @param ifname   The name of the wireless interface.
+ * @param confname The path to the JSON configuration file. If NULL, a
+ *                 default path is used.
+ * @param conf     A pointer to a caller-provided structure to be filled
+ *                 with the configuration data.
  *
- * Input Parameters:
- *
- * Returned Value:
+ * @return
  *   Return a pointer to the hold the config resource, NULL On error.
- *
- ****************************************************************************/
+ */
 
 FAR void *wapi_load_config(FAR const char *ifname,
                            FAR const char *confname,
                            FAR struct wpa_wconfig_s *conf);
 
-/****************************************************************************
- * Name: wapi_unload_config
+/**
+ * @brief
+ *   Release the resources allocated by wapi_load_config.
  *
- * Description:
+ * @param load   Config resource handler, allocate by wapi_load_config().
  *
- * Input Parameters:
- *  load - Config resource handler, allocate by wapi_load_config()
- *
- * Returned Value:
- *
- ****************************************************************************/
+ * @return
+ *   void.
+ */
 
 void wapi_unload_config(FAR void *load);
 
-/****************************************************************************
- * Name: wapi_save_config
+/**
+ * @brief
+ *   Save the wireless network configuration for a specified interface.
  *
- * Description:
+ * @param  ifname    The name of the wireless interface for which the
+ *                   configuration is to be saved.
+ * @param  confname  The path to the JSON configuration file. If NULL, a
+ *                   default path is used.
+ * @param  conf      A pointer to a structure containing the configuration
+ *                   data to be written to the file.
  *
- * Input Parameters:
- *
- * Returned Value:
- *
- ****************************************************************************/
+ * @return 0 on success, or a negated errno value on failure.
+ */
 
 int wapi_save_config(FAR const char *ifname,
                      FAR const char *confname,
                      FAR const struct wpa_wconfig_s *conf);
 #endif
 
-/****************************************************************************
- * Name: wpa_driver_wext_set_key_ext
+/**
+ * @brief
+ *   Set an encryption key for a specific wireless interface.
  *
- * Description:
+ * @param  sockfd   Opened network socket.
+ * @param  ifname   Interface name.
+ * @param  alg      The encryption algorithm to use.
+ * @param  key      A pointer to the buffer containing the key material.
+ * @param  key_len  The length of the key in bytes.
  *
- * Input Parameters:
- *   sockfd - Opened network socket
- *   ifname - Interface name
- *
- * Returned Value:
- *
- ****************************************************************************/
+ * @return 0 on success, or a negated errno value on failure.
+ */
 
 int wpa_driver_wext_set_key_ext(int sockfd, FAR const char *ifname,
                                 enum wpa_alg_e alg, FAR const char *key,
                                 size_t key_len);
 
-/****************************************************************************
- * Name: wpa_driver_wext_get_key_ext
+/**
+ * @brief
+ *   Retrieve the currently configured encryption key and algorithm for a
+ *   specific wireless interface.
  *
- * Description:
+ * @param  sockfd   Opened network socket.
+ * @param  ifname   Interface name.
+ * @param  alg      A pointer to a variable where the retrieved encryption
+ *                  algorithm will be stored.
+ * @param  key      A pointer to a buffer where the key material will be
+ *                  copied.
+ * @param  req_len  An in-out parameter. On input, it must point to the size
+ *                  of the 'key' buffer. On successful return, it will be
+ *                  updated with the actual length of the retrieved key.
  *
- * Input Parameters:
- *   sockfd - Opened network socket
- *   ifname - Interface name
- *
- * Returned Value:
- *
- ****************************************************************************/
+ * @return 0 on success, or a negated errno value on failure.
+ */
 
 int wpa_driver_wext_get_key_ext(int sockfd, FAR const char *ifname,
                                 enum wpa_alg_e *alg, FAR char *key,
                                 size_t *req_len);
 
-/****************************************************************************
- * Name: wpa_driver_wext_associate
+/**
+ * @brief
+ *   Configure and initiates an association for a wireless interface.
  *
- * Description:
+ * @param  wconfig   Describes the wireless configuration.
  *
- * Input Parameters:
- *   wconfig - Describes the wireless configuration.
- *
- * Returned Value:
- *
- ****************************************************************************/
+ * @return 0 on successful configuration, or a negated errno value on
+ *         failure.
+ */
 
 int wpa_driver_wext_associate(FAR struct wpa_wconfig_s *wconfig);
 
-/****************************************************************************
- * Name: wpa_driver_wext_set_auth_param
+/**
+ * @brief
+ *   Set a specific authentication parameter for a wireless interface.
  *
- * Description:
+ * @param  sockfd   The socket file descriptor used for the underlying
+ *                  ioctl call.
+ * @param  ifname   The name of the wireless interface.
+ * @param  idx      The index of the authentication parameter to set.
+ * @param  value    The value to assign to the specified parameter.
  *
- * Input Parameters:
- *
- * Returned Value:
- *
- ****************************************************************************/
+ * @return 0 on success, or a negated errno value on failure from the
+ *         underlying ioctl call.
+ */
 
 int wpa_driver_wext_set_auth_param(int sockfd, FAR const char *ifname,
                                    int idx, uint32_t value);
 
-/****************************************************************************
- * Name: wpa_driver_wext_get_auth_param
+/**
+ * @brief
+ *   Retrieve a specific authentication parameter from a wireless
+ *   interface.
  *
- * Description:
+ * @param  sockfd   The socket file descriptor used for the underlying
+ *                  ioctl call.
+ * @param  ifname   The name of the wireless interface.
+ * @param  idx      The index of the authentication parameter to retrieve.
+ * @param  value    A pointer to a variable where the retrieved parameter
+ *                  value will be stored.
  *
- * Input Parameters:
- *
- * Returned Value:
- *
- ****************************************************************************/
+ * @return 0 on success, or a negated errno value on failure from the
+ *         underlying ioctl call.
+ */
 
 int wpa_driver_wext_get_auth_param(int sockfd, FAR const char *ifname,
                                    int idx, uint32_t *value);
 
-/****************************************************************************
- * Name: wpa_driver_wext_disconnect
+/**
+ * @brief
+ *   Disconnect the specified wireless interface.
  *
- * Description:
+ * @param  sockfd   The socket file descriptor used for the underlying
+ *                  ioctl calls.
+ * @param  ifname   The name of the wireless interface.
  *
- * Input Parameters:
- *
- * Returned Value:
- *
- ****************************************************************************/
+ * @return
+ *   void.
+ */
 
 void wpa_driver_wext_disconnect(int sockfd, FAR const char *ifname);
 
-/****************************************************************************
- * Name: wapi_set_pta_prio
+/**
+ * @brief
+ *   Set the pta priority of the device.
  *
- * Description:
- *   Sets the pta priority of the device.
+ * @param  sock      The socket file descriptor used for the underlying
+ *                   ioctl call.
+ * @param  ifname    The name of the wireless interface.
+ * @param  pta_prio  The PTA priority level to set, as defined by the
+ *                   `enum wapi_pta_prio_e` enumeration.
  *
- ****************************************************************************/
+ * @return 0 on success, or a negated errno value on failure from the
+ *         underlying ioctl call.
+ */
 
 int wapi_set_pta_prio(int sock, FAR const char *ifname,
                       enum wapi_pta_prio_e pta_prio);
 
-/****************************************************************************
- * Name: wapi_get_pta_prio
+/**
+ * @brief
+ *   Get the pta priority of the device.
  *
- * Description:
- *   Gets the pta priority of the device.
+ * @param  sock      The socket file descriptor used for the underlying
+ *                   ioctl call.
+ * @param  ifname    The name of the wireless interface.
+ * @param  pta_prio  A pointer to a variable where the current PTA priority
+ *                   level will be stored upon successful retrieval.
  *
- ****************************************************************************/
+ * @return 0 on success, or a negated errno value on failure from the
+ *         underlying ioctl call.
+ */
 
 int wapi_get_pta_prio(int sock, FAR const char *ifname,
                       enum wapi_pta_prio_e *pta_prio);
 
-/****************************************************************************
- * Name: wapi_set_pmksa
- *
- * Description:
+/**
+ * @brief
  *   Set the wlan pmksa.
  *
- ****************************************************************************/
+ * @param  sock    The socket file descriptor used for the underlying
+ *                 ioctl call.
+ * @param  ifname  The name of the wireless interface.
+ * @param  pmk     A pointer to the data buffer containing the PMKSA
+ *                 information to be set. This typically includes the
+ *                 BSSID of the AP and the PMK.
+ * @param  len     The length of the data buffer pointed to by `pmk`.
+ *
+ * @return 0 on success, or a negated errno value on failure from the
+ *         underlying ioctl call.
+ */
 
 int wapi_set_pmksa(int sock, FAR const char *ifname,
                    FAR const uint8_t *pmk, int len);
 
-/****************************************************************************
- * Name: wapi_get_pmksa
- *
- * Description:
+/**
+ * @brief
  *   Get the wlan pmksa.
  *
- ****************************************************************************/
+ * @param  sock    The socket file descriptor used for the underlying
+ *                 ioctl call.
+ * @param  ifname  The name of the wireless interface.
+ * @param  pmk     A pointer to a buffer where the retrieved PMKSA
+ *                 information will be stored.
+ * @param  len     The size of the buffer pointed to by `pmk`.
+ *
+ * @return 0 on success, or a negated errno value on failure from the
+ *         underlying ioctl call.
+ */
 
 int wapi_get_pmksa(int sock, FAR const char *ifname,
                    FAR uint8_t *pmk, int len);
 
-/****************************************************************************
- * Name: wapi_extend_params
- *
- * Description:
+/**
+ * @brief
  *   wapi extension interface for privatization method.
  *
- ****************************************************************************/
+ * @param  sock  The socket file descriptor used for the underlying
+ *               ioctl call.
+ * @param  cmd   The private ioctl command code to be executed. This
+ *               command must be within the valid range for driver-specific
+ *               operations.
+ * @param  wrq   A pointer to an `iwreq` structure, which should be
+ *               pre-populated by the caller with the interface name and
+ *               any data required by the specific `cmd`.
+ *
+ * @return 0 on success. On failure, returns a negated errno value.
+ */
 
 int wapi_extend_params(int sock, int cmd, FAR struct iwreq *wrq);
 
-/****************************************************************************
- * Name: wapi_set_power_save
- *
- * Description:
+/**
+ * @brief
  *   Set power save status of wifi.
  *
- ****************************************************************************/
+ * @param  sock    The socket file descriptor used for the underlying
+ *                 ioctl call.
+ * @param  ifname  The name of the wireless interface.
+ * @param  on      A boolean flag to control the power-saving state.
+ *
+ * @return 0 on success, or a negated errno value on failure.
+ */
 
 int wapi_set_power_save(int sock, FAR const char *ifname, bool on);
 
-/****************************************************************************
- * Name: wapi_get_power_save
- *
- * Description:
+/**
+ * @brief
  *   Get power save status of wifi.
  *
- ****************************************************************************/
+ * @param  sock    The socket file descriptor used for the underlying
+ *                 ioctl call.
+ * @param  ifname  The name of the wireless interface.
+ * @param  on      A pointer to a boolean variable where the current
+ *                 power-saving status will be stored.
+ *
+ * @return 0 on success, or a negated errno value on failure.
+ */
 
 int wapi_get_power_save(int sock, FAR const char *ifname, bool *on);
 

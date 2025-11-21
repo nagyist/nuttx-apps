@@ -77,11 +77,97 @@ extern "C"
 #define EXTERN extern
 #endif
 
+/**
+ * @brief
+ *   Initialize a DHCP client session on a network interface.
+ *
+ *   This function allocates a state structure and configures a UDP socket
+ *   for subsequent DHCP client operations.
+ *
+ * @param interface The name of the network interface to use (e.g., "eth0").
+ * @param macaddr   A pointer to the MAC address of the interface.
+ * @param maclen    The length of the MAC address in bytes.
+ *
+ * @return
+ *   A non-NULL handle to the new DHCP client session on success;
+ *   NULL is returned on failure (e.g., memory allocation or socket error).
+ */
+
 FAR void *dhcpc_open(FAR const char *interface,
                      FAR const void *mac_addr, int mac_len);
+
+/**
+ * @brief
+ *   Perform the DHCP negotiation to obtain an IP address and network
+ *   lease.
+ *
+ *   This function executes the core DHCP client logic to acquire a valid
+ *   network configuration from a DHCP server. It is a blocking an call.
+ *
+ * @param handle   The DHCP client session handle, previously created by
+ *   dhcpc_open().
+ * @param presult  An output pointer to a structure that will be populated
+ *   with the lease details on success.
+ *
+ * @return
+ *   OK (0) on success; ERROR (-1) on failure.
+ */
+
 int  dhcpc_request(FAR void *handle, FAR struct dhcpc_state *presult);
+
+/**
+ * @brief
+ *   Start the DHCP request process asynchronously.
+ *
+ *   This function initiates the DHCP negotiation in a new background
+ *   thread, returning immediately without blocking. The result of the
+ *   negotiation will be delivered via the provided callback function.
+ *
+ * @param handle   The DHCP client session handle, previously created by
+ *   dhcpc_open().
+ * @param callback A function to be called upon completion of the DHCP
+ *   negotiation.
+ *
+ * @return
+ *   OK (0) if the background thread was successfully started;
+ *   ERROR (-1) on failure. A successful return only indicates that the
+ *   process has begun, not that a lease has been acquired.
+ */
+
 int  dhcpc_request_async(FAR void *handle, dhcpc_callback_t callback);
+
+/**
+ * @brief
+ *   Cancel an ongoing DHCP negotiation process.
+ *
+ *   This function is used to stop a DHCP client operation.
+ *   It works by:
+ *   1. Setting an internal cancellation flag for synchronous operations.
+ *   2. Signaling and then joining the background thread for asynchronous
+ *   operations.
+ *
+ * @param handle The DHCP client session handle for the operation to be
+ *   cancelled.
+ */
+
 void dhcpc_cancel(FAR void *handle);
+
+/**
+ * @brief
+ *   Close a DHCP client session and releases all associated resources.
+ *
+ *   This function serves as the counterpart to dhcpc_open(). It ensures a
+ *   clean shutdown of the DHCP session by:
+ *   1. Cancelling any active background thread.
+ *   2. Closing the network socket.
+ *   3. Freeing the memory allocated for the session handle.
+ *
+ *   After this function returns, the handle becomes invalid and must not
+ *   be used again.
+ *
+ * @param handle The DHCP client session handle to close.
+ */
+
 void dhcpc_close(FAR void *handle);
 
 #undef EXTERN

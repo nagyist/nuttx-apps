@@ -37,7 +37,9 @@
 
 /* Configuration ************************************************************/
 
-/* Required configuration settings:  Of course TCP networking support is
+/**
+ * @cond
+ * Required configuration settings:  Of course TCP networking support is
  * required.  But here are a couple that are less obvious:
  *
  *   CONFIG_DISABLE_PTHREAD - pthread support is required
@@ -111,89 +113,75 @@ extern "C"
  * Public Functions Prototypes
  ****************************************************************************/
 
-/****************************************************************************
- * Name: ftpd_open
- *
- * Description:
+/**
+ * @endcond
+ * @brief
  *   Create an instance of the FTPD server and return a handle that can be
  *   used to run the server.
  *
- * Input Parameters:
- *    port - The port that the server will listen to.
- *    family - The type of INET family to use when opening the socket.
- *    AF_INET and AF_INET6 are supported.
+ * @param   port   The port that the server will listen to.
+ * @param   family The type of INET family to use when opening the socket.
+ *   AF_INET and AF_INET6 are supported.
  *
- * Returned Value:
+ * @return
  *   On success, a non-NULL handle is returned that can be used to reference
  *   the server instance.
- *
- ****************************************************************************/
+ */
 
 FTPD_SESSION ftpd_open(int port, sa_family_t family);
 
-/****************************************************************************
- * Name: ftpd_adduser
- *
- * Description:
+/**
+ * @brief
  *   Add one FTP user.
  *
- * Input Parameters:
- *    handle - A handle previously returned by ftpd_open
- *    accountflags - The characteristics of this user
- *                   (see FTPD_ACCOUNTFLAGS_* definitions above).
- *    user - The user login name. May be NULL indicating that no login is
- *      required.
- *    passwd - The user password.  May be NULL indicating that no password
- *      is required.
- *    home - The user home directory. May be NULL.
+ * @param   handle       A handle previously returned by ftpd_open
+ * @param   accountflags The characteristics of this user
+ *   (see FTPD_ACCOUNTFLAGS_* definitions above).
+ * @param   user         The user login name. May be NULL indicating
+ *   that no login is required.
+ * @param   passwd       The user password.  May be NULL indicating
+ *   that no password is required.
+ * @param   home         The user home directory. May be NULL.
  *
- * Returned Value:
+ * @return
  *   Zero is returned on success.  A negated errno value is return on
  *   failure.
- *
- ****************************************************************************/
+ */
 
 int ftpd_adduser(FTPD_SESSION handle, uint8_t accountflags,
                  FAR const char *user, FAR const char *passwd,
                  FAR const char *home);
 
-/****************************************************************************
- * Name: ftpd_session
- *
- * Description:
+/**
+ * @brief
  *   Execute the FTPD server.  This thread does not return until either (1)
  *   the timeout expires with no connection, (2) some other error occurs, or
  *   (2) a connection was accepted and an FTP worker thread was started to
  *   service the session.  Each call to ftpd_session creates on session.
  *
- * Input Parameters:
- *   handle - A handle previously returned by ftpd_open
- *   timeout - A time in milliseconds to wait for a connection. If this
- *     time elapses with no connected, the -ETIMEDOUT error will be returned.
+ * @param  handle  A handle previously returned by ftpd_open
+ * @param  timeout A time in milliseconds to wait for a connection. If
+ *   this time elapses with no connected, the -ETIMEDOUT error will be
+ *   returned.
  *
- * Returned Value:
+ * @return
  *   Zero is returned if the FTP worker was started.  On failure, a negated
  *   errno value is returned to indicate why the server terminated.
  *   -ETIMEDOUT indicates that the user-provided timeout elapsed with no
  *   connection.
- *
- ****************************************************************************/
+ */
 
 int ftpd_session(FTPD_SESSION handle, int timeout);
 
-/****************************************************************************
- * Name: ftpd_close
- *
- * Description:
+/**
+ * @brief
  *   Close and destroy the handle created by ftpd_open.
  *
- * Input Parameters:
- *   handle - A handle previously returned by ftpd_open
+ * @param  handle A handle previously returned by ftpd_open
  *
- * Returned Value:
+ * @return
  *   None
- *
- ****************************************************************************/
+ */
 
 void ftpd_close(FTPD_SESSION handle);
 
