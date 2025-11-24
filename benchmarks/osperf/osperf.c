@@ -41,6 +41,7 @@
 
 #include <nuttx/sched.h>
 #include <nuttx/wqueue.h>
+#include <nuttx/mutex.h>
 
 /****************************************************************************
  * Private Types
@@ -57,6 +58,7 @@ struct performance_thread_s
   sem_t sem;
   pthread_mutex_t lock;
   pthread_cond_t cond;
+  mutex_t mutex;
   struct performance_time_s time;
 };
 
@@ -74,6 +76,7 @@ static size_t pthread_create_performance(void);
 static size_t pthread_switch_performance(void);
 static size_t pthread_cond_signal_performance(void);
 static size_t pthread_cond_signal_switch_performance(void);
+static size_t nxmutex_performance(void);
 static size_t context_switch_performance(void);
 #ifdef CONFIG_BUILD_FLAT
 static size_t hpwork_performance(void);
@@ -97,6 +100,7 @@ static const struct performance_entry_s g_entry_list[] =
   {"pthread-cond-signal", pthread_cond_signal_performance},
   {"pthread-cond-signal-switch", pthread_cond_signal_switch_performance},
   {"context-switch", context_switch_performance},
+  {"nxmutex-lock", nxmutex_performance},
 #ifdef CONFIG_BUILD_FLAT
   {"hpwork", hpwork_performance},
 #endif
@@ -181,6 +185,20 @@ static size_t pthread_switch_performance(void)
   performance_start(&perf.time);
   sem_post(&perf.sem);
   pthread_join(tid, NULL);
+
+  return performance_gettime(&perf.time);
+}
+
+static size_t nxmutex_performance(void)
+{
+  struct performance_thread_s perf;
+
+  nxmutex_init(&perf.mutex);
+
+  performance_start(&perf.time);
+  nxmutex_lock(&perf.mutex);
+  nxmutex_unlock(&perf.mutex);
+  performance_end(&perf.time);
 
   return performance_gettime(&perf.time);
 }
