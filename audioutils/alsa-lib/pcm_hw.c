@@ -376,6 +376,7 @@ static int snd_pcm_hw_hw_params(FAR snd_pcm_t *pcm,
   struct ap_buffer_info_s buf_info;
   snd_pcm_uframes_t period_size;
   unsigned int period_bytes;
+  struct audio_info_s info;
   unsigned int period_time;
   snd_pcm_format_t format;
   unsigned int channels;
@@ -413,12 +414,23 @@ static int snd_pcm_hw_hw_params(FAR snd_pcm_t *pcm,
   buf_info.nbuffers = periods;
   buf_info.buffer_size = period_bytes;
   ioctl(hw->fd, AUDIOIOC_SETBUFFERINFO, &buf_info);
+
+  ret = ioctl(hw->fd, AUDIOIOC_GETAUDIOINFO, &info);
+  if (ret < 0)
+    {
+      return -errno;
+    }
+
+  snd_pcm_hw_params_set_format(pcm, params, info.subformat);
+  snd_pcm_hw_params_set_channels(pcm, params, info.channels);
+  snd_pcm_hw_params_set_rate(pcm, params, info.samplerate, 0);
+
   ioctl(hw->fd, AUDIOIOC_GETBUFFERINFO, &buf_info);
   if (buf_info.nbuffers != periods || buf_info.buffer_size != period_bytes)
     {
       periods = buf_info.nbuffers;
       period_size = 8 * buf_info.buffer_size /
-                    (snd_pcm_format_physical_width(format) * channels);
+                    (snd_pcm_format_physical_width(format) * info.channels);
       period_time = period_size * 1000000 / rate;
       snd_pcm_hw_params_set_periods(pcm, params, periods, 0);
       snd_pcm_hw_params_set_period_size(pcm, params, period_size, 0);
