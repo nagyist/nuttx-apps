@@ -559,9 +559,6 @@ static int snd_pcm_hw_prepare(FAR snd_pcm_t *pcm)
 static int snd_pcm_hw_reset(FAR snd_pcm_t *pcm)
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
-  struct audio_buf_desc_s buf_desc;
-  unsigned int i;
-  int ret;
 
   if (ioctl(hw->fd, AUDIOIOC_RESETSTATUS, 0) < 0)
     {
@@ -571,20 +568,6 @@ static int snd_pcm_hw_reset(FAR snd_pcm_t *pcm)
 
   hw->setup = false;
   pcm->appl = hw->status->head;
-
-  for (i = 0; i < pcm->periods - 1; i++)
-    {
-      buf_desc.numbytes = snd_pcm_frames_to_bytes(pcm, pcm->period_size);
-      buf_desc.u.pbuffer = NULL;
-
-      ret = ioctl(hw->fd, AUDIOIOC_ENQUEUEBUFFER, &buf_desc);
-      if (ret < 0)
-        {
-          return -errno;
-        }
-
-      pcm->appl++;
-    }
 
   return 0;
 }
