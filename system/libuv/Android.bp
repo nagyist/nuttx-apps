@@ -61,5 +61,9 @@ cc_library_static {
         "//apex_available:platform",
         "com.android.btservices",
     ],
+
+    header_libs: [
+        "kernel_modules_headers",
+    ],
 }
 
