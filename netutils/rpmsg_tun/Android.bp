@@ -1,5 +1,8 @@
 cc_binary {
     name: "rpmsg_tun_client",
+    header_libs: [
+        "kernel_modules_headers",
+    ],
     srcs: [
         "rpmsg_tun_client.c",
         "rpmsg_tun_util.c",
