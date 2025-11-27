@@ -111,6 +111,33 @@ if(CONFIG_TFLITEMICRO)
   list(FILTER TFLITE_MICRO_SRCS EXCLUDE REGEX ".*test.cc")
   list(FILTER TFLITE_MICRO_SRCS EXCLUDE REGEX ".*test_common.cc")
 
+  # Add Ethos-U NPU kernel support if enabled
+  if(CONFIG_ETHOSU)
+    file(GLOB ETHOS_U_SRCS
+         ${TFLITE_MICRO_DIR}/tensorflow/lite/micro/kernels/ethos_u/*.cc)
+
+    # Remove generic kernels that have Ethos-U specific implementations Extract
+    # filenames from Ethos-U directory
+    set(ETHOS_U_FILENAMES)
+    foreach(file ${ETHOS_U_SRCS})
+      get_filename_component(filename ${file} NAME)
+      list(APPEND ETHOS_U_FILENAMES ${filename})
+    endforeach()
+
+    # Remove files with same filename from generic kernels directory
+    set(NEW_TFLITE_MICRO_SRCS)
+    foreach(file ${TFLITE_MICRO_SRCS})
+      get_filename_component(filename ${file} NAME)
+      if(NOT filename IN_LIST ETHOS_U_FILENAMES)
+        list(APPEND NEW_TFLITE_MICRO_SRCS ${file})
+      endif()
+    endforeach()
+
+    # Add Ethos-U specific implementations
+    list(APPEND NEW_TFLITE_MICRO_SRCS ${ETHOS_U_SRCS})
+    set(TFLITE_MICRO_SRCS ${NEW_TFLITE_MICRO_SRCS})
+  endif()
+
   if(CONFIG_MLEARNING_CMSIS_NN)
     list(APPEND COMMON_FLAGS -DCMSIS_NN)
 
