@@ -19,6 +19,7 @@
  ****************************************************************************/
 
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <setjmp.h>
@@ -51,53 +52,55 @@ typedef struct tb
 {
   FAR char *data;
   int datalen;
-  uint32_t result;
 }
 tb;
+
+typedef struct crc32_params
+{
+  uint32_t polynomial;
+  uint32_t initial;
+  uint32_t xorout;
+  bool reflectin;
+  bool reflectout;
+}
+cp;
 
 /****************************************************************************
  * Private Data
  ****************************************************************************/
 
-static const tb g_h04c11db7_testcase[] =
+static const tb g_crc32_testcases[] =
 {
     /* testcase 1-7: Individual testing */
 
     {
       "",
       0,
-      0,
     },
     {
       "a",
       1,
-      0xe8b7be43,
     },
     {
       "abc",
       3,
-      0x352441c2,
     },
     {
       "message digest",
       14,
-      0x20159d7f,
     },
     {
       "abcdefghijklmnopqrstuvwxyz",
       26,
-      0x4c2750bd,
     },
     {
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
       62,
-      0x1fc2e6d2,
     },
     {
       "123456789012345678901234567890123456789"
       "01234567890123456789012345678901234567890",
       80,
-      0x7ca94a72,
     },
 
     /* testcase 8: test case 7 is divided into 8 parts */
@@ -105,57 +108,6 @@ static const tb g_h04c11db7_testcase[] =
     {
       "1234567890",
       10,
-      0x7ca94a72,
-    }
-};
-
-static const tb g_hf4acfb13_testcase[] =
-{
-    /* testcase 1-7: Individual testing */
-
-    {
-      "",
-      0,
-      0,
-    },
-    {
-      "a",
-      1,
-      0xaa7b2b08,
-    },
-    {
-      "abc",
-      3,
-      0xebe963c8,
-    },
-    {
-      "message digest",
-      14,
-      0x572300c2,
-    },
-    {
-      "abcdefghijklmnopqrstuvwxyz",
-      26,
-      0x9bed5706,
-    },
-    {
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-      62,
-      0xadd7278e,
-    },
-    {
-      "123456789012345678901234567890123456789"
-      "01234567890123456789012345678901234567890",
-      80,
-      0x226aba31,
-    },
-
-    /* testcase 8: test case 7 is divided into 8 parts */
-
-    {
-      "1234567890",
-      10,
-      0x226aba31,
     }
 };
 
@@ -198,11 +150,11 @@ static int syscrc32_init(FAR crypto_context *ctx)
   return 0;
 }
 
-static int syscrc32_start(FAR crypto_context *ctx, uint32_t *key)
+static int syscrc32_start(FAR crypto_context *ctx, FAR cp *key)
 {
   ctx->session.mac = CRYPTO_CRC32;
   ctx->session.mackey = (caddr_t) key;
-  ctx->session.mackeylen = sizeof(uint32_t) * 3;
+  ctx->session.mackeylen = sizeof(cp);
   if (ioctl(ctx->crypto_fd, CIOCGSESSION, &ctx->session) == -1)
     {
       warn("CIOCGSESSION");
@@ -266,88 +218,128 @@ static int match(const uint32_t a, const uint32_t b)
   return 1;
 }
 
-static void test_crc32_h04c11db7(void **state)
+static void test_crc32_calc(FAR cp *params, FAR uint32_t *result)
 {
-  crypto_context crc32_ctx;
-  int i;
+  crypto_context ctx;
   uint32_t output;
-  uint32_t key[3] =
-    {
-      0x04c11db7, 0, 0
-    };
+  int i;
 
-  assert_int_equal(syscrc32_init(&crc32_ctx), 0);
+  assert_int_equal(syscrc32_init(&ctx), 0);
 
   /* testcase 1-7: test crc32 vector */
 
-  for (i = 0; i < sizeof(g_h04c11db7_testcase) / sizeof(tb) - 1; i++)
+  for (i = 0; i < sizeof(g_crc32_testcases) / sizeof(tb) - 1; i++)
     {
-      assert_int_equal(syscrc32_start(&crc32_ctx, key), 0);
-      assert_int_equal(syscrc32_update(&crc32_ctx,
-                                       g_h04c11db7_testcase[i].data,
-                                       g_h04c11db7_testcase[i].datalen), 0);
+      assert_int_equal(syscrc32_start(&ctx, params), 0);
+      assert_int_equal(syscrc32_update(&ctx,
+                                       g_crc32_testcases[i].data,
+                                       g_crc32_testcases[i].datalen), 0);
 
-      assert_int_equal(syscrc32_finish(&crc32_ctx, &output), 0);
-      assert_int_equal(match(g_h04c11db7_testcase[i].result, output), 0);
+      assert_int_equal(syscrc32_finish(&ctx, &output), 0);
+      assert_int_equal(match(result[i], output), 0);
     }
 
   /* testcase 8: test segmented computing capabilities in crc32 mode */
 
+  assert_int_equal(syscrc32_start(&ctx, params), 0);
   for (i = 0; i < 8; i++)
     {
-      assert_int_equal(syscrc32_start(&crc32_ctx, key), 0);
-
-      assert_int_equal(syscrc32_update(&crc32_ctx,
-                                       g_h04c11db7_testcase[7].data,
-                                       g_h04c11db7_testcase[7].datalen), 0);
-
-      assert_int_equal(syscrc32_finish(&crc32_ctx, &key[1]), 0);
+      assert_int_equal(syscrc32_update(&ctx,
+                                       g_crc32_testcases[7].data,
+                                       g_crc32_testcases[7].datalen), 0);
     }
 
-  assert_int_equal(match(g_h04c11db7_testcase[7].result, key[1]), 0);
-  syscrc32_free(&crc32_ctx);
+  assert_int_equal(syscrc32_finish(&ctx, &output), 0);
+  assert_int_equal(match(result[7], output), 0);
+  syscrc32_free(&ctx);
 }
 
-static void test_crc32_hf4acfb13(void **state)
+static void test_crc32_case1(void **state)
 {
-  crypto_context crc32_ctx;
-  int i;
-  uint32_t output;
-  uint32_t key[3] =
+  /* CRC-32/ISO-HDLC */
+
+  cp params =
     {
-      0xf4acfb13, 0, 0
+      0xedb88320,
+      0x00000000,
+      0x00000000,
+      true,
+      false,
     };
 
-  assert_int_equal(syscrc32_init(&crc32_ctx), 0);
-
-  /* testcase 1-7: test crc32 vector */
-
-  for (i = 0; i < sizeof(g_hf4acfb13_testcase) / sizeof(tb) - 1; i++)
+  uint32_t result[] =
     {
-      assert_int_equal(syscrc32_start(&crc32_ctx, key), 0);
-      assert_int_equal(syscrc32_update(&crc32_ctx,
-                                       g_hf4acfb13_testcase[i].data,
-                                       g_hf4acfb13_testcase[i].datalen), 0);
+      0x00000000, 0xb2364bc0, 0x75ce58c0, 0xbb741ae0,
+      0xa24cfcc0, 0x32344b80, 0x121cfd80, 0x121cfd80,
+    };
 
-      assert_int_equal(syscrc32_finish(&crc32_ctx, &output), 0);
-      assert_int_equal(match(g_hf4acfb13_testcase[i].result, output), 0);
-    }
+  test_crc32_calc(&params, result);
+}
 
-  /* testcase 8: test segmented computing capabilities in crc32 mode */
+static void test_crc32_case2(void **state)
+{
+  /* CRC-32/IEEE-802.3 */
 
-  for (i = 0; i < 8; i++)
+  cp params =
     {
-      assert_int_equal(syscrc32_start(&crc32_ctx, key), 0);
+      0x04c11db7,
+      0xffffffff,
+      0xffffffff,
+      true,
+      true
+    };
 
-      assert_int_equal(syscrc32_update(&crc32_ctx,
-                                       g_hf4acfb13_testcase[7].data,
-                                       g_hf4acfb13_testcase[7].datalen), 0);
+  uint32_t result[] =
+    {
+      0x00000000, 0xe8b7be43, 0x352441c2, 0x20159d7f,
+      0x4c2750bd, 0x1fc2e6d2, 0x7ca94a72, 0x7ca94a72,
+    };
 
-      assert_int_equal(syscrc32_finish(&crc32_ctx, &key[1]), 0);
-    }
+  test_crc32_calc(&params, result);
+}
 
-  assert_int_equal(match(g_hf4acfb13_testcase[7].result, key[1]), 0);
-  syscrc32_free(&crc32_ctx);
+static void test_crc32_case3(void **state)
+{
+  /* CRC-32/P4 */
+
+  cp params =
+    {
+      0xf4acfb13,
+      0xffffffff,
+      0xffffffff,
+      true,
+      true
+    };
+
+  uint32_t result[] =
+    {
+      0x00000000, 0xaa7b2b08, 0xebe963c8, 0x572300c2,
+      0x9bed5706, 0xadd7278e, 0x226aba31, 0x226aba31,
+    };
+
+  test_crc32_calc(&params, result);
+}
+
+static void test_crc32_case4(void **state)
+{
+  /* CRC-32C */
+
+  cp params =
+    {
+      0x1edc6f41,
+      0xffffffff,
+      0xffffffff,
+      true,
+      true
+    };
+
+  uint32_t result[] =
+    {
+      0x00000000, 0xc1d04330, 0x364b3fb7, 0x02bd79d0,
+      0x9ee6ef25, 0xa245d57d, 0x477a6781, 0x477a6781,
+    };
+
+  test_crc32_calc(&params, result);
 }
 
 /****************************************************************************
@@ -358,8 +350,10 @@ int main(int argc, FAR char *argv[])
 {
   const struct CMUnitTest crc32_tests[] =
     {
-      cmocka_unit_test(test_crc32_h04c11db7),
-      cmocka_unit_test(test_crc32_hf4acfb13),
+      cmocka_unit_test(test_crc32_case1),
+      cmocka_unit_test(test_crc32_case2),
+      cmocka_unit_test(test_crc32_case3),
+      cmocka_unit_test(test_crc32_case4),
     };
 
   return cmocka_run_group_tests(crc32_tests, NULL, NULL);
