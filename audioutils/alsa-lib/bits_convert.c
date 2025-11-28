@@ -31,9 +31,9 @@
  * Pre-processor Prototypes
  ****************************************************************************/
 
-#define BITSCONV_PACKET(name, in_type, out_type)                            \
+#define BITSCONV_PACKET(name, in_type, out_type, trans)                     \
   static void bitsconv_##name(FAR const void **in_data, int frames, int ch, \
-                              FAR void *out_data, trans_func trans)         \
+                              FAR void *out_data)                           \
   {                                                                         \
     FAR out_type *out = (FAR out_type *)out_data;                           \
     FAR const in_type *in = (FAR const in_type *)in_data[0];                \
@@ -44,14 +44,7 @@
       {                                                                     \
         for (j = 0; j < ch; j++)                                            \
           {                                                                 \
-            if (trans)                                                      \
-              {                                                             \
-                *(out + j) = (out_type)trans(*(in + j));                    \
-              }                                                             \
-            else                                                            \
-              {                                                             \
-                *(out + j) = (out_type)*(in + j);                           \
-              }                                                             \
+            *(out + j) = (out_type)trans(*(in + j));                        \
           }                                                                 \
                                                                             \
         in += ch;                                                           \
@@ -59,9 +52,9 @@
       }                                                                     \
   }
 
-#define BITSCONV_PLANER(name, in_type, out_type)                            \
+#define BITSCONV_PLANER(name, in_type, out_type, trans)                     \
   static void bitsconv_##name(FAR const void **in_data, int frames, int ch, \
-                              FAR void *out_data, trans_func trans)         \
+                              FAR void *out_data)                           \
   {                                                                         \
     FAR out_type *out = (FAR out_type *)out_data;                           \
     FAR const in_type *in;                                                  \
@@ -73,25 +66,19 @@
         for (j = 0; j < ch; j++)                                            \
           {                                                                 \
             in = (FAR const in_type *)in_data[j];                           \
-            if (trans)                                                      \
-              {                                                             \
-                *(out + j) = (out_type)trans(*(in + i));                    \
-              }                                                             \
-            else                                                            \
-              {                                                             \
-                *(out + j) = (out_type)*(in + i);                           \
-              }                                                             \
+            *(out + j) = (out_type)trans(*(in + i));                        \
           }                                                                 \
                                                                             \
         out += ch;                                                          \
       }                                                                     \
   }
 
+#define trans_default(x) (x)
 /****************************************************************************
  * Private Types
  ****************************************************************************/
 
-typedef int32_t (*trans_func)(int32_t);
+typedef void *(*trans_func)(void *);
 
 /****************************************************************************
  * Private Functions
@@ -102,17 +89,35 @@ static inline int32_t trans_s16_to_s32(int32_t in)
   return in << 16;
 }
 
-static inline int32_t trans_s32_to_s16(int32_t in)
+static inline int16_t trans_s32_to_s16(int32_t in)
 {
   return in >> 16;
 }
 
-BITSCONV_PACKET(s16_to_s32, int16_t, int32_t);
-BITSCONV_PACKET(s32_to_s16, int32_t, int16_t);
-BITSCONV_PLANER(s16p_to_s16, int16_t, int16_t);
-BITSCONV_PLANER(s16p_to_s32, int16_t, int32_t);
-BITSCONV_PLANER(s32p_to_s16, int32_t, int16_t);
-BITSCONV_PLANER(s32p_to_s32, int32_t, int32_t);
+static inline int16_t trans_float_to_s16(float in)
+{
+  if (in > 1.0f)
+    {
+      return INT16_MAX;
+    }
+  else if (in < -1.0f)
+    {
+      return INT16_MIN;
+    }
+  else
+    {
+      return (int16_t)(in * 32767.0f);
+    }
+}
+
+BITSCONV_PACKET(s16_to_s32, int16_t, int32_t, trans_s16_to_s32);
+BITSCONV_PACKET(s32_to_s16, int32_t, int16_t, trans_s32_to_s16);
+BITSCONV_PACKET(flt_to_s16, float, int16_t, trans_float_to_s16);
+BITSCONV_PLANER(s16p_to_s16, int16_t, int16_t, trans_default);
+BITSCONV_PLANER(s16p_to_s32, int16_t, int32_t, trans_s16_to_s32);
+BITSCONV_PLANER(s32p_to_s16, int32_t, int16_t, trans_s32_to_s16);
+BITSCONV_PLANER(s32p_to_s32, int32_t, int32_t, trans_default);
+BITSCONV_PLANER(fltp_to_s16, float, int16_t, trans_float_to_s16);
 
 /****************************************************************************
  * Public Functions
@@ -127,10 +132,11 @@ int bitsconv_init(FAR struct bitsconv_data **bc, int channels,
       return 0;
     }
 
-  /* Support s16->s32, s32->s16 only */
+  /* Support s16->s32, s32->s16, float->s16 only */
 
   if ((src_format != SND_PCM_FORMAT_S16_LE &&
-       src_format != SND_PCM_FORMAT_S32_LE) ||
+       src_format != SND_PCM_FORMAT_S32_LE &&
+       src_format != SND_PCM_FORMAT_FLOAT_LE) ||
       (dst_format != SND_PCM_FORMAT_S16_LE &&
        dst_format != SND_PCM_FORMAT_S32_LE))
     {
@@ -201,12 +207,12 @@ int bitsconv_process(FAR struct bitsconv_data *bc, FAR const void **in_datas,
           if (bc->dst_format == SND_PCM_FORMAT_S16_LE)
             {
               bitsconv_s16p_to_s16(in_datas, in_size, bc->channels,
-                                   bc->bitsconv_buf, NULL);
+                                   bc->bitsconv_buf);
             }
           else if (bc->dst_format == SND_PCM_FORMAT_S32_LE)
             {
               bitsconv_s16p_to_s32(in_datas, in_size, bc->channels,
-                                   bc->bitsconv_buf, trans_s16_to_s32);
+                                   bc->bitsconv_buf);
             }
           else
             {
@@ -218,16 +224,24 @@ int bitsconv_process(FAR struct bitsconv_data *bc, FAR const void **in_datas,
           if (bc->dst_format == SND_PCM_FORMAT_S16_LE)
             {
               bitsconv_s32p_to_s16(in_datas, in_size, bc->channels,
-                                   bc->bitsconv_buf, trans_s32_to_s16);
+                                   bc->bitsconv_buf);
             }
           else if (bc->dst_format == SND_PCM_FORMAT_S32_LE)
             {
               bitsconv_s32p_to_s32(in_datas, in_size, bc->channels,
-                                   bc->bitsconv_buf, NULL);
+                                   bc->bitsconv_buf);
             }
           else
             {
               goto notsup;
+            }
+        }
+      else if (bc->src_format == SND_PCM_FORMAT_FLOAT_LE)
+        {
+          if (bc->dst_format == SND_PCM_FORMAT_S16_LE)
+            {
+              bitsconv_fltp_to_s16(in_datas, in_size, bc->channels,
+                                   bc->bitsconv_buf);
             }
         }
       else
@@ -241,13 +255,19 @@ int bitsconv_process(FAR struct bitsconv_data *bc, FAR const void **in_datas,
           bc->dst_format == SND_PCM_FORMAT_S32_LE)
         {
           bitsconv_s16_to_s32(in_datas, in_size, bc->channels,
-                              bc->bitsconv_buf, trans_s16_to_s32);
+                              bc->bitsconv_buf);
         }
       else if (bc->src_format == SND_PCM_FORMAT_S32_LE &&
                bc->dst_format == SND_PCM_FORMAT_S16_LE)
         {
           bitsconv_s32_to_s16(in_datas, in_size, bc->channels,
-                              bc->bitsconv_buf, trans_s32_to_s16);
+                              bc->bitsconv_buf);
+        }
+      else if (bc->src_format == SND_PCM_FORMAT_FLOAT_LE &&
+               bc->dst_format == SND_PCM_FORMAT_S16_LE)
+        {
+          bitsconv_flt_to_s16(in_datas, in_size, bc->channels,
+                              bc->bitsconv_buf);
         }
       else
         {
