@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
           continue;
         }
 
-      ret = rpmsg_tun_loop(tunfd, rpmsgfd, nlfd, argv[4]);
+      ret = rpmsg_tun_loop(tunfd, rpmsgfd, nlfd, argc == 5 ? argv[4] : NULL);
       close(rpmsgfd);
       if (ret < 0)
         {

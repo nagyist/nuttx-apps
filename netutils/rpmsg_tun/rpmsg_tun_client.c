@@ -38,13 +38,16 @@
 
 int main(int argc, char *argv[])
 {
+  int nlfd = -1;
   int rpmsgfd;
   int tunfd;
   int ret;
 
-  if (argc != 5)
+  if (argc != 5 && argc != 6)
     {
-      fprintf(stderr, "Usage: %s <tunname> <ip> <mask> <cpu>\n", argv[0]);
+      fprintf(stderr, "Usage: %s <tunname> <ip> <mask> <cpu> <ifname> or\n"
+                      "Usage: %s <tunname> <ip> <mask> <cpu>\n",
+                      argv[0], argv[0]);
       return -EINVAL;
     }
 
@@ -54,8 +57,27 @@ int main(int argc, char *argv[])
       return tunfd;
     }
 
+  if (argc == 6)
+    {
+      nlfd = rpmsg_tun_connect_netlink();
+      if (nlfd < 0)
+        {
+          close(tunfd);
+          return nlfd;
+        }
+    }
+
   for (; ; )
     {
+      if (nlfd >= 0)
+        {
+          ret = rpmsg_tun_wait_running(nlfd, argv[5]);
+          if (ret < 0)
+            {
+              break;
+            }
+        }
+
       rpmsgfd = rpmsg_tun_connect(argv[4], argv[1]);
       if (rpmsgfd < 0)
         {
@@ -63,12 +85,17 @@ int main(int argc, char *argv[])
           continue;
         }
 
-      ret = rpmsg_tun_loop(tunfd, rpmsgfd, -1, NULL);
+      ret = rpmsg_tun_loop(tunfd, rpmsgfd, nlfd, argc == 6 ? argv[5] : NULL);
       close(rpmsgfd);
       if (ret < 0)
         {
           break;
         }
+    }
+
+  if (nlfd >= 0)
+    {
+      close(nlfd);
     }
 
   close(tunfd);
