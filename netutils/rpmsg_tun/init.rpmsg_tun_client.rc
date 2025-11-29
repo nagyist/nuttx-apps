@@ -1,6 +1,0 @@
-service rpmsg_tun_client /vendor/bin/rpmsg_tun_client bt-rpmsg 192.168.0.20 255.255.255.0 ap
-    class main
-    user root
-    group root vpn
-    oneshot
-    priority -2
