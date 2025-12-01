@@ -92,8 +92,9 @@ static void *thread_func(FAR void *parameter)
             {
               fprintf(stderr,
                       "pthread: ERROR pthread_mutex_timedlock() failed: %d, "
-                      "abs timeout: { sec=%ld  nsec=%ld }\n",
-                      status, (long)ts.tv_sec, (long)ts.tv_nsec);
+                      "abs timeout: { sec=%llu  nsec=%llu }\n",
+                      status, (unsigned long long)ts.tv_sec,
+                      (unsigned long long)ts.tv_nsec);
               ASSERT(false);
             }
 
