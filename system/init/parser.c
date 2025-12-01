@@ -303,8 +303,30 @@ out:
 int init_parse_configs(FAR const struct parser_s *parser)
 {
   static FAR const char *base = "/etc/init.d/init.";
+  static const char preset[] =
+    "on boot\n"
+    "   trigger init\n"
+    "on init\n"
+    "   board_init\n"
+#ifdef CONFIG_NETUTILS_NETINIT
+    "   trigger netinit\n"
+    "on netinit\n"
+    "   board_netinit\n"
+#endif
+#ifdef CONFIG_BOARDCTL_FINALINIT
+    "   trigger finalinit\n"
+    "on finalinit\n"
+    "   board_finalinit\n"
+#endif
+    ;
   char file[PATH_MAX];
   int ret;
+
+  ret = init_parse_config_buffer(parser, preset, sizeof(preset));
+  if (ret < 0)
+    {
+      return ret;
+    }
 
   snprintf(file, sizeof(file), "%src", base);
   ret = init_parse_config_file(parser, file);

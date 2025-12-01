@@ -33,6 +33,8 @@
 #include <sys/param.h>
 #include <sys/wait.h>
 
+#include <netutils/netinit.h>
+
 #include "builtin.h"
 #include "init.h"
 #include "service.h"
@@ -76,6 +78,16 @@ static int cmd_boot(FAR struct action_manager_s *am,
 static int cmd_start_cpu(FAR struct action_manager_s *am,
                          int argc, FAR char **argv);
 #endif
+static int cmd_board_init(FAR struct action_manager_s *am,
+                          int argc, FAR char **argv);
+#ifdef CONFIG_NETUTILS_NETINIT
+static int cmd_board_netinit(FAR struct action_manager_s *am,
+                             int argc, FAR char **argv);
+#endif
+#ifdef CONFIG_BOARDCTL_FINALINIT
+static int cmd_board_finalinit(FAR struct action_manager_s *am,
+                               int argc, FAR char **argv);
+#endif
 
 /****************************************************************************
  * Private Data
@@ -96,6 +108,13 @@ static const struct cmd_map_s g_builtin[] =
   {"start", 2, 2, cmd_start},
   {"stop", 2, 2, cmd_stop},
   {"trigger", 2, 2, cmd_trigger},
+  {"board_init", 1, 1, cmd_board_init},
+#ifdef CONFIG_NETUTILS_NETINIT
+  {"board_netinit", 1, 1, cmd_board_netinit},
+#endif
+#ifdef CONFIG_BOARDCTL_FINALINIT
+  {"board_finalinit", 1, 1, cmd_board_finalinit},
+#endif
 };
 
 /****************************************************************************
@@ -217,6 +236,28 @@ static int cmd_exec(FAR struct action_manager_s *am,
 
   return -EINVAL;
 }
+
+static int cmd_board_init(FAR struct action_manager_s *am,
+                          int argc, FAR char **argv)
+{
+  return boardctl(BOARDIOC_INIT, 0);
+}
+
+#ifdef CONFIG_NETUTILS_NETINIT
+static int cmd_board_netinit(FAR struct action_manager_s *am,
+                             int argc, FAR char **argv)
+{
+  return netinit_bringup();
+}
+#endif
+
+#ifdef CONFIG_BOARDCTL_FINALINIT
+static int cmd_board_finalinit(FAR struct action_manager_s *am,
+                               int argc, FAR char **argv)
+{
+  return boardctl(BOARDIOC_FINALINIT, 0);
+}
+#endif
 
 /****************************************************************************
  * Public Functions
