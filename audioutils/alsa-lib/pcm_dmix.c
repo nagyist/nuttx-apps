@@ -401,10 +401,11 @@ snd_pcm_dmix_playback_avail(FAR snd_pcm_dmix_t *dmix)
   return used;
 }
 
-static inline snd_pcm_uframes_t
-snd_pcm_dmix_written(FAR snd_pcm_dmix_t *dmix)
+static inline snd_pcm_uframes_t snd_pcm_dmix_written(FAR snd_pcm_t *pcm)
 {
-  return (*dmix->appl_ptr - dmix->appl_reset) * dmix->spcm->period_size;
+  FAR snd_pcm_dmix_t *dmix = pcm->private_data;
+
+  return (*dmix->appl_ptr - dmix->appl_reset) * pcm->period_size;
 }
 
 static int snd_pcm_dmix_delay(FAR snd_pcm_t *pcm,
@@ -484,6 +485,13 @@ static int snd_pcm_dmix_hw_params(FAR snd_pcm_t *pcm,
           info.subformat, info.channels, info.samplerate);
 
   snd_pcm_hw_params_alloca(&sparams);
+
+  snd_pcm_hw_params_set_format(
+      dmix->spcm, sparams,
+      snd_pcm_build_linear_format(info.subformat, info.subformat, 0, 0));
+  snd_pcm_hw_params_set_channels(dmix->spcm, sparams, info.channels);
+  snd_pcm_hw_params_set_rate(dmix->spcm, sparams, info.samplerate, 0);
+
   ret = snd_pcm_hw_params_any(dmix->spcm, sparams);
   if (ret < 0)
     {
@@ -491,13 +499,11 @@ static int snd_pcm_dmix_hw_params(FAR snd_pcm_t *pcm,
       return ret;
     }
 
-  snd_pcm_hw_params_set_format(
-      dmix->spcm, sparams,
-      snd_pcm_build_linear_format(info.subformat, info.subformat, 0, 0));
-  snd_pcm_hw_params_set_channels(dmix->spcm, sparams, info.channels);
-  snd_pcm_hw_params_set_rate(dmix->spcm, sparams, info.samplerate, 0);
+  snd_pcm_hw_params_get_rate(sparams, &rate, 0);
+
   snd_pcm_hw_params_set_periods(dmix->spcm, sparams, periods, 0);
-  snd_pcm_hw_params_set_period_size(dmix->spcm, sparams, period_size, 0);
+  snd_pcm_hw_params_set_period_size(dmix->spcm, sparams,
+                                    period_size * rate / pcm->rate, 0);
   snd_pcm_hw_params_set_access(dmix->spcm, sparams, access);
 
   first_instance = snd_pcm_state(dmix->spcm) == AUDIO_STATE_OPEN;
@@ -1082,7 +1088,7 @@ static snd_pcm_sframes_t snd_pcm_dmix_write_period(FAR snd_pcm_t *pcm,
   xfer = in_frames;
   if (dmix->state == SND_PCM_STATE_PREPARED)
     {
-      written = snd_pcm_dmix_written(dmix);
+      written = snd_pcm_dmix_written(pcm);
       if (dmix->running)
         {
           dmix->state = SND_PCM_STATE_RUNNING;

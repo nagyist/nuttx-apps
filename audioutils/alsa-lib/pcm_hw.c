@@ -329,6 +329,7 @@ static int snd_pcm_hw_hw_refine(FAR snd_pcm_t *pcm,
   FAR snd_pcm_hw_t *hw = pcm->private_data;
   FAR snd_pcm_format_mask_t *format_mask;
   unsigned int value[32];
+  unsigned int rate;
   int ret;
   int i;
 
@@ -355,14 +356,37 @@ static int snd_pcm_hw_hw_refine(FAR snd_pcm_t *pcm,
   snd_pcm_hw_params_set_channels_min(pcm, params, &value[0]);
   snd_pcm_hw_params_set_channels_max(pcm, params, &value[1]);
 
+  ret = snd_pcm_hw_params_get_rate(params, &rate, NULL);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
   ret = snd_pcm_hw_query_rate(hw->fd, pcm->stream, value, 32);
   if (ret < 0)
     {
       return ret;
     }
 
-  snd_pcm_hw_params_set_rate_min(pcm, params, &value[0], NULL);
-  snd_pcm_hw_params_set_rate_max(pcm, params, &value[MAX(ret - 1, 0)], NULL);
+  if (rate)
+    {
+      for (i = 0; i < ret; i++)
+        {
+          if (value[i] == rate)
+            {
+              return 0;
+            }
+        }
+
+      rate = value[ret - 1];
+      snd_pcm_hw_params_set_rate(pcm, params, rate, 0);
+    }
+  else
+    {
+      snd_pcm_hw_params_set_rate_min(pcm, params, &value[0], NULL);
+      snd_pcm_hw_params_set_rate_max(pcm, params, &value[MAX(ret - 1, 0)],
+                                     NULL);
+    }
 
   return 0;
 }
