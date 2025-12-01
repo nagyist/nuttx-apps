@@ -16,3 +16,5 @@ allowxperm rpmsg_tun_server tun_device:chr_file ioctl { SIOCSIFFLAGS SIOCGIFFLAG
 allow rpmsg_tun_server self:rpmsg_socket { connect create read write };
 
 allow rpmsg_tun_server self:tun_socket create;
+
+allow rpmsg_tun_server { self unlabeled }:decnet_socket { create bind listen accept connect read write getopt setopt };
