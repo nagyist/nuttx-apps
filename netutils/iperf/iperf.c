@@ -527,7 +527,7 @@ static int iperf_tcp_server(FAR struct iperf_ctrl_t *ctrl,
   int listen_socket;
   struct timeval t;
   int sockfd;
-  int opt;
+  int opt = 1;
 
   listen_socket = socket(addr->sa_family, SOCK_STREAM, IPPROTO_TCP);
   if (listen_socket < 0)
@@ -641,7 +641,7 @@ static int iperf_udp_server(FAR struct iperf_ctrl_t *ctrl,
   int want_recv = 0;
   FAR uint8_t *buffer;
   int sockfd;
-  int opt;
+  int opt = 1;
   bool udp_recv_start = true;
 
   sockfd = socket(addr->sa_family, SOCK_DGRAM, IPPROTO_UDP);
@@ -726,7 +726,7 @@ static int iperf_udp_client(FAR struct iperf_ctrl_t *ctrl,
   int want_send = 0;
   uint8_t *buffer;
   int sockfd;
-  int opt;
+  int opt = 1;
   int err;
   int id;
 
