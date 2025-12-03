@@ -415,7 +415,7 @@ int nsh_fileapp(FAR struct nsh_vtbl_s *vtbl, FAR const char *cmd,
         {
           struct sched_param sched;
           sched_getparam(ret, &sched);
-          nsh_output(vtbl, "%s [%d:%d]\n", cmd, ret, sched.sched_priority);
+          nsh_output(vtbl, "%s [%d:%d]\n", cmd, pid, sched.sched_priority);
 
           /* Backgrounded commands always 'succeed' as long as we can start
            * them.
