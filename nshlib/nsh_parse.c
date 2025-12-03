@@ -2529,7 +2529,7 @@ static int nsh_parse_command(FAR struct nsh_vtbl_s *vtbl, FAR char *cmdline,
   bool      bg_save = false;
 #endif
 
-#ifdef CONFIG_SCHED_INSTRUMENTATION_DUMP
+#ifdef CONFIG_TRACE_APP
   char      tracebuf[CONFIG_NSH_LINELEN + 1];
 
   strlcpy(tracebuf, cmdline, sizeof(tracebuf));
