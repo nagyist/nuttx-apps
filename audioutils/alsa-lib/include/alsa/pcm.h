@@ -187,6 +187,14 @@ typedef enum
 
   SND_PCM_FORMAT_U32_BE = SNDRV_PCM_FORMAT_U32_BE,
 
+  /* Float 32 bit Little Endian */
+
+  SND_PCM_FORMAT_FLOAT_LE = SNDRV_PCM_FORMAT_FLOAT_LE,
+
+  /* Float 32 bit Big Endian */
+
+  SND_PCM_FORMAT_FLOAT_BE = SNDRV_PCM_FORMAT_FLOAT_BE,
+
   /* Signed 16 bit CPU endian */
 
   SND_PCM_FORMAT_S16 = SNDRV_PCM_FORMAT_S16,
@@ -210,6 +218,10 @@ typedef enum
   /* Unsigned 32 bit CPU endian */
 
   SND_PCM_FORMAT_U32 = SNDRV_PCM_FORMAT_U32,
+
+  /* Float 32 bit CPU endian */
+
+  SND_PCM_FORMAT_FLOAT = SNDRV_PCM_FORMAT_FLOAT,
 
   SND_PCM_FORMAT_LAST = SNDRV_PCM_FORMAT_U32_BE,
 } snd_pcm_format_t;

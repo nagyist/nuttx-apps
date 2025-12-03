@@ -875,6 +875,10 @@ FAR const char *snd_pcm_format_name(snd_pcm_format_t format)
       return "U32_LE";
     case SND_PCM_FORMAT_U32_BE:
       return "U32_BE";
+    case SND_PCM_FORMAT_FLOAT_LE:
+      return "FLOAT_LE";
+    case SND_PCM_FORMAT_FLOAT_BE:
+      return "FLOAT_BE";
     default:
       return NULL;
     }
@@ -1050,6 +1054,8 @@ int snd_pcm_format_width(snd_pcm_format_t format)
     case SND_PCM_FORMAT_S32_BE:
     case SND_PCM_FORMAT_U32_LE:
     case SND_PCM_FORMAT_U32_BE:
+    case SND_PCM_FORMAT_FLOAT_LE:
+    case SND_PCM_FORMAT_FLOAT_BE:
       return 32;
     default:
       return -EINVAL;
@@ -1076,6 +1082,8 @@ int snd_pcm_format_physical_width(snd_pcm_format_t format)
     case SND_PCM_FORMAT_S32_BE:
     case SND_PCM_FORMAT_U32_LE:
     case SND_PCM_FORMAT_U32_BE:
+    case SND_PCM_FORMAT_FLOAT_LE:
+    case SND_PCM_FORMAT_FLOAT_BE:
       return 32;
     default:
       return -EINVAL;
