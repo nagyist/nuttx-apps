@@ -25,39 +25,8 @@ if(CONFIG_TFLITEMICRO)
   # ############################################################################
 
   set(TFLITE_MICRO_DIR ${CMAKE_CURRENT_LIST_DIR}/tflite-micro)
-
-  if(NOT EXISTS ${TFLITE_MICRO_DIR})
-    set(TFLITE_MICRO_URL
-        https://github.com/tensorflow/tflite-micro/archive/cfa4c91d1b36c37c7c104b9c664615e59f1abfe3.zip
-    )
-    FetchContent_Declare(
-      tflite_micro_fetch
-      URL ${TFLITE_MICRO_URL} SOURCE_DIR ${TFLITE_MICRO_DIR} BINARY_DIR
-          ${CMAKE_BINARY_DIR}/apps/mlearning/tflite-micro/tflite-micro
-      DOWNLOAD_NO_PROGRESS true
-      TIMEOUT 30)
-
-    FetchContent_GetProperties(tflite_micro_fetch)
-
-    if(NOT tflite_micro_fetch_POPULATED)
-      FetchContent_Populate(tflite_micro_fetch)
-
-      # Apply the patch after fetching the content
-      execute_process(
-        COMMAND ${CMAKE_COMMAND} -E echo "Applying patch to tflite-micro"
-        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-      execute_process(COMMAND patch -d ${TFLITE_MICRO_DIR} -p1 <
-                              ${CMAKE_CURRENT_LIST_DIR}/tflite-micro.patch)
-      execute_process(
-        COMMAND patch -d ${TFLITE_MICRO_DIR} -p1 <
-                ${CMAKE_CURRENT_LIST_DIR}/0001-dequantize-int8.patch)
-      execute_process(
-        COMMAND patch -d ${TFLITE_MICRO_DIR} -p1 <
-                ${CMAKE_CURRENT_LIST_DIR}/0002-quantize-int8.patch)
-      execute_process(COMMAND patch -d ${TFLITE_MICRO_DIR} -p1 <
-                              ${CMAKE_CURRENT_LIST_DIR}/0003-mean-int8.patch)
-    endif()
-  endif()
+  # Fetch commit id: cfa4c91d1b36c37c7c104b9c664615e59f1abfe3
+  # https://github.com/tensorflow/tflite-micro/archive/cfa4c91d1b36c37c7c104b9c664615e59f1abfe3.zip
 
   # ############################################################################
   # Flags
@@ -66,7 +35,6 @@ if(CONFIG_TFLITEMICRO)
   set(COMMON_FLAGS
       -DTF_LITE_STATIC_MEMORY
       -DTF_LITE_DISABLE_X86_NEON
-      -DTF_LITE_STRIP_ERROR_STRINGS
       -Wno-sign-compare
       -Wno-unused-variable
       -Wno-undef
@@ -86,6 +54,12 @@ if(CONFIG_TFLITEMICRO)
     list(APPEND COMMON_FLAGS -DTFLITE_MODEL_COMPILER)
   endif()
 
+  # Enable debug logs and get time for the TFLM benchmark tool
+  if(CONFIG_TFLITEMICRO_BENCHMARK_TOOL)
+    list(APPEND COMMON_FLAGS -DTF_LITE_USE_CTIME)
+  else()
+    list(APPEND COMMON_FLAGS -DTF_LITE_STRIP_ERROR_STRINGS)
+  endif()
   # ############################################################################
   # Sources
   # ############################################################################
@@ -313,6 +287,10 @@ if(CONFIG_TFLITEMICRO)
       tflm_tool.cc)
     target_include_directories(apps_tflm PUBLIC ${INCDIR})
     target_compile_options(apps_tflm PRIVATE ${COMMON_FLAGS})
+  endif()
+
+  if(CONFIG_TFLITEMICRO_BENCHMARK_TOOL)
+    add_subdirectory(tflite-micro/tensorflow/lite/micro/tools/benchmarking)
   endif()
 
 endif()

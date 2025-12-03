@@ -37,7 +37,11 @@ if TFLITEMICRO
 		tensorflow/lite/micro/kernels/xtensa/ directory.
 
 	config TFLITEMICRO_TOOL
-	bool "tflite-micro cmdline tool"
+	bool "tflite-micro online compiling tool"
+	default n
+
+	config TFLITEMICRO_BENCHMARK_TOOL
+	bool "tflite-micro benchmarking tool"
 	default n
 
 if TFLITEMICRO_TOOL
@@ -50,4 +54,23 @@ if TFLITEMICRO_TOOL
 	default 4096
 
 endif
+
+if TFLITEMICRO_BENCHMARK_TOOL
+	config TFLITEMICRO_BENCHMARK_TOOL_PRIORITY
+	int "tflite-micro benchmarking tool priority"
+	default 100
+
+	config TFLITEMICRO_BENCHMARK_TOOL_STACKSIZE
+	int "tflite-micro benchmarking tool stacksize"
+	default 10240
+
+	config BENCHMARK_MODEL_PATH
+	string "tflite model path"
+	default ""
+
+	config BENCHMARK_TENSOR_ARENA_SIZE
+	int "arena size for tensors"
+	default 32768
+endif
+
 endif
