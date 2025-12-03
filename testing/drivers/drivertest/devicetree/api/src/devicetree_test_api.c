@@ -1,5 +1,5 @@
 /****************************************************************************
- * apps/testing/devicetree/api/src/devicetree_test_api.c
+ * apps/testing/drivers/drivertest/devicetree/api/src/devicetree_test_api.c
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
@@ -94,7 +94,7 @@
 #define assert_within(a, b, d) \
   assert(((a) >= ((b) - (d))) && ((a) <= ((b) + (d))))
 
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
 int g_board_id;
 #endif
 
@@ -129,39 +129,59 @@ static void test_path_props(FAR void** state)
   assert_true(!strcmp(DT_PROP_BY_IDX(TEST_ABCD1234, compatible, 0),
     "vnd,gpio-device"));
 
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
   g_board_id = 1;
-  assert_int_equal(DT_NUM_REGS_DYNAMIC(TEST_DEADBEEF), 1);
-  assert_int_equal(DT_PROP_DYNAMIC(TEST_DEADBEEF, gpio_controller), 1);
-  assert_int_equal(DT_PROP_DYNAMIC(TEST_DEADBEEF, ngpios), 100);
-  assert_true(!strcmp(DT_PROP_DYNAMIC(TEST_DEADBEEF, status), "okay"));
-  assert_int_equal(DT_PROP_LEN_DYNAMIC(TEST_DEADBEEF, compatible), 1);
-  assert_true(!strcmp(DT_PROP_BY_IDX_DYNAMIC(TEST_DEADBEEF, compatible, 0),
-    "vnd,gpio-device"));
+  assert_int_equal(DT_NUM_REGS_DYNAMIC(g_board_id, TEST_DEADBEEF), 1);
+  assert_int_equal(
+    DT_PROP_DYNAMIC(g_board_id, TEST_DEADBEEF, gpio_controller), 1);
+  assert_int_equal(
+    DT_PROP_DYNAMIC(g_board_id, TEST_DEADBEEF, ngpios), 100);
+  assert_true(!strcmp(DT_PROP_DYNAMIC(g_board_id, TEST_DEADBEEF, status),
+                      "okay"));
+  assert_int_equal(DT_PROP_LEN_DYNAMIC(g_board_id, TEST_DEADBEEF,
+                   compatible), 1);
+  assert_true(
+    !strcmp(DT_PROP_BY_IDX_DYNAMIC(g_board_id, TEST_DEADBEEF, compatible, 0),
+            "vnd,gpio-device"));
 
-  assert_int_equal(DT_NUM_REGS_DYNAMIC(TEST_ABCD1234), 2);
-  assert_int_equal(DT_PROP_DYNAMIC(TEST_ABCD1234, gpio_controller), 1);
-  assert_int_equal(DT_PROP_DYNAMIC(TEST_ABCD1234, ngpios), 200);
-  assert_true(!strcmp(DT_PROP_DYNAMIC(TEST_ABCD1234, status), "okay"));
-  assert_int_equal(DT_PROP_LEN_DYNAMIC(TEST_ABCD1234, compatible), 1);
-  assert_true(!strcmp(DT_PROP_BY_IDX_DYNAMIC(TEST_ABCD1234, compatible, 0),
-    "vnd,gpio-device"));
+  assert_int_equal(DT_NUM_REGS_DYNAMIC(g_board_id, TEST_ABCD1234), 2);
+  assert_int_equal(
+    DT_PROP_DYNAMIC(g_board_id, TEST_ABCD1234, gpio_controller), 1);
+  assert_int_equal(
+    DT_PROP_DYNAMIC(g_board_id, TEST_ABCD1234, ngpios), 200);
+  assert_true(
+    !strcmp(DT_PROP_DYNAMIC(g_board_id, TEST_ABCD1234, status), "okay"));
+  assert_int_equal(
+    DT_PROP_LEN_DYNAMIC(g_board_id, TEST_ABCD1234, compatible), 1);
+  assert_true(
+    !strcmp(DT_PROP_BY_IDX_DYNAMIC(g_board_id, TEST_ABCD1234, compatible, 0),
+            "vnd,gpio-device"));
   g_board_id = 2;
-  assert_int_equal(DT_NUM_REGS_DYNAMIC(TEST_DEADBEEF), 2);
-  assert_int_equal(DT_PROP_DYNAMIC(TEST_DEADBEEF, gpio_controller), 1);
-  assert_int_equal(DT_PROP_DYNAMIC(TEST_DEADBEEF, ngpios), 300);
-  assert_true(!strcmp(DT_PROP_DYNAMIC(TEST_DEADBEEF, status), "disabled"));
-  assert_int_equal(DT_PROP_LEN_DYNAMIC(TEST_DEADBEEF, compatible), 1);
-  assert_true(!strcmp(DT_PROP_BY_IDX_DYNAMIC(TEST_DEADBEEF, compatible, 0),
-    "vnd,gpio-device"));
+  assert_int_equal(DT_NUM_REGS_DYNAMIC(g_board_id, TEST_DEADBEEF), 2);
+  assert_int_equal(
+    DT_PROP_DYNAMIC(g_board_id, TEST_DEADBEEF, gpio_controller), 1);
+  assert_int_equal(
+    DT_PROP_DYNAMIC(g_board_id, TEST_DEADBEEF, ngpios), 300);
+  assert_true(
+    !strcmp(DT_PROP_DYNAMIC(g_board_id, TEST_DEADBEEF, status), "disabled"));
+  assert_int_equal(
+    DT_PROP_LEN_DYNAMIC(g_board_id, TEST_DEADBEEF, compatible), 1);
+  assert_true(
+    !strcmp(DT_PROP_BY_IDX_DYNAMIC(g_board_id, TEST_DEADBEEF, compatible, 0),
+            "vnd,gpio-device"));
 
-  assert_int_equal(DT_NUM_REGS_DYNAMIC(TEST_ABCD1234), 2);
-  assert_int_equal(DT_PROP_DYNAMIC(TEST_ABCD1234, gpio_controller), 1);
-  assert_int_equal(DT_PROP_DYNAMIC(TEST_ABCD1234, ngpios), 600);
-  assert_true(!strcmp(DT_PROP_DYNAMIC(TEST_ABCD1234, status), "disabled"));
-  assert_int_equal(DT_PROP_LEN_DYNAMIC(TEST_ABCD1234, compatible), 1);
-  assert_true(!strcmp(DT_PROP_BY_IDX_DYNAMIC(TEST_ABCD1234, compatible, 0),
-    "vnd,gpio-device"));
+  assert_int_equal(DT_NUM_REGS_DYNAMIC(g_board_id, TEST_ABCD1234), 2);
+  assert_int_equal(
+    DT_PROP_DYNAMIC(g_board_id, TEST_ABCD1234, gpio_controller), 1);
+  assert_int_equal(
+    DT_PROP_DYNAMIC(g_board_id, TEST_ABCD1234, ngpios), 600);
+  assert_true(
+    !strcmp(DT_PROP_DYNAMIC(g_board_id, TEST_ABCD1234, status), "disabled"));
+  assert_int_equal(
+    DT_PROP_LEN_DYNAMIC(g_board_id, TEST_ABCD1234, compatible), 1);
+  assert_true(
+    !strcmp(DT_PROP_BY_IDX_DYNAMIC(g_board_id, TEST_ABCD1234, compatible, 0),
+            "vnd,gpio-device"));
 #endif
 }
 
@@ -537,13 +557,17 @@ static void test_reg(FAR void** state)
   assert_int_equal(DT_REG_ADDR_BY_IDX(TEST_ABCD1234, 0), 0xabcd1234);
   assert_int_equal(DT_REG_ADDR_BY_IDX(TEST_ABCD1234, 1), 0x98765432);
 
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
   g_board_id = 1;
-  assert_int_equal(DT_REG_ADDR_BY_IDX_DYNAMIC(TEST_ABCD1234, 0), 0xabcd1234);
-  assert_int_equal(DT_REG_ADDR_BY_IDX_DYNAMIC(TEST_ABCD1234, 1), 0x98765432);
+  assert_int_equal(
+    DT_REG_ADDR_BY_IDX_DYNAMIC(g_board_id, TEST_ABCD1234, 0), 0xabcd1234);
+  assert_int_equal(
+    DT_REG_ADDR_BY_IDX_DYNAMIC(g_board_id, TEST_ABCD1234, 1), 0x98765432);
   g_board_id = 2;
-  assert_int_equal(DT_REG_ADDR_BY_IDX_DYNAMIC(TEST_ABCD1234, 0), 0xaabb5678);
-  assert_int_equal(DT_REG_ADDR_BY_IDX_DYNAMIC(TEST_ABCD1234, 1), 0x11223344);
+  assert_int_equal(
+    DT_REG_ADDR_BY_IDX_DYNAMIC(g_board_id, TEST_ABCD1234, 0), 0xaabb5678);
+  assert_int_equal(
+    DT_REG_ADDR_BY_IDX_DYNAMIC(g_board_id, TEST_ABCD1234, 1), 0x11223344);
 #endif
 
   /* DT_REG_SIZE_BY_IDX */
@@ -551,13 +575,17 @@ static void test_reg(FAR void** state)
   assert_int_equal(DT_REG_SIZE_BY_IDX(TEST_ABCD1234, 0), 0x500);
   assert_int_equal(DT_REG_SIZE_BY_IDX(TEST_ABCD1234, 1), 0xff);
 
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
   g_board_id = 1;
-  assert_int_equal(DT_REG_SIZE_BY_IDX_DYNAMIC(TEST_ABCD1234, 0), 0x500);
-  assert_int_equal(DT_REG_SIZE_BY_IDX_DYNAMIC(TEST_ABCD1234, 1), 0xff);
+  assert_int_equal(
+    DT_REG_SIZE_BY_IDX_DYNAMIC(g_board_id, TEST_ABCD1234, 0), 0x500);
+  assert_int_equal(
+    DT_REG_SIZE_BY_IDX_DYNAMIC(g_board_id, TEST_ABCD1234, 1), 0xff);
   g_board_id = 2;
-  assert_int_equal(DT_REG_SIZE_BY_IDX_DYNAMIC(TEST_ABCD1234, 0), 0x600);
-  assert_int_equal(DT_REG_SIZE_BY_IDX_DYNAMIC(TEST_ABCD1234, 1), 0xaa);
+  assert_int_equal(
+    DT_REG_SIZE_BY_IDX_DYNAMIC(g_board_id, TEST_ABCD1234, 0), 0x600);
+  assert_int_equal(
+    DT_REG_SIZE_BY_IDX_DYNAMIC(g_board_id, TEST_ABCD1234, 1), 0xaa);
 #endif
 
   /* DT_REG_ADDR */
@@ -579,17 +607,17 @@ static void test_reg(FAR void** state)
   assert_int_equal(DT_REG_ADDR_BY_NAME(TEST_ABCD1234, two),
                    0x98765432);
 
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
   g_board_id = 1;
-  assert_int_equal(DT_REG_ADDR_BY_NAME_DYNAMIC(TEST_ABCD1234, one),
-                   0xabcd1234);
-  assert_int_equal(DT_REG_ADDR_BY_NAME_DYNAMIC(TEST_ABCD1234, two),
-                   0x98765432);
+  assert_int_equal(
+    DT_REG_ADDR_BY_NAME_DYNAMIC(g_board_id, TEST_ABCD1234, one), 0xabcd1234);
+  assert_int_equal(
+    DT_REG_ADDR_BY_NAME_DYNAMIC(g_board_id, TEST_ABCD1234, two), 0x98765432);
   g_board_id = 2;
-  assert_int_equal(DT_REG_ADDR_BY_NAME_DYNAMIC(TEST_ABCD1234, one),
-                   0xaabb5678);
-  assert_int_equal(DT_REG_ADDR_BY_NAME_DYNAMIC(TEST_ABCD1234, two),
-                   0x11223344);
+  assert_int_equal(
+    DT_REG_ADDR_BY_NAME_DYNAMIC(g_board_id, TEST_ABCD1234, one), 0xaabb5678);
+  assert_int_equal(
+    DT_REG_ADDR_BY_NAME_DYNAMIC(g_board_id, TEST_ABCD1234, two), 0x11223344);
 #endif
 
   /* DT_REG_ADDR_BY_NAME_OR */
@@ -611,13 +639,17 @@ static void test_reg(FAR void** state)
   assert_int_equal(DT_REG_SIZE_BY_NAME(TEST_ABCD1234, one), 0x500);
   assert_int_equal(DT_REG_SIZE_BY_NAME(TEST_ABCD1234, two), 0xff);
 
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
   g_board_id = 1;
-  assert_int_equal(DT_REG_SIZE_BY_NAME_DYNAMIC(TEST_ABCD1234, one), 0x500);
-  assert_int_equal(DT_REG_SIZE_BY_NAME_DYNAMIC(TEST_ABCD1234, two), 0xff);
+  assert_int_equal(
+    DT_REG_SIZE_BY_NAME_DYNAMIC(g_board_id, TEST_ABCD1234, one), 0x500);
+  assert_int_equal(
+    DT_REG_SIZE_BY_NAME_DYNAMIC(g_board_id, TEST_ABCD1234, two), 0xff);
   g_board_id = 2;
-  assert_int_equal(DT_REG_SIZE_BY_NAME_DYNAMIC(TEST_ABCD1234, one), 0x600);
-  assert_int_equal(DT_REG_SIZE_BY_NAME_DYNAMIC(TEST_ABCD1234, two), 0xaa);
+  assert_int_equal(
+    DT_REG_SIZE_BY_NAME_DYNAMIC(g_board_id, TEST_ABCD1234, one), 0x600);
+  assert_int_equal(
+    DT_REG_SIZE_BY_NAME_DYNAMIC(g_board_id, TEST_ABCD1234, two), 0xaa);
 #endif
 
   /* DT_REG_SIZE_BY_NAME_OR */
@@ -801,15 +833,21 @@ static void test_irq(void** state)
   assert_int_equal(DT_IRQN_BY_IDX(DT_INST(0, DT_DRV_COMPAT), 1), 40);
   assert_int_equal(DT_IRQN_BY_IDX(DT_INST(0, DT_DRV_COMPAT), 2), 60);
 
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
   g_board_id = 1;
-  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 0), 30);
-  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 1), 40);
-  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 2), 60);
+  assert_int_equal(
+    DT_IRQN_BY_IDX_DYNAMIC(g_board_id, DT_INST(0, DT_DRV_COMPAT), 0), 30);
+  assert_int_equal(
+    DT_IRQN_BY_IDX_DYNAMIC(g_board_id, DT_INST(0, DT_DRV_COMPAT), 1), 40);
+  assert_int_equal(
+    DT_IRQN_BY_IDX_DYNAMIC(g_board_id, DT_INST(0, DT_DRV_COMPAT), 2), 60);
   g_board_id = 2;
-  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 0), 40);
-  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 1), 50);
-  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(DT_INST(0, DT_DRV_COMPAT), 2), 70);
+  assert_int_equal(
+    DT_IRQN_BY_IDX_DYNAMIC(g_board_id, DT_INST(0, DT_DRV_COMPAT), 0), 40);
+  assert_int_equal(
+    DT_IRQN_BY_IDX_DYNAMIC(g_board_id, DT_INST(0, DT_DRV_COMPAT), 1), 50);
+  assert_int_equal(
+    DT_IRQN_BY_IDX_DYNAMIC(g_board_id, DT_INST(0, DT_DRV_COMPAT), 2), 70);
 #endif
 
 #else
@@ -914,13 +952,13 @@ static void test_irq(void** state)
   assert_int_equal(DT_IRQN_BY_IDX(TEST_IRQ_EXT, 0), 70);
   assert_int_equal(DT_IRQN_BY_IDX(TEST_IRQ_EXT, 2), 42);
 
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
   g_board_id = 1;
-  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(TEST_IRQ_EXT, 0), 70);
-  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(TEST_IRQ_EXT, 2), 42);
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(g_board_id, TEST_IRQ_EXT, 0), 70);
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(g_board_id, TEST_IRQ_EXT, 2), 42);
   g_board_id = 2;
-  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(TEST_IRQ_EXT, 0), 65);
-  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(TEST_IRQ_EXT, 2), 47);
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(g_board_id, TEST_IRQ_EXT, 0), 65);
+  assert_int_equal(DT_IRQN_BY_IDX_DYNAMIC(g_board_id, TEST_IRQ_EXT, 2), 47);
 #endif
 
 #endif
@@ -2089,13 +2127,15 @@ static void test_child_nodes_number(void** state)
   assert_int_equal(DT_CHILD_NUM_STATUS_OKAY(TEST_CHILDREN), 2);
   assert_int_equal(DT_INST_CHILD_NUM_STATUS_OKAY(0), 2);
 
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
   g_board_id = 1;
-  assert_int_equal(DT_CHILD_NUM_DYNAMIC(TEST_CHILDREN), 3);
-  assert_int_equal(DT_CHILD_NUM_STATUS_OKAY_DYNAMIC(TEST_CHILDREN), 2);
+  assert_int_equal(DT_CHILD_NUM_DYNAMIC(g_board_id, TEST_CHILDREN), 3);
+  assert_int_equal(
+    DT_CHILD_NUM_STATUS_OKAY_DYNAMIC(g_board_id, TEST_CHILDREN), 2);
   g_board_id = 2;
-  assert_int_equal(DT_CHILD_NUM_DYNAMIC(TEST_CHILDREN), 4);
-  assert_int_equal(DT_CHILD_NUM_STATUS_OKAY_DYNAMIC(TEST_CHILDREN), 3);
+  assert_int_equal(DT_CHILD_NUM_DYNAMIC(g_board_id, TEST_CHILDREN), 4);
+  assert_int_equal(
+    DT_CHILD_NUM_STATUS_OKAY_DYNAMIC(g_board_id, TEST_CHILDREN), 3);
 #endif
 }
 
@@ -2768,7 +2808,7 @@ static void test_interrupt_controller(void** state)
   assert_true(DT_SAME_NODE(DT_INST_IRQ_INTC(0), TEST_INTC));
 }
 
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
 
 #define USER_ARRAY_MAX_SIZE 5
 uint32_t g_user_array[USER_ARRAY_MAX_SIZE];
@@ -2796,7 +2836,8 @@ static void test_dynamic_foreach_usage(void** state)
   memset(g_user_array, 0, USER_ARRAY_MAX_SIZE * sizeof(uint32_t));
   DT_FOREACH_DYNAMIC(g_board_id, DT_NODELABEL(test_foreach), \
     DT_FOREACH_CHILD, DT_INIT_USER_ARRAY);
-  for (int i = 0; i < (DT_CHILD_NUM_DYNAMIC(DT_NODELABEL(test_foreach))); \
+  for (int i = 0;
+       i < (DT_CHILD_NUM_DYNAMIC(g_board_id, DT_NODELABEL(test_foreach)));
        i++)
     {
       assert_int_equal(g_user_array[i], i);
@@ -2806,7 +2847,8 @@ static void test_dynamic_foreach_usage(void** state)
   memset(g_user_array, 0, USER_ARRAY_MAX_SIZE * sizeof(uint32_t));
   DT_FOREACH_DYNAMIC(g_board_id, DT_NODELABEL(test_foreach), \
     DT_FOREACH_CHILD, DT_INIT_USER_ARRAY);
-  for (int i = 0; i < (DT_CHILD_NUM_DYNAMIC(DT_NODELABEL(test_foreach))); \
+  for (int i = 0;
+       i < (DT_CHILD_NUM_DYNAMIC(g_board_id, DT_NODELABEL(test_foreach)));
        i++)
     {
       assert_int_equal(g_user_array[i], i);
@@ -2849,8 +2891,8 @@ static void test_dynamic_foreach_usage(void** state)
 
 #define DT_INIT_DEVICE_CHANNEL(node_id, var) \
   { \
-    DT_CAT_EVAL(g_user_config_, var)[DT_PROP(node_id, child_id)].m_child_enable = DT_PROP(node_id, m_child_enable); \
-    DT_CAT_EVAL(g_user_config_, var)[DT_PROP(node_id, child_id)].m_child_bits = DT_PROP(node_id, m_child_bits); \
+    DT_CAT(g_user_config_, var)[DT_PROP(node_id, child_id)].m_child_enable = DT_PROP(node_id, m_child_enable); \
+    DT_CAT(g_user_config_, var)[DT_PROP(node_id, child_id)].m_child_bits = DT_PROP(node_id, m_child_bits); \
   } \
 
 #define DT_INIT_DEVICE(node_id) \
@@ -3006,7 +3048,7 @@ int main(int argc, FAR char *argv[])
   cmocka_unit_test(test_string_escape),
   cmocka_unit_test(test_string_array_escape),
   cmocka_unit_test(test_interrupt_controller),
-#if defined(CONFIG_DTS_DYNAMIC_API_SUPPORT)
+#ifdef CONFIG_TESTING_DEVICETREE_DYNAMIC_API
   cmocka_unit_test(test_dynamic_foreach_usage),
 #endif
   };

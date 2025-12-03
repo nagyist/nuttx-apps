@@ -1,5 +1,7 @@
 # ##############################################################################
-# apps/testing/devicetree/api/CMakeLists.txt
+# apps/testing/drivers/drivertest/devicetree/CMakeLists.txt
+#
+# SPDX-License-Identifier: Apache-2.0
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more contributor
 # license agreements.  See the NOTICE file distributed with this work for
@@ -18,18 +20,4 @@
 #
 # ##############################################################################
 
-if(CONFIG_TESTING_DEVICETREE)
-  nuttx_add_application(
-    NAME
-    devicetree_test_api
-    PRIORITY
-    ${CONFIG_TESTING_DEVICETREE_PRIORITY}
-    STACKSIZE
-    ${CONFIG_TESTING_DEVICETREE_STACKSIZE}
-    MODULE
-    ${CONFIG_TESTING_DEVICETREE}
-    DEPENDS
-    cmocka
-    SRCS
-    src/devicetree_test_api.c)
-endif()
+nuttx_add_subdirectory()

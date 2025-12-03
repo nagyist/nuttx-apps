@@ -51,3 +51,7 @@ config TESTING_DRIVER_GPIO_INTERRUPT_TYPE
 endif
 
 endif
+
+menu "devicetree"
+	source "$APPSDIR/testing/drivers/drivertest/devicetree/Kconfig"
+endmenu

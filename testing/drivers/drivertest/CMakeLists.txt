@@ -594,3 +594,5 @@ if(CONFIG_TESTING_DRIVER_TEST)
   endif()
 
 endif()
+
+nuttx_add_subdirectory()

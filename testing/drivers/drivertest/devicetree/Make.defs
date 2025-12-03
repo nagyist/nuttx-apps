@@ -1,5 +1,7 @@
 ############################################################################
-# apps/testing/devicetree/api/Make.defs
+# apps/testing/drivers/drivertest/devicetree/Make.defs
+#
+# SPDX-License-Identifier: Apache-2.0
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -18,6 +20,4 @@
 #
 ############################################################################
 
-ifneq ($(CONFIG_TESTING_DEVICETREE),)
-CONFIGURED_APPS += $(APPDIR)/testing/devicetree/api
-endif
+include $(wildcard $(APPDIR)/testing/drivers/drivertest/devicetree/*/Make.defs)
