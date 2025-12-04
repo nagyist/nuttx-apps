@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <setjmp.h>
+#include <unistd.h>
 #include <nuttx/sensors/bmi160.h>
 
 #include <cmocka.h>
