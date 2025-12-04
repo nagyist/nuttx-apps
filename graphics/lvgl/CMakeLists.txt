@@ -152,6 +152,10 @@ if(CONFIG_GRAPHICS_LVGL)
     target_compile_options(lvgl PRIVATE ${CONFIG_LV_OPTLEVEL})
   endif()
 
+  # this macro should be visiable to LVGL and all libraries that use LVGL
+  target_compile_options(
+    lvgl PUBLIC "-DLV_ATTRIBUTE_MEM_ALIGN=aligned_data(LV_DRAW_BUF_ALIGN)")
+
   set_property(
     TARGET nuttx
     APPEND
