@@ -24,6 +24,7 @@
 
 #include <nuttx/config.h>
 #include <nuttx/wqueue.h>
+#include <nuttx/atomic.h>
 
 #include <assert.h>
 #include <pthread.h>

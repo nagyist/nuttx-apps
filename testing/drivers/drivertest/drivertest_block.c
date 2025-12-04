@@ -41,6 +41,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <cmocka.h>
 
 #include "inode/inode.h"

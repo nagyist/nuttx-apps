@@ -37,6 +37,7 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <stdint.h>
+#include <pthread.h>
 #include <cmocka.h>
 
 #include <nuttx/ioexpander/gpio.h>

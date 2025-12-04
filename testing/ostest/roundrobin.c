@@ -25,6 +25,7 @@
 #include <nuttx/config.h>
 
 #include <nuttx/sched.h>
+#include <nuttx/atomic.h>
 
 #include <assert.h>
 #include <pthread.h>

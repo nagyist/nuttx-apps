@@ -23,7 +23,7 @@
  ****************************************************************************/
 
 #include <nuttx/config.h>
-#include <nuttx/tls.h>
+#include <nuttx/tls_task.h>
 #include <stdio.h>
 #include <setjmp.h>
 #include <stdarg.h>
