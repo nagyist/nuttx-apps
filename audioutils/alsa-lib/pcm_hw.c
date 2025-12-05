@@ -327,25 +327,55 @@ static int snd_pcm_hw_hw_refine(FAR snd_pcm_t *pcm,
                                 FAR snd_pcm_hw_params_t *params)
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
-  FAR snd_pcm_format_mask_t *format_mask;
+  snd_pcm_format_mask_t format_mask;
+  snd_pcm_format_t format;
   unsigned int value[32];
+  unsigned int channels;
   unsigned int rate;
+  bool changed;
   int ret;
   int i;
 
+  snd_pcm_hw_params_get_format_mask(params, &format_mask);
   ret = snd_pcm_hw_query_format(hw->fd, value, 32);
   if (ret < 0)
     {
       return ret;
     }
 
-  snd_pcm_format_mask_alloca(&format_mask);
-  for (i = 0; i < ret; i++)
+  if (format_mask)
     {
-      snd_pcm_format_mask_set(format_mask, value[i]);
+      changed = true;
+      for (i = 0; i < ret; i++)
+        {
+          if (snd_pcm_format_mask_test(&format_mask, value[i]))
+            {
+              changed = false;
+              break;
+            }
+        }
+
+      if (changed)
+        {
+          format = value[ret - 1];
+          snd_pcm_hw_params_set_format(pcm, params, format);
+        }
+    }
+  else
+    {
+      for (i = 0; i < ret; i++)
+        {
+          snd_pcm_format_mask_set(&format_mask, value[i]);
+        }
+
+      snd_pcm_hw_params_set_format_mask(pcm, params, &format_mask);
     }
 
-  snd_pcm_hw_params_set_format_mask(pcm, params, format_mask);
+  ret = snd_pcm_hw_params_get_channels_min(params, &channels);
+  if (ret < 0)
+    {
+      return ret;
+    }
 
   ret = snd_pcm_hw_query_channel(hw->fd, pcm->stream, value, 32);
   if (ret < 0)
@@ -353,10 +383,21 @@ static int snd_pcm_hw_hw_refine(FAR snd_pcm_t *pcm,
       return ret;
     }
 
-  snd_pcm_hw_params_set_channels_min(pcm, params, &value[0]);
-  snd_pcm_hw_params_set_channels_max(pcm, params, &value[1]);
+  if (channels)
+    {
+      if (channels < value[0] || channels > value[1])
+        {
+          channels = value[1];
+          snd_pcm_hw_params_set_channels(pcm, params, channels);
+        }
+    }
+  else
+    {
+      snd_pcm_hw_params_set_channels_min(pcm, params, &value[0]);
+      snd_pcm_hw_params_set_channels_max(pcm, params, &value[1]);
+    }
 
-  ret = snd_pcm_hw_params_get_rate(params, &rate, NULL);
+  ret = snd_pcm_hw_params_get_rate_min(params, &rate, 0);
   if (ret < 0)
     {
       return ret;
@@ -370,16 +411,21 @@ static int snd_pcm_hw_hw_refine(FAR snd_pcm_t *pcm,
 
   if (rate)
     {
+      changed = true;
       for (i = 0; i < ret; i++)
         {
           if (value[i] == rate)
             {
-              return 0;
+              changed = false;
+              break;
             }
         }
 
-      rate = value[ret - 1];
-      snd_pcm_hw_params_set_rate(pcm, params, rate, 0);
+      if (changed)
+        {
+          rate = value[ret - 1];
+          snd_pcm_hw_params_set_rate(pcm, params, rate, 0);
+        }
     }
   else
     {
