@@ -22,6 +22,8 @@ if(CONFIG_SYSTEM_ZMODEM)
   set(CSRCS zm_send.c zm_receive.c zm_state.c zm_proto.c zm_watchdog.c
             zm_utils.c)
 
+  nuttx_add_library(zmodem STATIC ${CSRCS})
+
   nuttx_add_application(
     MODULE
     ${CONFIG_SYSTEM_ZMODEM}
@@ -33,7 +35,8 @@ if(CONFIG_SYSTEM_ZMODEM)
     ${CONFIG_SYSTEM_ZMODEM_PRIORITY}
     SRCS
     sz_main.c
-    ${CSRCS})
+    DEPENDS
+    zmodem)
 
   nuttx_add_application(
     MODULE
@@ -46,5 +49,6 @@ if(CONFIG_SYSTEM_ZMODEM)
     ${CONFIG_SYSTEM_ZMODEM_PRIORITY}
     SRCS
     rz_main.c
-    ${CSRCS})
+    DEPENDS
+    zmodem)
 endif()
