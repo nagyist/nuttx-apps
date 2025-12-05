@@ -27,6 +27,7 @@
 #include <nuttx/config.h>
 
 #include <errno.h>
+#include <stdio.h>
 #include <string.h>
 #include <sys/boardctl.h>
 #include <sys/param.h>
@@ -112,12 +113,10 @@ static int init_boot_reason(FAR struct action_manager_s *am)
       [BOARDIOC_RESETCAUSE_SYS_CHIPPOR] = "cold",
       [BOARDIOC_RESETCAUSE_SYS_RWDT]    = "watchdog",
       [BOARDIOC_RESETCAUSE_SYS_BOR]     = "undervoltage",
-      [BOARDIOC_RESETCAUSE_CORE_SOFT]   = "warm",
       [BOARDIOC_RESETCAUSE_CORE_DPSP]   = "warm",
       [BOARDIOC_RESETCAUSE_CORE_MWDT]   = "watchdog",
       [BOARDIOC_RESETCAUSE_CORE_RWDT]   = "watchdog",
       [BOARDIOC_RESETCAUSE_CPU_MWDT]    = "watchdog",
-      [BOARDIOC_RESETCAUSE_CPU_SOFT]    = "warm",
       [BOARDIOC_RESETCAUSE_CPU_RWDT]    = "watchdog",
       [BOARDIOC_RESETCAUSE_PIN]         = "powerkey",
       [BOARDIOC_RESETCAUSE_LOWPOWER]    = "lowpower",
@@ -137,7 +136,9 @@ static int init_boot_reason(FAR struct action_manager_s *am)
       [BOARDIOC_SOFTRESETCAUSE_POWEROFF]                = "shutdown",
     };
 
+  char buf[CONFIG_SYSTEM_INIT_RC_LINE_MAX];
   struct boardioc_reset_cause_s reset;
+  FAR const char *value;
   int ret;
 
   memset(&reset, 0, sizeof(reset));
@@ -158,9 +159,17 @@ static int init_boot_reason(FAR struct action_manager_s *am)
       reset.flag = nitems(resetflag) - 1;
     }
 
-  return init_property_set(am->prop, "sys.boot.reason",
-                           reset.cause != BOARDIOC_RESETCAUSE_CPU_SOFT ?
-                           resetcause[reset.cause] : resetflag[reset.flag]);
+  if (resetcause[reset.cause])
+    {
+      sprintf(buf, "%s,%" PRIu32 "", resetcause[reset.cause], reset.flag);
+      value = buf;
+    }
+  else
+    {
+      value = resetflag[reset.flag];
+    }
+
+  return init_property_set(am->prop, "sys.boot.reason", value);
 }
 #else
 #  define init_boot_reason(am) (0)
