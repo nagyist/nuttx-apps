@@ -191,7 +191,7 @@ static void read_touch_event(FAR struct input_device_s *dev)
   if (nbytes == SIZEOF_TOUCH_SAMPLE_S(priv->maxpoint))
     {
       GETEVENT_INFO("touch event: %s\n", dev->path);
-      GETEVENT_INFO("   npoints : %d\n", priv->sample->npoints);
+      GETEVENT_INFO("   npoints : %" PRId32 "\n", priv->sample->npoints);
       for (i = 0; i < priv->maxpoint; i++)
         {
           if (priv->sample->point[i].flags == 0)
