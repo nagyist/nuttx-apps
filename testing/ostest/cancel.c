@@ -322,6 +322,7 @@ static FAR void *asynch_waiter(FAR void *parameter)
 static void start_thread(FAR void *(*entry)(FAR void *), pthread_t *waiter,
                         int cancelable)
 {
+  struct sched_param param;
   pthread_attr_t attr;
   int status;
 
@@ -354,6 +355,18 @@ static void start_thread(FAR void *(*entry)(FAR void *), pthread_t *waiter,
     {
       printf("start_thread: "
              "ERROR pthread_attr_init failed, status=%d\n", status);
+      ASSERT(false);
+    }
+
+  param.sched_priority = PRIORITY;
+  printf("start_thread: Parent thread priority=%d\n",
+          param.sched_priority);
+
+  status = pthread_attr_setschedparam(&attr, &param);
+  if (status != 0)
+    {
+      printf("start_thread: ERROR pthread_attr_setschedparam failed,"
+             "status=%d\n", status);
       ASSERT(false);
     }
 
