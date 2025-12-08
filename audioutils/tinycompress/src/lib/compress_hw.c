@@ -278,7 +278,7 @@ static int compress_hw_init(FAR struct compress_hw_data *compress,
 
   struct mq_attr attr =
     {
-      .mq_maxmsg = 16,
+      .mq_maxmsg = 32,
       .mq_msgsize = sizeof(struct audio_msg_s),
     };
 
