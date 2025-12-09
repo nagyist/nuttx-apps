@@ -1116,9 +1116,9 @@ static snd_pcm_sframes_t snd_pcm_dmix_writei(FAR snd_pcm_t *pcm,
   snd_pcm_sframes_t transfer;
   snd_pcm_uframes_t offset;
   snd_pcm_uframes_t frames;
+  ssize_t offset_src;
+  ssize_t offset_dst;
   FAR void *bufs[1];
-  int offset_src;
-  int offset_dst;
 
   SNDDEBUG("enter, buffer:%p, size:%ld", buffer, size);
 
@@ -1177,8 +1177,20 @@ static snd_pcm_sframes_t snd_pcm_dmix_writei(FAR snd_pcm_t *pcm,
           transfer = MIN(size, dmix->last_buffer.nmaxframes -
                                dmix->last_buffer.nframes);
           offset_src = snd_pcm_frames_to_bytes(pcm, xfer);
+          if (offset_src < 0)
+            {
+              ret = offset_src;
+              break;
+            }
+
           offset_dst =
               snd_pcm_frames_to_bytes(pcm, dmix->last_buffer.nframes);
+          if (offset_dst < 0)
+            {
+              ret = offset_dst;
+              break;
+            }
+
           memcpy(dmix->last_buffer.data + offset_dst, in_data + offset_src,
                  transfer * pcm->frame_bits / 8);
           dmix->last_buffer.nframes += transfer;
@@ -1203,6 +1215,12 @@ static snd_pcm_sframes_t snd_pcm_dmix_writei(FAR snd_pcm_t *pcm,
         }
 
       offset_src = snd_pcm_frames_to_bytes(pcm, xfer);
+      if (offset_src < 0)
+        {
+          ret = offset_src;
+          break;
+        }
+
       bufs[0] = in_data + offset_src;
       transfer = snd_pcm_dmix_write_period(pcm, bufs, areas[0].addr);
       if (transfer < 0)
@@ -1233,8 +1251,8 @@ static snd_pcm_sframes_t snd_pcm_dmix_writen(FAR snd_pcm_t *pcm,
   snd_pcm_uframes_t offset;
   snd_pcm_uframes_t frames;
   FAR uint8_t *in_data;
-  int offset_src;
-  int offset_dst;
+  ssize_t offset_src;
+  ssize_t offset_dst;
   ssize_t step;
   ssize_t len;
   int i;
@@ -1297,8 +1315,25 @@ static snd_pcm_sframes_t snd_pcm_dmix_writen(FAR snd_pcm_t *pcm,
                                dmix->last_buffer.nframes);
 
           offset_src = snd_pcm_samples_to_bytes(pcm, xfer);
+          if (offset_src < 0)
+            {
+              ret = offset_src;
+              break;
+            }
+
           step = snd_pcm_samples_to_bytes(pcm, pcm->period_size);
+          if (step < 0)
+            {
+              ret = step;
+              break;
+            }
+
           len = snd_pcm_samples_to_bytes(pcm, transfer);
+          if (len < 0)
+            {
+              ret = len;
+              break;
+            }
 
           for (i = 0; i < pcm->channels; i++)
             {
@@ -1332,6 +1367,12 @@ static snd_pcm_sframes_t snd_pcm_dmix_writen(FAR snd_pcm_t *pcm,
         }
 
       offset_src = snd_pcm_samples_to_bytes(pcm, xfer);
+      if (offset_src < 0)
+        {
+          ret = offset_src;
+          break;
+        }
+
       for (i = 0; i < pcm->channels; i++)
       {
         in_data = bufs[i];
