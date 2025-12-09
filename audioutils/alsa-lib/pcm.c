@@ -574,7 +574,7 @@ snd_pcm_sframes_t snd_pcm_mmap_writei(FAR snd_pcm_t *pcm,
   snd_pcm_uframes_t frames;
   FAR uint8_t *out;
   int ret = 0;
-  size_t len;
+  ssize_t len;
 
   while (size > 0)
     {
@@ -603,6 +603,12 @@ snd_pcm_sframes_t snd_pcm_mmap_writei(FAR snd_pcm_t *pcm,
         }
 
       len = snd_pcm_frames_to_bytes(pcm, frames);
+      if (len < 0)
+        {
+          ret = len;
+          break;
+        }
+
       out = (FAR uint8_t *)areas->addr +
             snd_pcm_frames_to_bytes(pcm, offset);
 
@@ -647,7 +653,7 @@ snd_pcm_sframes_t snd_pcm_mmap_readi(FAR snd_pcm_t *pcm, FAR void *buffer,
   snd_pcm_uframes_t frames;
   FAR uint8_t *in;
   int ret = 0;
-  size_t len;
+  ssize_t len;
 
   if (snd_pcm_state(pcm) == SND_PCM_STATE_PREPARED)
     {
@@ -685,6 +691,12 @@ snd_pcm_sframes_t snd_pcm_mmap_readi(FAR snd_pcm_t *pcm, FAR void *buffer,
         }
 
       len = snd_pcm_frames_to_bytes(pcm, frames);
+      if (len < 0)
+        {
+          ret = len;
+          break;
+        }
+
       in = (FAR uint8_t *)areas->addr +
            snd_pcm_frames_to_bytes(pcm, offset);
 

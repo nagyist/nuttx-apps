@@ -538,14 +538,18 @@ static int snd_pcm_hw_mmap(FAR snd_pcm_t *pcm)
   unsigned int ch;
   unsigned int i;
   FAR void *addr;
-  size_t len;
+  ssize_t len;
   int ret;
 
   ptr_size = pcm->periods * sizeof(hw->areas[0]);
   areas_size = pcm->channels * sizeof(hw->areas[0][0]);
   len = snd_pcm_frames_to_bytes(pcm, pcm->period_size);
+  if (len < 0)
+    {
+      return len;
+    }
 
-  hw->areas = malloc(ptr_size + pcm->periods * areas_size);
+  hw->areas = calloc(1, ptr_size + pcm->periods * areas_size);
   if (!hw->areas)
     {
       return -ENOMEM;
