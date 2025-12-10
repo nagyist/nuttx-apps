@@ -22,5 +22,4 @@ include $(APPDIR)/tools/Rust.mk
 
 ifneq ($(CONFIG_EXAMPLES_RUST_SLINT),)
 CONFIGURED_APPS += $(APPDIR)/examples/rust/slint
-EXTRA_LIBS += $(call RUST_GET_BINDIR,slint,$(APPDIR)/examples/rust)
 endif

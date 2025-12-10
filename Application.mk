@@ -432,12 +432,24 @@ clean::
 	$(call DELFILE, .built)
 	$(call CLEANAROBJS)
 	$(call CLEAN)
+	$(call RUST_CLEAN_UNIFIED)
+
 distclean:: clean
 	$(call DELFILE, Make.dep)
 	$(call DELFILE, .depend)
 	$(foreach AIDLSRC,$(AIDLSRCS),$(call DELAIDLOUT,$(AIDLSRC)))
 
 -include $(PREFIX)Make.dep
+
+# ############################################################################
+# Rust Unified Library Integration
+# ############################################################################
+
+# Include Rust.mk for registration functionality
+-include $(APPDIR)/tools/Rust.mk
+
+# Rust unified library variables
+
 
 # Include Wasm specific definitions
 include $(APPDIR)/tools/Wasm.mk

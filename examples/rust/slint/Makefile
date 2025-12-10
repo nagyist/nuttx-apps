@@ -26,9 +26,8 @@ STACKSIZE = $(CONFIG_EXAMPLES_RUST_SLINT_STACKSIZE)
 MODULE    = $(CONFIG_EXAMPLES_RUST_SLINT)
 
 context::
-	$(call RUST_CARGO_BUILD,slint,$(APPDIR)/examples/rust)
+	$(call nuttx_add_rust,slint,$(APPDIR)/examples/rust/slint)
 
-clean::
-	$(call RUST_CARGO_CLEAN,slint,$(APPDIR)/examples/rust)
+# No individual build needed - handled by unified library system
 
 include $(APPDIR)/Application.mk

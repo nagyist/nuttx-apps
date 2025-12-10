@@ -21,6 +21,7 @@
 export APPDIR = $(CURDIR)
 include $(APPDIR)/Make.defs
 include $(APPDIR)/tools/Wasm.mk
+include $(APPDIR)/tools/Rust.mk
 
 # The GNU make CURDIR will always be a POSIX-like path with forward slashes
 # as path segment separators.  This is fine for the above inclusions but
@@ -83,6 +84,9 @@ else
 context_wasm:
 
 endif
+
+context_rust:
+	$(call RUST_BUILD_UNIFIED)
 
 
 # In the KERNEL build, we must build and install all of the modules.  No
@@ -186,6 +190,7 @@ context: | staging
 	$(Q) $(MAKE) context_all
 	$(Q) $(MAKE) register_all
 	$(Q) $(MAKE) context_wasm
+	$(Q) $(MAKE) context_rust
 
 Kconfig:
 	$(foreach SDIR, $(CONFIGDIRS), $(call MAKE_template,$(SDIR),preconfig))
@@ -238,4 +243,6 @@ distclean: $(foreach SDIR, $(CLEANDIRS), $(SDIR)_distclean)
 	$(call DELDIR, staging)
 	$(call DELDIR, wasm)
 	$(call DELDIR, $(APPDIR)$(DELIM)tools$(DELIM)Wasm$(DELIM)build)
+	$(call DELDIR,$(BUILTIN_REGISTRY)$(DELIM)rust_unified_lib)
+	$(call DELFILE,$(BUILTIN_REGISTRY)$(DELIM)*.rdat)
 	$(call CLEAN)

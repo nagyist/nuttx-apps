@@ -139,3 +139,68 @@ $(2)/$(1)/target/$(strip $(if $(findstring .json,$(call RUST_TARGET_TRIPLE)), \
 	$(basename $(notdir $(call RUST_TARGET_TRIPLE))), \
 	$(call RUST_TARGET_TRIPLE)))/$(if $(CONFIG_DEBUG_FULLOPT),release,debug)/lib$(1).a
 endef
+
+# ############################################################################
+# Rust Crate Registration for Unified Building
+# ############################################################################
+
+# Rust registry directory
+RUST_REGISTRY = $(BUILTIN_REGISTRY)
+
+# Rust unified library directory
+RUST_UNIFIED_LIB_DIR = $(BUILTIN_REGISTRY)$(DELIM)rust_unified_lib
+
+# nuttx_add_rust: Register a Rust crate for unified building
+# Usage: $(call nuttx_add_rust,CRATE_NAME,CRATE_PATH)
+define nuttx_add_rust
+  # Create .rdat file for Rust crate registration (separate from .bdat to avoid builtin conflicts)
+  $(Q) echo "Register Rust crate: $(1)"
+  $(Q) echo "{\"$(1)\", \"$(2)\"}" > "$(RUST_REGISTRY)$(DELIM)$(1).rdat"
+  $(Q) touch "$(RUST_REGISTRY)$(DELIM).updated"
+endef
+
+# RUST_BUILD_UNIFIED: Generate unified Rust library
+# Usage: $(call RUST_BUILD_UNIFIED)
+define RUST_BUILD_UNIFIED
+	@echo "Generating unified Rust library from registered crates..."
+	@mkdir -p $(RUST_UNIFIED_LIB_DIR)
+
+	# Collect crate names and build arguments in one pass (deferred execution)
+	$(eval CRATE_ARGS := $(shell cd $(RUST_REGISTRY) && \
+		for rdat in *.rdat; do \
+			if [ -f "$$rdat" ]; then \
+				crate_name="$${rdat%.rdat}"; \
+				crate_path=$$(sed -n 's/{"[^"]*"[[:space:]]*,[[:space:]]*"\([^"]*\)".*/\1/p' "$$rdat"); \
+				if [ -n "$$crate_path" ]; then \
+					echo "--crate-name $$crate_name --crate-path $$crate_path"; \
+				else \
+					echo "Warning: Empty or invalid $$rdat" >&2; \
+				fi; \
+			fi; \
+		done | tr '\n' ' '))
+
+	@if [ -z "$(CRATE_ARGS)" ]; then \
+		echo "No valid Rust crates found to build"; \
+	else \
+		echo "Building Rust crates with args: $(CRATE_ARGS)"; \
+		python3 $(APPDIR)/tools/generate_rust_unified_lib.py $(CRATE_ARGS) --output-dir $(RUST_UNIFIED_LIB_DIR); \
+		cd $(RUST_UNIFIED_LIB_DIR) && NUTTX_INCLUDE_DIR=$(TOPDIR)/include:$(TOPDIR)/include/arch NUTTX_APPS_DIR=$(APPDIR) NUTTX_BUILD_DIR=$(TOPDIR) cargo build --manifest-path $(RUST_UNIFIED_LIB_DIR)/Cargo.toml --target $(call RUST_TARGET_TRIPLE) $(if $(CONFIG_DEUG_NOOPT),,--release); \
+		build_type="$(if $(CONFIG_DEUG_NOOPT),debug,release)"; \
+		lib_path=$$(find $(RUST_UNIFIED_LIB_DIR)/target -name "librust_unified_lib.a" -path "*/$$build_type/*" | head -1); \
+		if [ -n "$$lib_path" ] && [ -f "$$lib_path" ]; then \
+			mkdir -p $(APPDIR)$(DELIM)staging; \
+			cp "$$lib_path" $(APPDIR)$(DELIM)staging$(DELIM)librust_unified_lib.a; \
+			echo "Copied Rust unified library to staging: $(APPDIR)$(DELIM)staging$(DELIM)librust_unified_lib.a"; \
+		else \
+			echo "Warning: Rust unified library not found in $$build_type build"; \
+		fi; \
+	fi
+endef
+
+# RUST_GET_UNIFIED_LIB: Get path to built Rust unified library
+# Usage: $(call RUST_GET_UNIFIED_LIB)
+define RUST_GET_UNIFIED_LIB
+$(if $(CONFIG_DEUG_NOOPT),$(wildcard $(RUST_UNIFIED_LIB_DIR)$(DELIM)target$(DELIM)*$(DELIM)*$(DELIM)debug$(DELIM)librust_unified_lib.a),$(wildcard $(RUST_UNIFIED_LIB_DIR)$(DELIM)target$(DELIM)*$(DELIM)*$(DELIM)release$(DELIM)librust_unified_lib.a))
+endef
+
+

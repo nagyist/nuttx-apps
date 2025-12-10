@@ -28,9 +28,6 @@ STACKSIZE = $(CONFIG_EXAMPLES_HELLO_RUST_CARGO_STACKSIZE)
 MODULE    = $(CONFIG_EXAMPLES_HELLO_RUST_CARGO)
 
 context::
-	$(call RUST_CARGO_BUILD,hello,$(APPDIR)/examples/rust)
-
-clean::
-	$(call RUST_CARGO_CLEAN,hello,$(APPDIR)/examples/rust)
+	$(call nuttx_add_rust,hello,$(APPDIR)/examples/rust/hello)
 
 include $(APPDIR)/Application.mk

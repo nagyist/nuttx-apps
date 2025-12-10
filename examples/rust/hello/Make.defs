@@ -22,5 +22,4 @@ include $(APPDIR)/tools/Rust.mk
 
 ifneq ($(CONFIG_EXAMPLES_HELLO_RUST_CARGO),)
 CONFIGURED_APPS += $(APPDIR)/examples/rust/hello
-EXTRA_LIBS += $(call RUST_GET_BINDIR,hello,$(APPDIR)/examples/rust)
 endif
