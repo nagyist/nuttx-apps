@@ -569,7 +569,12 @@ int rpmsg_tun_connect(const char *cpu, const char *name)
       return -errno;
     }
 
-  ioctl(fd, FIONBIO, (uintptr_t)&on);
+  if (ioctl(fd, FIONBIO, (uintptr_t)&on) < 0)
+    {
+      close(fd);
+      return -errno;
+    }
+
   return fd;
 }
 
