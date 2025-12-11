@@ -48,7 +48,9 @@ if(CONFIG_MLEARNING_CMSIS_NN)
   # Flags
   # ############################################################################
 
-  set(CFLAGS -Wno-undef -O3)
+  set(CMSIS_OPTIMIZATION_LEVEL
+      "-Ofast"
+      CACHE STRING "Compiler optimization level.")
 
   # ############################################################################
   # Sources
@@ -84,7 +86,8 @@ if(CONFIG_MLEARNING_CMSIS_NN)
   # ############################################################################
 
   nuttx_add_library(cmsis_nn STATIC)
-  target_compile_options(cmsis_nn PRIVATE ${CFLAGS})
+  target_compile_options(cmsis_nn PRIVATE ${CMSIS_OPTIMIZATION_LEVEL}
+                                          -Wno-undef -fomit-frame-pointer)
   # Add CMSIS-NN public headers
   target_include_directories(cmsis_nn PRIVATE ${CMSIS_NN_DIR}/Include)
   target_sources(cmsis_nn PRIVATE ${CMSIS_NN_SRCS})
