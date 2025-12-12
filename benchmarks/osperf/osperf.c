@@ -375,7 +375,7 @@ static size_t poll_performance(void)
   argv[1] = (FAR char *)(uintptr_t)pipefd[1];
 
   ret = performance_thread_create(poll_task, argv,
-                                  CONFIG_BENCHMARK_OSPERF_PRIORITY);
+                                  CONFIG_BENCHMARK_OSPERF_PRIORITY - 1);
 
   poll(&fds, 1, -1);
   performance_end(&result);
