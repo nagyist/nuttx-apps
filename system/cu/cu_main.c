@@ -116,10 +116,12 @@ struct cu_globals_s
  * Private Functions
  ****************************************************************************/
 
+#ifndef CONFIG_DISABLE_SIGNALS
 static void listener_sigusr1(int sig)
 {
   /* Nothing */
 }
+#endif
 
 /****************************************************************************
  * Name: cu_listener
@@ -132,11 +134,13 @@ static void listener_sigusr1(int sig)
 static FAR void *cu_listener(FAR void *parameter)
 {
   FAR struct cu_globals_s *cu = (FAR struct cu_globals_s *)parameter;
+#ifndef CONFIG_DISABLE_SIGNALS
   struct sigaction sa;
 
   memset(&sa, 0, sizeof(sa));
   sa.sa_handler = listener_sigusr1;
   sigaction(SIGUSR1, &sa, NULL);
+#endif
 
   while (!cu->force_exit)
     {
