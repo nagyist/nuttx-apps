@@ -466,6 +466,8 @@ static int compress_hw_set_current_config(FAR void *compress_data,
       dq_addlast(&buffer->dq_entry, &compress->bufferq);
     }
 
+  compress->config.fragment_size = config->fragment_size;
+  compress->config.fragments = config->fragments;
   return 0;
 }
 
