@@ -245,6 +245,7 @@ int main(int argc, char **argv)
 	struct timeval timeout, timeout_config = { 0, 0 }, *timeout_current = NULL;
 	FILE *logfile = NULL;
 
+	running = 1;
 #if 0 /* NuttX doesn't support these signals */
 	signal(SIGTERM, sigterm);
 	signal(SIGHUP, sigterm);
