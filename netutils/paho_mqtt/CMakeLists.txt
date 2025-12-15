@@ -53,7 +53,7 @@ if(CONFIG_LIB_MQTT5)
   endif()
 
   if(NOT CONFIG_LIB_MQTT5_STACKTRACE)
-    set(MQTT5_FLAGS -DNOSTACKTRACE)
+    list(APPEND MQTT5_FLAGS -DNOSTACKTRACE)
   endif()
 
   target_compile_options(mqtt5 PRIVATE ${MQTT5_FLAGS})
