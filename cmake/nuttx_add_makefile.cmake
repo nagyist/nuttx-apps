@@ -21,7 +21,9 @@
 include(ProcessorCount)
 ProcessorCount(N)
 if(NOT N EQUAL 0)
-  set(MAKE_PARALLELISM -j${N} GLOBAL)
+  set(MAKE_PARALLELISM
+      -j${N}
+      CACHE STRING "MAKE_PARALLELISM")
 endif()
 
 nuttx_build_host_target(mkdeps ${NUTTX_DIR}/tools/mkdeps.c)
@@ -163,6 +165,12 @@ function(nuttx_call_apps_makefile)
   # gen common defs in function call binary dir
   generate_common_defs()
 
+  if("$ENV{VERBOSE}" STREQUAL "1" OR NOT CMAKE_VERBOSE_MAKEFILE)
+    set(MAKE_VERBOSE "V=1")
+  else()
+    set(MAKE_VERBOSE "")
+  endif()
+
   # call external module for exter build
   ExternalProject_Add(
     ${TARGET}_out_tree
@@ -170,14 +178,18 @@ function(nuttx_call_apps_makefile)
     BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}"
     CONFIGURE_COMMAND
       bash -c
-      "make -C ${CMAKE_CURRENT_SOURCE_DIR} DST_PATH=${CMAKE_CURRENT_BINARY_DIR} context ${MAKE_PARALLELISM}"
+      "make -C ${CMAKE_CURRENT_SOURCE_DIR} DST_PATH=${CMAKE_CURRENT_BINARY_DIR} context ${MAKE_VERBOSE} ${MAKE_PARALLELISM}"
     BUILD_COMMAND
       bash -c
-      "make -C ${CMAKE_CURRENT_SOURCE_DIR} DST_PATH=${CMAKE_CURRENT_BINARY_DIR} depend ${MAKE_PARALLELISM}"
+      "make -C ${CMAKE_CURRENT_SOURCE_DIR} DST_PATH=${CMAKE_CURRENT_BINARY_DIR} depend ${MAKE_VERBOSE} ${MAKE_PARALLELISM}"
     INSTALL_COMMAND
       bash -c
-      "make -C ${CMAKE_CURRENT_SOURCE_DIR} DST_PATH=${CMAKE_CURRENT_BINARY_DIR} all ${MAKE_PARALLELISM}"
+      "make -C ${CMAKE_CURRENT_SOURCE_DIR} DST_PATH=${CMAKE_CURRENT_BINARY_DIR} all ${MAKE_VERBOSE} ${MAKE_PARALLELISM}"
+    LOG_DIR "${CMAKE_CURRENT_BINARY_DIR}"
     BUILD_ALWAYS TRUE
+    LOG_CONFIGURE TRUE
+    LOG_BUILD TRUE
+    LOG_INSTALL TRUE
     DEPENDS mkdeps incdir)
 
   # imported target need a generate rule
