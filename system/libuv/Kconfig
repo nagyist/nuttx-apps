@@ -62,6 +62,7 @@ config LIBUV_UTILS_NONE
 config LIBUV_UTILS_TEST
 	bool "uv_run_tests"
 	select LIBC_EXECFUNCS
+	depends on TLS_NCLEANUP > 0
 
 config LIBUV_UTILS_BENCHMARK
 	bool "uv_run_benchmarks"
