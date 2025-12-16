@@ -57,7 +57,7 @@ if(CONFIG_NETUTILS_NNG)
       -Wno-shadow)
 
   if(CONFIG_SMP_NCPUS)
-    list(APPEND CFLAGS -DNNG_MAX_TASKQ_THREADS=$(CONFIG_SMP_NCPUS))
+    list(APPEND CFLAGS -DNNG_MAX_TASKQ_THREADS=${CONFIG_SMP_NCPUS})
   else()
     list(APPEND CFLAGS -DNNG_MAX_TASKQ_THREADS=2)
   endif()
@@ -83,6 +83,7 @@ if(CONFIG_NETUTILS_NNG)
       ${NNG_DIR}/src/core/lmq.c
       ${NNG_DIR}/src/core/message.c
       ${NNG_DIR}/src/core/msgqueue.c
+      ${NNG_DIR}/src//core/nng_global.c
       ${NNG_DIR}/src/core/options.c
       ${NNG_DIR}/src/core/pollable.c
       ${NNG_DIR}/src/core/panic.c
@@ -166,13 +167,7 @@ if(CONFIG_NETUTILS_NNG)
     PROPERTY NUTTX_INCLUDE_DIRECTORIES ${NNG_DIR}/include)
   set(INCDIR ${NNG_DIR}/src)
 
-  nuttx_add_library(nng STATIC)
-  target_sources(nng PRIVATE ${CSRCS})
-  target_compile_options(nng PRIVATE ${CFLAGS})
-  target_include_directories(nng PRIVATE ${INCDIR})
-
   if(CONFIG_NETUTILS_NNG_TEST)
-    # Set compile definitions for test files
     set(TESTDIR ${NNG_DIR}/tests)
 
     list(
@@ -191,101 +186,109 @@ if(CONFIG_NETUTILS_NNG)
       -DNNG_HAVE_LANGINFO=1)
     list(APPEND CSRCS ${NNG_DIR}/src/compat/nanomsg/nn.c
          ${TESTDIR}/compat_testutil.c ${TESTDIR}/convey.c ${TESTDIR}/trantest.c)
+  endif()
+
+  nuttx_add_library(nng STATIC)
+  target_sources(nng PRIVATE ${CSRCS})
+  target_compile_options(nng PRIVATE ${CFLAGS})
+  target_include_directories(nng PRIVATE ${INCDIR})
+
+  if(CONFIG_NETUTILS_NNG_TEST)
+    # Set compile definitions for test files
 
     set_source_files_properties(
       ${TESTDIR}/bus.c
-      PROPERTIES COMPILE_DEFINITIONS bus=test_bus
-                 bus1=test_bus1 bus2=test_bus2
-                 bus3=test_bus3 rtimeo=test_bus_rtimeo)
+      PROPERTIES
+        COMPILE_DEFINITIONS
+        "bus=test_bus;bus1=test_bus1;bus2=test_bus2;bus3=test_bus3;rtimeo=test_bus_rtimeo"
+    )
 
     set_source_files_properties(
-      ${TESTDIR}/compat_block.c PROPERTIES COMPILE_DEFINITIONS sc=cp_block_sc
-                                           sb=cp_block_sb)
+      ${TESTDIR}/compat_block.c PROPERTIES COMPILE_DEFINITIONS
+                                           "sc=cp_block_sc;sb=cp_block_sb")
 
     set_source_files_properties(
       ${TESTDIR}/compat_device.c
-      PROPERTIES COMPILE_DEFINITIONS deva=cp_device_deva
-                 devb=cp_device_devb devc=cp_device_devc
-                 devd=cp_device_devd)
+      PROPERTIES
+        COMPILE_DEFINITIONS
+        "deva=cp_device_deva;devb=cp_device_devb;devc=cp_device_devc;devd=cp_device_devd"
+    )
 
     set_source_files_properties(${TESTDIR}/compat_poll.c
                                 PROPERTIES COMPILE_DEFINITIONS sc=cp_poll_sc)
 
     set_source_files_properties(
       ${TESTDIR}/compat_reqttl.c
-      PROPERTIES COMPILE_DEFINITIONS dev0=cp_reqttl_dev0 dev1=cp_reqttl_dev1)
+      PROPERTIES COMPILE_DEFINITIONS "dev0=cp_reqttl_dev0;dev1=cp_reqttl_dev1")
 
     set_source_files_properties(
       ${TESTDIR}/compat_surveyttl.c
-      PROPERTIES COMPILE_DEFINITIONS dev0=cp_surveyttl_dev0
-                 dev1=cp_surveyttl_dev1)
+      PROPERTIES COMPILE_DEFINITIONS
+                 "dev0=cp_surveyttl_dev0;dev1=cp_surveyttl_dev1")
 
     set_source_files_properties(
       ${TESTDIR}/ipcsupp.c
-      PROPERTIES COMPILE_DEFINITIONS d=ipcsupp_dialer
-                 l=ipcsupp_listener daio=ipcsupp_aio
-                 laio=ipcsupp_laio maio=ipcsupp_maio
-                 c1=ipcsupp_c1 c2=ipcsupp_c2
-                 aio1=ipcsupp_aio1 aio2=ipcsupp_aio2
-                 sa2=ipcsupp_sa2)
+      PROPERTIES
+        COMPILE_DEFINITIONS
+        "d=ipcsupp_dialer;l=ipcsupp_listener;daio=ipcsupp_aio;laio=ipcsupp_laio;maio=ipcsupp_maio;c1=ipcsupp_c1;c2=ipcsupp_c2;aio1=ipcsupp_aio1;aio2=ipcsupp_aio2;sa2=ipcsupp_sa2"
+    )
 
     set_source_files_properties(
-      ${TESTDIR}/ipcwinsec.c PROPERTIES COMPILE_DEFINITIONS s=ipcwinsec_s
-                                        l=ipcwinsec_l x=ipcwinsec_x)
+      ${TESTDIR}/ipcwinsec.c
+      PROPERTIES COMPILE_DEFINITIONS
+                 "s=ipcwinsec_s;l=ipcwinsec_l;x=ipcwinsec_x")
 
     set_source_files_properties(
-      ${TESTDIR}/nonblock.c PROPERTIES COMPILE_DEFINITIONS addr=nonblock_addr
-                                       reqs=nonblock_reqs rep=nonblock_rep)
+      ${TESTDIR}/nonblock.c
+      PROPERTIES COMPILE_DEFINITIONS
+                 "addr=nonblock_addr;reqs=nonblock_reqs;rep=nonblock_rep")
 
     set_source_files_properties(
       ${TESTDIR}/pipe.c
-      PROPERTIES COMPILE_DEFINITIONS addr=pipe_addr
-                 cnt=pipe_cnt push=pipe_push
-                 pull=pipe_pull)
+      PROPERTIES COMPILE_DEFINITIONS
+                 "addr=pipe_addr;cnt=pipe_cnt;push=pipe_push;pull=pipe_pull")
 
     set_source_files_properties(
-      ${TESTDIR}/pollfd.c PROPERTIES COMPILE_DEFINITIONS s1=pollfd_s1
-                                     s2=pollfd_s2 s3=pollfd_s3)
+      ${TESTDIR}/pollfd.c PROPERTIES COMPILE_DEFINITIONS
+                                     "s1=pollfd_s1;s2=pollfd_s2;s3=pollfd_s3")
 
     set_source_files_properties(
       ${TESTDIR}/reqctx.c
-      PROPERTIES COMPILE_DEFINITIONS ctxs=reqctx_ctxs
-                 saios=reqctx_saios raios=reqctx_raios
-                 recd=reqctx_recd sent=reqctx_sent
-                 req=reqctx_req ctx=reqctx_ctx
-                 aio=reqctx_aio)
+      PROPERTIES
+        COMPILE_DEFINITIONS
+        "ctxs=reqctx_ctxs;saios=reqctx_saios;raios=reqctx_raios;recd=reqctx_recd;sent=reqctx_sent;req=reqctx_req;ctx=reqctx_ctx;aio=reqctx_aio"
+    )
 
     set_source_files_properties(
       ${TESTDIR}/reqstress.c
-      PROPERTIES COMPILE_DEFINITIONS tcp4_template=reqstress_tcp4tmp
-                 tcp6_template=reqstress_tcp6tmp
-                 inproc_template=reqstress_inproctmp
-                 ipc_template=reqstress_ipctemp ws_template=reqstress_wstmp
-                 templates=reqstress_templates cases=reqstress_cases
-                 ncases=reqstress_ncases curcase=reqstress_curcase)
+      PROPERTIES
+        COMPILE_DEFINITIONS
+        "tcp4_template=reqstress_tcp4tmp;tcp6_template=reqstress_tcp6tmp;inproc_template=reqstress_inproctmp;ipc_template=reqstress_ipctemp;ws_template=reqstress_wstmp;templates=reqstress_templates;cases=reqstress_cases;ncases=reqstress_ncases;curcase=reqstress_curcase"
+    )
 
     set_source_files_properties(
-      ${TESTDIR}/stats.c PROPERTIES COMPILE_DEFINITIONS s1=stats_s1 s2=stats_s2)
+      ${TESTDIR}/stats.c PROPERTIES COMPILE_DEFINITIONS
+                                    "s1=stats_s1;s2=stats_s2")
 
     set_source_files_properties(
-      ${TESTDIR}/sync.c PROPERTIES COMPILE_DEFINITIONS thr=sync_thr mx=sync_mx)
+      ${TESTDIR}/sync.c PROPERTIES COMPILE_DEFINITIONS
+                                   "thr=sync_thr;mx=sync_mx")
 
     set_source_files_properties(${TESTDIR}/tcp6.c PROPERTIES COMPILE_DEFINITIONS
-                                                             s1=tcp6_s1)
+                                                             "s1=tcp6_s1")
 
     set_source_files_properties(
       ${TESTDIR}/tcpsupp.c
-      PROPERTIES COMPILE_DEFINITIONS d=tcpsupp_dialer
-                 l=tcpsupp_listener daio=tcpsupp_daio
-                 laio=tcpsupp_laio maio=tcpsupp_maio
-                 c1=tcpsupp_c1 c2=tcpsupp_c2
-                 aio1=tcpsupp_aio1 aio2=tcpsupp_aio2)
-
-    set_source_files_properties(${TESTDIR}/udp.c PROPERTIES COMPILE_DEFINITIONS
-                                                            u1=udp_u1 u2=udp_u2)
+      PROPERTIES
+        COMPILE_DEFINITIONS
+        "d=tcpsupp_dialer;l=tcpsupp_listener;daio=tcpsupp_daio;laio=tcpsupp_laio;maio=tcpsupp_maio;c1=tcpsupp_c1;c2=tcpsupp_c2;aio1=tcpsupp_aio1;aio2=tcpsupp_aio2"
+    )
 
     set_source_files_properties(
-      ${TESTDIR}/zt.c PROPERTIES COMPILE_DEFINITIONS s=zt_s s1=zt_s1 s2=zt_s2)
+      ${TESTDIR}/udp.c PROPERTIES COMPILE_DEFINITIONS "u1=udp_u1;u2=udp_u2")
+
+    set_source_files_properties(
+      ${TESTDIR}/zt.c PROPERTIES COMPILE_DEFINITIONS "s=zt_s;s1=zt_s1;s2=zt_s2")
 
     macro(add_nng_test_app NNG_NAME NNG_MAIN)
       nuttx_add_application(
@@ -296,7 +299,13 @@ if(CONFIG_NETUTILS_NNG)
         STACKSIZE
         ${CONFIG_NETUTILS_NNG_TEST_STACKSIZE}
         PRIORITY
-        ${CONFIG_NETUTILS_NNG_TEST_PRIORITY})
+        ${CONFIG_NETUTILS_NNG_TEST_PRIORITY}
+        INCLUDE_DIRECTORIES
+        ${NNG_DIR}/src
+        COMPILE_FLAGS
+        ${CFLAGS}
+        DEPENDS
+        nng)
     endmacro()
 
     add_nng_test_app(nng_test_bus bus.c)
