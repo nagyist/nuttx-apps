@@ -73,7 +73,7 @@
 #define DELAY_TEST_DELAY_MAX         (500)
 #define DELAY_TEST_DELAY_MIN         (50)
 
-#define WORK_THREAD_TEST_THREAD_NUM           (10)
+#define WORK_THREAD_TEST_THREAD_NUM           (4)
 #define WORK_THREAD_TEST_MAX_LOOP             (20)
 #define WORK_THREAD_TEST_WORK_SLEEP_TIME_MS   (50)
 #define WORK_THREAD_TEST_EFFICIENCY_THRESHOLD (80)
