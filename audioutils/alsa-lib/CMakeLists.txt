@@ -30,6 +30,8 @@ if(CONFIG_AUDIOUTILS_ALSA_LIB)
             pcm_softvol.c
             pcm.c)
 
+  set_source_files_properties(pcm_params.c TARGET_DIRECTORY apps
+                              PROPERTIES COMPILE_FLAGS "-Wno-array-bounds")
   target_compile_definitions(apps PRIVATE OUTSIDE_SPEEX RANDOM_PREFIX=nuttx)
 
   if(CONFIG_AUDIOUTILS_ALSA_LIB_APLAY)
