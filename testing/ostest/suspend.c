@@ -51,13 +51,14 @@ static int victim_main(int argc, char *argv[])
 {
   FAR sem_t *sem = (FAR sem_t *)(uintptr_t)strtoul(argv[2], NULL, 16);
 
-  sem_post(sem);
   printf("victim_main: Victim started\n");
+  sem_post(sem);
+
+  /* Don't call printf here, to avoid hold uart sem during STOP */
+
   for (; ; )
     {
       sleep(3);
-      printf("victim_main: Wasting time\n");
-      FFLUSH();
     }
 
   return 0; /* Won't get here */
