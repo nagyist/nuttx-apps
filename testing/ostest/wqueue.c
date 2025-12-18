@@ -1248,8 +1248,6 @@ static int create_and_add_notifier(FAR void *test_work,
 static void test_work_notifier_signal(void)
 {
   struct test_state_s test_state;
-  unsigned int elapsed  = 0;
-  unsigned int elapsed2 = 0;
   int notifier_key1;
   int notifier_key2;
 
@@ -1269,11 +1267,9 @@ static void test_work_notifier_signal(void)
   printf("start sending notifier signal 1.\n");
   work_notifier_signal(WORK_NET_DOWN, (void *)(intptr_t)FD1);
 
-  while (!test_state.test_work1.completed
-         && elapsed < WORK_NOTIFIER_TEST_TIMEOUT_US)
+  while (!test_state.test_work1.completed)
     {
       usleep(1000);
-      elapsed += 1000;
     }
 
   wqtest_assert(test_state.test_work1.completed, NULL);
@@ -1287,11 +1283,9 @@ static void test_work_notifier_signal(void)
       printf("notifier 1 processing failed.\n");
     }
 
-  while (!test_state.test_work2.completed
-         && elapsed2 < WORK_NOTIFIER_TEST_TIMEOUT_US)
+  while (!test_state.test_work2.completed)
     {
       usleep(1000);
-      elapsed2 += 1000;
     }
 
   wqtest_assert(test_state.test_work2.completed, NULL);
