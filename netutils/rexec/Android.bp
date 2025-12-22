@@ -10,7 +10,8 @@ cc_binary {
         "libnuttx_libc",
     ],
     header_libs: [
-        "nuttx_libc_headers"
+        "nuttx_libc_headers",
+        "kernel_modules_headers",
     ],
     defaults: [
         "nuttx_libc_defaults"
