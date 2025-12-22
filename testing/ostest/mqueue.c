@@ -72,7 +72,8 @@ static mqd_t g_recv_mqfd;
 #ifndef CONFIG_DISABLE_SIGNALS
 static void sig_handler(int sig)
 {
-  printf("mqueue_test: sig_handler\n");
+  /* No printf allowed here, to avoid potential deadlocks */
+
   pthread_exit(NULL);
 }
 #endif
