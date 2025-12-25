@@ -178,7 +178,7 @@ void rr_test(void)
       ASSERT(false);
     }
 
-  sparam.sched_priority = sched_get_priority_min(SCHED_FIFO);
+  sparam.sched_priority = CONFIG_TESTING_OSTEST_PRIORITY;
   status = pthread_attr_setschedparam(&attr, &sparam);
   if (status != OK)
     {
