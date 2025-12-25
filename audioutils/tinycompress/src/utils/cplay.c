@@ -85,6 +85,7 @@
 
 #define ID3V2_HEADER_SIZE 10
 #define ID3V2_FILE_IDENTIFIER_SIZE 3
+#define ADIF_HEADER_SIZE 20
 
 /****************************************************************************
  * Private Types
@@ -348,9 +349,6 @@ static int find_adts_header(FAR FILE *file, FAR unsigned int *num_channels,
     case 0x1:
       *format = SND_AUDIOSTREAMFORMAT_MP2ADTS;
       break;
-    default:
-      printf("can't find stream format\n");
-      break;
     }
 
   switch (buf[2] >> 2 & 0xf)
@@ -432,7 +430,7 @@ static int find_adif_header(FAR FILE *file, FAR unsigned int *num_channels,
                             FAR unsigned int *sample_rate,
                             FAR unsigned int *format)
 {
-  unsigned char adif_header[20];
+  unsigned char adif_header[ADIF_HEADER_SIZE];
   unsigned char adif_id[4];
   int skip_size = 0;
   int bitstream_type;
@@ -454,7 +452,11 @@ static int find_adif_header(FAR FILE *file, FAR unsigned int *num_channels,
       return 0;
     }
 
-  fread(adif_header, sizeof(unsigned char), 20, file);
+  ret = fread(adif_header, sizeof(unsigned char), ADIF_HEADER_SIZE, file);
+  if (ret != ADIF_HEADER_SIZE)
+    {
+      return 0;
+    }
 
   /* Copyright string */
 
