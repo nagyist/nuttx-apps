@@ -457,7 +457,7 @@ static void capture_samples(FAR char *name, unsigned int card,
   ret = finish_record();
   if (ret < 0)
     {
-      fprintf(stderr, "Failed to finish header: %s\n", strerror(ret));
+      fprintf(stderr, "Failed to finish header: %s\n", strerror(-ret));
       goto buf_exit;
     }
 
