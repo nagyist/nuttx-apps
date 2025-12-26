@@ -603,13 +603,11 @@ int main(int argc, FAR char **argv)
 
   if (optind >= argc)
     {
-      file = NULL;
       g_finfo = fopen("/dev/null", "w");
       g_streamed = true;
     }
   else if (codec_id == SND_AUDIOCODEC_PCM)
     {
-      file = argv[optind];
       g_finfo = stdout;
       g_streamed = false;
     }
