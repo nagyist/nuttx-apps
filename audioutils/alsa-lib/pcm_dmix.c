@@ -1034,15 +1034,26 @@ static snd_pcm_sframes_t snd_pcm_dmix_write_period(FAR snd_pcm_t *pcm,
 
   if (dmix->resampler)
     {
+      if (in_frames > UINT32_MAX || out_frames > UINT32_MAX)
+        {
+          SNDERR("frame count too large for resampler");
+          return -EINVAL;
+        }
+
+      spx_uint32_t in_len = (spx_uint32_t)in_frames;
+      spx_uint32_t out_len = (spx_uint32_t)out_frames;
+
       ret = speex_resampler_process_interleaved_int(
-            dmix->resampler, in_data, (FAR spx_uint32_t *)&in_frames,
-            (FAR int16_t *)dmix->resmp_out, (FAR spx_uint32_t *)&out_frames);
+            dmix->resampler, in_data, &in_len,
+            (FAR int16_t *)dmix->resmp_out, &out_len);
       if (ret != RESAMPLER_ERR_SUCCESS)
         {
           SNDERR("resample err, ret:%ld", ret);
           return -EIO;
         }
 
+      in_frames = in_len;
+      out_frames = out_len;
       in_data = dmix->resmp_out;
     }
 
