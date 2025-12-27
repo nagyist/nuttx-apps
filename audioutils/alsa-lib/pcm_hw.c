@@ -820,7 +820,8 @@ static snd_pcm_sframes_t snd_pcm_hw_mmap_commit(FAR snd_pcm_t *pcm,
   struct audio_buf_desc_s desc;
   int ret;
 
-  if (hw->offset + size >= pcm->period_size)
+  hw->offset += size;
+  if (hw->offset >= pcm->period_size)
     {
       desc.numbytes = snd_pcm_frames_to_bytes(pcm, pcm->period_size);
       desc.u.buffer = NULL;
@@ -828,6 +829,7 @@ static snd_pcm_sframes_t snd_pcm_hw_mmap_commit(FAR snd_pcm_t *pcm,
       ret = ioctl(hw->fd, AUDIOIOC_ENQUEUEBUFFER, &desc);
       if (ret < 0)
         {
+          hw->offset -= size;
           return -errno;
         }
 
