@@ -775,7 +775,7 @@ static snd_pcm_sframes_t snd_pcm_hw_avail_update(FAR snd_pcm_t *pcm)
 
   used = pcm->appl - hw->status->tail;
 
-  return pcm->period_size * (pcm->periods - used) - hw->offset;
+  return pcm->period_size * (pcm->periods - used);
 }
 
 static int snd_pcm_hw_mmap_begin(FAR snd_pcm_t *pcm,
