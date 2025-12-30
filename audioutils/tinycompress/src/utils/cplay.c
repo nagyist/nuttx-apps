@@ -733,7 +733,7 @@ static void get_codec_aac(FAR FILE *file, FAR struct compr_config *config,
 
 static int skip_id3v2_header(FAR FILE *file)
 {
-  char buffer[ID3V2_HEADER_SIZE + 1];
+  unsigned char buffer[ID3V2_HEADER_SIZE + 1];
   uint32_t header_size;
   int bytes_read;
   int ret;
@@ -748,7 +748,7 @@ static int skip_id3v2_header(FAR FILE *file)
 
   /* Read first ID3V2_HEADER_SIZE chunk */
 
-  bytes_read = fread(buffer, sizeof(char), ID3V2_HEADER_SIZE, file);
+  bytes_read = fread(buffer, sizeof(unsigned char), ID3V2_HEADER_SIZE, file);
 
   /* ID3v2 header is 10 bytes long
    *
@@ -763,7 +763,8 @@ static int skip_id3v2_header(FAR FILE *file)
 
   /* Check if we're dealing with ID3v2 */
 
-  if (strncmp(buffer, "ID3", ID3V2_FILE_IDENTIFIER_SIZE) != 0)
+  if (strncmp((FAR const char *)buffer, "ID3",
+              ID3V2_FILE_IDENTIFIER_SIZE) != 0)
     {
       return 0;
     }
