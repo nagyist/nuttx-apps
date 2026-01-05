@@ -177,6 +177,7 @@ static FAR void *pthread_cond_task(FAR void *arg)
   FAR struct performance_thread_s *perf = arg;
 
   pthread_mutex_lock(&perf->lock);
+  sem_post(&perf->sem);
   pthread_cond_wait(&perf->cond, &perf->lock);
   pthread_mutex_unlock(&perf->lock);
   performance_end(&perf->time);
@@ -234,17 +235,20 @@ static size_t pthread_cond_signal_switch_performance(void)
   struct performance_thread_s perf;
   pthread_t tid;
 
+  sem_init(&perf.sem, 0, 0);
   pthread_mutex_init(&perf.lock, NULL);
   pthread_cond_init(&perf.cond, NULL);
 
   tid = performance_thread_create(pthread_cond_task, &perf,
                                   CONFIG_BENCHMARK_OSPERF_PRIORITY + 1);
 
+  sem_wait(&perf.sem);
   performance_start(&perf.time);
   pthread_mutex_lock(&perf.lock);
   pthread_cond_signal(&perf.cond);
   pthread_mutex_unlock(&perf.lock);
   pthread_join(tid, NULL);
+  sem_destroy(&perf.sem);
 
   return performance_gettime(&perf.time);
 }
