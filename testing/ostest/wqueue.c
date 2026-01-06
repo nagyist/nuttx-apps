@@ -272,11 +272,11 @@ static void period_worker(FAR void *arg)
       p->cnt++;
     }
 
-  atomic_fetch_add(p->runing_cnt, 1);
+  atomic_add(p->runing_cnt, 1);
 
   if (p->cnt == PERIODIC_TEST_WORK_NUM)
     {
-      atomic_fetch_add(p->enough_cnt, 1);
+      atomic_add(p->enough_cnt, 1);
     }
 
   work_queue_next_wq(p->wq, &p->work, period_worker, arg, p->period);
@@ -345,7 +345,7 @@ static void workthread_worker(FAR void *arg)
   if (!work->is_first)
     {
       usleep(WORK_THREAD_TEST_WORK_SLEEP_TIME_MS * 1000);
-      atomic_fetch_sub(&work->pending_cnt, 1);
+      atomic_sub(&work->pending_cnt, 1);
     }
   else
     {
@@ -366,7 +366,7 @@ static void workthread_worker(FAR void *arg)
         {
           work_queue_wq(work->wq, &work->works[next_total],
                         workthread_worker, work, 0);
-          atomic_fetch_add(&work->pending_cnt, 1);
+          atomic_add(&work->pending_cnt, 1);
         }
     }
 
@@ -376,8 +376,8 @@ static void workthread_worker(FAR void *arg)
       int finish_cnt;
 
       exec_tick  = clock_systime_ticks() - start_tick;
-      finish_cnt = atomic_fetch_add(&work->finish_cnt, 1);
-      atomic_fetch_add(&work->total_ticks, exec_tick);
+      finish_cnt = atomic_add(&work->finish_cnt, 1);
+      atomic_add(&work->total_ticks, exec_tick);
       if (finish_cnt + 1 == work->nworks)
         {
           sem_post(&work->finish_sem);

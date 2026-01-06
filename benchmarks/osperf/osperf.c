@@ -567,11 +567,11 @@ static size_t atomic_performance(void)
   performance_start(&result);
   atomic_set(&val, 1234);
   atomic_read(&val);
-  atomic_fetch_add_relaxed(&val, 123);
-  atomic_fetch_sub_relaxed(&val, 123);
-  atomic_fetch_and_relaxed(&val, 123);
-  atomic_fetch_or_relaxed(&val, 123);
-  atomic_fetch_xor_relaxed(&val, 123);
+  atomic_add_relaxed(&val, 123);
+  atomic_sub_relaxed(&val, 123);
+  atomic_and_relaxed(&val, 123);
+  atomic_or_relaxed(&val, 123);
+  atomic_xor_relaxed(&val, 123);
   atomic_cmpxchg(&val, &val, 123);
   performance_end(&result);
 

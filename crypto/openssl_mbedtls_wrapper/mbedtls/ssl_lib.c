@@ -20,7 +20,6 @@
  * Included Files
  ****************************************************************************/
 
-#include <nuttx/atomic.h>
 #include <openssl/ssl_dbg.h>
 #include <openssl/ssl3.h>
 #include <openssl/ssl_local.h>
@@ -1069,7 +1068,7 @@ SSL_SESSION *SSL_get1_session(SSL *ssl)
 {
   SSL_ASSERT2(ssl);
 
-  atomic_fetch_add(&ssl->session->references, 1);
+  atomic_add(&ssl->session->references, 1);
   return ssl->session;
 }
 
@@ -1077,7 +1076,7 @@ void SSL_SESSION_free(SSL_SESSION *session)
 {
   SSL_ASSERT3(session);
 
-  if (atomic_fetch_sub(&session->references, 1) == 1)
+  if (atomic_sub(&session->references, 1) == 1)
     {
       X509_free(session->peer);
       ssl_mem_free(session);
