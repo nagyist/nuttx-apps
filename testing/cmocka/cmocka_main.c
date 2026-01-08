@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <syslog.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <nuttx/lib/builtin.h>
 #include <regex.h>
 #include <cmocka.h>
@@ -57,7 +58,7 @@ static void cm_usage(void)
         " -p, --skip B     don't run cases where case function "
         "name matches B pattern\n"
         " -s, --suite C    only run suites where PROGNAME "
-        "matches C pattern\n"
+        "matches C pattern or direct test file\n"
         " -f, --output-path use xml report instead of standard "
         "output\n"
         " -d, --shuffle-seed shuffling test sequence,between "
@@ -108,6 +109,7 @@ int main(int argc, FAR char *argv[])
   int list_tests = 0;
 
 #ifndef CONFIG_BUILD_KERNEL
+  int found_in_builtin = 0;
   FAR const struct builtin_s *builtin;
 #else
   FAR DIR *dir;
@@ -214,11 +216,29 @@ int main(int argc, FAR char *argv[])
           continue;
         }
 
+      found_in_builtin = 1;
       bypass[0] = (FAR char *)builtin->name;
       ret = posix_spawn(&pid, builtin->name, NULL, NULL, bypass, NULL);
       if (ret == 0)
         {
           waitpid(pid, &ret, WUNTRACED);
+        }
+    }
+
+  if (!found_in_builtin && suite != NULL)
+    {
+      struct stat st;
+      if (stat(suite, &st) == 0 && S_ISREG(st.st_mode))
+        {
+          FAR char *elf_argv[2];
+          elf_argv[0] = suite;
+          elf_argv[1] = NULL;
+
+          ret = posix_spawn(&pid, suite, NULL, NULL, elf_argv, NULL);
+          if (ret == 0)
+            {
+              waitpid(pid, &ret, WUNTRACED);
+            }
         }
     }
 #else /* CONFIG_BUILD_KERNEL */
