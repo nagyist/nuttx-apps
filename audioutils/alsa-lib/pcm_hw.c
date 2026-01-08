@@ -140,15 +140,16 @@ static int snd_pcm_hw_close(FAR snd_pcm_t *pcm)
       break;
     }
 
-  while (pcm->appl > hw->status->tail)
-    {
-      snd_pcm_wait(pcm, -1);
-    }
+  buf_desc.u.buffer = NULL;
 
   if (hw->status->state == AUDIO_STATE_DRAINING ||
       hw->status->state == AUDIO_STATE_OPEN)
     {
-      buf_desc.u.buffer = NULL;
+      while (pcm->appl > hw->status->tail)
+        {
+          snd_pcm_wait(pcm, -1);
+        }
+
       for (i = 0; i < pcm->periods; i++)
         {
           ioctl(hw->fd, AUDIOIOC_FREEBUFFER, &buf_desc);
