@@ -43,7 +43,7 @@
  ****************************************************************************/
 
 #define SIG SIGALRM
-#define CLOCKID CLOCK_REALTIME
+#define CLOCKID CLOCK_MONOTONIC
 
 /****************************************************************************
  * Public Functions
