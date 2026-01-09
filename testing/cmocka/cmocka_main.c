@@ -123,12 +123,6 @@ int main(int argc, FAR char *argv[])
   int status;
 #endif
 
-  if (strlen(argv[0]) < prefix_len  - 1 ||
-      strncmp(argv[0], prefix, prefix_len  - 1))
-    {
-      return 0;
-    }
-
   memset(bypass, 0, sizeof(bypass));
 
   for (i = 1; i < argc; i++)
