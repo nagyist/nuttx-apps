@@ -420,7 +420,7 @@ int main(int argc, FAR char *argv[])
       return -ENOMEM;
     }
 
-  buffer = lib_get_tempbuffer(CONFIG_NSH_LINELEN);
+  buffer = lib_get_tempbuffer(LINE_MAX);
   if (buffer == NULL)
     {
       nxcamera_release(pcam);
@@ -439,7 +439,7 @@ int main(int argc, FAR char *argv[])
 
       /* Read a line from the terminal */
 
-      len = readline_stream(buffer, CONFIG_NSH_LINELEN,
+      len = readline_stream(buffer, LINE_MAX,
                             stdin, stdout);
       if (len > 0)
         {
