@@ -793,11 +793,9 @@ static int snd_pcm_hw_mmap_begin(FAR snd_pcm_t *pcm,
       return avail;
     }
 
-  if (avail > pcm->period_size)
-    {
-      avail = pcm->period_size;
-    }
-  else if (avail > hw->offset)
+  avail = MIN(avail, pcm->period_size);
+
+  if (avail > hw->offset)
     {
       avail -= hw->offset;
     }
