@@ -853,6 +853,11 @@ static int snd_pcm_hw_poll_descriptors(FAR snd_pcm_t *pcm,
   pfds->fd = hw->fd;
   pfds->events = POLLIN | POLLOUT;
 
+  if (hw->status->state == SND_PCM_STATE_DRAINING)
+    {
+      pfds->events = POLLERR;
+    }
+
   return 1;
 }
 
