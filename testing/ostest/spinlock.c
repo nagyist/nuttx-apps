@@ -37,8 +37,11 @@
 /****************************************************************************
  * Preprocessor Definitions
  ****************************************************************************/
-
+#ifndef CONFIG_ARCH_TRUSTZONE_SECURE
 #define MAX_THREAD_NUM (CONFIG_SMP_NCPUS)
+#else
+#define MAX_THREAD_NUM 1
+#endif
 #define LOOP_TIMES     (CONFIG_TEST_LOOP_SCALE * 100000)
 
 aligned_data(64) struct spinlock_pub_args_s
@@ -174,7 +177,7 @@ void run_test_thread(void *lock, FAR void *(*thread_func)(FAR void *arg),
 
       /* Set affinity */
 
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) && !defined(CONFIG_ARCH_TRUSTZONE_SECURE)
       cpu_set = 1u << ((i + 1) % CONFIG_SMP_NCPUS);
 
       status = pthread_attr_setaffinity_np(&attr, sizeof(cpu_set_t),
