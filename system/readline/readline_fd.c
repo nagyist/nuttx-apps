@@ -206,17 +206,21 @@ ssize_t readline_fd(FAR char *buf, int buflen, int infd, int outfd)
   UNUSED(outfd);
 
   struct readline_s vtbl;
+  struct termios oldcfg;
   struct termios cfg;
   ssize_t ret;
 
   if (isatty(infd))
     {
       tcgetattr(infd, &cfg);
-      if (cfg.c_lflag & ICANON)
+      oldcfg = cfg;
+#ifdef CONFIG_READLINE_ECHO
+      cfg.c_lflag &= ~ECHO;
+#endif
+      cfg.c_lflag &= ~ICANON;
+      if (cfg.c_lflag != oldcfg.c_lflag)
         {
-          cfg.c_lflag &= ~ICANON;
           tcsetattr(infd, TCSANOW, &cfg);
-          cfg.c_lflag |= ICANON;
         }
     }
 
@@ -235,9 +239,9 @@ ssize_t readline_fd(FAR char *buf, int buflen, int infd, int outfd)
 
   ret = readline_common(&vtbl.vtbl, buf, buflen);
 
-  if (isatty(infd) && (cfg.c_lflag & ICANON))
+  if (isatty(infd) && (cfg.c_lflag != oldcfg.c_lflag))
     {
-      tcsetattr(infd, TCSANOW, &cfg);
+      tcsetattr(infd, TCSANOW, &oldcfg);
     }
 
   return ret;

@@ -700,6 +700,12 @@ ssize_t readline_common(FAR struct rl_common_s *vtbl, FAR char *buf,
             }
 #endif /* CONFIG_READLINE_CMD_HISTORY */
 
+#ifdef CONFIG_READLINE_ECHO
+          /* Echo the newline character */
+
+          RL_PUTC(vtbl, '\n');
+#endif
+
           /* The newline is stored in the buffer along with the null
            * terminator.
            */
@@ -717,6 +723,12 @@ ssize_t readline_common(FAR struct rl_common_s *vtbl, FAR char *buf,
       else if (!iscntrl(ch & 0xff))
         {
           buf[nch++] = ch;
+
+#ifdef CONFIG_READLINE_ECHO
+          /* Echo the character back to the output */
+
+          RL_PUTC(vtbl, ch);
+#endif
 
           /* Check if there is room for another character and the line's
            * null terminator.  If not then we have to end the line now.
