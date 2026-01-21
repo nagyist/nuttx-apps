@@ -652,6 +652,55 @@ if(CONFIG_TESTING_LTP)
       -Wno-shift-count-overflow
       -Wno-stringop-overread)
 
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/clock_nanosleep/1-1.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/clock_nanosleep/1-3.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/clock_nanosleep/1-4.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/clock_nanosleep/1-5.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/clock_nanosleep/2-1.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/clock_nanosleep/2-2.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/clock_nanosleep/2-3.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/clock_nanosleep/3-1.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/clock_nanosleep/9-1.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/nanosleep/1-1.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/nanosleep/1-2.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/nanosleep/1-3.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/nanosleep/10000-1.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/nanosleep/2-1.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/nanosleep/3-2.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+    set_source_files_properties(
+      ${TESTDIR}/conformance/interfaces/nanosleep/7-2.c
+      PROPERTIES COMPILE_FLAGS -DCLOCK_REALTIME=CLOCK_MONOTONIC)
+
     file(GLOB_RECURSE LTP_LINUX_ORIGS ${TESTLINUX_DIR}/*.c)
 
     if(LTP_LINUX_ORIGS)

@@ -658,6 +658,27 @@ CFLAGS += -Wno-discarded-qualifiers -Wno-implicit-int -Wno-pointer-to-int-cast
 CFLAGS += -Wno-switch-bool -Wno-restrict -Wno-stringop-overflow -Wno-array-bounds
 CFLAGS += -Wno-shift-count-overflow -Wno-stringop-overread
 
+# Locate the file you want to replace,
+# starting from the ltp/ directory level,
+# and then add _CFLAGS suffix,
+# += customize the option.
+$(TESTDIR)/conformance/interfaces/clock_nanosleep/1-1.c_CFLAGS += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/clock_nanosleep/1-3.c_CFLAGS += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/clock_nanosleep/1-4.c_CFLAGS += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/clock_nanosleep/1-5.c_CFLAGS += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/clock_nanosleep/2-1.c_CFLAGS += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/clock_nanosleep/2-2.c_CFLAGS += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/clock_nanosleep/2-3.c_CFLAGS += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/clock_nanosleep/3-1.c_CFLAGS += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/clock_nanosleep/9-1.c_CFLAGS += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/nanosleep/1-1.c_CFLAGS       += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/nanosleep/1-2.c_CFLAGS       += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/nanosleep/1-3.c_CFLAGS       += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/nanosleep/10000-1.c_CFLAGS   += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/nanosleep/2-1.c_CFLAGS       += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/nanosleep/3-2.c_CFLAGS       += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+$(TESTDIR)/conformance/interfaces/nanosleep/7-2.c_CFLAGS       += -DCLOCK_REALTIME=CLOCK_MONOTONIC
+
 #####################################################################################
 
 ltp-$(LTPS_VERSION).zip:
