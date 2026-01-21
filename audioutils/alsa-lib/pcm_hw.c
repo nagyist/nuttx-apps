@@ -548,7 +548,7 @@ static int snd_pcm_hw_munmap(FAR snd_pcm_t *pcm)
   FAR snd_pcm_hw_t *hw = pcm->private_data;
   unsigned int i;
   FAR void *addr;
-  size_t len;
+  ssize_t len;
 
   if (hw->areas == NULL)
     {
@@ -556,9 +556,18 @@ static int snd_pcm_hw_munmap(FAR snd_pcm_t *pcm)
     }
 
   len = snd_pcm_frames_to_bytes(pcm, pcm->period_size);
+  if (len < 0)
+    {
+      return len;
+    }
 
   for (i = 0; i < pcm->periods; i++)
     {
+      if (hw->areas[i] == NULL)
+        {
+          continue;
+        }
+
       addr = hw->areas[i][0].addr;
       if (addr == NULL || addr == MAP_FAILED)
         {
@@ -613,6 +622,7 @@ static int snd_pcm_hw_mmap(FAR snd_pcm_t *pcm)
       if (addr == MAP_FAILED)
         {
           ret = -errno;
+          SNDERR("mmap failed: %d\n", ret);
           snd_pcm_hw_munmap(pcm);
 
           return ret;
