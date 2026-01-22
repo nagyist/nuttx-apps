@@ -81,6 +81,11 @@ add_link_options(-Wl,--no-entry)
 add_link_options(-Wl,--strip-all)
 add_link_options(-Wl,--allow-undefined)
 
+execute_process(
+  COMMAND ${CMAKE_C_COMPILER} --print-libgcc-file-name
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+  OUTPUT_VARIABLE WCC_COMPILER_RT_LIB)
+
 # ~~~
 # Function "wasm_add_application" to add a WebAssembly application to the
 # build system.
@@ -147,6 +152,8 @@ function(wasm_add_application)
   target_link_options(${APP_NAME} PRIVATE
                       -Wl,--initial-memory=${APP_INITIAL_MEMORY_SIZE})
   target_link_options(${APP_NAME} PRIVATE ${APP_WLDFLAGS})
+
+  target_link_libraries(${APP_NAME} PRIVATE ${WCC_COMPILER_RT_LIB})
 
   # Set the target properties
   set_target_properties(${APP_NAME} PROPERTIES OUTPUT_NAME ${APP_NAME}.wasm)
