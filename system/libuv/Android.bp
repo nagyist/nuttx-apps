@@ -63,7 +63,7 @@ cc_library_static {
     ],
 
     header_libs: [
-        "kernel_modules_headers",
+        "kernel_modules_headers_apex",
     ],
 }
 
