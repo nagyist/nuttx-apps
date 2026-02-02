@@ -124,7 +124,9 @@ if(CONFIG_GRAPHICS_LVGL)
                                PRIVATE LV_SYSMON_GET_IDLE=lv_nuttx_get_idle)
   endif()
 
-  if(CONFIG_SCHED_INSTRUMENTATION AND CONFIG_LV_USE_PROFILER)
+  if(CONFIG_SCHED_INSTRUMENTATION
+     AND CONFIG_LV_USE_PROFILER
+     AND NOT CONFIG_LV_USE_PROFILER_BUILTIN)
     target_compile_definitions(
       lvgl
       PRIVATE
