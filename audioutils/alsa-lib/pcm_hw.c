@@ -496,7 +496,12 @@ static int snd_pcm_hw_hw_params(FAR snd_pcm_t *pcm,
   snd_pcm_hw_params_set_channels(pcm, params, info.channels);
   snd_pcm_hw_params_set_rate(pcm, params, info.samplerate, 0);
 
-  ioctl(hw->fd, AUDIOIOC_GETBUFFERINFO, &buf_info);
+  ret = ioctl(hw->fd, AUDIOIOC_GETBUFFERINFO, &buf_info);
+  if (ret < 0)
+    {
+      return ret;
+    }
+
   if (buf_info.nbuffers != periods || buf_info.buffer_size != period_bytes)
     {
       periods = buf_info.nbuffers;
