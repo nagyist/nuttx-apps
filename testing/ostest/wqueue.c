@@ -1189,13 +1189,14 @@ static void wqueue_workthread_test(int nthread)
   workthread_worker(&work);
   sem_wait(&work.finish_sem);
   exec_time  = clock_systime_ticks() - start_tick;
-  efficiency = work.total_ticks * 10000ull / (exec_time * nthread);
+  efficiency = atomic_read(&work.total_ticks) * 10000ull /
+                 (exec_time * nthread);
   printf("Thread Num: %d;\
          Efficiency: %2d.%02d%%; \
          Total time: %" PRIu32 " ticks, \
          Execution: %" PRIu64 " ticks\n",
-         nthread, efficiency / 100, efficiency % 100, work.total_ticks,
-         exec_time);
+         nthread, efficiency / 100, efficiency % 100,
+         (uint32_t)atomic_read(&work.total_ticks), exec_time);
 
   wqtest_assert(efficiency > threshold,
                 "wqueue_test: work thread test failed, "
