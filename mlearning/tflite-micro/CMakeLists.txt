@@ -200,12 +200,8 @@ if(CONFIG_TFLITEMICRO)
     # detection
 
     # Check for services_1700 directory first, then fallback to services
-    if(EXISTS ${CMAKE_SOURCE_DIR}/../vendor/bes/framework/services_1700)
-      set(BES_SERVICES_DIR
-          ${CMAKE_SOURCE_DIR}/../vendor/bes/framework/services_1700)
-    else()
-      set(BES_SERVICES_DIR ${CMAKE_SOURCE_DIR}/../vendor/bes/framework/services)
-    endif()
+    set(BES_SERVICES_DIR
+        ${CMAKE_SOURCE_DIR}/../vendor/bes/${CONFIG_BES_DDK_DIR})
 
     set(BECO_INCLUDE_DIRS
         ${BES_SERVICES_DIR}/include/beco
