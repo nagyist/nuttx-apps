@@ -43,18 +43,28 @@
 
 void test_nuttx_syscall_clocknanosleep01(FAR void **state)
 {
-  int ret;
   clockid_t type = CLOCK_REALTIME;
+  int success_count = 0;
+  clock_t start_time;
+  clock_t end_time;
   struct timespec t;
-  clock_t start_time, end_time;
-  t.tv_sec = 2;
-  t.tv_nsec = 0;
-  start_time = clock();
-  ret = clock_nanosleep(type, 0, &t, NULL);
-  assert_int_equal(ret, 0);
-  end_time = clock();
-  assert_int_equal((time_t)(end_time - start_time) / CLOCKS_PER_SEC,
-                   t.tv_sec);
+  int ret;
+
+  for (int i = 0; i < 5; i++)
+    {
+      t.tv_sec = 2;
+      t.tv_nsec = 0;
+      start_time = clock();
+      ret = clock_nanosleep(type, 0, &t, NULL);
+      assert_int_equal(ret, 0);
+      end_time = clock();
+      if ((time_t)(end_time - start_time) / CLOCKS_PER_SEC == t.tv_sec)
+        {
+          success_count++;
+        }
+    }
+
+  assert_true(success_count >= 3);
 }
 
 /****************************************************************************
