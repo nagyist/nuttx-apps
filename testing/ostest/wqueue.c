@@ -686,13 +686,16 @@ static void wqueue_period_and_cancel_test(void)
   FAR struct kwork_wqueue_s *wq;
   FAR period_work_t *works;
   FAR period_work_t *work;
-  atomic_t running_cnt = 0;
-  atomic_t enough_cnt  = 0;
+  atomic_t running_cnt;
+  atomic_t enough_cnt;
   int total_cnt        = PERIODIC_TEST_WORK_NUM;
   int success_cnt;
   int prev_cnt;
   int curr_cnt;
   int i;
+
+  atomic_set(&running_cnt, 0);
+  atomic_set(&enough_cnt, 0);
 
   printf("\nwqueue_test: periodic work and cancel test start...\n");
   printf("Testing %d periodic work\n", total_cnt);
@@ -1162,10 +1165,10 @@ static void wqueue_workthread_test(int nthread)
   work.nthread     = nthread;
   work.nworks      = WORK_THREAD_TEST_MAX_LOOP * nthread;
   work.is_first    = true;
-  work.pending_cnt = 0;
-  work.total_cnt   = 0;
-  work.finish_cnt  = 0;
-  work.total_ticks = 0;
+  atomic_set(&work.pending_cnt, 0);
+  atomic_set(&work.total_cnt, 0);
+  atomic_set(&work.finish_cnt, 0);
+  atomic_set(&work.total_ticks, 0);
   sem_init(&work.finish_sem, 0, 0);
   work.wq = work_queue_create("test", WQUEUE_DEFAULT_PRIORITY, NULL,
                               WQUEUE_DEFAULT_STACK_SIZE, nthread);
