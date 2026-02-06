@@ -101,7 +101,7 @@ static int open_device(FAR struct input_device_s *dev)
 
   if (dev->fd < 0)
     {
-      GETEVENT_INFO("open %s failed:%d\n", dev->path, errno);
+      GETEVENT_INFO("open %s failed, errno: %d\n", dev->path, errno);
       return -errno;
     }
 
@@ -126,11 +126,12 @@ static int touch_init(FAR struct input_device_s *dev)
   ret = ioctl(dev->fd, TSIOC_GETMAXPOINTS, &maxpoint);
   if (ret < 0)
     {
-      GETEVENT_INFO("ioctl GETMAXPOINTS failed: %d\n", ret);
+      GETEVENT_INFO("ioctl GETMAXPOINTS failed: %d, "
+                    "errno: %d\n", ret, errno);
       return -errno;
     }
 
-  priv = malloc(sizeof(struct touch_priv_s) +
+  priv = calloc(1, sizeof(struct touch_priv_s) +
                 SIZEOF_TOUCH_SAMPLE_S(maxpoint));
   if (!priv)
     {
@@ -292,7 +293,7 @@ static void run_event_loop(FAR struct input_devices_ctx_s *ctx)
   sa.sa_flags = SA_SIGINFO;
   sa.sa_sigaction = signal_handler;
   sigemptyset(&sa.sa_mask);
-  sa.sa_user = &running;
+  sa.sa_user = (FAR void *)&running;
   sigaction(SIGINT, &sa, NULL);
 
   for (dev = ctx->head; dev; dev = dev->next)
@@ -303,7 +304,13 @@ static void run_event_loop(FAR struct input_devices_ctx_s *ctx)
         }
     }
 
-  fds = malloc(fd_count * sizeof(struct pollfd));
+  fds = calloc(fd_count, sizeof(struct pollfd));
+
+  if (!fds)
+    {
+      GETEVENT_INFO("Memory allocation failed for fds\n");
+      return;
+    }
 
   for (dev = ctx->head; dev; dev = dev->next)
     {
@@ -327,15 +334,17 @@ static void run_event_loop(FAR struct input_devices_ctx_s *ctx)
 
       for (i = 0; i < fd_count; i++)
         {
-          if (fds[i].revents & POLLIN)
+          if (!(fds[i].revents & POLLIN))
             {
-              for (dev = ctx->head; dev; dev = dev->next)
+              continue;
+            }
+
+          for (dev = ctx->head; dev; dev = dev->next)
+            {
+              if (dev->fd == fds[i].fd)
                 {
-                  if (dev->fd == fds[i].fd)
-                    {
-                      dev->read_cb(dev);
-                      break;
-                    }
+                  dev->read_cb(dev);
+                  break;
                 }
             }
         }
@@ -371,14 +380,13 @@ alloc_input_device(FAR struct input_devices_ctx_s *ctx,
   FAR struct input_device_s *cur;
   size_t path_len = strlen(path) + 1;
 
-  dev = malloc(sizeof(struct input_device_s) + path_len);
+  dev = calloc(1, sizeof(struct input_device_s) + path_len);
   if (!dev)
     {
       GETEVENT_INFO("Memory allocation failed for device\n");
       return NULL;
     }
 
-  memset(dev, 0, sizeof(struct input_device_s));
   memcpy(dev->path, path, path_len);
 
   if (!ctx->head)
@@ -436,7 +444,7 @@ static int detect_devices(FAR struct input_devices_ctx_s *ctx)
   dir = opendir("/dev");
   if (!dir)
     {
-      GETEVENT_INFO("Failed to open /dev directory\n");
+      GETEVENT_INFO("Failed to open /dev directory, errno: %d\n", errno);
       return -errno;
     }
 
