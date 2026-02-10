@@ -180,7 +180,7 @@ int main(int argc, FAR char *argv[])
       if (xml_path != NULL)
         {
           setenv("CMOCKA_XML_FILE", xml_path, 1);
-          cmocka_set_message_output(CM_OUTPUT_XML);
+          cmocka_set_message_output(CM_OUTPUT_STANDARD | CM_OUTPUT_XML);
         }
 
       if (shuffle_seed != NULL)
