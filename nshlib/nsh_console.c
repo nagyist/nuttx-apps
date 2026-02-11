@@ -184,7 +184,7 @@ static int nsh_consoleioctl(FAR struct nsh_vtbl_s *vtbl,
 {
   FAR struct console_stdio_s *pstate = (FAR struct console_stdio_s *)vtbl;
 
-  return ioctl(OUTFD(pstate), cmd, arg);
+  return ioctl(INFD(pstate), cmd, arg);
 }
 
 /****************************************************************************
