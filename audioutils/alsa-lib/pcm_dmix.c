@@ -762,7 +762,7 @@ static int snd_pcm_dmix_drain_lastbuffer(FAR snd_pcm_t *pcm)
 
   transfer = dmix->last_buffer.nmaxframes - dmix->last_buffer.nframes;
 
-  silence_buf = calloc(transfer, pcm->frame_bits);
+  silence_buf = calloc(transfer, pcm->frame_bits / 8);
   if (!silence_buf)
     {
       return -ENOMEM;
