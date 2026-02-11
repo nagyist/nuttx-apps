@@ -87,7 +87,7 @@ MAINSRC += $(CURDIR)/kernel/socket/cmocka_socket_test.c
 endif
 
 ifneq ($(CONFIG_CM_PTHREAD_TEST),)
-CFLAGS += -I$(CURDIR)/kernel/pthread/include
+CFLAGS += -I$(CURDIR)/kernel/pthread/include -DCLOCK_REALTIME=CLOCK_MONOTONIC
 CSRCS += $(wildcard kernel/pthread/cases/*.c)
 CSRCS += $(wildcard kernel/pthread/common/*.c)
 PROGNAME += cmocka_pthread_test

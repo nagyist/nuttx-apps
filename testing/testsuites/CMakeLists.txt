@@ -163,6 +163,7 @@ if(CONFIG_CM_TIME_TEST)
   set(INCDIR ${CMAKE_CURRENT_SOURCE_DIR}/kernel/time/include
              ${NUTTX_DIR}/../apps/testing/cmocka/include ${NUTTX_DIR}/include)
   file(GLOB TIME_CSRCS ${CMAKE_CURRENT_SOURCE_DIR}/kernel/time/cases/*.c)
+  add_compile_options(-DCLOCK_REALTIME=CLOCK_MONOTONIC)
   nuttx_add_application(
     NAME
     cmocka_time_test
