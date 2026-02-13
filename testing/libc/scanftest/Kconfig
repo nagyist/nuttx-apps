@@ -33,7 +33,7 @@ config TESTING_SCANFTEST_STACKSIZE
 
 config TESTING_SCANFTEST_FNAME
 	string "Scanftest file name"
-	default "/mnt/fs/test.txt"
+	default "/tmp/scanftest.txt"
 	---help---
 		Path to the file for test writes/reads.
 
