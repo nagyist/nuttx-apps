@@ -50,8 +50,8 @@ static void show_usage(FAR const char *progname, int exitcode)
  ****************************************************************************/
 
 #define BASEPATH "/mnt/sdcard"
-#define FOLDER_NAME "/ÄÖÜ 测试文件夹 Test Folder"
-#define FILE_NAME "/ÄÖÜ 测试文件 Test File"
+#define FOLDER_NAME "/ÄÖÜ 测试 Folder"
+#define FILE_NAME "/ÄÖÜ 测试 File"
 
 int main(int argc, FAR char *argv[])
 {
