@@ -121,9 +121,7 @@ void test_nuttx_clock_test_timer03(FAR void **state)
                 start.tv_sec * (int64_t)(1e9) - start.tv_nsec;
 
       failed += (escaped < expected
-#ifndef SIMULATOR
-                || (escaped - expected) > 20000000 /* 20000000, 2 ticks. */
-#endif
+                || (escaped - expected) > 1000000000 /* 1s, align to the LTP. */
                 );
       syslog(LOG_INFO,
             "expected = %" PRIi64
