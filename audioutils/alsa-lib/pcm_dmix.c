@@ -755,22 +755,20 @@ static int snd_pcm_dmix_drop(FAR snd_pcm_t *pcm)
 
 static int snd_pcm_dmix_drain_lastbuffer(FAR snd_pcm_t *pcm)
 {
-  snd_pcm_sframes_t transfer;
   FAR snd_pcm_dmix_t *dmix = pcm->private_data;
-  void *silence_buf;
+  snd_pcm_sframes_t transfer;
+  ssize_t offset;
   int ret = 0;
 
   transfer = dmix->last_buffer.nmaxframes - dmix->last_buffer.nframes;
+  offset = snd_pcm_frames_to_bytes(pcm, dmix->last_buffer.nframes);
 
-  silence_buf = calloc(transfer, pcm->frame_bits / 8);
-  if (!silence_buf)
-    {
-      return -ENOMEM;
-    }
+  memset(dmix->last_buffer.data + offset, 0,
+         transfer * pcm->frame_bits / 8);
 
   if (pcm->access == SND_PCM_ACCESS_RW_INTERLEAVED)
     {
-      ret = snd_pcm_writei(pcm, silence_buf, transfer);
+      ret = snd_pcm_writei(pcm, dmix->last_buffer.data + offset, transfer);
     }
   else if (pcm->access == SND_PCM_ACCESS_RW_NONINTERLEAVED)
     {
@@ -778,13 +776,11 @@ static int snd_pcm_dmix_drain_lastbuffer(FAR snd_pcm_t *pcm)
 
       for (int i = 0; i < pcm->channels; i++)
         {
-          data[i] = silence_buf;
+          data[i] = dmix->last_buffer.data + offset;
         }
 
       ret = snd_pcm_writen(pcm, data, transfer);
     }
-
-  free(silence_buf);
 
   return ret;
 }
@@ -798,7 +794,10 @@ static int snd_pcm_dmix_drain(FAR snd_pcm_t *pcm)
     case SND_PCM_STATE_PREPARED:
       if (!dmix->running)
         {
-          snd_pcm_start(pcm);
+          while (snd_pcm_dmix_written(pcm) < pcm->start_threshold)
+            {
+              snd_pcm_dmix_drain_lastbuffer(pcm);
+            }
         }
       break;
     case SND_PCM_STATE_PAUSED:
