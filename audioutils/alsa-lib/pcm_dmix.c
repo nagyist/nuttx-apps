@@ -478,7 +478,7 @@ static int snd_pcm_dmix_hw_params(FAR snd_pcm_t *pcm,
   ret = snd_pcm_dmix_negotiate(pcm, &info);
   if (ret < 0)
     {
-      return ret;
+      goto err;
     }
 
   SNDINFO("negotiate format:%" PRIu8 ", channels:%" PRIu8 ", rate:%" PRIu32,
@@ -496,7 +496,7 @@ static int snd_pcm_dmix_hw_params(FAR snd_pcm_t *pcm,
   if (ret < 0)
     {
       SNDERR("Invalid snd_pcm_hw_params_any return: %d", ret);
-      return ret;
+      goto err;
     }
 
   snd_pcm_hw_params_get_rate(sparams, &rate, 0);
@@ -511,7 +511,7 @@ static int snd_pcm_dmix_hw_params(FAR snd_pcm_t *pcm,
   ret = snd_pcm_hw_params(dmix->spcm, sparams);
   if (ret < 0)
     {
-      return ret;
+      goto err;
     }
 
   dmix->appl_ptr = &dmix->spcm->appl;
@@ -531,6 +531,10 @@ static int snd_pcm_dmix_hw_params(FAR snd_pcm_t *pcm,
   dmix_up_sem(dmix);
 
   return 0;
+
+err:
+  dmix_up_sem(dmix);
+  return ret;
 }
 
 static int snd_pcm_dmix_prepare(FAR snd_pcm_t *pcm)
@@ -1070,7 +1074,7 @@ static snd_pcm_sframes_t snd_pcm_dmix_write_period(FAR snd_pcm_t *pcm,
       in_data = out_data;
     }
 
-  if (pcm->volume != 1.0)
+  if (pcm->volume != 1.0f)
     {
       snd_pcm_softvol_scale(dmix->spcm->format, pcm->volume, in_data,
                             out_frames * dmix->spcm->channels);
@@ -1507,15 +1511,14 @@ int snd_pcm_dmix_open(FAR snd_pcm_t **pcmp, FAR const char *name,
       goto open_err;
     }
 
-  *pcmp = pcm;
-
   ret = snd_pcm_hw_open(&spcm, name, stream, mode);
   if (ret < 0)
     {
-      return ret;
+      goto open_err;
     }
 
   dmix->spcm = spcm;
+  *pcmp = pcm;
   return 0;
 
 open_err:
