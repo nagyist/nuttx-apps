@@ -94,7 +94,7 @@ static int monitor_memory_pressure(size_t threshold, int interval)
 
   printf("Starting memory pressure daemon with threshold %d bytes\n",
          threshold);
-  while (g_exit)
+  while (!g_exit)
     {
       ret = poll(fds, sizeof(fds) / sizeof(fds[0]), 1000);
       if (ret < 0)
