@@ -470,6 +470,7 @@ int snd_pcm_dump(FAR snd_pcm_t *pcm, FAR snd_output_t *out)
 
   /* Dump hardware info */
 
+  SNDINFO("device         : %s\n", pcm->name);
   SNDINFO("stream         : %s\n", snd_pcm_stream_name(pcm->stream));
   SNDINFO("access         : %s\n", snd_pcm_access_name(pcm->access));
   SNDINFO("format         : %s\n", snd_pcm_format_name(pcm->format));

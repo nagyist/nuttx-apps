@@ -662,6 +662,9 @@ static int snd_pcm_hw_reset(FAR snd_pcm_t *pcm)
 {
   FAR snd_pcm_hw_t *hw = pcm->private_data;
 
+  SNDINFO("device:%s head:%ld tail:%ld\n", pcm->name, hw->status->head,
+          hw->status->tail);
+
   if (ioctl(hw->fd, AUDIOIOC_RESETSTATUS, 0) < 0)
     {
       SNDERR("reset error:%d\n", -errno);
@@ -670,6 +673,7 @@ static int snd_pcm_hw_reset(FAR snd_pcm_t *pcm)
 
   hw->setup = false;
   pcm->appl = hw->status->head;
+  SNDINFO("reset appl:%ld", pcm->appl);
 
   return 0;
 }

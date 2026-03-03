@@ -736,7 +736,6 @@ static void snd_pcm_dmix_dump(FAR snd_pcm_t *pcm, snd_output_t *out)
 {
   FAR snd_pcm_dmix_t *dmix = pcm->private_data;
 
-  SNDINFO("device       : %s\n",  pcm->name);
   SNDINFO("format       : %s\n",  snd_pcm_format_name(dmix->spcm->format));
   SNDINFO("channels     : %u\n",  dmix->spcm->channels);
   SNDINFO("rate         : %u\n",  dmix->spcm->rate);
@@ -793,6 +792,8 @@ static int snd_pcm_dmix_drain(FAR snd_pcm_t *pcm)
 {
   FAR snd_pcm_dmix_t *dmix = pcm->private_data;
 
+  SNDINFO("device:%s", pcm->name);
+
   switch (dmix->state)
     {
     case SND_PCM_STATE_PREPARED:
@@ -844,7 +845,7 @@ static int snd_pcm_dmix_close(FAR snd_pcm_t *pcm)
   FAR snd_pcm_dmix_t *dmix = pcm->private_data;
   int ret;
 
-  SNDINFO("enter");
+  SNDINFO("device:%s", pcm->name);
 
   pcm->mode &= ~SND_PCM_NONBLOCK;
   snd_pcm_drain(pcm);
@@ -904,7 +905,7 @@ static int snd_pcm_dmix_pause(FAR snd_pcm_t *pcm, int enable)
   FAR snd_pcm_dmix_t *dmix = pcm->private_data;
   int ret;
 
-  SNDINFO("enter, enable:%d", enable);
+  SNDINFO("enable:%d device:%s", enable, pcm->name);
 
   ret = dmix->spcm->ops->pause(dmix->spcm->ops_arg, enable);
   if (ret < 0)
