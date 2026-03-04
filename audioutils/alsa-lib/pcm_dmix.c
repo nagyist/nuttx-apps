@@ -760,32 +760,37 @@ static int snd_pcm_dmix_drain_lastbuffer(FAR snd_pcm_t *pcm)
 {
   FAR snd_pcm_dmix_t *dmix = pcm->private_data;
   snd_pcm_sframes_t transfer;
+  void *data[pcm->channels];
   ssize_t offset;
-  int ret = 0;
+  ssize_t step;
+  ssize_t len;
 
   transfer = dmix->last_buffer.nmaxframes - dmix->last_buffer.nframes;
-  offset = snd_pcm_frames_to_bytes(pcm, dmix->last_buffer.nframes);
-
-  memset(dmix->last_buffer.data + offset, 0,
-         transfer * pcm->frame_bits / 8);
 
   if (pcm->access == SND_PCM_ACCESS_RW_INTERLEAVED)
     {
-      ret = snd_pcm_writei(pcm, dmix->last_buffer.data + offset, transfer);
+      offset = snd_pcm_frames_to_bytes(pcm, dmix->last_buffer.nframes);
+      len = snd_pcm_frames_to_bytes(pcm, transfer);
+
+      memset(dmix->last_buffer.data + offset, 0, len);
+      return snd_pcm_writei(pcm, dmix->last_buffer.data + offset, transfer);
     }
   else if (pcm->access == SND_PCM_ACCESS_RW_NONINTERLEAVED)
     {
-      void *data[pcm->channels];
+      offset = snd_pcm_samples_to_bytes(pcm, dmix->last_buffer.nframes);
+      step = snd_pcm_samples_to_bytes(pcm, dmix->last_buffer.nmaxframes);
+      len = snd_pcm_samples_to_bytes(pcm, transfer);
 
       for (int i = 0; i < pcm->channels; i++)
         {
-          data[i] = dmix->last_buffer.data + offset;
+          data[i] = dmix->last_buffer.data + step * i + offset;
+          memset(data[i], 0, len);
         }
 
-      ret = snd_pcm_writen(pcm, data, transfer);
+      return snd_pcm_writen(pcm, data, transfer);
     }
 
-  return ret;
+  return -EINVAL;
 }
 
 static int snd_pcm_dmix_drain(FAR snd_pcm_t *pcm)
