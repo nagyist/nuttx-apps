@@ -729,6 +729,8 @@ static int nsh_execute(FAR struct nsh_vtbl_s *vtbl,
           vtbl->np.np_redir_err)
         {
           nsh_undirect(vtbl, save);
+          fd_out = -1;
+          fd_in = -1;
         }
 
       /* Mark errors so that it is possible to test for non-zero return
